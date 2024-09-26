@@ -9,6 +9,7 @@ import Footer from "./components/Footer";
 
 // Pages
 import Influence from "./Pages/Reputation/Influence";
+import Login from "./Pages/Login";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <main className="p-12">
           <Routes>
             <Route path="/" element={<Influence />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/influence" element={<Influence />} />
           </Routes>
         </main>

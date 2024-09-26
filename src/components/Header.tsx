@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const Header = () => {
   return (
     <header className="bg-neutral-950 px-8 py-4 flex justify-between items-center">
@@ -11,7 +13,9 @@ const Header = () => {
           <li className="text-stone-400 hover:text-stone-200">About</li>
           <li className="text-stone-400 hover:text-stone-200">Forum</li>
           <li className="text-stone-400 hover:text-stone-200">Leaderboard</li>
-          <li className="text-stone-400 hover:text-stone-200">Login</li>
+          <li className="text-stone-400 hover:text-stone-200">
+            <Link to="/login">Log in / Sign up</Link>
+          </li>
         </ul>
       </nav>
     </header>
