@@ -16,26 +16,30 @@ const Infobar = () => {
         <p className="text-sm font-bold">XP</p>
         <Tooltip label="Experience points">
           <div className="bg-neutral-800 h-2 w-36">
-            <div className="bg-gray-400 h-2 w-3/4"></div>
+            <div className="bg-slate-400 h-2 w-3/4"></div>
           </div>
         </Tooltip>
       </div>
 
       <div className="flex items-center gap-2">
         <i className="fa-solid fa-location-dot"></i>
-        <Tooltip label="Your location">
+        <Tooltip label="Location">
           <p>New York City</p>
         </Tooltip>
       </div>
 
       <div className="flex items-center gap-2">
         <i className="fa-solid fa-dollar-sign"></i>
-        <p>334.221</p>
+        <Tooltip label="Holdings">
+          <p>334.221</p>
+        </Tooltip>
       </div>
 
       <div className="flex items-center gap-2">
         <i className="fa-solid fa-shield-halved"></i>
-        <p>84%</p>
+        <Tooltip label="Protection">
+          <p>84%</p>
+        </Tooltip>
       </div>
     </section>
   );
