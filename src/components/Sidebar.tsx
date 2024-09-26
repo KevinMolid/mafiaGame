@@ -39,7 +39,7 @@ const Sidebar = () => {
           <li>Street Racing</li>
         </ul>
         <h2 className="uppercase text-xs pb-1 text-stone-400">
-          <i className="fa-solid fa-suitcase"></i> Organized Crime
+          <i className="fa-solid fa-briefcase"></i> Organized Crime
         </h2>
         <ul className="text-stone-200 mb-4">
           <li>Robbery</li>
