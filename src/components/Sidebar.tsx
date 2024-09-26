@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
 
-const Sidebar = () => {
+interface SidebarInterface {
+  user: any;
+}
+
+const Sidebar = ({ user }: SidebarInterface) => {
   return (
     <div className="bg-neutral-800 p-8 text-sm leading-relaxed">
       <div className="mb-6">
@@ -9,7 +13,10 @@ const Sidebar = () => {
           src="src\assets\default.jpg"
           alt="Profile picture"
         />
-        <p className="text-center font-medium">TheBlackHand</p>
+        <Link to="/createcharacter">
+          <p className="text-center font-medium">TheBlackHand</p>
+        </Link>
+        <p className="text-xs">{user}</p>
         <p className="text-center text-stone-400">Enforcer</p>
       </div>
       <nav>
