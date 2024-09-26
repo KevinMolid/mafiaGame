@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import Layout from "./components/Layout";
 import Infobar from "./components/Infobar";
+import Footer from "./components/Footer";
 
 // Pages
 import Influence from "./Pages/Reputation/Influence";
@@ -16,11 +17,14 @@ function App() {
       <Infobar />
       <Layout>
         <Sidebar />
-        <Routes>
-          <Route path="/" element={<Influence />} />
-          <Route path="/influence" element={<Influence />} />
-        </Routes>
+        <main className="p-12">
+          <Routes>
+            <Route path="/" element={<Influence />} />
+            <Route path="/influence" element={<Influence />} />
+          </Routes>
+        </main>
       </Layout>
+      <Footer />
     </Router>
   );
 }

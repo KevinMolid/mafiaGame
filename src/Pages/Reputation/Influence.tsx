@@ -2,7 +2,7 @@ import H1 from "../../components/Typography/H1";
 
 const Influence = () => {
   return (
-    <main className="p-12">
+    <>
       <H1>Influence</H1>
       <aside className="grid grid-cols-4 gap-6 border border-neutral-700 px-6 py-4 pb-6">
         <h2 className="col-span-full text-2xl text-stone-500 leading-none">
@@ -41,7 +41,7 @@ const Influence = () => {
           </div>
         </article>
       </aside>
-    </main>
+    </>
   );
 };
 
