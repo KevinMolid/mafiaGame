@@ -1,5 +1,7 @@
+import { ReactNode } from "react";
+
 interface H1Interface {
-  children: string;
+  children: ReactNode;
 }
 
 const H1 = ({ children }: H1Interface) => {

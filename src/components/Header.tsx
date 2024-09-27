@@ -17,11 +17,13 @@ const Header = () => {
 
   return (
     <header className="bg-neutral-950 px-8 py-4 flex justify-between items-center">
-      <img
-        className="h-14"
-        src="src\assets\LogoV1.png"
-        alt="MafiaReign Logo: Fight for Dominance"
-      />
+      <Link to="/">
+        <img
+          className="h-14"
+          src="src\assets\LogoV1.png"
+          alt="MafiaReign Logo: Fight for Dominance"
+        />
+      </Link>
       <nav>
         <ul className="flex gap-6">
           <li className="text-stone-400 hover:text-stone-200">

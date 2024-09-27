@@ -9,6 +9,7 @@ import Infobar from "./components/Infobar";
 import Footer from "./components/Footer";
 
 // Pages
+import Home from "./Pages/Home.tsx";
 import About from "./Pages/About.tsx";
 import Signup from "./Pages/Signup.tsx";
 import Login from "./Pages/Login.tsx";
@@ -49,7 +50,7 @@ function App() {
         <Sidebar user={userID} />
         <main className="p-12">
           <Routes>
-            <Route path="/" element={<Influence />} />
+            <Route path="/" element={<Home user={userID} />} />
             <Route path="/about" element={<About />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
