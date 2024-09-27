@@ -18,8 +18,8 @@ const Sidebar = () => {
         <Link to="/createcharacter">
           <p className="text-center font-medium">TheBlackHand</p>
         </Link>
-        <p className="text-xs">{userData.email}</p>
-        <p className="text-xs">{user.uid}</p>
+        {userData && <p className="text-xs">{userData.email}</p>}
+        {user && <p className="text-xs">{user.uid}</p>}
         <p className="text-center text-stone-400">Enforcer</p>
       </div>
       <nav>

@@ -1,7 +1,14 @@
+// React
 import { Link } from "react-router-dom";
+
+// Firebase
 import { getAuth, signOut } from "firebase/auth";
 
+// Context
+import { useAuth } from "../AuthContext";
+
 const Header = () => {
+  const { userData } = useAuth();
   const auth = getAuth();
 
   // Sign out
@@ -31,12 +38,15 @@ const Header = () => {
           </li>
           <li className="text-stone-400 hover:text-stone-200">Forum</li>
           <li className="text-stone-400 hover:text-stone-200">Leaderboard</li>
-          <li className="text-stone-400 hover:text-stone-200">
-            <Link to="/signup">Log in / Sign up</Link>
-          </li>
-          <li className="text-stone-400 hover:text-stone-200">
-            <button onClick={logOut}>Log out</button>
-          </li>
+          {userData ? (
+            <li className="text-stone-400 hover:text-stone-200">
+              <button onClick={logOut}>Log out</button>
+            </li>
+          ) : (
+            <li className="text-stone-400 hover:text-stone-200">
+              <Link to="/signup">Log in / Sign up</Link>
+            </li>
+          )}
         </ul>
       </nav>
     </header>

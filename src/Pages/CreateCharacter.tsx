@@ -5,8 +5,14 @@ import { useState } from "react";
 import { useAuth } from "../AuthContext";
 
 // Firebase
-import { collection, addDoc } from "firebase/firestore";
-import { getFirestore } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  arrayUnion,
+} from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
 
@@ -45,6 +51,7 @@ const CreateCharacter = () => {
     }
 
     try {
+      // Add the new character to the "Characters" collection
       const docRef = await addDoc(collection(db, "Characters"), {
         uid: user.uid,
         username: username,
@@ -55,7 +62,20 @@ const CreateCharacter = () => {
         createdAt: new Date(),
         diedAt: null,
       });
-      console.log("Document written with ID: ", docRef.id);
+
+      // Log the character document ID (REMOVE AT PRODUCTION)
+      console.log("Character created with ID: ", docRef.id);
+
+      // Update the user document in the "Users" collection
+      const userDocRef = doc(db, "Users", user.uid);
+      await updateDoc(userDocRef, {
+        characters: arrayUnion(docRef.id), // Add the new character to the user's characters array
+        activeCharacter: docRef.id, // Set the new character as the active character
+      });
+
+      console.log(
+        "User document updated with new character and active character."
+      );
     } catch (e) {
       console.error("Error adding document: ", e);
     }
@@ -64,7 +84,7 @@ const CreateCharacter = () => {
   return (
     <>
       <H1>Create your character</H1>
-      <p>{userData.email}</p>
+      {userData && <p>{userData.email}</p>}
       <form action="" className="flex flex-col mb-4 gap-2">
         <label htmlFor="username">Username</label>
         <input
