@@ -1,6 +1,9 @@
 // React
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
+// Context
 import { AuthProvider } from "./AuthContext";
+import { CharacterProvider } from "./CharacterContext";
 
 // Components
 import Header from "./components/Header";
@@ -20,24 +23,26 @@ import Influence from "./Pages/Reputation/Influence";
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Header />
-        <Infobar />
-        <Layout>
-          <Sidebar />
-          <main className="p-12">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/createcharacter" element={<CreateCharacter />} />
-              <Route path="/influence" element={<Influence />} />
-            </Routes>
-          </main>
-        </Layout>
-        <Footer />
-      </Router>
+      <CharacterProvider>
+        <Router>
+          <Header />
+          <Infobar />
+          <Layout>
+            <Sidebar />
+            <main className="p-12">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/createcharacter" element={<CreateCharacter />} />
+                <Route path="/influence" element={<Influence />} />
+              </Routes>
+            </main>
+          </Layout>
+          <Footer />
+        </Router>
+      </CharacterProvider>
     </AuthProvider>
   );
 }

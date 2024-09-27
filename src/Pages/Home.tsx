@@ -1,15 +1,24 @@
 // Context
-import { useAuth } from "../AuthContext";
+import { useCharacter } from "../CharacterContext";
 
 // Components
 import H1 from "../components/Typography/H1";
 
 const Home = () => {
-  const { userData } = useAuth();
+  const { character } = useCharacter();
 
   return (
     <div>
-      {userData ? <H1>Welcome {userData.email}</H1> : <H1>Welcome!</H1>}
+      {character ? <H1>Welcome {character.username}!</H1> : <H1>Welcome!</H1>}
+      {character ? (
+        <>
+          <p>Health: {character.stats.hp}</p>
+          <p>Experience: {character.stats.exp}</p>
+          <p>Reputation - Police: {character.reputation.police}</p>
+        </>
+      ) : (
+        <p>No character selected</p>
+      )}
     </div>
   );
 };
