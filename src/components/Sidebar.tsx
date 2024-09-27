@@ -2,10 +2,10 @@
 import { Link } from "react-router-dom";
 
 // Context
-import { useAuth } from "../AuthContext";
+import { useCharacter } from "../CharacterContext";
 
 const Sidebar = () => {
-  const { user, userData } = useAuth();
+  const { character } = useCharacter();
 
   return (
     <div className="bg-neutral-800 p-8 text-sm leading-relaxed">
@@ -15,11 +15,15 @@ const Sidebar = () => {
           src="src\assets\default.jpg"
           alt="Profile picture"
         />
-        <Link to="/createcharacter">
-          <p className="text-center font-medium">TheBlackHand</p>
-        </Link>
-        {userData && <p className="text-xs">{userData.email}</p>}
-        {user && <p className="text-xs">{user.uid}</p>}
+        {character ? (
+          <Link to="/">
+            <p className="text-center font-medium">{character.username}</p>
+          </Link>
+        ) : (
+          <Link to="/createcharacter">
+            <p className="text-center font-medium">Create character</p>
+          </Link>
+        )}
         <p className="text-center text-stone-400">Enforcer</p>
       </div>
       <nav>
