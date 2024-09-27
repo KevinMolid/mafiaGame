@@ -9,10 +9,11 @@ import Infobar from "./components/Infobar";
 import Footer from "./components/Footer";
 
 // Pages
-import Influence from "./Pages/Reputation/Influence";
+import About from "./Pages/About.tsx";
 import Signup from "./Pages/Signup.tsx";
 import Login from "./Pages/Login.tsx";
 import CreateCharacter from "./Pages/CreateCharacter.tsx";
+import Influence from "./Pages/Reputation/Influence";
 
 // Firebase
 import { initializeApp } from "firebase/app";
@@ -49,6 +50,7 @@ function App() {
         <main className="p-12">
           <Routes>
             <Route path="/" element={<Influence />} />
+            <Route path="/about" element={<About />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
             <Route
