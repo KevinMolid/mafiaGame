@@ -1,13 +1,9 @@
 import H1 from "../components/Typography/H1";
 
-interface HomeInterface {
-  user: any;
-}
-
-const Home = ({ user }: HomeInterface) => {
+const Home = () => {
   return (
     <div>
-      <H1>Welcome {user}</H1>
+      <H1>Welcome</H1>
     </div>
   );
 };

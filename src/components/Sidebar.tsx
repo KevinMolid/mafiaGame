@@ -1,10 +1,12 @@
+// React
 import { Link } from "react-router-dom";
 
-interface SidebarInterface {
-  user: any;
-}
+// Context
+import { useAuth } from "../AuthContext";
 
-const Sidebar = ({ user }: SidebarInterface) => {
+const Sidebar = () => {
+  const { user, userData } = useAuth();
+
   return (
     <div className="bg-neutral-800 p-8 text-sm leading-relaxed">
       <div className="mb-6">
@@ -16,7 +18,8 @@ const Sidebar = ({ user }: SidebarInterface) => {
         <Link to="/createcharacter">
           <p className="text-center font-medium">TheBlackHand</p>
         </Link>
-        <p className="text-xs">{user}</p>
+        <p className="text-xs">{userData.email}</p>
+        <p className="text-xs">{user.uid}</p>
         <p className="text-center text-stone-400">Enforcer</p>
       </div>
       <nav>

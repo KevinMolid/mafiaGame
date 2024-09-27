@@ -1,6 +1,9 @@
 // React
 import { useState } from "react";
 
+// Context
+import { useAuth } from "../AuthContext";
+
 // Firebase
 import { collection, addDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
@@ -14,11 +17,8 @@ import Button from "../components/Button";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-interface CreateCharacterInterface {
-  user: any;
-}
-
-const CreateCharacter = ({ user }: CreateCharacterInterface) => {
+const CreateCharacter = () => {
+  const { user, userData } = useAuth();
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
 
@@ -46,8 +46,8 @@ const CreateCharacter = ({ user }: CreateCharacterInterface) => {
 
     try {
       const docRef = await addDoc(collection(db, "Characters"), {
-        uid: { user },
-        username: { username },
+        uid: user.uid,
+        username: username,
         status: "alive",
         stats: { exp: 0, hp: 100 },
         reputation: { police: 0, politics: 0, gangs: 0, community: 0 },
@@ -64,6 +64,7 @@ const CreateCharacter = ({ user }: CreateCharacterInterface) => {
   return (
     <>
       <H1>Create your character</H1>
+      <p>{userData.email}</p>
       <form action="" className="flex flex-col mb-4 gap-2">
         <label htmlFor="username">Username</label>
         <input
