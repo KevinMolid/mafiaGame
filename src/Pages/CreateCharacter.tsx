@@ -73,8 +73,7 @@ const CreateCharacter = ({ user }: CreateCharacterInterface) => {
           value={username}
           onChange={handleUsernameChange}
         />
-        {error && <span className="text-red-500">{error}</span>}{" "}
-        {/* Error message */}
+        {error && <span className="text-red-500">{error}</span>}
       </form>
       <Button onClick={handleClick}>Create character</Button>
     </>

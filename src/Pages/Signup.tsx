@@ -22,6 +22,7 @@ const Signup = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   /* Handle input fields */
   function handleEmailChange(event: any) {
@@ -53,6 +54,7 @@ const Signup = () => {
         const errorCode = error.code;
         const errorMessage = error.message;
         console.log(errorCode, errorMessage);
+        setError(errorCode);
       });
   }
 
@@ -78,6 +80,7 @@ const Signup = () => {
             onChange={handlePwChange}
           />
         </div>
+        {error && <span className="text-red-500">{error}</span>}
       </form>
       <Button onClick={signUp}>Sign up</Button>
       <p className="text-stone-400">
