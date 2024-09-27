@@ -10,7 +10,8 @@ import Footer from "./components/Footer";
 
 // Pages
 import Influence from "./Pages/Reputation/Influence";
-import Login from "./Pages/Login";
+import Signup from "./Pages/Signup.tsx";
+import Login from "./Pages/Login.tsx";
 import CreateCharacter from "./Pages/CreateCharacter.tsx";
 
 // Firebase
@@ -48,6 +49,7 @@ function App() {
         <main className="p-12">
           <Routes>
             <Route path="/" element={<Influence />} />
+            <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
             <Route
               path="/createcharacter"

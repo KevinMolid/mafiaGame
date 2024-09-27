@@ -17,7 +17,7 @@ import Button from "../components/Button";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const Login = () => {
+const Signup = () => {
   const auth = getAuth();
 
   const [email, setEmail] = useState("");
@@ -32,7 +32,7 @@ const Login = () => {
     setPassword(event.target.value);
   }
 
-  /* Handle Login in THIS NEEDS TO BE REWRITTEN TO LOGIN LOGIC*/
+  /* Handle sign in */
   function signUp() {
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
@@ -58,7 +58,7 @@ const Login = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <H1>Log in</H1>
+      <H1>Sign up</H1>
       <form action="" className="flex flex-col gap-2">
         <div className="flex flex-col">
           <label htmlFor="email">Email</label>
@@ -79,15 +79,15 @@ const Login = () => {
           />
         </div>
       </form>
-      <Button onClick={signUp}>Log in</Button>
+      <Button onClick={signUp}>Sign up</Button>
       <p className="text-stone-400">
-        Dont have an account?{" "}
-        <Link to="/signup">
-          <span className="text-white hover:underline">Sign up here!</span>
+        Already have an account?{" "}
+        <Link to="/login">
+          <span className="text-white hover:underline">Log in here!</span>
         </Link>
       </p>
     </div>
   );
 };
 
-export default Login;
+export default Signup;

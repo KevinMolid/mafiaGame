@@ -14,7 +14,7 @@ const Header = () => {
           <li className="text-stone-400 hover:text-stone-200">Forum</li>
           <li className="text-stone-400 hover:text-stone-200">Leaderboard</li>
           <li className="text-stone-400 hover:text-stone-200">
-            <Link to="/login">Log in / Sign up</Link>
+            <Link to="/signup">Log in / Sign up</Link>
           </li>
         </ul>
       </nav>
