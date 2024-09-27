@@ -3,25 +3,18 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 // Firebaase
-import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
-
-import firebaseConfig from "../firebaseConfig";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 // Components
 import H1 from "../components/Typography/H1";
 import Button from "../components/Button";
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 const Login = () => {
   const auth = getAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   /* Handle input fields */
   function handleEmailChange(event: any) {
@@ -32,27 +25,16 @@ const Login = () => {
     setPassword(event.target.value);
   }
 
-  /* Handle Login in THIS NEEDS TO BE REWRITTEN TO LOGIN LOGIC*/
-  function signUp() {
-    createUserWithEmailAndPassword(auth, email, password)
+  /* Handle Login*/
+  function logIn() {
+    signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
-        // Signed up
+        // Signed in
         const user = userCredential.user;
-        console.log("Logged in as " + user);
-
-        // Add user to db
-        return setDoc(doc(db, "Users", user.uid), {
-          email: user.email,
-          uid: user.uid,
-          createdAt: new Date(),
-          activeCharacter: null,
-          characters: [],
-        });
+        console.log("Logged in as " + user.uid);
       })
       .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log(errorCode, errorMessage);
+        setError(error.code);
       });
   }
 
@@ -78,8 +60,9 @@ const Login = () => {
             onChange={handlePwChange}
           />
         </div>
+        {error && <span className="text-red-500">{error}</span>}
       </form>
-      <Button onClick={signUp}>Log in</Button>
+      <Button onClick={logIn}>Log in</Button>
       <p className="text-stone-400">
         Dont have an account?{" "}
         <Link to="/signup">
