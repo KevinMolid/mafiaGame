@@ -1,8 +1,19 @@
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+// React
 import { useState } from "react";
+
+// Firebaase
+import { initializeApp } from "firebase/app";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+
+import firebaseConfig from "../firebaseConfig";
 
 // Components
 import H1 from "../components/Typography/H1";
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const Login = () => {
   const auth = getAuth();
@@ -10,6 +21,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  /* Handle input fields */
   function handleEmailChange(event: any) {
     setEmail(event.target.value);
   }
@@ -18,13 +30,24 @@ const Login = () => {
     setPassword(event.target.value);
   }
 
+  /* Handle sign in */
   function signUp(event: any) {
     event.preventDefault();
+
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         // Signed up
         const user = userCredential.user;
         console.log("Logged in as " + user);
+
+        // Add user to db
+        return setDoc(doc(db, "Users", user.uid), {
+          email: user.email,
+          uid: user.uid,
+          createdAt: new Date(),
+          activeCharacter: null,
+          characters: [],
+        });
       })
       .catch((error) => {
         const errorCode = error.code;

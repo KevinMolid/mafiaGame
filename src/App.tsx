@@ -15,7 +15,6 @@ import CreateCharacter from "./Pages/CreateCharacter.tsx";
 
 // Firebase
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 import firebaseConfig from "./firebaseConfig.tsx";
@@ -23,7 +22,6 @@ import firebaseConfig from "./firebaseConfig.tsx";
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
 
 function App() {
   const [userID, setUserID] = useState("");
@@ -51,7 +49,10 @@ function App() {
           <Routes>
             <Route path="/" element={<Influence />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/createcharacter" element={<CreateCharacter />} />
+            <Route
+              path="/createcharacter"
+              element={<CreateCharacter user={userID} />}
+            />
             <Route path="/influence" element={<Influence />} />
           </Routes>
         </main>
