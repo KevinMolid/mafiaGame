@@ -24,7 +24,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const CreateCharacter = () => {
-  const { user, userData } = useAuth();
+  const { user } = useAuth();
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
 
@@ -56,7 +56,7 @@ const CreateCharacter = () => {
         uid: user.uid,
         username: username,
         status: "alive",
-        stats: { exp: 0, hp: 100 },
+        stats: { xp: 0, hp: 100, heat: 0, money: 1000, protection: 0 },
         reputation: { police: 0, politics: 0, gangs: 0, community: 0 },
         location: "New York",
         createdAt: new Date(),
@@ -84,7 +84,6 @@ const CreateCharacter = () => {
   return (
     <>
       <H1>Create your character</H1>
-      {userData && <p>{userData.email}</p>}
       <form action="" className="flex flex-col mb-4 gap-2">
         <label htmlFor="username">Username</label>
         <input
