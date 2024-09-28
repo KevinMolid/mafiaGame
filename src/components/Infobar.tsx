@@ -22,7 +22,7 @@ const Infobar = () => {
   const heatPercentage = character ? (character.stats.heat / maxHeat) * 100 : 0;
 
   return (
-    <section className="bg-neutral-700 px-8 py-2 flex gap-6 justify-center text-stone-400">
+    <section className="bg-neutral-700 px-8 py-2 flex flex-wrap gap-x-6 gap-y-2 justify-center text-stone-400">
       <div className="flex items-center gap-2">
         <i className="fa-solid fa-heart"></i>
         <Tooltip label="Health bar">
