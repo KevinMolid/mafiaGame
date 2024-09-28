@@ -6,6 +6,10 @@ import { useCharacter } from "../CharacterContext";
 const Infobar = () => {
   const { character } = useCharacter();
 
+  if (!character) {
+    return null; // Return nothing if character is not available
+  }
+
   const maxHealth = 100;
   const healthPercentage = character
     ? (character.stats.hp / maxHealth) * 100
