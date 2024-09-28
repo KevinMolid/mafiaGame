@@ -4,6 +4,9 @@ import { Link } from "react-router-dom";
 // Context
 import { useCharacter } from "../CharacterContext";
 
+// Functions
+import { getRank } from "../Functions/RankFunctions";
+
 const Sidebar = () => {
   const { character } = useCharacter();
 
@@ -24,7 +27,9 @@ const Sidebar = () => {
             <p className="text-center font-medium">Create character</p>
           </Link>
         )}
-        <p className="text-center text-stone-400">Enforcer</p>
+        <p className="text-center text-stone-400">
+          {getRank(character.stats.xp)}
+        </p>
       </div>
       <nav>
         <h2 className="uppercase text-xs pb-1 text-stone-400">
