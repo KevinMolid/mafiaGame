@@ -13,8 +13,8 @@ const CrimeBox = ({ children, img }: CrimeBoxInterface) => {
         src={img}
         alt=""
       />
-      <div className="w-full h-full bg-black/60 hover:bg-black/30 col-start-1 row-start-1 rounded-lg"></div>
-      <p className="col-start-1 row-start-1 text-2xl font-bold tracking-wider">
+      <div className="w-full h-full bg-black/60 hover:bg-black/30 col-start-1 row-start-1 rounded-lg hover:cursor-pointer"></div>
+      <p className="col-start-1 row-start-1 text-2xl font-bold tracking-wider pointer-events-none">
         {children}
       </p>
     </article>
