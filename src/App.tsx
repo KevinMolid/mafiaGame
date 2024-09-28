@@ -19,6 +19,7 @@ import Signup from "./Pages/Signup.tsx";
 import Login from "./Pages/Login.tsx";
 import CreateCharacter from "./Pages/CreateCharacter.tsx";
 import Influence from "./Pages/Reputation/Influence";
+import StreetCrime from "./Pages/Crime/StreetCrime.tsx";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/createcharacter" element={<CreateCharacter />} />
                 <Route path="/influence" element={<Influence />} />
+                <Route path="/streetcrime" element={<StreetCrime />} />
               </Routes>
             </main>
           </Layout>

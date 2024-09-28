@@ -48,9 +48,11 @@ const Sidebar = () => {
           <li>Underground Fighting</li>
           <li>Black Market</li>
         </ul>
-        <h2 className="uppercase text-xs pb-1 text-stone-400">
-          <i className="fa-solid fa-money-bill"></i> Street crimes
-        </h2>
+        <Link to="/streetcrime">
+          <h2 className="uppercase text-xs pb-1 text-stone-400">
+            <i className="fa-solid fa-money-bill"></i> Street crimes
+          </h2>
+        </Link>
         <ul className="text-stone-200 mb-4">
           <li>Pickpocketing</li>
           <li>Vandalism</li>
