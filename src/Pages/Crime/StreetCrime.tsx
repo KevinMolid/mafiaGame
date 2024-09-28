@@ -62,6 +62,7 @@ const StreetCrime = () => {
             key={crime.id}
             img={crime.img}
             onClick={() => setSelectedCrime(crime.name)}
+            isSelected={selectedCrime === crime.name}
           >
             {crime.description}
           </CrimeBox>

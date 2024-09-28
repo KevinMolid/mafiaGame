@@ -5,9 +5,16 @@ interface CrimeBoxInterface {
   heading: string;
   img: string;
   onClick: () => void;
+  isSelected: boolean;
 }
 
-const CrimeBox = ({ children, heading, img, onClick }: CrimeBoxInterface) => {
+const CrimeBox = ({
+  children,
+  heading,
+  img,
+  onClick,
+  isSelected,
+}: CrimeBoxInterface) => {
   return (
     <article className="grid grid-cols-1 grid-rows-1 w-72 h-40 bg-neutral-950 items-center text-center rounded-lg">
       <img
@@ -16,7 +23,11 @@ const CrimeBox = ({ children, heading, img, onClick }: CrimeBoxInterface) => {
         alt=""
       />
       <div
-        className="w-full h-full bg-black/60 hover:bg-black/30 col-start-1 row-start-1 rounded-lg hover:cursor-pointer transition-all border border-neutral-600 hover:border-neutral-300"
+        className={`w-full h-full border ${
+          isSelected
+            ? "bg-black/30 border-neutral-300"
+            : "bg-black/60 hover:bg-black/30 border border-neutral-700 hover:border-neutral-500"
+        } col-start-1 row-start-1 rounded-lg transition-all cursor-pointer`}
         onClick={onClick}
       ></div>
       <div className="col-start-1 row-start-1 pointer-events-none">
