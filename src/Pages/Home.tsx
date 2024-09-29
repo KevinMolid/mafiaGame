@@ -10,6 +10,7 @@ import Button from "../components/Button";
 
 // Functions
 import { giveXP } from "../Functions/XpFunctions";
+import { getRankProgress } from "../Functions/RankFunctions";
 
 const Home = () => {
   const { character } = useCharacter();
@@ -20,8 +21,7 @@ const Home = () => {
     ? (character.stats.hp / maxHealth) * 100
     : 0;
 
-  const maxXp = 500;
-  const xpPercentage = character ? (character.stats.xp / maxXp) * 100 : 0;
+  const { progress, minXP, maxXP } = getRankProgress(character.stats.xp);
 
   const maxHeat = 100;
   const heatPercentage = character ? (character.stats.heat / maxHeat) * 100 : 0;
@@ -51,11 +51,13 @@ const Home = () => {
             </div>
 
             <div className="flex flex-col gap-1">
-              <p>Experience: {character.stats.xp}</p>
+              <p>
+                Experience: {character.stats.xp - minXP} / {maxXP - minXP}
+              </p>
               <div className="bg-neutral-700 h-1 w-[250px]">
                 <div
                   className="h-1 bg-slate-400 transition-all duration-300"
-                  style={{ width: `${xpPercentage}%` }}
+                  style={{ width: `${progress}%` }}
                 ></div>
               </div>
             </div>

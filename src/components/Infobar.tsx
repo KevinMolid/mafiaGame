@@ -3,6 +3,9 @@ import Tooltip from "./Tooltip";
 // Context
 import { useCharacter } from "../CharacterContext";
 
+// Functions
+import { getRankProgress } from "../Functions/RankFunctions";
+
 const Infobar = () => {
   const { character } = useCharacter();
 
@@ -15,8 +18,7 @@ const Infobar = () => {
     ? (character.stats.hp / maxHealth) * 100
     : 0;
 
-  const maxXp = 500;
-  const xpPercentage = character ? (character.stats.xp / maxXp) * 100 : 0;
+  const { progress, minXP, maxXP } = getRankProgress(character.stats.xp);
 
   const maxHeat = 100;
   const heatPercentage = character ? (character.stats.heat / maxHeat) * 100 : 0;
@@ -37,11 +39,11 @@ const Infobar = () => {
 
       <div className="flex items-center gap-2">
         <p className="text-sm font-bold">XP</p>
-        <Tooltip label="Experience points">
+        <Tooltip label={`${character.stats.xp - minXP} / ${maxXP - minXP}`}>
           <div className="bg-neutral-800 h-1 w-36">
             <div
               className="h-1 bg-slate-400 transition-all duration-300"
-              style={{ width: `${xpPercentage}%` }}
+              style={{ width: `${progress}%` }}
             ></div>
           </div>
         </Tooltip>

@@ -13,7 +13,21 @@ const ranks = [
 ];
 
 // Function to get the current rank based on XP
-export const getRank = (xp: number) => {
+export const getCurrentRank = (xp: number) => {
   const rank = ranks.find((rank) => xp >= rank.minXP && xp < rank.maxXP);
   return rank ? rank.name : "Unknown Rank";
+};
+
+// Function to get progress towards the next rank
+export const getRankProgress = (xp: number) => {
+  const currentRank = ranks.find((rank) => xp >= rank.minXP && xp < rank.maxXP);
+
+  if (!currentRank) return { progress: 0, minXP: 0, maxXP: 0 };
+
+  const { minXP, maxXP } = currentRank;
+
+  // Calculate how much progress has been made within the current rank
+  const progress = ((xp - minXP) / (maxXP - minXP)) * 100;
+
+  return { progress: Math.min(progress, 100), minXP, maxXP };
 };
