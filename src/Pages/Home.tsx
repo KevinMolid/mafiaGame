@@ -1,5 +1,5 @@
 // React
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Context
 import { useCharacter } from "../CharacterContext";
@@ -19,11 +19,19 @@ const Home = () => {
   const { character, setCharacter } = useCharacter();
   const { userData } = useAuth();
 
+  // Local state for XP, initialized with the character's current XP
+  const [xp, setXP] = useState<number>(character?.stats.xp || 0);
+
+  // Sync the local XP state with character stats if character changes
+  useEffect(() => {
+    if (character) {
+      setXP(character.stats.xp);
+    }
+  }, [character]); // Runs whenever character object changes
+
   if (!character) {
     return null;
   }
-
-  const [xp, setXP] = useState(character.stats.xp); // Local state for XP
 
   const handleGiveXP = async (xpToAdd: number) => {
     // Call the giveXP function

@@ -11,7 +11,6 @@ export const giveXP = async (
   xp: number
 ) => {
   try {
-    console.log("Character ID: ", characterID);
     // Reference to the player's document in Firestore
     const characterRef = doc(db, "Characters", characterID);
 

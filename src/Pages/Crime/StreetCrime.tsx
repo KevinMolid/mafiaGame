@@ -15,7 +15,7 @@ import InfoBox from "../../components/InfoBox";
 import { giveXP } from "../../Functions/XpFunctions";
 
 const StreetCrime = () => {
-  const { character } = useCharacter();
+  const { character, setCharacter } = useCharacter();
   const { userData } = useAuth();
   const [selectedCrime, setSelectedCrime] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -23,13 +23,28 @@ const StreetCrime = () => {
     "success" | "failure" | "important" | "warning" | "info"
   >("success");
 
-  function handleClick() {
+  // Function for comitting a crime
+  const handleClick = async () => {
     if (selectedCrime) {
       const crime = crimes.find((c) => c.name === selectedCrime);
       if (crime) {
         const success = Math.random() < crime.successRate;
         if (success) {
-          giveXP(character, userData.activeCharacter, crime.xpReward);
+          // Call giveXP and update the character XP
+          const updatedXP = await giveXP(
+            character,
+            userData.activeCharacter,
+            crime.xpReward
+          );
+
+          // Update the character with the new XP
+          setCharacter((prevCharacter: any) => ({
+            ...prevCharacter,
+            stats: {
+              ...prevCharacter.stats,
+              xp: updatedXP,
+            },
+          }));
 
           setMessage(
             `You successfully committed ${crime.name} and earned ${crime.xpReward} XP!`
@@ -46,7 +61,7 @@ const StreetCrime = () => {
       setMessage("No crime selected! Please select a crime first.");
       setMessageType("warning");
     }
-  }
+  };
 
   // Crime options array
   const crimes = [
