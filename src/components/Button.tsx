@@ -5,7 +5,10 @@ interface ButtonInterface {
 
 const Button = ({ children, onClick }: ButtonInterface) => {
   return (
-    <button className="bg-sky-900 px-4 py-2" onClick={onClick}>
+    <button
+      className="bg-sky-800 px-4 py-2 hover:bg-sky-900 text-neutral-200"
+      onClick={onClick}
+    >
       {children}
     </button>
   );

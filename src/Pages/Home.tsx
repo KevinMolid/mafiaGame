@@ -6,6 +6,7 @@ import { useAuth } from "../AuthContext";
 import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import Equipment from "../components/Equipment";
+import Button from "../components/Button";
 
 // Functions
 import { giveXP } from "../Functions/XpFunctions";
@@ -29,9 +30,9 @@ const Home = () => {
     <div className="text-stone-400">
       {character ? <H1>Welcome {character.username}!</H1> : <H1>Welcome!</H1>}
 
-      <button onClick={() => giveXP(character, userData.activeCharacter, 15)}>
+      <Button onClick={() => giveXP(character, userData.activeCharacter, 150)}>
         Get XP
-      </button>
+      </Button>
 
       {character ? (
         <>
