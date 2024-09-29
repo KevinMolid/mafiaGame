@@ -1,3 +1,6 @@
+// React
+import { useState } from "react";
+
 // Context
 import { useCharacter } from "../CharacterContext";
 import { useAuth } from "../AuthContext";
@@ -13,8 +16,27 @@ import { giveXP } from "../Functions/XpFunctions";
 import { getRankProgress } from "../Functions/RankFunctions";
 
 const Home = () => {
-  const { character } = useCharacter();
+  const { character, setCharacter } = useCharacter();
   const { userData } = useAuth();
+  const [xp, setXP] = useState(character.stats.xp); // Local state for XP
+
+  const handleGiveXP = async (xpToAdd: number) => {
+    // Call the giveXP function
+    const updatedXP = await giveXP(
+      character,
+      userData.activeCharacter,
+      xpToAdd
+    );
+
+    // After successfully updating in Firebase, update the local state
+    if (updatedXP) {
+      setXP(updatedXP); // Update XP in the state
+      setCharacter((prevCharacter: any) => ({
+        ...prevCharacter,
+        stats: { ...prevCharacter.stats, xp: updatedXP },
+      }));
+    }
+  };
 
   const maxHealth = 100;
   const healthPercentage = character
@@ -30,9 +52,7 @@ const Home = () => {
     <div className="text-stone-400">
       {character ? <H1>Welcome {character.username}!</H1> : <H1>Welcome!</H1>}
 
-      <Button onClick={() => giveXP(character, userData.activeCharacter, 1200)}>
-        Get XP
-      </Button>
+      <Button onClick={() => handleGiveXP(50)}>Get XP</Button>
 
       {character ? (
         <>
@@ -52,7 +72,7 @@ const Home = () => {
 
             <div className="flex flex-col gap-1">
               <p>
-                Experience: {character.stats.xp - minXP} / {maxXP - minXP}
+                Experience: {xp - minXP} / {maxXP - minXP}
               </p>
               <div className="bg-neutral-700 h-1 w-[250px]">
                 <div
