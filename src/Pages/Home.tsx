@@ -30,7 +30,7 @@ const Home = () => {
     <div className="text-stone-400">
       {character ? <H1>Welcome {character.username}!</H1> : <H1>Welcome!</H1>}
 
-      <Button onClick={() => giveXP(character, userData.activeCharacter, 150)}>
+      <Button onClick={() => giveXP(character, userData.activeCharacter, 1200)}>
         Get XP
       </Button>
 

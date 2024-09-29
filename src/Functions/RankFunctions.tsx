@@ -1,12 +1,19 @@
+// Define rank thresholds
+const ranks = [
+  { name: "Street Hustler", minXP: 0, maxXP: 500 },
+  { name: "Thug", minXP: 500, maxXP: 1500 },
+  { name: "Enforcer", minXP: 1500, maxXP: 4000 },
+  { name: "Capo", minXP: 4000, maxXP: 10000 },
+  { name: "Lieutenant", minXP: 10000, maxXP: 25000 },
+  { name: "Underboss", minXP: 25000, maxXP: 50000 },
+  { name: "Consigliere", minXP: 50000, maxXP: 100000 },
+  { name: "Boss", minXP: 100000, maxXP: 200000 },
+  { name: "Don", minXP: 200000, maxXP: 400000 },
+  { name: "Godfather", minXP: 400000, maxXP: Infinity }, // Highest rank
+];
+
+// Function to get the current rank based on XP
 export const getRank = (xp: number) => {
-  if (xp >= 400000) return "Godfather";
-  if (xp >= 200000) return "Don";
-  if (xp >= 100000) return "Boss";
-  if (xp >= 50000) return "Underboss";
-  if (xp >= 25000) return "Consigliere";
-  if (xp >= 10000) return "Lieutenant";
-  if (xp >= 4000) return "Capo";
-  if (xp >= 1500) return "Enforcer";
-  if (xp >= 500) return "Thug";
-  return "Street Hustler";
+  const rank = ranks.find((rank) => xp >= rank.minXP && xp < rank.maxXP);
+  return rank ? rank.name : "Unknown Rank";
 };
