@@ -1,13 +1,18 @@
 // Context
 import { useCharacter } from "../CharacterContext";
+import { useAuth } from "../AuthContext";
 
 // Components
 import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import Equipment from "../components/Equipment";
 
+// Functions
+import { giveXP } from "../Functions/XpFunctions";
+
 const Home = () => {
   const { character } = useCharacter();
+  const { userData } = useAuth();
 
   const maxHealth = 100;
   const healthPercentage = character
@@ -23,6 +28,10 @@ const Home = () => {
   return (
     <div className="text-stone-400">
       {character ? <H1>Welcome {character.username}!</H1> : <H1>Welcome!</H1>}
+
+      <button onClick={() => giveXP(character, userData.activeCharacter, 15)}>
+        Get XP
+      </button>
 
       {character ? (
         <>

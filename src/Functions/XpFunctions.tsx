@@ -5,10 +5,15 @@ import firebaseConfig from "../firebaseConfig";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-export const giveXP = async (character: any, xp: number) => {
+export const giveXP = async (
+  character: any,
+  characterID: string,
+  xp: number
+) => {
   try {
+    console.log("Character ID: ", characterID);
     // Reference to the player's document in Firestore
-    const characterRef = doc(db, "characters", character.id);
+    const characterRef = doc(db, "Characters", characterID);
 
     // Get the current XP and add the new XP
     const newXp = character.stats.xp + xp;
