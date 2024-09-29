@@ -14,6 +14,7 @@ import Footer from "./components/Footer";
 
 // Pages
 import Home from "./Pages/Home.tsx";
+import Profile from "./Pages/Profile.tsx";
 import About from "./Pages/About.tsx";
 import Forum from "./Pages/Forum.tsx";
 import Leaderboard from "./Pages/Leaderboard.tsx";
@@ -35,6 +36,7 @@ function App() {
             <main className="p-12">
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/profile" element={<Profile />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/forum" element={<Forum />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />

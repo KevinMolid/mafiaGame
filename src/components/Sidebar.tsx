@@ -23,7 +23,7 @@ const Sidebar = () => {
           alt="Profile picture"
         />
         {character ? (
-          <Link to="/">
+          <Link to="/profile">
             <p className="text-center font-medium">{character.username}</p>
           </Link>
         ) : (
