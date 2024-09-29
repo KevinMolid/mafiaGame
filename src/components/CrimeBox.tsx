@@ -30,9 +30,11 @@ const CrimeBox = ({
         } col-start-1 row-start-1 rounded-lg transition-all cursor-pointer`}
         onClick={onClick}
       ></div>
-      <div className="col-start-1 row-start-1 pointer-events-none">
-        <p className="text-2xl font-bold tracking-wider">{heading}</p>
-        <p className="text-stone-300">{children}</p>
+      <div className="col-start-1 row-start-1 pointer-events-none text-stone-300">
+        <p className="text-2xl font-bold tracking-wider text-white">
+          {heading}
+        </p>
+        {children}
       </div>
     </article>
   );
