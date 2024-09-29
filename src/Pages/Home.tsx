@@ -18,6 +18,11 @@ import { getRankProgress } from "../Functions/RankFunctions";
 const Home = () => {
   const { character, setCharacter } = useCharacter();
   const { userData } = useAuth();
+
+  if (!character) {
+    return null;
+  }
+
   const [xp, setXP] = useState(character.stats.xp); // Local state for XP
 
   const handleGiveXP = async (xpToAdd: number) => {

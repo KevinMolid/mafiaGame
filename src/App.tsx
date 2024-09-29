@@ -15,6 +15,7 @@ import Footer from "./components/Footer";
 // Pages
 import Home from "./Pages/Home.tsx";
 import About from "./Pages/About.tsx";
+import Forum from "./Pages/Forum.tsx";
 import Signup from "./Pages/Signup.tsx";
 import Login from "./Pages/Login.tsx";
 import CreateCharacter from "./Pages/CreateCharacter.tsx";
@@ -34,6 +35,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/forum" element={<Forum />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/createcharacter" element={<CreateCharacter />} />

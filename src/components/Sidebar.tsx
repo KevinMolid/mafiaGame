@@ -10,6 +10,10 @@ import { getCurrentRank } from "../Functions/RankFunctions";
 const Sidebar = () => {
   const { character } = useCharacter();
 
+  if (!character) {
+    return null;
+  }
+
   return (
     <div className="bg-neutral-800 p-8 text-sm leading-relaxed">
       <div className="mb-6">
