@@ -39,7 +39,9 @@ const Header = () => {
           <li className="text-stone-400 hover:text-stone-200">
             <Link to="/forum">Forum</Link>
           </li>
-          <li className="text-stone-400 hover:text-stone-200">Leaderboard</li>
+          <li className="text-stone-400 hover:text-stone-200">
+            <Link to="/leaderboard">Leaderboard</Link>
+          </li>
           {userData ? (
             <li className="text-stone-400 hover:text-stone-200">
               <button onClick={logOut}>Log out</button>

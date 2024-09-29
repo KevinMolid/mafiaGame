@@ -16,6 +16,7 @@ import Footer from "./components/Footer";
 import Home from "./Pages/Home.tsx";
 import About from "./Pages/About.tsx";
 import Forum from "./Pages/Forum.tsx";
+import Leaderboard from "./Pages/Leaderboard.tsx";
 import Signup from "./Pages/Signup.tsx";
 import Login from "./Pages/Login.tsx";
 import CreateCharacter from "./Pages/CreateCharacter.tsx";
@@ -36,6 +37,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/forum" element={<Forum />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/createcharacter" element={<CreateCharacter />} />
