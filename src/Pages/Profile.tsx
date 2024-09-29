@@ -33,6 +33,9 @@ const Profile = () => {
 
             <li className="text-stone-400">Family</li>
             <li>Norwegian Gangsters</li>
+
+            <li className="text-stone-400">Status</li>
+            <li className="capitalize">{character.status}</li>
           </ul>
         </div>
       </div>
