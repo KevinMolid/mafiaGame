@@ -1,11 +1,22 @@
+// React
+import { useState } from "react";
+
+// Context
+import { useCharacter } from "../../CharacterContext";
+import { useAuth } from "../../AuthContext";
+
+// Components
 import H1 from "../../components/Typography/H1";
 import Button from "../../components/Button";
 import CrimeBox from "../../components/CrimeBox";
 import InfoBox from "../../components/InfoBox";
 
-import { useState } from "react";
+// Functions
+import { giveXP } from "../../Functions/XpFunctions";
 
 const StreetCrime = () => {
+  const { character } = useCharacter();
+  const { userData } = useAuth();
   const [selectedCrime, setSelectedCrime] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<
@@ -18,8 +29,10 @@ const StreetCrime = () => {
       if (crime) {
         const success = Math.random() < crime.successRate;
         if (success) {
+          giveXP(character, userData.activeCharacter, crime.xpReward);
+
           setMessage(
-            `You successfully committed ${crime.name} and earned some money!`
+            `You successfully committed ${crime.name} and earned ${crime.xpReward} XP!`
           );
           setMessageType("success");
         } else {
