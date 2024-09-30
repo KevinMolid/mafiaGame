@@ -15,6 +15,7 @@ import Footer from "./components/Footer";
 // Pages
 import Home from "./Pages/Home.tsx";
 import Profile from "./Pages/Profile.tsx";
+import EditProfile from "./Pages/EditProfile.tsx";
 import About from "./Pages/About.tsx";
 import Forum from "./Pages/Forum.tsx";
 import Leaderboard from "./Pages/Leaderboard.tsx";
@@ -37,6 +38,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/editprofile" element={<EditProfile />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/forum" element={<Forum />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
