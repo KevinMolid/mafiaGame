@@ -15,11 +15,7 @@ const Profile = () => {
     <section>
       <p className="font-bold mb-4">{character.username}'s profile</p>
       <div className="grid grid-cols-[max-content_max-content] gap-8 pb-4 border-b border-neutral-700">
-        <img
-          className="w-52 h-52 object-cover"
-          src="https://i.imgur.com/lEwhDHl.png"
-          alt=""
-        />
+        <img className="w-52 h-52 object-cover" src={character.img} alt="" />
         <div>
           <ul className="grid grid-cols-[min-content_max-content] gap-x-4">
             <li className="text-stone-400">Username</li>
