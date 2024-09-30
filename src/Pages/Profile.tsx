@@ -35,6 +35,8 @@ const Profile = () => {
           </ul>
         </div>
       </div>
+
+      <div className="py-6">{character.profileText}</div>
     </section>
   );
 };
