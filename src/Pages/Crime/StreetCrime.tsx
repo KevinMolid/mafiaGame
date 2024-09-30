@@ -1,5 +1,8 @@
 // React
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+// Firebase
+import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 
 // Context
 import { useCharacter } from "../../CharacterContext";
@@ -23,8 +26,17 @@ const StreetCrime = () => {
     "success" | "failure" | "important" | "warning" | "info"
   >("success");
 
+  const db = getFirestore();
+  const [cooldownTime, setCooldownTime] = useState(0);
+
   // Function for comitting a crime
   const handleClick = async () => {
+    if (cooldownTime > 0) {
+      setMessage("You must wait before committing another crime.");
+      setMessageType("info");
+      return;
+    }
+
     if (selectedCrime) {
       const crime = crimes.find((c) => c.name === selectedCrime);
       if (crime) {
@@ -40,12 +52,67 @@ const StreetCrime = () => {
           setMessage,
           setMessageType,
         });
+
+        // Set timestaamp in db
+        const timestamp = new Date().getTime(); // Current time in milliseconds
+        await updateDoc(doc(db, "Characters", userData.activeCharacter), {
+          lastCrimeTimestamp: timestamp,
+        });
+
+        setCooldownTime(120);
       }
     } else {
       setMessage("No crime selected! Please select a crime first.");
       setMessageType("info");
     }
   };
+
+  useEffect(() => {
+    const fetchCooldown = async () => {
+      const characterRef = doc(db, "Characters", userData.activeCharacter);
+      const characterSnap = await getDoc(characterRef);
+
+      if (characterSnap.exists()) {
+        const characterData = characterSnap.data();
+        const lastCrimeTimestamp = characterData.lastCrimeTimestamp;
+
+        if (lastCrimeTimestamp) {
+          const currentTime = new Date().getTime();
+          const elapsedTime = Math.floor(
+            (currentTime - lastCrimeTimestamp) / 1000
+          ); // in seconds
+
+          // Calculate remaining cooldown (120 seconds cooldown)
+          const remainingCooldown = 120 - elapsedTime;
+
+          if (remainingCooldown > 0) {
+            setCooldownTime(remainingCooldown);
+          } else {
+            setCooldownTime(0); // No cooldown
+          }
+        }
+      }
+    };
+
+    fetchCooldown();
+  }, [db, userData.activeCharacter]);
+
+  // Effect to handle the cooldown timer
+  useEffect(() => {
+    if (cooldownTime > 0) {
+      const timer = setInterval(() => {
+        setCooldownTime((prevTime) => prevTime - 1);
+      }, 1000);
+
+      // Cleanup the interval when cooldown reaches 0
+      if (cooldownTime <= 0) {
+        clearInterval(timer);
+      }
+
+      // Cleanup the interval on unmount or when cooldownTime reaches 0
+      return () => clearInterval(timer);
+    }
+  }, [cooldownTime]);
 
   // Crime options array
   const crimes = [
@@ -90,7 +157,16 @@ const StreetCrime = () => {
   return (
     <section>
       <H1>Street Crimes</H1>
+
+      {cooldownTime > 0 && (
+        <p className="mb-4 text-stone-400">
+          You can commit another crime in{" "}
+          <span className="font-bold text-white">{cooldownTime}</span> seconds.
+        </p>
+      )}
+
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
       <p className="mb-4 text-stone-400 font-medium">Select Crime:</p>
       <div className="grid grid-cols-[min-content_auto] gap-2 mb-4">
         {crimes.map((crime) => (
