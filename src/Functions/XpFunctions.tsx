@@ -28,3 +28,50 @@ export const giveXP = async (
     console.error("Error updating XP:", error);
   }
 };
+
+interface GainXPParams {
+  character: any;
+  activeCharacter: string;
+  xpReward: number;
+  successMessage: string;
+  failureMessage: string;
+  successRate: number;
+  setCharacter: (value: any) => void;
+  setMessage: (message: string) => void;
+  setMessageType: (type: "success" | "failure" | "info" | "warning") => void;
+}
+
+export const attemptXPReward = async ({
+  character,
+  activeCharacter,
+  xpReward,
+  successMessage,
+  failureMessage,
+  successRate,
+  setCharacter,
+  setMessage,
+  setMessageType,
+}: GainXPParams) => {
+  const success = Math.random() < successRate;
+  if (success) {
+    // Call giveXP and update the character XP
+    const updatedXP = await giveXP(character, activeCharacter, xpReward);
+
+    // Update the character with the new XP
+    setCharacter((prevCharacter: any) => ({
+      ...prevCharacter,
+      stats: {
+        ...prevCharacter.stats,
+        xp: updatedXP,
+      },
+    }));
+
+    // Set success message
+    setMessage(successMessage);
+    setMessageType("success");
+  } else {
+    // Set failure message
+    setMessage(failureMessage);
+    setMessageType("failure");
+  }
+};

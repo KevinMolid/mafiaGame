@@ -12,7 +12,7 @@ import CrimeBox from "../../components/CrimeBox";
 import InfoBox from "../../components/InfoBox";
 
 // Functions
-import { giveXP } from "../../Functions/XpFunctions";
+import { attemptXPReward } from "../../Functions/XpFunctions";
 
 const StreetCrime = () => {
   const { character, setCharacter } = useCharacter();
@@ -24,42 +24,25 @@ const StreetCrime = () => {
   >("success");
 
   // Function for comitting a crime
-  const handleClick = async () => {
+  const handleClick = () => {
     if (selectedCrime) {
       const crime = crimes.find((c) => c.name === selectedCrime);
       if (crime) {
-        const success = Math.random() < crime.successRate;
-        if (success) {
-          // Call giveXP and update the character XP
-          const updatedXP = await giveXP(
-            character,
-            userData.activeCharacter,
-            crime.xpReward
-          );
-
-          // Update the character with the new XP
-          setCharacter((prevCharacter: any) => ({
-            ...prevCharacter,
-            stats: {
-              ...prevCharacter.stats,
-              xp: updatedXP,
-            },
-          }));
-
-          setMessage(
-            `You successfully committed ${crime.name} and earned ${crime.xpReward} XP!`
-          );
-          setMessageType("success");
-        } else {
-          setMessage(
-            `You failed to commit ${crime.name}. Better luck next time!`
-          );
-          setMessageType("failure");
-        }
+        attemptXPReward({
+          character,
+          activeCharacter: userData.activeCharacter,
+          xpReward: crime.xpReward,
+          successMessage: `You successfully committed ${crime.name} and earned ${crime.xpReward} XP!`,
+          failureMessage: `You failed to commit ${crime.name}. Better luck next time!`,
+          successRate: crime.successRate,
+          setCharacter,
+          setMessage,
+          setMessageType,
+        });
       }
     } else {
       setMessage("No crime selected! Please select a crime first.");
-      setMessageType("warning");
+      setMessageType("info");
     }
   };
 
