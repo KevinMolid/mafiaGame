@@ -26,11 +26,10 @@ const Sidebar = () => {
         <div className="relative">
           <img
             className="border border-neutral-500 size-36 object-cover m-auto mb-2 hover:cursor-pointer"
-            src="src\assets\default.jpg"
+            src={character.img}
             alt="Profile picture"
             onClick={toggleNav}
           />
-
           {showNav && (
             <nav className="bg-sky-800 border border-neutral-500 absolute bottom-0 right-[-130px]">
               <ul>
