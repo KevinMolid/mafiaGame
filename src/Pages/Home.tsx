@@ -10,14 +10,19 @@ import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import Equipment from "../components/Equipment";
 import Button from "../components/Button";
+import InfoBox from "../components/InfoBox";
 
 // Functions
-import { giveXP } from "../Functions/XpFunctions";
+import { attemptReward } from "../Functions/RewardFunctions";
 import { getRankProgress } from "../Functions/RankFunctions";
 
 const Home = () => {
   const { character, setCharacter } = useCharacter();
   const { userData } = useAuth();
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<
+    "success" | "failure" | "important" | "warning" | "info"
+  >("success");
 
   // Local state for XP, initialized with the character's current XP
   const [xp, setXP] = useState<number>(character?.stats.xp || 0);
@@ -33,22 +38,23 @@ const Home = () => {
     return null;
   }
 
-  const handleGiveXP = async (xpToAdd: number) => {
-    // Call the giveXP function
-    const updatedXP = await giveXP(
-      character,
-      userData.activeCharacter,
-      xpToAdd
-    );
+  const handleAction = async () => {
+    const xpReward = 50; // Define the XP reward for this action
+    const moneyReward = 50; // Define the money reward for this action
+    const successRate = 1.0; // Define the success rate for the action (80%)
 
-    // After successfully updating in Firebase, update the local state
-    if (updatedXP) {
-      setXP(updatedXP); // Update XP in the state
-      setCharacter((prevCharacter: any) => ({
-        ...prevCharacter,
-        stats: { ...prevCharacter.stats, xp: updatedXP },
-      }));
-    }
+    await attemptReward({
+      character,
+      activeCharacter: userData.activeCharacter,
+      xpReward, // Pass the XP reward
+      moneyReward, // Pass the money reward
+      successMessage: `Action successful!`, // Define success message
+      failureMessage: `Action failed. Better luck next time!`, // Define failure message
+      successRate, // Pass the success rate
+      setCharacter, // Update character state
+      setMessage, // Update message state
+      setMessageType, // Update message type
+    });
   };
 
   const maxHealth = 100;
@@ -65,7 +71,9 @@ const Home = () => {
     <div className="text-stone-400">
       {character ? <H1>Welcome {character.username}!</H1> : <H1>Welcome!</H1>}
 
-      <Button onClick={() => handleGiveXP(50)}>Get XP</Button>
+      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
+      <Button onClick={handleAction}>Get XP</Button>
 
       {character ? (
         <>

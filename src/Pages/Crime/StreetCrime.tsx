@@ -12,7 +12,7 @@ import CrimeBox from "../../components/CrimeBox";
 import InfoBox from "../../components/InfoBox";
 
 // Functions
-import { attemptXPReward } from "../../Functions/XpFunctions";
+import { attemptReward } from "../../Functions/RewardFunctions";
 
 const StreetCrime = () => {
   const { character, setCharacter } = useCharacter();
@@ -24,15 +24,16 @@ const StreetCrime = () => {
   >("success");
 
   // Function for comitting a crime
-  const handleClick = () => {
+  const handleClick = async () => {
     if (selectedCrime) {
       const crime = crimes.find((c) => c.name === selectedCrime);
       if (crime) {
-        attemptXPReward({
+        await attemptReward({
           character,
           activeCharacter: userData.activeCharacter,
-          xpReward: crime.xpReward,
-          successMessage: `You successfully committed ${crime.name} and earned ${crime.xpReward} XP!`,
+          xpReward: crime.xpReward, // XP reward for the crime
+          moneyReward: crime.moneyReward || 0, // Optional money reward for the crime
+          successMessage: `You successfully committed ${crime.name}`,
           failureMessage: `You failed to commit ${crime.name}. Better luck next time!`,
           successRate: crime.successRate,
           setCharacter,
@@ -55,6 +56,7 @@ const StreetCrime = () => {
       img: "src\\assets\\PickpocketBw.png",
       successRate: 0.8, // 80% success rate
       xpReward: 4, // XP for success
+      moneyReward: 50, // Money reward for success
     },
     {
       id: "vandalism",
@@ -63,6 +65,7 @@ const StreetCrime = () => {
       img: "src\\assets\\VandalismBw.png",
       successRate: 0.6, // 60% success rate
       xpReward: 8, // XP for success
+      moneyReward: 200, // Money reward for success
     },
     {
       id: "protectionRacket",
@@ -71,6 +74,7 @@ const StreetCrime = () => {
       img: "src\\assets\\ProtectionRacketBw.png",
       successRate: 0.4, // 40% success rate
       xpReward: 12, // XP for success
+      moneyReward: 800, // Money reward for success
     },
     {
       id: "streetRacing",
@@ -79,6 +83,7 @@ const StreetCrime = () => {
       img: "src\\assets\\StreetRacingBw.png",
       successRate: 0.2, // 20% success rate
       xpReward: 16, // XP for success
+      moneyReward: 3200, // Money reward for success
     },
   ];
 
