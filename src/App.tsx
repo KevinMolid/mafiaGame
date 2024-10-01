@@ -25,6 +25,8 @@ import CreateCharacter from "./Pages/CreateCharacter.tsx";
 import Influence from "./Pages/Reputation/Influence";
 import StreetCrime from "./Pages/Crime/StreetCrime.tsx";
 
+import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
+
 function App() {
   return (
     <AuthProvider>
@@ -36,17 +38,62 @@ function App() {
             <Sidebar />
             <main className="p-12">
               <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/editprofile" element={<EditProfile />} />
+                {/* Public Routes */}
                 <Route path="/about" element={<About />} />
-                <Route path="/forum" element={<Forum />} />
+                <Route path="/createcharacter" element={<CreateCharacter />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/createcharacter" element={<CreateCharacter />} />
-                <Route path="/influence" element={<Influence />} />
-                <Route path="/streetcrime" element={<StreetCrime />} />
+
+                {/* Protected Routes */}
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <Home />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/editprofile"
+                  element={
+                    <ProtectedRoute>
+                      <EditProfile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/forum"
+                  element={
+                    <ProtectedRoute>
+                      <Forum />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/influence"
+                  element={
+                    <ProtectedRoute>
+                      <Influence />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/streetcrime"
+                  element={
+                    <ProtectedRoute>
+                      <StreetCrime />
+                    </ProtectedRoute>
+                  }
+                />
               </Routes>
             </main>
           </Layout>

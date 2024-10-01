@@ -13,7 +13,15 @@ const Sidebar = () => {
   const [showNav, setShowNav] = useState(false);
 
   if (!character) {
-    return null;
+    return (
+      <div className="bg-neutral-800 p-8 text-sm leading-relaxed">
+        <ul className="text-stone-200 mb-4">
+          <li>
+            <Link to="/influence">Create Character</Link>
+          </li>
+        </ul>
+      </div>
+    );
   }
 
   const toggleNav = () => {
