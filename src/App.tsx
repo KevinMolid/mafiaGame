@@ -55,7 +55,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/profile"
+                  path="/profile/:characterID"
                   element={
                     <ProtectedRoute>
                       <Profile />

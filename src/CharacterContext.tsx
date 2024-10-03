@@ -37,7 +37,7 @@ export const CharacterProvider = ({
           const charDocRef = doc(db, "Characters", userData.activeCharacter);
           const charDocSnap = await getDoc(charDocRef);
           if (charDocSnap.exists()) {
-            setCharacter(charDocSnap.data());
+            setCharacter({ id: charDocSnap.id, ...charDocSnap.data() });
           } else {
             console.error("No character document found!");
             setCharacter(null);

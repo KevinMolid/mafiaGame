@@ -17,7 +17,7 @@ const Sidebar = () => {
       <div className="bg-neutral-800 p-8 text-sm leading-relaxed">
         <ul className="text-stone-200 mb-4">
           <li>
-            <Link to="/influence">Create Character</Link>
+            <Link to="/createcharacter">Create Character</Link>
           </li>
         </ul>
       </div>
@@ -42,7 +42,10 @@ const Sidebar = () => {
             <nav className="bg-sky-800 border border-neutral-500 absolute bottom-0 right-[-130px]">
               <ul>
                 <li className="hover:bg-sky-900 py-2 px-4">
-                  <Link to="/profile" className="flex gap-2 items-center">
+                  <Link
+                    to={`/profile/${character.id}`}
+                    className="flex gap-2 items-center"
+                  >
                     <i className="fa-solid fa-user"></i> Show profile
                   </Link>
                 </li>
@@ -57,7 +60,7 @@ const Sidebar = () => {
         </div>
 
         {character ? (
-          <Link to="/profile">
+          <Link to={`/profile/${character.id}`}>
             <p className="text-center font-medium">{character.username}</p>
           </Link>
         ) : (
