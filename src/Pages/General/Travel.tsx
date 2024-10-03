@@ -5,6 +5,8 @@ import { useState } from "react";
 
 import { useCharacter } from "../../CharacterContext";
 
+import { getFirestore, doc, updateDoc } from "firebase/firestore";
+
 // Define your location coordinates as percentages
 const locations = [
   { name: "Mexico City", coordinates: { top: "51%", left: "22%" } },
@@ -15,9 +17,55 @@ const locations = [
 ];
 
 const Travel = () => {
-  const { character } = useCharacter();
+  const { character, setCharacter } = useCharacter();
   const [targetLocation, setTargetLocation] = useState("");
   const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
+  const db = getFirestore();
+
+  // Render nothing if character is null
+  if (!character) {
+    return null;
+  }
+
+  const handleTravel = async () => {
+    if (!character) {
+      console.error("Character not found");
+      return;
+    }
+
+    try {
+      const charDocRef = doc(db, "Characters", character.id);
+      await updateDoc(charDocRef, { location: targetLocation });
+
+      // Update character location in state
+      setCharacter((prevCharacter) => {
+        if (prevCharacter) {
+          return {
+            ...prevCharacter,
+            location: targetLocation,
+          };
+        } else {
+          // Handle case where prevCharacter is null
+          return {
+            location: targetLocation,
+            id: character.id, // Keep the current character's ID
+            stats: character.stats, // Keep the current stats if needed
+            img: character.img, // Include img if needed
+            username: character.username, // Include username if needed
+            createdAt: character.createdAt, // Include createdAt if needed
+            diedAt: character.diedAt, // Include diedAt if needed
+            lastCrimeTimestamp: character.lastCrimeTimestamp, // Include lastCrimeTimestamp if needed
+            profileText: character.profileText, // Include profileText if needed
+            reputation: character.reputation, // Include reputation if needed
+            status: character.status, // Include status if needed
+            uid: character.uid, // Include uid if needed
+          };
+        }
+      });
+    } catch (error) {
+      console.error("Error updating character location:", error);
+    }
+  };
 
   return (
     <section>
@@ -71,9 +119,9 @@ const Travel = () => {
             }}
           />
         ))}
-        <Button onClick={() => console.log(`Traveling to ${targetLocation}`)}>
-          Travel
-        </Button>
+        {targetLocation && (
+          <Button onClick={handleTravel}>Travel to {targetLocation}</Button>
+        )}
       </div>
     </section>
   );

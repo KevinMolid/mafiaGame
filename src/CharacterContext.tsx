@@ -1,5 +1,6 @@
 // React
 import { createContext, useContext, useState, useEffect } from "react";
+import { Character, Stats, Reputation } from "./Interfaces/CharacterTypes";
 
 // Firebase
 import { doc, getDoc } from "firebase/firestore";
@@ -13,11 +14,22 @@ import { useAuth } from "./AuthContext";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Create a context for character data
-const CharacterContext = createContext<any>(null);
+interface CharacterContextType {
+  character: Character | null;
+  setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
+  loading: boolean;
+}
+
+const CharacterContext = createContext<CharacterContextType | undefined>(
+  undefined
+);
 
 export const useCharacter = () => {
-  return useContext(CharacterContext);
+  const context = useContext(CharacterContext);
+  if (!context) {
+    throw new Error("useCharacter must be used within a CharacterProvider");
+  }
+  return context;
 };
 
 export const CharacterProvider = ({
@@ -26,7 +38,7 @@ export const CharacterProvider = ({
   children: React.ReactNode;
 }) => {
   const { userData } = useAuth();
-  const [character, setCharacter] = useState<any>(null);
+  const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,7 +49,41 @@ export const CharacterProvider = ({
           const charDocRef = doc(db, "Characters", userData.activeCharacter);
           const charDocSnap = await getDoc(charDocRef);
           if (charDocSnap.exists()) {
-            setCharacter({ id: charDocSnap.id, ...charDocSnap.data() });
+            const characterData = charDocSnap.data();
+
+            if (
+              characterData &&
+              characterData.location &&
+              characterData.stats &&
+              characterData.img &&
+              characterData.username
+            ) {
+              const newCharacter: Character = {
+                id: charDocSnap.id,
+                location: characterData.location as string,
+                stats: characterData.stats as Stats,
+                img: characterData.img as string,
+                username: characterData.username as string,
+                createdAt: characterData.createdAt.toDate(), // Assuming Firestore timestamp
+                diedAt: characterData.diedAt
+                  ? characterData.diedAt.toDate()
+                  : null,
+                lastCrimeTimestamp:
+                  characterData.lastCrimeTimestamp &&
+                  characterData.lastCrimeTimestamp.toDate
+                    ? characterData.lastCrimeTimestamp.toDate()
+                    : undefined,
+                profileText: characterData.profileText as string,
+                reputation: characterData.reputation as Reputation,
+                status: characterData.status as string,
+                uid: characterData.uid as string,
+              };
+
+              setCharacter(newCharacter);
+            } else {
+              console.error("Character data is incomplete or missing stats");
+              setCharacter(null);
+            }
           } else {
             console.error("No character document found!");
             setCharacter(null);

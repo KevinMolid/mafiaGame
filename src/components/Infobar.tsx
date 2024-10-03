@@ -9,8 +9,9 @@ import { getRankProgress } from "../Functions/RankFunctions";
 const Infobar = () => {
   const { character } = useCharacter();
 
-  if (!character) {
-    return null; // Return nothing if character is not available
+  // Ensure that characterContext is defined before accessing its values
+  if (!character || !character.stats) {
+    return <div>Loading character info...</div>; // Handle case when character or stats is not yet available
   }
 
   const maxHealth = 100;

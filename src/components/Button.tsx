@@ -1,5 +1,7 @@
+import { ReactNode } from "react";
+
 interface ButtonInterface {
-  children: string;
+  children: ReactNode;
   onClick: () => void;
 }
 
