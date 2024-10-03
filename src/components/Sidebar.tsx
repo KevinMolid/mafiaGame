@@ -13,15 +13,7 @@ const Sidebar = () => {
   const [showNav, setShowNav] = useState(false);
 
   if (!character) {
-    return (
-      <div className="bg-neutral-800 p-8 text-sm leading-relaxed">
-        <ul className="text-stone-200 mb-4">
-          <li>
-            <Link to="/createcharacter">Create Character</Link>
-          </li>
-        </ul>
-      </div>
-    );
+    return null;
   }
 
   const toggleNav = () => {
@@ -29,7 +21,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="bg-neutral-800 p-8 text-sm leading-relaxed">
+    <div className="hidden sm:block bg-neutral-800 p-8 text-sm leading-relaxed">
       <div className="mb-6">
         <div className="relative">
           <img

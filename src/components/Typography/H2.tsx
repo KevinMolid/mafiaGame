@@ -5,7 +5,11 @@ interface H2Interface {
 }
 
 const H2 = ({ children }: H2Interface) => {
-  return <h2 className="text-3xl mb-4 text-white">{children}</h2>;
+  return (
+    <h2 className="text-xl sm:text-2xl md:text-3xl mb-4 text-white">
+      {children}
+    </h2>
+  );
 };
 
 export default H2;

@@ -73,7 +73,8 @@ const Home = () => {
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
-      <Button onClick={handleAction}>Get XP</Button>
+      {/* Button for testing only */}
+      {false && <Button onClick={handleAction}>Get XP</Button>}
 
       {character ? (
         <>

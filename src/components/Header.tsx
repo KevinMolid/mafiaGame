@@ -43,7 +43,7 @@ const Header = () => {
 
       {/* Menu icon for small screens */}
       <div
-        className="flex justify-center items-center rounded-md sm:hidden w-12 h-12 bg-neutral-700"
+        className="flex justify-center items-center rounded-md sm:hidden w-12 h-12 bg-neutral-700 hover:cursor-pointer"
         onClick={toggleMenu}
       >
         <i className="text-3xl fa-solid fa-bars"></i>

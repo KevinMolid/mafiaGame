@@ -28,7 +28,7 @@ const Tooltip = ({ children, label }: TooltipInterface) => {
     >
       {children}
       {active && (
-        <span className="absolute bg-neutral-800 border border-neutral-600 px-2 py-1">
+        <span className="absolute bg-neutral-800 border border-neutral-600 px-2 py-1 z-10">
           {label}
         </span>
       )}

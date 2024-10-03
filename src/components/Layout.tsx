@@ -5,7 +5,7 @@ interface LayoutInterface {
 }
 
 const Layout = ({ children }: LayoutInterface) => {
-  return <main className="grid grid-cols-[220px_auto]">{children}</main>;
+  return <main className="sm:grid sm:grid-cols-[220px_auto]">{children}</main>;
 };
 
 export default Layout;
