@@ -7,6 +7,7 @@ import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 // Context
 import { useCharacter } from "../../CharacterContext";
 import { useAuth } from "../../AuthContext";
+import { useNavigate } from "react-router-dom";
 
 // Components
 import H1 from "../../components/Typography/H1";
@@ -20,6 +21,8 @@ import { attemptReward } from "../../Functions/RewardFunctions";
 const StreetCrime = () => {
   const { character, setCharacter } = useCharacter();
   const { userData } = useAuth();
+  const navigate = useNavigate();
+
   const [selectedCrime, setSelectedCrime] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<
@@ -28,6 +31,13 @@ const StreetCrime = () => {
 
   const db = getFirestore();
   const [cooldownTime, setCooldownTime] = useState(0);
+
+  useEffect(() => {
+    if (!userData) {
+      navigate("/login");
+      return;
+    }
+  }, [userData, navigate]);
 
   // Function for comitting a crime
   const handleClick = async () => {
@@ -69,6 +79,8 @@ const StreetCrime = () => {
 
   useEffect(() => {
     const fetchCooldown = async () => {
+      if (!userData?.activeCharacter) return;
+
       const characterRef = doc(db, "Characters", userData.activeCharacter);
       const characterSnap = await getDoc(characterRef);
 
@@ -95,7 +107,7 @@ const StreetCrime = () => {
     };
 
     fetchCooldown();
-  }, [db, userData.activeCharacter]);
+  }, [db, userData?.activeCharacter]);
 
   // Effect to handle the cooldown timer
   useEffect(() => {
