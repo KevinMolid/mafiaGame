@@ -119,10 +119,10 @@ const Travel = () => {
             }}
           />
         ))}
-        {targetLocation && (
-          <Button onClick={handleTravel}>Travel to {targetLocation}</Button>
-        )}
       </div>
+      {targetLocation && (
+        <Button onClick={handleTravel}>Travel to {targetLocation}</Button>
+      )}
     </section>
   );
 };
