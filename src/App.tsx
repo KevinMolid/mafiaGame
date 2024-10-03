@@ -24,6 +24,7 @@ import Login from "./Pages/Login.tsx";
 import CreateCharacter from "./Pages/CreateCharacter.tsx";
 import Influence from "./Pages/Reputation/Influence";
 import StreetCrime from "./Pages/Crime/StreetCrime.tsx";
+import Travel from "./Pages/General/Travel.tsx";
 
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
 
@@ -91,6 +92,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <StreetCrime />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/travel"
+                  element={
+                    <ProtectedRoute>
+                      <Travel />
                     </ProtectedRoute>
                   }
                 />

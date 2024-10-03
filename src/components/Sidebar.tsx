@@ -94,12 +94,6 @@ const Sidebar = () => {
             <i className="fa-solid fa-money-bill"></i> Street crimes
           </h2>
         </Link>
-        <ul className="text-stone-200 mb-4">
-          <li>Pickpocketing</li>
-          <li>Vandalism</li>
-          <li>Protection Racket</li>
-          <li>Street Racing</li>
-        </ul>
         <h2 className="uppercase text-xs pb-1 text-stone-400">
           <i className="fa-solid fa-briefcase"></i> Organized Crime
         </h2>
@@ -127,6 +121,11 @@ const Sidebar = () => {
           <li>Money Laundering</li>
           <li>Mafia Wars</li>
         </ul>
+        <Link to="/travel">
+          <h2 className="uppercase text-xs pb-1 text-stone-400">
+            <i className="fa-solid fa-plane"></i> Travel
+          </h2>
+        </Link>
       </nav>
     </div>
   );
