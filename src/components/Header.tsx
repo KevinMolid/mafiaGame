@@ -1,4 +1,4 @@
-import logo from "../assets/LogoV1.png";
+import logo from "../assets/LogoV2.png";
 
 // React
 import { Link } from "react-router-dom";
