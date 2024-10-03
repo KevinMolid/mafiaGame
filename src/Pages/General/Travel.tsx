@@ -1,5 +1,6 @@
 import H1 from "../../components/Typography/H1";
 import Button from "../../components/Button";
+import InfoBox from "../../components/InfoBox";
 
 import { useState } from "react";
 
@@ -20,6 +21,7 @@ const Travel = () => {
   const { character, setCharacter } = useCharacter();
   const [targetLocation, setTargetLocation] = useState("");
   const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
   const db = getFirestore();
 
   // Render nothing if character is null
@@ -40,6 +42,7 @@ const Travel = () => {
       // Update character location in state
       setCharacter((prevCharacter) => {
         if (prevCharacter) {
+          setMessage(`You travelled to ${targetLocation}`);
           return {
             ...prevCharacter,
             location: targetLocation,
@@ -70,11 +73,12 @@ const Travel = () => {
   return (
     <section>
       <H1>Travel</H1>
+      {message && <InfoBox type="success">{message}</InfoBox>}
       <p className="text-stone-400">
         Current location:{" "}
         <strong className="text-white">{character.location}</strong>{" "}
       </p>
-      {targetLocation && (
+      {targetLocation && targetLocation !== character.location && (
         <p className="text-stone-400">
           Traveling from{" "}
           <strong className="text-white">{character.location}</strong> to{" "}
