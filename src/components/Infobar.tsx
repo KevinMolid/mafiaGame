@@ -11,7 +11,7 @@ const Infobar = () => {
 
   // Ensure that characterContext is defined before accessing its values
   if (!character || !character.stats) {
-    return <div>Loading character info...</div>; // Handle case when character or stats is not yet available
+    return null;
   }
 
   const maxHealth = 100;
