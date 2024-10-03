@@ -32,13 +32,22 @@ export const CharacterProvider = ({
   useEffect(() => {
     const fetchCharacterData = async () => {
       if (userData && userData.activeCharacter) {
-        const charDocRef = doc(db, "Characters", userData.activeCharacter);
-        const charDocSnap = await getDoc(charDocRef);
-        if (charDocSnap.exists()) {
-          setCharacter(charDocSnap.data());
-        } else {
-          console.error("No character document found!");
+        setLoading(true);
+        try {
+          const charDocRef = doc(db, "Characters", userData.activeCharacter);
+          const charDocSnap = await getDoc(charDocRef);
+          if (charDocSnap.exists()) {
+            setCharacter(charDocSnap.data());
+          } else {
+            console.error("No character document found!");
+            setCharacter(null);
+          }
+        } catch (error) {
+          console.error("Error fetching character data:", error);
+          setCharacter(null);
         }
+      } else {
+        setCharacter(null);
       }
       setLoading(false);
     };
@@ -51,7 +60,7 @@ export const CharacterProvider = ({
   }
 
   return (
-    <CharacterContext.Provider value={{ character, setCharacter }}>
+    <CharacterContext.Provider value={{ character, setCharacter, loading }}>
       {children}
     </CharacterContext.Provider>
   );

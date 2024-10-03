@@ -2,10 +2,13 @@ import { Navigate } from "react-router-dom";
 import { useCharacter } from "../CharacterContext";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { activeCharacter } = useCharacter();
+  const { character, loading } = useCharacter();
 
-  if (!activeCharacter) {
-    // Redirect to CreateCharacter page if no active character
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!character) {
     return <Navigate to="/createcharacter" />;
   }
 
