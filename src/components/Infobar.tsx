@@ -25,8 +25,8 @@ const Infobar = () => {
   const heatPercentage = character ? (character.stats.heat / maxHeat) * 100 : 0;
 
   return (
-    <section className="bg-neutral-700 px-4 sm:px-8 py-2 flex flex-wrap gap-x-6 gap-y-2 justify-center text-stone-400 text-sm sm:text-base">
-      <div className="flex items-center gap-2">
+    <section className="bg-neutral-700 px-4 sm:px-8 py-2 flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 justify-center text-stone-400 text-sm sm:text-base">
+      <div className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-heart"></i>
         <Tooltip label="Health bar">
           <div className="bg-neutral-800 h-1 w-20 sm:w-36">
@@ -38,7 +38,7 @@ const Infobar = () => {
         </Tooltip>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <p className="text-sm font-bold">XP</p>
         <Tooltip label={`${character.stats.xp - minXP} / ${maxXP - minXP}`}>
           <div className="bg-neutral-800 h-1 w-20 sm:w-36">
@@ -50,7 +50,7 @@ const Infobar = () => {
         </Tooltip>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-fire-flame-curved"></i>{" "}
         <Tooltip label="Heat">
           <div className="bg-neutral-800 h-1 w-20 sm:w-36">
@@ -62,28 +62,28 @@ const Infobar = () => {
         </Tooltip>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-user-group"></i>{" "}
         <Tooltip label="Family">
-          <p>Norwegian Gangsters</p>
+          <p>Imperium</p>
         </Tooltip>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-location-dot"></i>
         <Tooltip label="Location">
           <p>{character.location}</p>
         </Tooltip>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-dollar-sign"></i>
         <Tooltip label="Money">
           <p>{character.stats.money.toLocaleString()}</p>
         </Tooltip>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-shield-halved"></i>
         <Tooltip label="Protection">
           <p>{character.stats.protection}%</p>
