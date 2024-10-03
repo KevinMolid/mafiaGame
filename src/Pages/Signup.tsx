@@ -1,6 +1,9 @@
 // React
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../AuthContext";
 
 // Firebaase
 import { initializeApp } from "firebase/app";
@@ -19,10 +22,19 @@ const db = getFirestore(app);
 
 const Signup = () => {
   const auth = getAuth();
+  const { userData } = useAuth();
+  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (userData) {
+      navigate("/");
+      return;
+    }
+  }, [userData, navigate]);
 
   /* Handle input fields */
   function handleEmailChange(event: any) {
