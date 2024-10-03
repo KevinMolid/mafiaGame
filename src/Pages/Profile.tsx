@@ -68,7 +68,7 @@ const Profile = () => {
       <div className="grid grid-cols-[max-content_max-content] gap-8 pb-4 border-b border-neutral-700">
         <img
           className="w-52 h-52 object-cover"
-          src={characterData.img}
+          src={characterData.img || "/default.jpg"}
           alt=""
         />
         <div>

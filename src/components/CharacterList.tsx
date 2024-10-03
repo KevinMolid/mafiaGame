@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 
@@ -47,8 +48,10 @@ const CharacterList = () => {
         <ul>
           {characters.map((character) => (
             <li key={character.id}>
-              <strong>{character.username}</strong> -{" "}
-              {getCurrentRank(character.xp)}
+              <Link to={`/profile/${character.id}`}>
+                <strong>{character.username}</strong>
+              </Link>{" "}
+              - {getCurrentRank(character.xp)}
             </li>
           ))}
         </ul>

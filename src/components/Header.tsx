@@ -1,3 +1,5 @@
+import logo from "../assets/LogoV1.png";
+
 // React
 import { Link } from "react-router-dom";
 
@@ -27,7 +29,7 @@ const Header = () => {
       <Link to="/">
         <img
           className="h-14"
-          src="src\assets\LogoV1.png"
+          src={logo}
           alt="MafiaReign Logo: Fight for Dominance"
         />
       </Link>
