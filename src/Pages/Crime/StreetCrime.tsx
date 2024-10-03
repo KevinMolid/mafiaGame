@@ -132,7 +132,7 @@ const StreetCrime = () => {
       id: "pickpocket",
       name: "Pickpocket",
       description: "Steal from a stranger",
-      img: "src\\assets\\PickpocketBw.png",
+      img: "PickpocketBw.png",
       successRate: 0.8, // 80% success rate
       xpReward: 4, // XP for success
       moneyReward: 50, // Money reward for success
@@ -141,7 +141,7 @@ const StreetCrime = () => {
       id: "vandalism",
       name: "Vandalism",
       description: "Ruin something for money",
-      img: "src\\assets\\VandalismBw.png",
+      img: "VandalismBw.png",
       successRate: 0.6, // 60% success rate
       xpReward: 8, // XP for success
       moneyReward: 200, // Money reward for success
@@ -150,7 +150,7 @@ const StreetCrime = () => {
       id: "protectionRacket",
       name: "Protection Racket",
       description: "Offer protection to a venue",
-      img: "src\\assets\\ProtectionRacketBw.png",
+      img: "ProtectionRacketBw.png",
       successRate: 0.4, // 40% success rate
       xpReward: 12, // XP for success
       moneyReward: 800, // Money reward for success
@@ -159,7 +159,7 @@ const StreetCrime = () => {
       id: "streetRacing",
       name: "Street Racing",
       description: "Compete in a street race",
-      img: "src\\assets\\StreetRacingBw.png",
+      img: "StreetRacingBw.png",
       successRate: 0.2, // 20% success rate
       xpReward: 16, // XP for success
       moneyReward: 3200, // Money reward for success
