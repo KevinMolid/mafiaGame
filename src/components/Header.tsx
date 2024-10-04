@@ -49,45 +49,27 @@ const Header = () => {
         <i className="text-3xl fa-solid fa-location-crosshairs"></i>
       </div>
 
-      {/* Small screen dropdown menu */}
+      {/* Small screen Action dropdown menu */}
       {actionsOpen && (
         <nav className="absolute top-16 left-0 bg-neutral-950 p-4 sm:hidden z-10">
           <p>Actions</p>
           <hr className="border-neutral-500 mb-2" />
           <ul className="flex flex-col gap-2 text-stone-400">
             <li className="hover:text-stone-200">
-              <Link to="/about" onClick={() => setMenuOpen(false)}>
-                About
+              <Link to="/influence" onClick={() => setMenuOpen(false)}>
+                Influence
               </Link>
             </li>
             <li className="hover:text-stone-200">
-              <Link to="/forum" onClick={() => setMenuOpen(false)}>
-                Forum
+              <Link to="/streetcrime" onClick={() => setMenuOpen(false)}>
+                Street Crimes
               </Link>
             </li>
             <li className="hover:text-stone-200">
-              <Link to="/leaderboard" onClick={() => setMenuOpen(false)}>
-                Leaderboard
+              <Link to="/travel" onClick={() => setMenuOpen(false)}>
+                Travel
               </Link>
             </li>
-            {userData ? (
-              <li className="hover:text-stone-200">
-                <button
-                  onClick={() => {
-                    logOut();
-                    setMenuOpen(false);
-                  }}
-                >
-                  Log out
-                </button>
-              </li>
-            ) : (
-              <li className="hover:text-stone-200">
-                <Link to="/signup" onClick={() => setMenuOpen(false)}>
-                  Log in / Sign up
-                </Link>
-              </li>
-            )}
           </ul>
         </nav>
       )}
