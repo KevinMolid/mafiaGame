@@ -39,7 +39,7 @@ function App() {
               <Infobar />
               <Layout>
                 <Sidebar />
-                <main className="p-8 sm:p-12">
+                <main className="p-4 sm:p-12 text-stone-400">
                   <Routes>
                     {/* Public Routes */}
                     <Route path="/about" element={<About />} />
