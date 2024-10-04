@@ -87,7 +87,7 @@ const Travel = () => {
       )}
       <div className="relative my-4">
         <img
-          src="WorldMap.png"
+          src="WorldMap2.png"
           alt="World Map"
           style={{ width: "100%", height: "auto" }}
         />
