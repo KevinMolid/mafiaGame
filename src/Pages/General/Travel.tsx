@@ -74,10 +74,12 @@ const Travel = () => {
     <section>
       <H1>Travel</H1>
       {message && <InfoBox type="success">{message}</InfoBox>}
-      <p className="text-stone-400">
-        Current location:{" "}
-        <strong className="text-white">{character.location}</strong>{" "}
-      </p>
+      {!targetLocation && (
+        <p className="text-stone-400">
+          Current location:{" "}
+          <strong className="text-white">{character.location}</strong>{" "}
+        </p>
+      )}
       {targetLocation && targetLocation !== character.location && (
         <p className="text-stone-400">
           Traveling from{" "}
@@ -87,7 +89,7 @@ const Travel = () => {
       )}
       <div className="relative my-4">
         <img
-          src="WorldMap2.png"
+          src="WorldMap3.png"
           alt="World Map"
           style={{ width: "100%", height: "auto" }}
         />
