@@ -85,7 +85,7 @@ const Travel = () => {
           <strong className="text-white">{targetLocation}</strong>
         </p>
       )}
-      <div className="relative">
+      <div className="relative my-4">
         <img
           src="WorldMap.png"
           alt="World Map"
