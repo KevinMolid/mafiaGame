@@ -79,7 +79,7 @@ const Home = () => {
       {character ? (
         <>
           <H2>Stats</H2>
-          <div className="flex gap-4 mb-6">
+          <div className="flex flex-col lg:flex-row flex-wrap gap-4 mb-6">
             <div className="flex flex-col gap-1">
               <p>
                 Health: {character.stats.hp} / {healthPercentage}

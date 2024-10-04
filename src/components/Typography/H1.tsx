@@ -6,7 +6,7 @@ interface H1Interface {
 
 const H1 = ({ children }: H1Interface) => {
   return (
-    <h1 className="text-2xl sm:text-3xl md:text-4xl mb-6 text-white">
+    <h1 className="text-2xl sm:text-3xl md:text-4xl mb-2 sm:mb-4 md:mb-6 text-white">
       {children}
     </h1>
   );

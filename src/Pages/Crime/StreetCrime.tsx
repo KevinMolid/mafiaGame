@@ -180,7 +180,7 @@ const StreetCrime = () => {
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
       <p className="mb-4 text-stone-400 font-medium">Select Crime:</p>
-      <div className="grid grid-cols-[min-content_auto] gap-2 mb-4">
+      <div className="flex flex-wrap lg:grid lg:grid-cols-[min-content_1fr] gap-2 mb-4">
         {crimes.map((crime) => (
           <CrimeBox
             heading={crime.name}

@@ -65,7 +65,7 @@ const Profile = () => {
   return (
     <section>
       <p className="font-bold mb-4">{characterData.username}'s profile</p>
-      <div className="grid grid-cols-[max-content_max-content] gap-8 pb-4 border-b border-neutral-700">
+      <div className="flex flex-col items-center sm:grid sm:grid-cols-[max-content_max-content] gap-4 sm:gap-8 pb-4 border-b border-neutral-700">
         <img
           className="w-52 h-52 object-cover"
           src={characterData.img || "/default.jpg"}

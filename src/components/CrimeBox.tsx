@@ -16,7 +16,7 @@ const CrimeBox = ({
   isSelected,
 }: CrimeBoxInterface) => {
   return (
-    <article className="grid grid-cols-1 grid-rows-1 w-72 h-40 bg-neutral-950 items-center text-center rounded-lg">
+    <article className="grid grid-cols-1 grid-rows-1 w-full lg:w-72 h-32 sm:h-40 bg-neutral-950 items-center text-center rounded-lg">
       <img
         className="w-full h-full object-cover col-start-1 row-start-1 rounded-lg"
         src={img}
