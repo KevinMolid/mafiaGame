@@ -2,7 +2,7 @@ import logo from "../assets/LogoV2.png";
 
 // React
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 // Firebase
 import { getAuth, signOut } from "firebase/auth";
@@ -15,6 +15,9 @@ const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const auth = getAuth();
+
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const actionsRef = useRef<HTMLDivElement | null>(null);
 
   // Sign out
   function logOut() {
@@ -39,6 +42,31 @@ const Header = () => {
     setMenuOpen(false);
   };
 
+  // Close menus if clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        menuOpen
+      ) {
+        setMenuOpen(false); // Close menu if clicking outside
+      }
+      if (
+        actionsRef.current &&
+        !actionsRef.current.contains(event.target as Node) &&
+        actionsOpen
+      ) {
+        setActionsOpen(false); // Close actions menu if clicking outside
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuOpen, actionsOpen]); // Listen only when menus are open
+
   return (
     <header className="bg-neutral-950 px-2 sm:px-8 py-2 sm:py-4 flex justify-between items-center">
       {/* Menu icon for small screens */}
@@ -51,22 +79,25 @@ const Header = () => {
 
       {/* Small screen Action dropdown menu */}
       {actionsOpen && (
-        <nav className="absolute top-16 left-0 bg-neutral-950 p-4 sm:hidden z-10">
+        <nav
+          ref={actionsRef}
+          className="absolute top-16 left-0 bg-neutral-950 p-4 sm:hidden z-10"
+        >
           <p>Actions</p>
           <hr className="border-neutral-500 mb-2" />
           <ul className="flex flex-col gap-2 text-stone-400">
             <li className="hover:text-stone-200">
-              <Link to="/influence" onClick={() => setMenuOpen(false)}>
+              <Link to="/influence" onClick={() => setActionsOpen(false)}>
                 Influence
               </Link>
             </li>
             <li className="hover:text-stone-200">
-              <Link to="/streetcrime" onClick={() => setMenuOpen(false)}>
+              <Link to="/streetcrime" onClick={() => setActionsOpen(false)}>
                 Street Crimes
               </Link>
             </li>
             <li className="hover:text-stone-200">
-              <Link to="/travel" onClick={() => setMenuOpen(false)}>
+              <Link to="/travel" onClick={() => setActionsOpen(false)}>
                 Travel
               </Link>
             </li>
@@ -93,7 +124,10 @@ const Header = () => {
 
       {/* Small screen dropdown menu */}
       {menuOpen && (
-        <nav className="absolute top-16 right-0 bg-neutral-950 p-4 sm:hidden z-10">
+        <nav
+          ref={menuRef}
+          className="absolute top-16 right-0 bg-neutral-950 p-4 sm:hidden z-10"
+        >
           <p>Menu</p>
           <hr className="border-neutral-500 mb-2" />
           <ul className="flex flex-col gap-2 text-stone-400">
