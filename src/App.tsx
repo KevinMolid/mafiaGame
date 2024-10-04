@@ -33,80 +33,87 @@ function App() {
     <AuthProvider>
       <CharacterProvider>
         <Router>
-          <Header />
-          <Infobar />
-          <Layout>
-            <Sidebar />
-            <main className="p-8 sm:p-12">
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/about" element={<About />} />
-                <Route path="/createcharacter" element={<CreateCharacter />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/login" element={<Login />} />
+          <div id="page-container" className="relative min-h-screen">
+            <div id="content-wrap" className="pb-16">
+              <Header />
+              <Infobar />
+              <Layout>
+                <Sidebar />
+                <main className="p-8 sm:p-12">
+                  <Routes>
+                    {/* Public Routes */}
+                    <Route path="/about" element={<About />} />
+                    <Route
+                      path="/createcharacter"
+                      element={<CreateCharacter />}
+                    />
+                    <Route path="/leaderboard" element={<Leaderboard />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/login" element={<Login />} />
 
-                {/* Protected Routes */}
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <Home />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile/:characterID"
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/editprofile"
-                  element={
-                    <ProtectedRoute>
-                      <EditProfile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/forum"
-                  element={
-                    <ProtectedRoute>
-                      <Forum />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/influence"
-                  element={
-                    <ProtectedRoute>
-                      <Influence />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/streetcrime"
-                  element={
-                    <ProtectedRoute>
-                      <StreetCrime />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/travel"
-                  element={
-                    <ProtectedRoute>
-                      <Travel />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </main>
-          </Layout>
-          <Footer />
+                    {/* Protected Routes */}
+                    <Route
+                      path="/"
+                      element={
+                        <ProtectedRoute>
+                          <Home />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/profile/:characterID"
+                      element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/editprofile"
+                      element={
+                        <ProtectedRoute>
+                          <EditProfile />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/forum"
+                      element={
+                        <ProtectedRoute>
+                          <Forum />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/influence"
+                      element={
+                        <ProtectedRoute>
+                          <Influence />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/streetcrime"
+                      element={
+                        <ProtectedRoute>
+                          <StreetCrime />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/travel"
+                      element={
+                        <ProtectedRoute>
+                          <Travel />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Routes>
+                </main>
+              </Layout>
+            </div>
+            <Footer />
+          </div>
         </Router>
       </CharacterProvider>
     </AuthProvider>
