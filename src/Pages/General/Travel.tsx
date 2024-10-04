@@ -10,11 +10,11 @@ import { getFirestore, doc, updateDoc } from "firebase/firestore";
 
 // Define your location coordinates as percentages
 const locations = [
-  { name: "Mexico City", coordinates: { top: "51%", left: "22%" } },
-  { name: "Rio de Janeiro", coordinates: { top: "73%", left: "35%" } },
-  { name: "Tokyo", coordinates: { top: "44%", left: "81%" } },
-  { name: "Moscow", coordinates: { top: "32%", left: "56%" } },
-  { name: "New York", coordinates: { top: "39%", left: "28%" } },
+  { name: "Mexico City", coordinates: { top: "53%", left: "20%" } },
+  { name: "Rio de Janeiro", coordinates: { top: "75%", left: "34%" } },
+  { name: "Tokyo", coordinates: { top: "45%", left: "86%" } },
+  { name: "Moscow", coordinates: { top: "33%", left: "57%" } },
+  { name: "New York", coordinates: { top: "40%", left: "27%" } },
 ];
 
 const Travel = () => {
@@ -113,6 +113,7 @@ const Travel = () => {
                   : "#cccccc",
               cursor: "pointer",
               zIndex: 1,
+              transform: "translate(-50%, -50%)",
               transition: "background-color 0.3s ease",
             }}
             onMouseEnter={() => setHoveredLocation(location.name)}
