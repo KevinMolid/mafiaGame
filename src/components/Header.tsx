@@ -97,6 +97,11 @@ const Header = () => {
               </Link>
             </li>
             <li className="hover:text-stone-200">
+              <Link to="/prison" onClick={() => setActionsOpen(false)}>
+                Prison
+              </Link>
+            </li>
+            <li className="hover:text-stone-200">
               <Link to="/travel" onClick={() => setActionsOpen(false)}>
                 Travel
               </Link>

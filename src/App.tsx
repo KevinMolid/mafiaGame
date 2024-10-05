@@ -25,6 +25,7 @@ import CreateCharacter from "./Pages/CreateCharacter.tsx";
 import Influence from "./Pages/Reputation/Influence";
 import StreetCrime from "./Pages/Crime/StreetCrime.tsx";
 import Travel from "./Pages/General/Travel.tsx";
+import Prison from "./Pages/General/Prison.tsx";
 
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
 
@@ -47,6 +48,7 @@ function App() {
                       path="/createcharacter"
                       element={<CreateCharacter />}
                     />
+
                     <Route path="/leaderboard" element={<Leaderboard />} />
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/login" element={<Login />} />
@@ -60,6 +62,7 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
+
                     <Route
                       path="/profile/:characterID"
                       element={
@@ -68,6 +71,7 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
+
                     <Route
                       path="/editprofile"
                       element={
@@ -76,6 +80,7 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
+
                     <Route
                       path="/forum"
                       element={
@@ -84,6 +89,7 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
+
                     <Route
                       path="/influence"
                       element={
@@ -92,6 +98,7 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
+
                     <Route
                       path="/streetcrime"
                       element={
@@ -100,11 +107,21 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
+
                     <Route
                       path="/travel"
                       element={
                         <ProtectedRoute>
                           <Travel />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="/prison"
+                      element={
+                        <ProtectedRoute>
+                          <Prison />
                         </ProtectedRoute>
                       }
                     />
