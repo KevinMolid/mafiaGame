@@ -79,21 +79,39 @@ const Parking = () => {
           {/* Show loading if parking is still null */}
           <p>
             Slots:{" "}
-            {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
+            <strong className="text-white">
+              {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
+            </strong>
           </p>
-          <p>Security: 0</p>
+          <p>
+            Security:{" "}
+            <strong className="text-white">
+              {parking !== null ? ParkingTypes[parking].security : "Loading..."}
+              %
+            </strong>
+          </p>
         </div>
         {canUpgrade && (
           <div className="mt-2">
             <p>Next upgrade:</p>
-            <div className="bg-slate-400 text-black p-2 rounded-lg">
-              <p>
-                <strong>{ParkingTypes[parking + 1].name}</strong>
-              </p>
+            <div className="bg-sky-950 border border-sky-700 text-slate-400 px-4 py-2 rounded-lg mt-1">
+              <H2>{ParkingTypes[parking + 1].name}</H2>
               <div className="grid grid-cols-2">
                 <div>
-                  <p>Slots: {ParkingTypes[parking + 1].slots}</p>
-                  <p>Security: 0</p>
+                  <p>
+                    Slots: <strong>{ParkingTypes[parking].slots}</strong>{" "}
+                    <i className="fa-solid fa-arrow-right-long"></i>{" "}
+                    <strong className="text-green-500">
+                      {ParkingTypes[parking + 1].slots}
+                    </strong>
+                  </p>
+                  <p>
+                    Security: <strong>{ParkingTypes[parking].security}%</strong>{" "}
+                    <i className="fa-solid fa-arrow-right-long"></i>{" "}
+                    <strong className="text-green-500">
+                      {ParkingTypes[parking + 1].security}%
+                    </strong>
+                  </p>
                 </div>
                 <div className="flex justify-end items-end">
                   <Button
