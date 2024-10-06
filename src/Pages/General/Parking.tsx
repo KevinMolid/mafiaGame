@@ -24,18 +24,22 @@ const Parking = () => {
         </div>
       </div>
       <table className="w-full table-auto border border-collapse text-left">
-        <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
-          <th className="px-2 py-1">Car</th>
-          <th className="px-2 py-1">Power</th>
-          <th className="px-2 py-1">Value</th>
-          <th></th>
-        </tr>
-        <tr className="border bg-neutral-800 border-neutral-700">
-          <td className="px-2 py-1">Toyota RAV4</td>
-          <td className="px-2 py-1">203 hp</td>
-          <td className="px-2 py-1">{"$" + (15000).toLocaleString()}</td>
-          <td className="px-2 py-1">sell</td>
-        </tr>
+        <thead>
+          <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
+            <th className="px-2 py-1">Car</th>
+            <th className="px-2 py-1">Power</th>
+            <th className="px-2 py-1">Value</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="border bg-neutral-800 border-neutral-700">
+            <td className="px-2 py-1">Toyota RAV4</td>
+            <td className="px-2 py-1">203 hp</td>
+            <td className="px-2 py-1">{"$" + (15000).toLocaleString()}</td>
+            <td className="px-2 py-1">sell</td>
+          </tr>
+        </tbody>
       </table>
       <p>
         <strong className="text-white">1</strong> of{" "}
