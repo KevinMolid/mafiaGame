@@ -55,7 +55,6 @@ export const CharacterProvider = ({
               characterData &&
               characterData.location &&
               characterData.stats &&
-              characterData.img &&
               characterData.username
             ) {
               const newCharacter: Character = {

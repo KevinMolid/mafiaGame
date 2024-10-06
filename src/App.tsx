@@ -26,6 +26,7 @@ import Influence from "./Pages/Reputation/Influence";
 import StreetCrime from "./Pages/Crime/StreetCrime.tsx";
 import Travel from "./Pages/General/Travel.tsx";
 import Prison from "./Pages/General/Prison.tsx";
+import Parking from "./Pages/General/Parking.tsx";
 
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
 
@@ -109,10 +110,10 @@ function App() {
                     />
 
                     <Route
-                      path="/travel"
+                      path="/parking"
                       element={
                         <ProtectedRoute>
-                          <Travel />
+                          <Parking />
                         </ProtectedRoute>
                       }
                     />
@@ -122,6 +123,15 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <Prison />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="/travel"
+                      element={
+                        <ProtectedRoute>
+                          <Travel />
                         </ProtectedRoute>
                       }
                     />

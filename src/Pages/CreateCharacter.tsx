@@ -55,12 +55,15 @@ const CreateCharacter = () => {
       const docRef = await addDoc(collection(db, "Characters"), {
         uid: user.uid,
         username: username,
+        img: "",
         status: "alive",
         stats: { xp: 0, hp: 100, heat: 0, money: 1000, protection: 0 },
         reputation: { police: 0, politics: 0, gangs: 0, community: 0 },
         location: "New York",
         createdAt: new Date(),
         diedAt: null,
+        lastCrimeTimestamp: null,
+        profileText: "",
       });
 
       // Log the character document ID (REMOVE AT PRODUCTION)

@@ -26,7 +26,7 @@ const Sidebar = () => {
         <div className="relative">
           <img
             className="border border-neutral-500 size-36 object-cover m-auto mb-2 hover:cursor-pointer"
-            src={character.img}
+            src={character.img || "/default.jpg"}
             alt="Profile picture"
             onClick={toggleNav}
           />
