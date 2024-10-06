@@ -112,6 +112,12 @@ const Parking = () => {
                       {ParkingTypes[parking + 1].security}%
                     </strong>
                   </p>
+                  <p>
+                    Price:{" "}
+                    <strong className="text-yellow-400">
+                      ${ParkingTypes[parking + 1].price.toLocaleString()}
+                    </strong>
+                  </p>
                 </div>
                 <div className="flex justify-end items-end">
                   <Button
