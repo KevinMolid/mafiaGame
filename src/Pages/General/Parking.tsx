@@ -1,10 +1,68 @@
 import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
+import Button from "../../components/Button";
+
+import { useState, useEffect } from "react";
 
 import { useCharacter } from "../../CharacterContext";
 
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, updateDoc } from "firebase/firestore";
+import firebaseConfig from "../../firebaseConfig";
+
+import ParkingTypes from "../../Data/ParkingTypes";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const Parking = () => {
-  const { character } = useCharacter();
+  const { character, setCharacter } = useCharacter();
+  const [parking, setParking] = useState<number | null>(null);
+
+  if (!character) {
+    return null;
+  }
+
+  useEffect(() => {
+    if (character?.parkingFacilities?.[character.location]) {
+      const parkingSlots = character.parkingFacilities[character.location];
+      setParking(parkingSlots);
+    } else {
+      setParking(0);
+    }
+  }, [character]);
+
+  const updateParking = async (
+    characterId: string,
+    city: string,
+    newParkingIndex: number
+  ) => {
+    const characterRef = doc(db, "Characters", characterId);
+
+    try {
+      await updateDoc(characterRef, {
+        [`parkingFacilities.${city}`]: newParkingIndex,
+      });
+
+      setCharacter((prevCharacter) =>
+        prevCharacter
+          ? {
+              ...prevCharacter,
+              parkingFacilities: {
+                ...prevCharacter.parkingFacilities,
+                [city]: newParkingIndex,
+              },
+            }
+          : prevCharacter
+      );
+
+      setParking(newParkingIndex);
+    } catch (error) {
+      console.error("Error updating parking facility: ", error);
+    }
+  };
+
+  const canUpgrade = parking !== null && parking < ParkingTypes.length - 1;
 
   return (
     <section className="flex flex-col gap-4">
@@ -16,12 +74,45 @@ const Parking = () => {
         </p>
       </div>
       <div>
-        <H2>Simple parking space</H2>
+        <H2>{parking !== null ? ParkingTypes[parking].name : "Loading..."}</H2>
         <div className="flex gap-4">
-          <p>Slots: 1</p>
+          {/* Show loading if parking is still null */}
+          <p>
+            Slots:{" "}
+            {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
+          </p>
           <p>Security: 0</p>
-          <p>Upgrade</p>
         </div>
+        {canUpgrade && (
+          <div className="mt-2">
+            <p>Next upgrade:</p>
+            <div className="bg-slate-400 text-black p-2 rounded-lg">
+              <p>
+                <strong>{ParkingTypes[parking + 1].name}</strong>
+              </p>
+              <div className="grid grid-cols-2">
+                <div>
+                  <p>Slots: {ParkingTypes[parking + 1].slots}</p>
+                  <p>Security: 0</p>
+                </div>
+                <div className="flex justify-end items-end">
+                  <Button
+                    onClick={() =>
+                      parking !== null &&
+                      updateParking(
+                        character.id,
+                        character.location,
+                        parking + 1
+                      )
+                    }
+                  >
+                    Upgrade
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <table className="w-full table-auto border border-collapse text-left">
         <thead>
@@ -43,7 +134,10 @@ const Parking = () => {
       </table>
       <p>
         <strong className="text-white">1</strong> of{" "}
-        <strong className="text-white">1</strong> parking slots used
+        <strong className="text-white">
+          {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
+        </strong>{" "}
+        parking slots used
       </p>
     </section>
   );
