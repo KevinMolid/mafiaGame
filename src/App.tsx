@@ -22,6 +22,7 @@ import Leaderboard from "./Pages/Leaderboard.tsx";
 import Signup from "./Pages/Signup.tsx";
 import Login from "./Pages/Login.tsx";
 import CreateCharacter from "./Pages/CreateCharacter.tsx";
+import SelectCharacter from "./Pages/SelectCharacter.tsx";
 import Influence from "./Pages/Reputation/Influence";
 import StreetCrime from "./Pages/Crime/StreetCrime.tsx";
 import Travel from "./Pages/General/Travel.tsx";
@@ -48,6 +49,10 @@ function App() {
                     <Route
                       path="/createcharacter"
                       element={<CreateCharacter />}
+                    />
+                    <Route
+                      path="/selectcharacater"
+                      element={<SelectCharacter />}
                     />
 
                     <Route path="/leaderboard" element={<Leaderboard />} />

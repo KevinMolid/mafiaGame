@@ -64,7 +64,14 @@ const Sidebar = () => {
           {getCurrentRank(character.stats.xp)}
         </p>
       </div>
+
+      {/* Navigation */}
       <nav>
+        <Link to="/selectcharacater">
+          <h2 className="uppercase text-xs pb-1 text-stone-400">
+            <i className="fa-solid fa-people-group"></i> Select Characater
+          </h2>
+        </Link>
         <h2 className="uppercase text-xs pb-1 text-stone-400">
           <i className="fa-solid fa-handshake-simple"></i> Reputation
         </h2>
@@ -113,6 +120,18 @@ const Sidebar = () => {
           <li>Money Laundering</li>
           <li>Mafia Wars</li>
         </ul>
+        <Link to="/parking">
+          <h2 className="uppercase text-xs pb-1 text-stone-400">
+            <i className="fa-solid fa-square-parking"></i> Parking
+          </h2>
+        </Link>
+
+        <Link to="/prison">
+          <h2 className="uppercase text-xs pb-1 text-stone-400">
+            <i className="fa-solid fa-handcuffs"></i> Prison
+          </h2>
+        </Link>
+
         <Link to="/travel">
           <h2 className="uppercase text-xs pb-1 text-stone-400">
             <i className="fa-solid fa-plane"></i> Travel
