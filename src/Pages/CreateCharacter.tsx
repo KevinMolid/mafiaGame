@@ -12,6 +12,9 @@ import {
   addDoc,
   updateDoc,
   arrayUnion,
+  query,
+  where,
+  getDocs,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
@@ -43,6 +46,17 @@ const CreateCharacter = () => {
     }
   }
 
+  // Check if the username already exists in the "Characters" collection
+  async function isUsernameUnique(username: string) {
+    const q = query(
+      collection(db, "Characters"),
+      where("username", "==", username)
+    );
+    const querySnapshot = await getDocs(q);
+
+    return querySnapshot.empty; // Returns true if no documents found
+  }
+
   async function handleClick() {
     // Check that username is at least 3 characters
     if (username.length < 3) {
@@ -51,6 +65,13 @@ const CreateCharacter = () => {
     }
 
     try {
+      // Check if the username is unique
+      const isUnique = await isUsernameUnique(username);
+      if (!isUnique) {
+        setError("Username already exists. Please choose another one.");
+        return;
+      }
+
       // Add the new character to the "Characters" collection
       const docRef = await addDoc(collection(db, "Characters"), {
         uid: user.uid,
