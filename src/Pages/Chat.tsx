@@ -1,7 +1,20 @@
 import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 
+import { useState } from "react";
+
 const Chat = () => {
+  const [newMessage, setNewMessage] = useState<string>("");
+
+  const handleInputChange = (e: any) => {
+    setNewMessage(e.target.value);
+  };
+
+  const submitNewMessage = (e: any) => {
+    e.preventDefault();
+    console.log("Messaage submitted!");
+  };
+
   return (
     <section className="h-full pb-16">
       <H1>Chat</H1>
@@ -37,20 +50,27 @@ const Chat = () => {
           <div id="new_message_div">
             <form
               action=""
+              onSubmit={submitNewMessage}
               className="bg-neutral-800 grid grid-cols-[auto_min-content] rounded-lg pr-2"
             >
               <textarea
                 name=""
                 id=""
-                className="w-full resize-none bg-inherit rounded-lg"
+                value={newMessage}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.preventDefault();
+                }}
+                onChange={handleInputChange}
+                className="w-full resize-none bg-inherit rounded-lg px-4 py-2"
               ></textarea>
               <div id="icons" className="flex">
-                <div
+                <button
+                  type="submit"
                   id="send_icon"
                   className="w-8 flex justify-center items-center hover:text-white hover:cursor-pointer"
                 >
                   <i className=" text-xl fa-solid fa-paper-plane"></i>
-                </div>
+                </button>
                 <div
                   id="send_icon"
                   className="w-8 flex justify-center items-center hover:text-white hover:cursor-pointer"
