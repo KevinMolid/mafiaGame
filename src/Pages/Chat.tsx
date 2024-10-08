@@ -1,12 +1,50 @@
+// Components
 import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import CharacterList from "../components/CharacterList";
 
-import { useState } from "react";
+import { format } from "date-fns";
+
+// functions
+import { fetchMessages, Message } from "../Functions/messageService";
+
+// React
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 const Chat = () => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState<string>("");
-  const [receiver, setReceiver] = useState<string>("");
+  const [receiver, setReceiver] = useState<string>("Global");
+
+  useEffect(() => {
+    const loadMessages = async () => {
+      try {
+        const fetchedMessages = await fetchMessages("KZfZCQfE8nCKV5cjeMtj");
+        setMessages(fetchedMessages);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unknown error occurred.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMessages();
+  }, []);
+
+  if (loading) {
+    return <p>Loading messages...</p>;
+  }
+
+  if (error) {
+    return <p>Error: {error}</p>;
+  }
 
   const handleInputChange = (e: any) => {
     setNewMessage(e.target.value);
@@ -29,7 +67,7 @@ const Chat = () => {
           <H2>Channels</H2>
           <p className="text-lg text-white">Players</p>
           <CharacterList include="" action="log" onClick={selectReceiver} />
-          <ul>
+          {/*<ul>
             <li>
               <p className="text-lg text-white">Groups</p>
             </li>
@@ -37,7 +75,7 @@ const Chat = () => {
               <p>[Family]</p>
               <p>[Gang]</p>
             </li>
-          </ul>
+          </ul>*/}
         </div>
         <div
           id="right_panel"
@@ -46,7 +84,23 @@ const Chat = () => {
           <div id="right_panel_heading" className="border-b">
             <H2>{receiver}</H2>
           </div>
-          <div id="messages_div"></div>
+          <div id="messages_div">
+            <ul>
+              {messages.map((message) => (
+                <li key={message.id}>
+                  <div className="flex gap-2 mb-1">
+                    <Link to="#">
+                      <strong>{message.senderName}</strong>
+                    </Link>
+                    <p>{format(message.timestamp, "yyyy-MM-dd HH:mm:ss")}</p>
+                  </div>
+                  <div className="bg-slate-100 text-neutral-700 font-medium px-2 py-2 rounded-lg">
+                    {message.text}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
           <div id="new_message_div">
             <form
               action=""
