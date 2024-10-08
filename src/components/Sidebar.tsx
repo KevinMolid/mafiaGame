@@ -72,6 +72,11 @@ const Sidebar = () => {
             <i className="fa-solid fa-people-group"></i> Select Characater
           </h2>
         </Link>
+        <Link to="/chat">
+          <h2 className="uppercase text-xs pb-1 text-stone-400">
+            <i className="fa-solid fa-comment-dots"></i> Chat
+          </h2>
+        </Link>
         <h2 className="uppercase text-xs pb-1 text-stone-400">
           <i className="fa-solid fa-handshake-simple"></i> Reputation
         </h2>
@@ -80,20 +85,23 @@ const Sidebar = () => {
             <Link to="/influence">Influence</Link>
           </li>
         </ul>
-        <h2 className="uppercase text-xs pb-1 text-stone-400">
+
+        {/*<h2 className="uppercase text-xs pb-1 text-stone-400">
           <i className="fa-solid fa-globe"></i> Underground
         </h2>
         <ul className="text-stone-200 mb-4">
           <li>Gambling</li>
           <li>Underground Fighting</li>
           <li>Black Market</li>
-        </ul>
+        </ul>*/}
+
         <Link to="/streetcrime">
           <h2 className="uppercase text-xs pb-1 text-stone-400">
             <i className="fa-solid fa-money-bill"></i> Street crimes
           </h2>
         </Link>
-        <h2 className="uppercase text-xs pb-1 text-stone-400">
+
+        {/*<h2 className="uppercase text-xs pb-1 text-stone-400">
           <i className="fa-solid fa-briefcase"></i> Organized Crime
         </h2>
         <ul className="text-stone-200 mb-4">
@@ -101,8 +109,9 @@ const Sidebar = () => {
           <li>Drug Dealing</li>
           <li>Loan Sharking</li>
           <li>Kidnapping</li>
-        </ul>
-        <h2 className="uppercase text-xs pb-1 text-stone-400">
+        </ul>*/}
+
+        {/*<h2 className="uppercase text-xs pb-1 text-stone-400">
           <i className="fa-solid fa-ship"></i> Syndicate Operations
         </h2>
         <ul className="text-stone-200 mb-4">
@@ -110,8 +119,9 @@ const Sidebar = () => {
           <li>Assassination Contracts</li>
           <li>Heists</li>
           <li>Bribery and Corruption</li>
-        </ul>
-        <h2 className="uppercase text-xs pb-1 text-stone-400">
+        </ul>*/}
+
+        {/*<h2 className="uppercase text-xs pb-1 text-stone-400">
           <i className="fa-solid fa-globe"></i> Global Crimes
         </h2>
         <ul className="text-stone-200 mb-4">
@@ -119,7 +129,8 @@ const Sidebar = () => {
           <li>Political Assassinations</li>
           <li>Money Laundering</li>
           <li>Mafia Wars</li>
-        </ul>
+        </ul>*/}
+
         <Link to="/parking">
           <h2 className="uppercase text-xs pb-1 text-stone-400">
             <i className="fa-solid fa-square-parking"></i> Parking
