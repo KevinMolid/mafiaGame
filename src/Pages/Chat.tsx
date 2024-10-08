@@ -1,10 +1,12 @@
 import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
+import CharacterList from "../components/CharacterList";
 
 import { useState } from "react";
 
 const Chat = () => {
   const [newMessage, setNewMessage] = useState<string>("");
+  const [receiver, setReceiver] = useState<string>("");
 
   const handleInputChange = (e: any) => {
     setNewMessage(e.target.value);
@@ -15,20 +17,18 @@ const Chat = () => {
     console.log("Messaage submitted!");
   };
 
+  const selectReceiver = (receiver: string) => {
+    setReceiver(receiver);
+  };
+
   return (
     <section className="h-full pb-16">
       <H1>Chat</H1>
       <div className="grid grid-cols-[1fr_4fr] h-full">
         <div className="h-full bg-neutral-800 p-4">
           <H2>Channels</H2>
-          <ul>
-            <li>
-              <p className="text-lg text-white">Players</p>
-            </li>
-            <li>
-              <p>[Username1]</p>
-            </li>
-          </ul>
+          <p className="text-lg text-white">Players</p>
+          <CharacterList include="" action="log" onClick={selectReceiver} />
           <ul>
             <li>
               <p className="text-lg text-white">Groups</p>
@@ -44,7 +44,7 @@ const Chat = () => {
           className="grid grid-rows-[min-content_auto_min-content] p-4"
         >
           <div id="right_panel_heading" className="border-b">
-            <H2>[Current channel]</H2>
+            <H2>{receiver}</H2>
           </div>
           <div id="messages_div"></div>
           <div id="new_message_div">

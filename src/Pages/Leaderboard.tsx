@@ -11,7 +11,7 @@ const Leaderboard = () => {
         under development.
       </p>
       <H2>Rank</H2>
-      <CharacterList />
+      <CharacterList include="all" action="link" />
 
       <H2>Money Rank</H2>
       <p>Player1</p>

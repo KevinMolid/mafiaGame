@@ -7,7 +7,13 @@ import firebaseConfig from "../firebaseConfig";
 
 import { getCurrentRank } from "../Functions/RankFunctions";
 
-const CharacterList = () => {
+interface CharacterListProps {
+  include: string;
+  action: string;
+  onClick?: (receiver: string) => void;
+}
+
+const CharacterList = ({ include, action, onClick }: CharacterListProps) => {
   const [characters, setCharacters] = useState<Array<any>>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,10 +54,17 @@ const CharacterList = () => {
         <ul>
           {characters.map((character) => (
             <li key={character.id}>
-              <Link to={`/profile/${character.id}`}>
-                <strong>{character.username}</strong>
-              </Link>{" "}
-              - {getCurrentRank(character.xp)}
+              {action === "log" && onClick !== undefined && (
+                <button onClick={() => onClick(character.username)}>
+                  {character.username}
+                </button>
+              )}
+              {action === "link" && (
+                <Link to={`/profile/${character.id}`}>
+                  <strong>{character.username}</strong>
+                </Link>
+              )}
+              {include === "all" && <> - {getCurrentRank(character.xp)}</>}
             </li>
           ))}
         </ul>
