@@ -3,10 +3,9 @@ import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import CharacterList from "../components/CharacterList";
 
-import { format } from "date-fns";
-
 // functions
 import { fetchMessages, Message } from "../Functions/messageService";
+import { format } from "date-fns";
 
 // React
 import { useState, useEffect } from "react";
@@ -18,11 +17,12 @@ const Chat = () => {
   const [error, setError] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState<string>("");
   const [receiver, setReceiver] = useState<string>("Global");
+  const [channelId, setChannelId] = useState<string>("KZfZCQfE8nCKV5cjeMtj");
 
   useEffect(() => {
     const loadMessages = async () => {
       try {
-        const fetchedMessages = await fetchMessages("KZfZCQfE8nCKV5cjeMtj");
+        const fetchedMessages = await fetchMessages(channelId);
         setMessages(fetchedMessages);
       } catch (err) {
         if (err instanceof Error) {
@@ -36,7 +36,7 @@ const Chat = () => {
     };
 
     loadMessages();
-  }, []);
+  }, [channelId]);
 
   if (loading) {
     return <p>Loading messages...</p>;
@@ -55,8 +55,9 @@ const Chat = () => {
     console.log("Messaage submitted!");
   };
 
-  const selectReceiver = (receiver: string) => {
-    setReceiver(receiver);
+  const selectReceiver = (channelName: string, id: string) => {
+    setReceiver(channelName);
+    setChannelId(id);
   };
 
   return (
@@ -66,16 +67,35 @@ const Chat = () => {
         <div className="h-full bg-neutral-800 p-4">
           <H2>Channels</H2>
           <p className="text-lg text-white">Players</p>
-          <CharacterList include="" action="log" onClick={selectReceiver} />
-          {/*<ul>
+          <CharacterList
+            include=""
+            action="log"
+            onClick={() => console.log("hehe")}
+          />
+
+          <ul>
             <li>
               <p className="text-lg text-white">Groups</p>
             </li>
             <li>
-              <p>[Family]</p>
-              <p>[Gang]</p>
+              <button
+                className="hover:text-white"
+                onClick={() => selectReceiver("Global", "KZfZCQfE8nCKV5cjeMtj")}
+              >
+                Global
+              </button>
             </li>
-          </ul>*/}
+            <li>
+              <button
+                className="hover:text-white"
+                onClick={() =>
+                  selectReceiver("Prison Chat", "EivoYnQQVwVQvnMctcXN")
+                }
+              >
+                Prison
+              </button>
+            </li>
+          </ul>
         </div>
         <div
           id="right_panel"
