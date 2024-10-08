@@ -21,7 +21,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="hidden sm:block bg-neutral-800 p-8 text-sm leading-relaxed">
+    <div className="hidden sm:block bg-neutral-800 p-8 text-sm leading-relaxed pb-16">
       <div className="mb-6">
         <div className="relative">
           <img

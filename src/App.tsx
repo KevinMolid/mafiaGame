@@ -38,8 +38,8 @@ function App() {
     <AuthProvider>
       <CharacterProvider>
         <Router>
-          <div id="page-container" className="relative min-h-screen">
-            <div id="content-wrap" className="pb-16">
+          <div id="page-container" className="relative min-h-dvh">
+            <div id="content-wrap" className="pb-8">
               <Header />
               <Infobar />
               <Layout>
