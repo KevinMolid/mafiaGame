@@ -1,4 +1,10 @@
-import { getFirestore, collection, getDocs } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 
 const db = getFirestore();
 
@@ -9,6 +15,25 @@ export interface Message {
   text: string;
   timestamp: Date;
 }
+
+export const sendMessage = async (
+  channelId: string,
+  message: string,
+  senderId: string,
+  senderName: string
+) => {
+  const messagesRef = collection(db, "Channels", channelId, "Messages");
+  try {
+    await addDoc(messagesRef, {
+      senderId: senderId,
+      senderName: senderName,
+      text: message,
+      timestamp: serverTimestamp(),
+    });
+  } catch (err) {
+    console.error("Error sending message: ", err);
+  }
+};
 
 export const fetchMessages = async (channelId: string): Promise<Message[]> => {
   try {

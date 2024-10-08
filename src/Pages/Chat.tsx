@@ -4,14 +4,22 @@ import H2 from "../components/Typography/H2";
 import CharacterList from "../components/CharacterList";
 
 // functions
-import { fetchMessages, Message } from "../Functions/messageService";
+import {
+  fetchMessages,
+  sendMessage,
+  Message,
+} from "../Functions/messageService";
 import { format } from "date-fns";
 
 // React
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
+// Context
+import { useCharacter } from "../CharacterContext";
+
 const Chat = () => {
+  const { character } = useCharacter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,9 +58,27 @@ const Chat = () => {
     setNewMessage(e.target.value);
   };
 
-  const submitNewMessage = (e: any) => {
+  const submitNewMessage = async (e: any) => {
     e.preventDefault();
-    console.log("Messaage submitted!");
+    if (!character) return;
+    if (!newMessage.trim()) return;
+
+    try {
+      await sendMessage(
+        channelId,
+        newMessage,
+        character.id,
+        character.username
+      );
+      setNewMessage("");
+      setError(null);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("An unknown error occurred.");
+      }
+    }
   };
 
   const selectReceiver = (channelName: string, id: string) => {
