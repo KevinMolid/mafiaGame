@@ -79,7 +79,11 @@ const Chat = () => {
             </li>
             <li>
               <button
-                className="hover:text-white"
+                className={`hover:text-white w-full text-left ${
+                  receiver === "Global"
+                    ? "bg-neutral-700/50 text-neutral-300 border-l-4 border-sky-500 pl-2"
+                    : ""
+                }`}
                 onClick={() => selectReceiver("Global", "KZfZCQfE8nCKV5cjeMtj")}
               >
                 Global
@@ -87,10 +91,12 @@ const Chat = () => {
             </li>
             <li>
               <button
-                className="hover:text-white"
-                onClick={() =>
-                  selectReceiver("Prison Chat", "EivoYnQQVwVQvnMctcXN")
-                }
+                className={`hover:text-white w-full text-left ${
+                  receiver === "Prison"
+                    ? "bg-neutral-700/50 text-neutral-300 border-l-4 border-sky-500 pl-2"
+                    : ""
+                }`}
+                onClick={() => selectReceiver("Prison", "EivoYnQQVwVQvnMctcXN")}
               >
                 Prison
               </button>
