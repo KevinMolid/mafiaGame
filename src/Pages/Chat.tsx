@@ -133,13 +133,19 @@ const Chat = () => {
           id="right_panel"
           className="grid grid-rows-[min-content_auto_min-content] p-4"
         >
-          <div id="right_panel_heading" className="border-b">
+          {/* Channel header */}
+          <div
+            id="right_panel_heading"
+            className="border-b border-neutral-600 mb-2"
+          >
             <H2>{receiver}</H2>
           </div>
+
+          {/* Messages */}
           <div id="messages_div">
             <ul>
               {messages.map((message) => (
-                <li key={message.id}>
+                <li key={message.id} className="mb-2">
                   <div className="flex gap-2 mb-1">
                     <Link to="#">
                       <strong>{message.senderName}</strong>
@@ -153,6 +159,7 @@ const Chat = () => {
               ))}
             </ul>
           </div>
+
           <div id="new_message_div">
             <form
               action=""
