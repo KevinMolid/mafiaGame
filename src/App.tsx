@@ -23,6 +23,7 @@ import Signup from "./Pages/Signup.tsx";
 import Login from "./Pages/Login.tsx";
 import CreateCharacter from "./Pages/CreateCharacter.tsx";
 import SelectCharacter from "./Pages/SelectCharacter.tsx";
+import NewMessage from "./Pages/NewMessage.tsx";
 import Influence from "./Pages/Reputation/Influence";
 import StreetCrime from "./Pages/Crime/StreetCrime.tsx";
 import Travel from "./Pages/General/Travel.tsx";
@@ -54,6 +55,7 @@ function App() {
                       path="/selectcharacater"
                       element={<SelectCharacter />}
                     />
+                    <Route path="/newmessage" element={<NewMessage />} />
 
                     <Route path="/leaderboard" element={<Leaderboard />} />
                     <Route path="/signup" element={<Signup />} />
