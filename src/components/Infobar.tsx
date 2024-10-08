@@ -63,7 +63,7 @@ const Infobar = () => {
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2">
-        <i className="fa-solid fa-user-group"></i>{" "}
+        <i className="fa-solid fa-users"></i>{" "}
         <Tooltip label="Family">
           <p>Imperium</p>
         </Tooltip>

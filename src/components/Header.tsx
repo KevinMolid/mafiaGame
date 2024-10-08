@@ -97,6 +97,11 @@ const Header = () => {
               </Link>
             </li>
             <li className="hover:text-stone-200">
+              <Link to="/family" onClick={() => setActionsOpen(false)}>
+                <i className="fa-solid fa-users"></i> Family
+              </Link>
+            </li>
+            <li className="hover:text-stone-200">
               <Link to="/parking" onClick={() => setActionsOpen(false)}>
                 <i className="fa-solid fa-square-parking"></i> Parking
               </Link>

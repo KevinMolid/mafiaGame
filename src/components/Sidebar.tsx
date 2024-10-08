@@ -137,6 +137,12 @@ const Sidebar = () => {
           </h2>
         </Link>
 
+        <Link to="/family">
+          <h2 className="uppercase text-xs pb-1 text-stone-400">
+            <i className="fa-solid fa-users"></i> Family
+          </h2>
+        </Link>
+
         <Link to="/prison">
           <h2 className="uppercase text-xs pb-1 text-stone-400">
             <i className="fa-solid fa-handcuffs"></i> Prison

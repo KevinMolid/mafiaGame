@@ -30,6 +30,7 @@ import StreetCrime from "./Pages/Crime/StreetCrime.tsx";
 import Travel from "./Pages/General/Travel.tsx";
 import Prison from "./Pages/General/Prison.tsx";
 import Parking from "./Pages/General/Parking.tsx";
+import Family from "./Pages/Family.tsx";
 
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
 
@@ -87,6 +88,15 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <EditProfile />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="/family"
+                      element={
+                        <ProtectedRoute>
+                          <Family />
                         </ProtectedRoute>
                       }
                     />
