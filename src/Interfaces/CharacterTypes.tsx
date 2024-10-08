@@ -27,4 +27,6 @@ export interface Character {
   uid: string;
   username: string;
   parkingFacilities?: any;
+  familyId?: string;
+  familyName?: string;
 }

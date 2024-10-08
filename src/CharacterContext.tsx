@@ -77,6 +77,7 @@ export const CharacterProvider = ({
                 status: characterData.status as string,
                 uid: characterData.uid as string,
                 parkingFacilities: characterData.parkingFacilities as any,
+                familyId: characterData.familyId as string,
               };
 
               setCharacter(newCharacter);
