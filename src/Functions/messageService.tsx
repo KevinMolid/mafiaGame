@@ -13,7 +13,7 @@ export interface Message {
   senderId: string;
   senderName: string;
   text: string;
-  timestamp: Date;
+  timestamp: any;
 }
 
 export const sendMessage = async (

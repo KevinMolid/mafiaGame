@@ -3,12 +3,18 @@ import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import CharacterList from "../components/CharacterList";
 
-// functions
+// Firebase
 import {
-  fetchMessages,
-  sendMessage,
-  Message,
-} from "../Functions/messageService";
+  getFirestore,
+  collection,
+  onSnapshot,
+  query,
+  orderBy,
+} from "firebase/firestore";
+const db = getFirestore();
+
+// functions
+import { sendMessage, Message } from "../Functions/messageService";
 import { format } from "date-fns";
 
 // React
@@ -28,22 +34,25 @@ const Chat = () => {
   const [channelId, setChannelId] = useState<string>("KZfZCQfE8nCKV5cjeMtj");
 
   useEffect(() => {
-    const loadMessages = async () => {
-      try {
-        const fetchedMessages = await fetchMessages(channelId);
+    const unsubscribe = onSnapshot(
+      query(
+        collection(db, "Channels", channelId, "Messages"),
+        orderBy("timestamp")
+      ),
+      (snapshot) => {
+        const fetchedMessages = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Message[];
         setMessages(fetchedMessages);
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("An unknown error occurred.");
-        }
-      } finally {
         setLoading(false);
+      },
+      (error) => {
+        setError(error.message);
       }
-    };
+    );
 
-    loadMessages();
+    return () => unsubscribe();
   }, [channelId]);
 
   if (loading) {
@@ -150,7 +159,14 @@ const Chat = () => {
                     <Link to="#">
                       <strong>{message.senderName}</strong>
                     </Link>
-                    <p>{format(message.timestamp, "yyyy-MM-dd HH:mm:ss")}</p>
+                    <p>
+                      {message.timestamp
+                        ? format(
+                            message.timestamp.toDate(),
+                            "yyyy-MM-dd HH:mm:ss"
+                          )
+                        : "Sending..."}
+                    </p>
                   </div>
                   <div className="bg-slate-100 text-neutral-700 font-medium px-2 py-2 rounded-lg">
                     {message.text}
