@@ -81,34 +81,34 @@ const Header = () => {
       {actionsOpen && (
         <nav
           ref={actionsRef}
-          className="absolute top-16 left-0 bg-neutral-950 p-4 sm:hidden z-10"
+          className="absolute top-16 left-0 bg-neutral-950 p-4 sm:hidden z-10 min-w-40"
         >
           <p>Actions</p>
           <hr className="border-neutral-500 mb-2" />
           <ul className="flex flex-col gap-2 text-stone-400">
             <li className="hover:text-stone-200">
               <Link to="/influence" onClick={() => setActionsOpen(false)}>
-                Influence
+                <i className="fa-solid fa-handshake-simple"></i> Influence
               </Link>
             </li>
             <li className="hover:text-stone-200">
               <Link to="/streetcrime" onClick={() => setActionsOpen(false)}>
-                Street Crimes
+                <i className="fa-solid fa-money-bill"></i> Street Crimes
               </Link>
             </li>
             <li className="hover:text-stone-200">
               <Link to="/parking" onClick={() => setActionsOpen(false)}>
-                Parking
+                <i className="fa-solid fa-square-parking"></i> Parking
               </Link>
             </li>
             <li className="hover:text-stone-200">
               <Link to="/prison" onClick={() => setActionsOpen(false)}>
-                Prison
+                <i className="fa-solid fa-handcuffs"></i> Prison
               </Link>
             </li>
             <li className="hover:text-stone-200">
               <Link to="/travel" onClick={() => setActionsOpen(false)}>
-                Travel
+                <i className="fa-solid fa-plane"></i> Travel
               </Link>
             </li>
           </ul>
@@ -143,17 +143,22 @@ const Header = () => {
           <ul className="flex flex-col gap-2 text-stone-400">
             <li className="hover:text-stone-200">
               <Link to="/about" onClick={() => setMenuOpen(false)}>
-                About
+                <i className="fa-solid fa-circle-info"></i> About
               </Link>
             </li>
+            <Link to="/chat" onClick={() => setMenuOpen(false)}>
+              <h2 className="hover:text-stone-200">
+                <i className="fa-solid fa-comment-dots"></i> Chat
+              </h2>
+            </Link>
             <li className="hover:text-stone-200">
               <Link to="/forum" onClick={() => setMenuOpen(false)}>
-                Forum
+                <i className="fa-solid fa-comments"></i> Forum
               </Link>
             </li>
             <li className="hover:text-stone-200">
               <Link to="/leaderboard" onClick={() => setMenuOpen(false)}>
-                Leaderboard
+                <i className="fa-solid fa-medal"></i> Leaderboard
               </Link>
             </li>
             {userData ? (
