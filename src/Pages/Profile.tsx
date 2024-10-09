@@ -72,7 +72,7 @@ const Profile = () => {
           alt=""
         />
         <div>
-          <Link to="/newmessage">
+          <Link to="/chat">
             <div className="hover:text-white">
               <i className="fa-solid fa-envelope"></i>
             </div>
@@ -87,10 +87,10 @@ const Profile = () => {
             <li>{getCurrentRank(characterData.stats.xp)}</li>
 
             <li className="text-stone-400">Money</li>
-            <li>$ {characterData.stats.money.toLocaleString()}</li>
+            <li>${characterData.stats.money.toLocaleString()}</li>
 
             <li className="text-stone-400">Family</li>
-            <li>Norwegian Gangsters</li>
+            <li>{characterData.familyName || "No family"}</li>
 
             <li className="text-stone-400">Status</li>
             <li className="capitalize">{characterData.status}</li>
