@@ -1,8 +1,10 @@
 // React
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 
 // Context
 import { useAuth } from "../AuthContext";
+import { useCharacter } from "../CharacterContext";
 
 // Firebase
 import {
@@ -28,8 +30,13 @@ const db = getFirestore(app);
 
 const CreateCharacter = () => {
   const { user } = useAuth();
+  const { character } = useCharacter();
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
+
+  if (character) {
+    return <Navigate to="/" />;
+  }
 
   /* Handle username input field */
   function handleUsernameChange(e: any) {
