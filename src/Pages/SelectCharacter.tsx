@@ -25,6 +25,9 @@ const SelectCharacter = () => {
           async (characterId: string) => {
             const characterRef = doc(db, "Characters", characterId);
             const characterSnap = await getDoc(characterRef);
+            if (characterId === userData.activeCharacter) {
+              setSelectedCharacter(characterId);
+            }
 
             return { id: characterSnap.id, ...characterSnap.data() };
           }
