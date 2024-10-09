@@ -55,7 +55,7 @@ const SelectCharacter = () => {
   return (
     <div>
       <H1>Select Character</H1>
-      <div>
+      <div className="flex gap-4 flex-wrap">
         {characters.length === 0 ? (
           <p>You have no characters.</p>
         ) : (
@@ -63,24 +63,38 @@ const SelectCharacter = () => {
             <div
               key={character.id}
               className={
-                selectedCharacter !== character.id
-                  ? "flex flex-col border bg-neutral-800 border-neutral-600 p-4 mb-4 rounded-lg"
-                  : "flex flex-col border bg-green-800 border-green-600 p-4 mb-4 rounded-lg text-green-200"
+                "flex flex-col border min-w-44 " +
+                (selectedCharacter !== character.id
+                  ? "bg-neutral-800 border-neutral-600 px-4 py-2 rounded-lg"
+                  : "border-neutral-400 px-4 py-2 rounded-lg")
               }
             >
               <p>
                 <strong className="text-white">{character.username}</strong>
               </p>
               <div className="flex gap-4 mb-2">
-                <p>Location: {character.location}</p>
-                <p>Status: {character.status}</p>
+                <p>
+                  Status:{" "}
+                  <span
+                    className={
+                      character.status === "alive"
+                        ? "text-green-500"
+                        : character.status === "dead"
+                        ? "text-red-500"
+                        : ""
+                    }
+                  >
+                    {character.status[0].toUpperCase() +
+                      character.status.slice(1)}
+                  </span>
+                </p>
               </div>
               {selectedCharacter !== character.id ? (
                 <Button onClick={() => handleSelectCharacter(character.id)}>
-                  {selectedCharacter === character.id ? "Selected" : "Select"}
+                  Set as active
                 </Button>
               ) : (
-                <h1 className="text-center text-neutral-200">Selected</h1>
+                <h1 className="text-center text-neutral-200">Active</h1>
               )}
             </div>
           ))
