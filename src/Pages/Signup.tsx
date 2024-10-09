@@ -51,7 +51,6 @@ const Signup = () => {
       .then((userCredential) => {
         // Signed up
         const user = userCredential.user;
-        console.log("Logged in as " + user);
 
         // Add user to db
         return setDoc(doc(db, "Users", user.uid), {
@@ -60,6 +59,7 @@ const Signup = () => {
           createdAt: new Date(),
           activeCharacter: null,
           characters: [],
+          type: "player",
         });
       })
       .catch((error) => {

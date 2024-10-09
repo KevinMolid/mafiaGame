@@ -87,19 +87,12 @@ const CreateCharacter = () => {
         profileText: "",
       });
 
-      // Log the character document ID (REMOVE AT PRODUCTION)
-      console.log("Character created with ID: ", docRef.id);
-
       // Update the user document in the "Users" collection
       const userDocRef = doc(db, "Users", user.uid);
       await updateDoc(userDocRef, {
         characters: arrayUnion(docRef.id), // Add the new character to the user's characters array
         activeCharacter: docRef.id, // Set the new character as the active character
       });
-
-      console.log(
-        "User document updated with new character and active character."
-      );
     } catch (e) {
       console.error("Error adding document: ", e);
     }
