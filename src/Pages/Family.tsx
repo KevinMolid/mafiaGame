@@ -5,6 +5,7 @@ import Button from "../components/Button";
 
 import { useState, useEffect } from "react";
 import { useCharacter } from "../CharacterContext";
+import { Character } from "../Interfaces/CharacterTypes";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 
 const db = getFirestore();
@@ -26,7 +27,7 @@ type FamilyData = {
 };
 
 const Family = () => {
-  const { character } = useCharacter();
+  const { character, setCharacter } = useCharacter();
   const [family, setFamily] = useState<FamilyData | null>(null);
   const [familyName, setFamilyName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -67,7 +68,7 @@ const Family = () => {
       return;
     }
     try {
-      const familyId = `family_${Date.now()}`; // Create a unique ID
+      const familyId = `family_${Date.now()}`;
       const newFamily = {
         name: familyName,
         leaderName: character.username,
@@ -83,7 +84,29 @@ const Family = () => {
         rules: "",
         wealth: 0,
       };
+
+      // Create new family document
       await setDoc(doc(db, "Families", familyId), newFamily);
+
+      // Update character with familyId and familyName
+      const characterRef = doc(db, "Characters", character.id);
+      await setDoc(
+        characterRef,
+        {
+          familyId: familyId,
+          familyName: familyName,
+        },
+        { merge: true }
+      );
+
+      // Update character in local state
+      setCharacter((prevCharacter) => ({
+        ...(prevCharacter as Character),
+        familyId: familyId as string,
+        familyName: familyName as string,
+      }));
+
+      // set Family in local state
       setFamily(newFamily);
       setFamilyName("");
     } catch (error) {
