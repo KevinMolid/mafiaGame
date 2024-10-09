@@ -1,7 +1,9 @@
 import H1 from "../components/Typography/H1";
+
 import { useState, useEffect } from "react";
 import { useCharacter } from "../CharacterContext";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import InfoBox from "../components/InfoBox";
 
 const db = getFirestore();
 
@@ -11,6 +13,7 @@ type FamilyData = {
   leaderId: string;
   members: string[];
   createdAt: Date;
+  rules: string;
 };
 
 const Family = () => {
@@ -58,6 +61,7 @@ const Family = () => {
         leaderId: character.id,
         members: [character.id],
         createdAt: new Date(),
+        rules: "",
       };
       await setDoc(doc(db, "Families", familyId), newFamily);
       setFamily(newFamily);
@@ -73,19 +77,28 @@ const Family = () => {
 
   return (
     <div>
-      <H1>Family</H1>
       {family ? (
-        <div>
-          <h2>
-            Welcome to the <strong className="text-white">{family.name}</strong>{" "}
-            Family!
-          </h2>
-          <p>Leader: {family.leaderName}</p>
-          <p>Members: {family.members.length}</p>
-          {/* Add more family details here */}
-        </div>
+        <>
+          <H1>
+            Family: <strong>{family.name}</strong>
+          </H1>
+          <div className="flex gap-4">
+            <p>
+              Leader:{" "}
+              <strong className="text-white">{family.leaderName}</strong>
+            </p>
+            <p>
+              Members:{" "}
+              <strong className="text-white">{family.members.length}</strong>
+            </p>
+          </div>
+          <div className="bg-neutral-500">
+            <InfoBox type="info">Family rules: {family.rules}</InfoBox>
+          </div>
+        </>
       ) : (
-        <div>
+        <>
+          <H1>Family</H1>
           <h2>Create a New Family</h2>
           <input
             type="text"
@@ -95,7 +108,7 @@ const Family = () => {
           />
           <button onClick={createFamily}>Create Family</button>
           {error && <p style={{ color: "red" }}>{error}</p>}
-        </div>
+        </>
       )}
     </div>
   );
