@@ -19,12 +19,15 @@ import {
 
 const db = getFirestore();
 
+import { useCharacter } from "../CharacterContext";
+
 const Assassinate = () => {
   const [targetPlayer, setTargetPlayer] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "warning" | "info"
   >("info");
+  const { character } = useCharacter();
 
   // Function to handle assassination
   const killPlayer = async () => {
@@ -50,7 +53,11 @@ const Assassinate = () => {
         const playerData = querySnapshot.docs[0].data();
         const targetDocId = querySnapshot.docs[0].id;
 
-        if (playerData.status === "dead") {
+        if (character?.username === playerData.username) {
+          // Suicide
+          setMessage(`You can't kill yourself!`);
+          setMessageType("warning");
+        } else if (playerData.status === "dead") {
           // Player is already dead
           setMessage(`Player ${targetPlayer} is already dead!`);
           setMessageType("warning");
