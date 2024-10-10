@@ -14,6 +14,7 @@ import Footer from "./components/Footer";
 
 // Pages
 import Home from "./Pages/Home.tsx";
+import Admin from "./Pages/Admin.tsx";
 import Profile from "./Pages/Profile.tsx";
 import EditProfile from "./Pages/EditProfile.tsx";
 import About from "./Pages/About.tsx";
@@ -71,6 +72,15 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <Home />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="/admin"
+                      element={
+                        <ProtectedRoute>
+                          <Admin />
                         </ProtectedRoute>
                       }
                     />

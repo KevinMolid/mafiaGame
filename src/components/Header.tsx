@@ -204,6 +204,13 @@ const Header = () => {
       {/* Normal navigation menu for larger screens */}
       <nav className="hidden sm:flex">
         <ul className="gap-6 flex">
+          <li className="text-yellow-400 hover:text-yellow-200">
+            {userData.type === "admin" && (
+              <Link to="/admin">
+                <i className="fa-solid fa-gear"></i> Admin
+              </Link>
+            )}
+          </li>
           <li className="text-stone-400 hover:text-stone-200">
             <Link to="/about">About</Link>
           </li>
