@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 
 import firebaseConfig from "../firebaseConfig";
 
+// Components
+import Username from "./Typography/Username";
+
+// Functions
 import { getCurrentRank } from "../Functions/RankFunctions";
 
 interface CharacterListProps {
@@ -63,11 +66,7 @@ const CharacterList = ({ include, action, onClick }: CharacterListProps) => {
                   {character.username}
                 </button>
               )}
-              {action === "link" && (
-                <Link to={`/profile/${character.id}`}>
-                  <strong className="text-white">{character.username}</strong>
-                </Link>
-              )}
+              {action === "link" && <Username character={character}></Username>}
               {(include === "all" || include === "admin") && (
                 <> - {getCurrentRank(character.xp)}</>
               )}

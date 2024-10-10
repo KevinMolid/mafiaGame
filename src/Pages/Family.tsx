@@ -1,3 +1,4 @@
+// Components
 import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import InfoBox from "../components/InfoBox";
