@@ -34,7 +34,7 @@ const CreateCharacter = () => {
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
 
-  if (character) {
+  if (character && character.status === "alive") {
     return <Navigate to="/" />;
   }
 
@@ -107,6 +107,15 @@ const CreateCharacter = () => {
 
   return (
     <>
+      {/* Current character dead */}
+      <div>
+        <h2>
+          Your character <strong>{character?.username}</strong> have been
+          assassinated and is{" "}
+          <span className="text-red-500">{character?.status}</span>.
+        </h2>
+      </div>
+
       <H1>Create your character</H1>
       <form action="" className="flex flex-col mb-4 gap-2">
         <label htmlFor="username">Username</label>

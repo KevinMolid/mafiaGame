@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" />;
   }
 
-  if (!character) {
+  if (!character || character.status === "dead") {
     return <Navigate to="/createcharacter" />;
   }
 
