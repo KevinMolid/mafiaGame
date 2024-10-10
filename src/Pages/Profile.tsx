@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
+import Username from "../components/Typography/Username";
+
 // Firebase
 import { doc, getDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
@@ -13,7 +15,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // Functions
-import { getCurrentRank } from "../Functions/RankFunctions";
+import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
 
 const Profile = () => {
   const { characterID } = useParams<{ characterID: string }>();
@@ -81,19 +83,30 @@ const Profile = () => {
         <div>
           <ul className="grid grid-cols-[min-content_max-content] gap-x-4">
             <li className="text-stone-400">Username</li>
-            <li>{characterData.username}</li>
+            <li>
+              <Username character={characterData} />
+            </li>
 
             <li className="text-stone-400">Rank</li>
             <li>{getCurrentRank(characterData.stats.xp)}</li>
 
             <li className="text-stone-400">Money</li>
-            <li>${characterData.stats.money.toLocaleString()}</li>
+            <li>{getMoneyRank(characterData.stats.money)}</li>
 
             <li className="text-stone-400">Family</li>
             <li>{characterData.familyName || "No family"}</li>
 
             <li className="text-stone-400">Status</li>
-            <li className="capitalize">{characterData.status}</li>
+            <li
+              className={
+                "capitalize " +
+                (characterData.status === "alive"
+                  ? "text-green-400"
+                  : "text-red-400")
+              }
+            >
+              {characterData.status}
+            </li>
           </ul>
         </div>
       </div>
