@@ -47,12 +47,23 @@ const Assassinate = () => {
         setMessage(`Player ${targetPlayer} does not exist.`);
         setMessageType("warning");
       } else {
-        // Assassinate
-        setMessage(`Player ${targetPlayer} was successfully assassinated!`);
-        setMessageType("success");
-
+        const playerData = querySnapshot.docs[0].data();
         const targetDocId = querySnapshot.docs[0].id;
-        await updateDoc(doc(db, "Characters", targetDocId), { status: "dead" });
+
+        if (playerData.status === "dead") {
+          // Player is already dead
+          setMessage(`Player ${targetPlayer} is already dead!`);
+          setMessageType("warning");
+        } else {
+          // Proceed with assassination
+          setMessage(`Player ${targetPlayer} was successfully assassinated!`);
+          setMessageType("success");
+
+          // Update player status to 'dead'
+          await updateDoc(doc(db, "Characters", targetDocId), {
+            status: "dead",
+          });
+        }
       }
     } catch (error) {
       // Handle any errors during the query
