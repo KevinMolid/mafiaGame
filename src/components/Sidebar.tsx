@@ -7,6 +7,7 @@ import { useCharacter } from "../CharacterContext";
 
 // Components
 import SidebarLink from "./SidebarLink";
+import Username from "./Typography/Username";
 
 // Functions
 import { getCurrentRank } from "../Functions/RankFunctions";
@@ -57,17 +58,15 @@ const Sidebar = () => {
         </div>
 
         {character ? (
-          <Link to={`/profile/${character.id}`}>
-            <p className="text-center font-medium">{character.username}</p>
-          </Link>
+          <div className="text-center text-stone-400">
+            <Username character={character} />
+            <p>{getCurrentRank(character.stats.xp)}</p>
+          </div>
         ) : (
           <Link to="/createcharacter">
             <p className="text-center font-medium">Create character</p>
           </Link>
         )}
-        <p className="text-center text-stone-400">
-          {getCurrentRank(character.stats.xp)}
-        </p>
       </div>
 
       {/* Navigation */}
