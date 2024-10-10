@@ -68,8 +68,9 @@ const CharacterList = ({ include, action, onClick }: CharacterListProps) => {
                   <strong className="text-white">{character.username}</strong>
                 </Link>
               )}
-              {include === "all" ||
-                (include === "admin" && <> - {getCurrentRank(character.xp)}</>)}
+              {(include === "all" || include === "admin") && (
+                <> - {getCurrentRank(character.xp)}</>
+              )}
 
               {include === "admin" && (
                 <div>
@@ -108,7 +109,7 @@ const CharacterList = ({ include, action, onClick }: CharacterListProps) => {
                       )}
                     </p>
                     <p>Xp: {character.xp}</p>
-                    <p>Money: {character.money.toLocaleString()}</p>
+                    <p>Money: ${character.money.toLocaleString()}</p>
                     <p>Location: {character.location}</p>
                   </div>
                 </div>
