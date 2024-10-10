@@ -17,7 +17,9 @@ const Header = () => {
   const auth = getAuth();
 
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const menuButtonRef = useRef<HTMLDivElement | null>(null);
   const actionsRef = useRef<HTMLDivElement | null>(null);
+  const actionsButtonRef = useRef<HTMLDivElement | null>(null);
 
   // Sign out
   function logOut() {
@@ -48,6 +50,8 @@ const Header = () => {
       if (
         menuRef.current &&
         !menuRef.current.contains(event.target as Node) &&
+        menuButtonRef.current &&
+        !menuButtonRef.current.contains(event.target as Node) &&
         menuOpen
       ) {
         setMenuOpen(false); // Close menu if clicking outside
@@ -55,6 +59,8 @@ const Header = () => {
       if (
         actionsRef.current &&
         !actionsRef.current.contains(event.target as Node) &&
+        actionsButtonRef.current &&
+        !actionsButtonRef.current.contains(event.target as Node) &&
         actionsOpen
       ) {
         setActionsOpen(false); // Close actions menu if clicking outside
@@ -69,8 +75,9 @@ const Header = () => {
 
   return (
     <header className="bg-neutral-950 px-2 sm:px-8 py-2 sm:py-4 flex justify-between items-center">
-      {/* Menu icon for small screens */}
+      {/* Actions menu icon for small screens */}
       <div
+        ref={actionsButtonRef}
         className="flex justify-center items-center rounded-md sm:hidden w-12 h-12 bg-neutral-700 hover:cursor-pointer"
         onClick={toggleActions}
       >
@@ -136,6 +143,7 @@ const Header = () => {
 
       {/* Menu icon for small screens */}
       <div
+        ref={menuButtonRef}
         className="flex justify-center items-center rounded-md sm:hidden w-12 h-12 bg-neutral-700 hover:cursor-pointer"
         onClick={toggleMenu}
       >
