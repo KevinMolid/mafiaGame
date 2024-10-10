@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 
 import firebaseConfig from "../firebaseConfig";
@@ -49,6 +55,20 @@ const CharacterList = ({ include, action, onClick }: CharacterListProps) => {
     fetchCharacters();
   }, []);
 
+  const killPlayer = async (character: any) => {
+    const characterRef = doc(db, "Characters", character.id);
+    await updateDoc(characterRef, {
+      status: "dead",
+    });
+  };
+
+  const ressurectPlayer = async (character: any) => {
+    const characterRef = doc(db, "Characters", character.id);
+    await updateDoc(characterRef, {
+      status: "alive",
+    });
+  };
+
   if (loading) {
     return <p>Loading characters...</p>;
   }
@@ -75,14 +95,14 @@ const CharacterList = ({ include, action, onClick }: CharacterListProps) => {
                 <div>
                   <div className="bg-slate-600 text-slate-300 px-4 py-1 text-sm flex gap-4">
                     {character.status === "alive" && (
-                      <p>
+                      <button onClick={() => killPlayer(character)}>
                         <i className="fa-solid fa-gun"></i> Kill
-                      </p>
+                      </button>
                     )}
                     {character.status === "dead" && (
-                      <p>
+                      <button onClick={() => ressurectPlayer(character)}>
                         <i className="fa-solid fa-hand"></i> Ressurect
-                      </p>
+                      </button>
                     )}
                   </div>
                   <div className="mb-2 bg-slate-700 text-slate-300 px-4 py-2 text-sm flex flex-wrap gap-x-4 gap-y-1">
