@@ -77,14 +77,12 @@ const Sidebar = () => {
             <i className="fa-solid fa-comment-dots"></i> Chat
           </h2>
         </Link>
-        <h2 className="uppercase text-xs pb-1 text-stone-400">
-          <i className="fa-solid fa-handshake-simple"></i> Reputation
-        </h2>
-        <ul className="text-stone-200 mb-4">
-          <li>
-            <Link to="/influence">Influence</Link>
-          </li>
-        </ul>
+
+        <Link to="/influence">
+          <h2 className="uppercase text-xs pb-1 text-stone-400">
+            <i className="fa-solid fa-handshake-simple"></i> Influence
+          </h2>
+        </Link>
 
         {/*<h2 className="uppercase text-xs pb-1 text-stone-400">
           <i className="fa-solid fa-globe"></i> Underground
@@ -152,6 +150,12 @@ const Sidebar = () => {
         <Link to="/travel">
           <h2 className="uppercase text-xs pb-1 text-stone-400">
             <i className="fa-solid fa-plane"></i> Travel
+          </h2>
+        </Link>
+
+        <Link to="/assassinate">
+          <h2 className="uppercase text-xs pb-1 text-stone-400">
+            <i className="fa-solid fa-gun"></i> Assassinate
           </h2>
         </Link>
       </nav>

@@ -31,6 +31,7 @@ import Travel from "./Pages/General/Travel.tsx";
 import Prison from "./Pages/General/Prison.tsx";
 import Parking from "./Pages/General/Parking.tsx";
 import Family from "./Pages/Family.tsx";
+import Assassinate from "./Pages/Assassinate.tsx";
 
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
 
@@ -151,6 +152,15 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <Travel />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="/assassinate"
+                      element={
+                        <ProtectedRoute>
+                          <Assassinate />
                         </ProtectedRoute>
                       }
                     />

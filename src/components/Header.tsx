@@ -116,6 +116,11 @@ const Header = () => {
                 <i className="fa-solid fa-plane"></i> Travel
               </Link>
             </li>
+            <li className="hover:text-stone-200">
+              <Link to="/assassinate" onClick={() => setActionsOpen(false)}>
+                <i className="fa-solid fa-gun"></i> Assassinate
+              </Link>
+            </li>
           </ul>
         </nav>
       )}
