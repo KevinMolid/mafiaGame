@@ -5,6 +5,9 @@ import { useState } from "react";
 // Context
 import { useCharacter } from "../CharacterContext";
 
+// Components
+import SidebarLink from "./SidebarLink";
+
 // Functions
 import { getCurrentRank } from "../Functions/RankFunctions";
 
@@ -30,6 +33,8 @@ const Sidebar = () => {
             alt="Profile picture"
             onClick={toggleNav}
           />
+
+          {/* Character dropdown menu*/}
           {showNav && (
             <nav className="bg-sky-800 border border-neutral-500 absolute bottom-0 right-[-130px]">
               <ul>
@@ -66,23 +71,24 @@ const Sidebar = () => {
       </div>
 
       {/* Navigation */}
-      <nav>
-        <Link to="/selectcharacater">
-          <h2 className="uppercase text-xs pb-1 text-stone-400">
-            <i className="fa-solid fa-people-group"></i> Select Characater
-          </h2>
-        </Link>
-        <Link to="/chat">
-          <h2 className="uppercase text-xs pb-1 text-stone-400">
-            <i className="fa-solid fa-comment-dots"></i> Chat
-          </h2>
-        </Link>
+      <nav className="flex flex-col gap-2">
+        <SidebarLink to="selectcharacater" icon="people-group">
+          Select Character
+        </SidebarLink>
 
-        <Link to="/influence">
-          <h2 className="uppercase text-xs pb-1 text-stone-400">
-            <i className="fa-solid fa-handshake-simple"></i> Influence
-          </h2>
-        </Link>
+        <hr className="border-neutral-600" />
+
+        <SidebarLink to="chat" icon="comment-dots">
+          Chat
+        </SidebarLink>
+
+        <hr className="border-neutral-600" />
+
+        <SidebarLink to="influence" icon="handshake-simple">
+          Influence
+        </SidebarLink>
+
+        <hr className="border-neutral-600" />
 
         {/*<h2 className="uppercase text-xs pb-1 text-stone-400">
           <i className="fa-solid fa-globe"></i> Underground
@@ -93,11 +99,11 @@ const Sidebar = () => {
           <li>Black Market</li>
         </ul>*/}
 
-        <Link to="/streetcrime">
-          <h2 className="uppercase text-xs pb-1 text-stone-400">
-            <i className="fa-solid fa-money-bill"></i> Street crimes
-          </h2>
-        </Link>
+        <SidebarLink to="streetcrime" icon="money-bill">
+          Street crime
+        </SidebarLink>
+
+        <hr className="border-neutral-600" />
 
         {/*<h2 className="uppercase text-xs pb-1 text-stone-400">
           <i className="fa-solid fa-briefcase"></i> Organized Crime
@@ -108,7 +114,6 @@ const Sidebar = () => {
           <li>Loan Sharking</li>
           <li>Kidnapping</li>
         </ul>*/}
-
         {/*<h2 className="uppercase text-xs pb-1 text-stone-400">
           <i className="fa-solid fa-ship"></i> Syndicate Operations
         </h2>
@@ -118,7 +123,6 @@ const Sidebar = () => {
           <li>Heists</li>
           <li>Bribery and Corruption</li>
         </ul>*/}
-
         {/*<h2 className="uppercase text-xs pb-1 text-stone-400">
           <i className="fa-solid fa-globe"></i> Global Crimes
         </h2>
@@ -129,35 +133,29 @@ const Sidebar = () => {
           <li>Mafia Wars</li>
         </ul>*/}
 
-        <Link to="/parking">
-          <h2 className="uppercase text-xs pb-1 text-stone-400">
-            <i className="fa-solid fa-square-parking"></i> Parking
-          </h2>
-        </Link>
+        <SidebarLink to="prison" icon="handcuffs">
+          Prison
+        </SidebarLink>
 
-        <Link to="/family">
-          <h2 className="uppercase text-xs pb-1 text-stone-400">
-            <i className="fa-solid fa-users"></i> Family
-          </h2>
-        </Link>
+        <SidebarLink to="parking" icon="square-parking">
+          Parking
+        </SidebarLink>
 
-        <Link to="/prison">
-          <h2 className="uppercase text-xs pb-1 text-stone-400">
-            <i className="fa-solid fa-handcuffs"></i> Prison
-          </h2>
-        </Link>
+        <SidebarLink to="travel" icon="plane">
+          Travel
+        </SidebarLink>
 
-        <Link to="/travel">
-          <h2 className="uppercase text-xs pb-1 text-stone-400">
-            <i className="fa-solid fa-plane"></i> Travel
-          </h2>
-        </Link>
+        <hr className="border-neutral-600" />
 
-        <Link to="/assassinate">
-          <h2 className="uppercase text-xs pb-1 text-stone-400">
-            <i className="fa-solid fa-gun"></i> Assassinate
-          </h2>
-        </Link>
+        <SidebarLink to="assassinate" icon="gun">
+          Assassinate
+        </SidebarLink>
+
+        <hr className="border-neutral-600" />
+
+        <SidebarLink to="family" icon="users">
+          Family
+        </SidebarLink>
       </nav>
     </div>
   );
