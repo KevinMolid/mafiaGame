@@ -59,11 +59,17 @@ const Assassinate = () => {
           setMessageType("warning");
         } else if (playerData.status === "dead") {
           // Player is already dead
-          setMessage(`Player ${targetPlayer} is already dead!`);
+          setMessage(`${targetPlayer} is already dead!`);
           setMessageType("warning");
+        } else if (character?.location !== playerData.location) {
+          // Player is not in same city
+          setMessage(
+            `You could not find ${targetPlayer} in ${character?.location}!`
+          );
+          setMessageType("failure");
         } else {
           // Proceed with assassination
-          setMessage(`Player ${targetPlayer} was successfully assassinated!`);
+          setMessage(`${targetPlayer} was successfully assassinated!`);
           setMessageType("success");
 
           // Update player status to 'dead'
