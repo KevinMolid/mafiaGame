@@ -101,7 +101,22 @@ const CharacterList = ({
           {sortedCharacters.map((character, index) => (
             <li key={character.id}>
               {/* Include Rank */}
-              {showRank && <>#{index + 1} </>}
+              {showRank && (
+                <span
+                  className={
+                    "font-bold mr-2 " +
+                    (index === 0
+                      ? "text-yellow-400"
+                      : index === 1
+                      ? "text-slate-300"
+                      : index === 2
+                      ? "text-amber-600"
+                      : "text-neutral-500")
+                  }
+                >
+                  #{index + 1}
+                </span>
+              )}
 
               {/* Username */}
               {action === "log" && onClick !== undefined && (
