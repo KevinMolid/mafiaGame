@@ -16,7 +16,7 @@ const CrimeBox = ({
   isSelected,
 }: CrimeBoxInterface) => {
   return (
-    <article className="grid grid-cols-1 grid-rows-1 w-full lg:w-72 h-32 sm:h-40 bg-neutral-950 items-center text-center rounded-lg">
+    <article className="grid grid-cols-1 grid-rows-1 w-full lg:w-72 h-24 sm:h-32 lg:h-40 bg-neutral-950 items-center text-center rounded-lg">
       <img
         className="w-full h-full object-cover col-start-1 row-start-1 rounded-lg"
         src={img}
@@ -30,8 +30,8 @@ const CrimeBox = ({
         } col-start-1 row-start-1 rounded-lg transition-all cursor-pointer`}
         onClick={onClick}
       ></div>
-      <div className="col-start-1 row-start-1 pointer-events-none text-stone-300">
-        <p className="text-2xl font-bold tracking-wider text-white">
+      <div className="col-start-1 row-start-1 pointer-events-none text-stone-400">
+        <p className="text-md md:text-xl lg:text-2xl font-bold tracking-wider text-white">
           {heading}
         </p>
         {children}

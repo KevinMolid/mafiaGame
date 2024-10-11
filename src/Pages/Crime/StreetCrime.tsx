@@ -180,7 +180,7 @@ const StreetCrime = () => {
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
       <p className="mb-4 text-stone-400 font-medium">Select Crime:</p>
-      <div className="flex flex-wrap lg:grid lg:grid-cols-[min-content_1fr] gap-2 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-[min-content_1fr] gap-2 mb-4">
         {crimes.map((crime) => (
           <CrimeBox
             heading={crime.name}
@@ -189,7 +189,7 @@ const StreetCrime = () => {
             onClick={() => setSelectedCrime(crime.name)}
             isSelected={selectedCrime === crime.name}
           >
-            <p>{crime.description}</p>
+            <p className="text-xs">{crime.description}</p>
             <p className="text-neutral-100 font-bold">
               {crime.successRate * 100} %
             </p>
