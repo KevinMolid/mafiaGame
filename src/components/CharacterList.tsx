@@ -19,10 +19,18 @@ import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
 interface CharacterListProps {
   include: "all" | "admin" | "moneyRank" | "";
   action: string;
+  sortBy?: "username" | "xp" | "money";
+  showRank?: boolean;
   onClick?: (receiver: string) => void;
 }
 
-const CharacterList = ({ include, action, onClick }: CharacterListProps) => {
+const CharacterList = ({
+  include,
+  action,
+  sortBy = "username",
+  showRank = false,
+  onClick,
+}: CharacterListProps) => {
   const [characters, setCharacters] = useState<Array<any>>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,6 +63,17 @@ const CharacterList = ({ include, action, onClick }: CharacterListProps) => {
     fetchCharacters();
   }, []);
 
+  // Function to sort characters
+  const sortedCharacters = characters.sort((a, b) => {
+    if (sortBy === "xp") {
+      return b.xp - a.xp; // Sort by XP
+    } else if (sortBy === "money") {
+      return b.money - a.money; // Sort by money
+    } else {
+      return a.username.localeCompare(b.username); // Sort alphabetically
+    }
+  });
+
   const killPlayer = async (character: any) => {
     const characterRef = doc(db, "Characters", character.id);
     await updateDoc(characterRef, {
@@ -79,8 +98,12 @@ const CharacterList = ({ include, action, onClick }: CharacterListProps) => {
         <p>No characters found.</p>
       ) : (
         <ul>
-          {characters.map((character) => (
+          {sortedCharacters.map((character, index) => (
             <li key={character.id}>
+              {/* Include Rank */}
+              {showRank && <>#{index + 1} </>}
+
+              {/* Username */}
               {action === "log" && onClick !== undefined && (
                 <button onClick={() => onClick(character.username)}>
                   {character.username}
