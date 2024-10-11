@@ -25,7 +25,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="hidden sm:block bg-neutral-800 p-8 text-sm leading-relaxed pb-16">
+    <div className="hidden sm:block bg-neutral-800 p-8 text-sm leading-relaxed h-full pb-24">
       <div className="mb-6">
         <div className="relative">
           <img
@@ -89,48 +89,11 @@ const Sidebar = () => {
 
         <hr className="border-neutral-600" />
 
-        {/*<h2 className="uppercase text-xs pb-1 text-stone-400">
-          <i className="fa-solid fa-globe"></i> Underground
-        </h2>
-        <ul className="text-stone-200 mb-4">
-          <li>Gambling</li>
-          <li>Underground Fighting</li>
-          <li>Black Market</li>
-        </ul>*/}
-
         <SidebarLink to="streetcrime" icon="money-bill">
           Street crime
         </SidebarLink>
 
         <hr className="border-neutral-600" />
-
-        {/*<h2 className="uppercase text-xs pb-1 text-stone-400">
-          <i className="fa-solid fa-briefcase"></i> Organized Crime
-        </h2>
-        <ul className="text-stone-200 mb-4">
-          <li>Robbery</li>
-          <li>Drug Dealing</li>
-          <li>Loan Sharking</li>
-          <li>Kidnapping</li>
-        </ul>*/}
-        {/*<h2 className="uppercase text-xs pb-1 text-stone-400">
-          <i className="fa-solid fa-ship"></i> Syndicate Operations
-        </h2>
-        <ul className="text-stone-200 mb-4">
-          <li>Smuggling</li>
-          <li>Assassination Contracts</li>
-          <li>Heists</li>
-          <li>Bribery and Corruption</li>
-        </ul>*/}
-        {/*<h2 className="uppercase text-xs pb-1 text-stone-400">
-          <i className="fa-solid fa-globe"></i> Global Crimes
-        </h2>
-        <ul className="text-stone-200 mb-4">
-          <li>International Smuggling</li>
-          <li>Political Assassinations</li>
-          <li>Money Laundering</li>
-          <li>Mafia Wars</li>
-        </ul>*/}
 
         <SidebarLink to="prison" icon="handcuffs">
           Prison

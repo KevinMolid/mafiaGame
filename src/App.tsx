@@ -42,159 +42,161 @@ function App() {
     <AuthProvider>
       <CharacterProvider>
         <Router>
-          <div id="page-container" className="relative min-h-dvh">
-            <div id="content-wrap" className="pb-8">
+          <div id="page-container" className="flex flex-col relative min-h-dvh">
+            <div id="content-wrap" className="flex flex-col flex-grow">
               <Header />
               <Infobar />
-              <Layout>
-                <Sidebar />
-                <main className="p-4 sm:p-12 text-stone-400">
-                  <Routes>
-                    {/* Public Routes */}
-                    <Route path="/about" element={<About />} />
-                    <Route
-                      path="/createcharacter"
-                      element={<CreateCharacter />}
-                    />
-                    <Route
-                      path="/selectcharacater"
-                      element={<SelectCharacter />}
-                    />
-                    <Route path="/chat" element={<Chat />} />
+              <div className="flex flex-col flex-grow">
+                <Layout>
+                  <Sidebar />
+                  <main className="pb-24 sm:pb-24 p-4 sm:p-12 text-stone-400">
+                    <Routes>
+                      {/* Public Routes */}
+                      <Route path="/about" element={<About />} />
+                      <Route
+                        path="/createcharacter"
+                        element={<CreateCharacter />}
+                      />
+                      <Route
+                        path="/selectcharacater"
+                        element={<SelectCharacter />}
+                      />
+                      <Route path="/chat" element={<Chat />} />
 
-                    <Route path="/leaderboard" element={<Leaderboard />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/login" element={<Login />} />
+                      <Route path="/leaderboard" element={<Leaderboard />} />
+                      <Route path="/signup" element={<Signup />} />
+                      <Route path="/login" element={<Login />} />
 
-                    {/* Protected Routes */}
-                    <Route
-                      path="/"
-                      element={
-                        <ProtectedRoute>
-                          <Home />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Protected Routes */}
+                      <Route
+                        path="/"
+                        element={
+                          <ProtectedRoute>
+                            <Home />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/admin"
-                      element={
-                        <ProtectedRoute>
-                          <Admin />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="/admin"
+                        element={
+                          <ProtectedRoute>
+                            <Admin />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/profile/:characterID"
-                      element={
-                        <ProtectedRoute>
-                          <Profile />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="/profile/:characterID"
+                        element={
+                          <ProtectedRoute>
+                            <Profile />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/editprofile"
-                      element={
-                        <ProtectedRoute>
-                          <EditProfile />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="/editprofile"
+                        element={
+                          <ProtectedRoute>
+                            <EditProfile />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/notebook"
-                      element={
-                        <ProtectedRoute>
-                          <Notebook />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="/notebook"
+                        element={
+                          <ProtectedRoute>
+                            <Notebook />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/blacklist"
-                      element={
-                        <ProtectedRoute>
-                          <Blacklist />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="/blacklist"
+                        element={
+                          <ProtectedRoute>
+                            <Blacklist />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/family"
-                      element={
-                        <ProtectedRoute>
-                          <Family />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="/family"
+                        element={
+                          <ProtectedRoute>
+                            <Family />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/forum"
-                      element={
-                        <ProtectedRoute>
-                          <Forum />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="/forum"
+                        element={
+                          <ProtectedRoute>
+                            <Forum />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/influence"
-                      element={
-                        <ProtectedRoute>
-                          <Influence />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="/influence"
+                        element={
+                          <ProtectedRoute>
+                            <Influence />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/streetcrime"
-                      element={
-                        <ProtectedRoute>
-                          <StreetCrime />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="/streetcrime"
+                        element={
+                          <ProtectedRoute>
+                            <StreetCrime />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/parking"
-                      element={
-                        <ProtectedRoute>
-                          <Parking />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="/parking"
+                        element={
+                          <ProtectedRoute>
+                            <Parking />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/prison"
-                      element={
-                        <ProtectedRoute>
-                          <Prison />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="/prison"
+                        element={
+                          <ProtectedRoute>
+                            <Prison />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/travel"
-                      element={
-                        <ProtectedRoute>
-                          <Travel />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="/travel"
+                        element={
+                          <ProtectedRoute>
+                            <Travel />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="/assassinate"
-                      element={
-                        <ProtectedRoute>
-                          <Assassinate />
-                        </ProtectedRoute>
-                      }
-                    />
-                  </Routes>
-                </main>
-              </Layout>
+                      <Route
+                        path="/assassinate"
+                        element={
+                          <ProtectedRoute>
+                            <Assassinate />
+                          </ProtectedRoute>
+                        }
+                      />
+                    </Routes>
+                  </main>
+                </Layout>
+              </div>
             </div>
             <Footer />
           </div>
