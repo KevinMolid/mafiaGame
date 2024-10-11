@@ -24,7 +24,6 @@ import Signup from "./Pages/Signup.tsx";
 import Login from "./Pages/Login.tsx";
 import CreateCharacter from "./Pages/CreateCharacter.tsx";
 import SelectCharacter from "./Pages/SelectCharacter.tsx";
-import NewMessage from "./Pages/NewMessage.tsx"; // Remove after Chat fully developed
 import Chat from "./Pages/Chat.tsx";
 import Influence from "./Pages/Reputation/Influence";
 import StreetCrime from "./Pages/Crime/StreetCrime.tsx";
@@ -32,7 +31,7 @@ import Travel from "./Pages/General/Travel.tsx";
 import Prison from "./Pages/General/Prison.tsx";
 import Parking from "./Pages/General/Parking.tsx";
 import Family from "./Pages/Family.tsx";
-import Assassinate from "./Pages/Assassinate.tsx";
+import Assassinate from "./Pages/Crime/Assassinate.tsx";
 
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
 
@@ -59,7 +58,6 @@ function App() {
                       path="/selectcharacater"
                       element={<SelectCharacter />}
                     />
-                    <Route path="/newmessage" element={<NewMessage />} />
                     <Route path="/chat" element={<Chat />} />
 
                     <Route path="/leaderboard" element={<Leaderboard />} />

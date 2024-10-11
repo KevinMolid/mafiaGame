@@ -1,7 +1,7 @@
-import H1 from "../components/Typography/H1";
-import H2 from "../components/Typography/H2";
-import Button from "../components/Button";
-import InfoBox from "../components/InfoBox";
+import H1 from "../../components/Typography/H1";
+import H2 from "../../components/Typography/H2";
+import Button from "../../components/Button";
+import InfoBox from "../../components/InfoBox";
 
 // React
 import { useState } from "react";
@@ -19,7 +19,7 @@ import {
 
 const db = getFirestore();
 
-import { useCharacter } from "../CharacterContext";
+import { useCharacter } from "../../CharacterContext";
 
 const Assassinate = () => {
   const [targetPlayer, setTargetPlayer] = useState("");

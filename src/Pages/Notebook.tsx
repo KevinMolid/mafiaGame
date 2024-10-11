@@ -1,6 +1,6 @@
 import H2 from "../components/Typography/H2";
 
-const Notes = () => {
+const Notebook = () => {
   return (
     <div>
       <H2>Notes</H2>
@@ -9,4 +9,4 @@ const Notes = () => {
   );
 };
 
-export default Notes;
+export default Notebook;
