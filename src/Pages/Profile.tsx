@@ -93,6 +93,13 @@ const Profile = () => {
                 <i className="fa-solid fa-book-skull"></i>
               </div>
             </Link>
+
+            <button
+              className="hover:text-white"
+              title={`Blacklist ${characterData.username}`}
+            >
+              <i className="fa-solid fa-skull-crossbones"></i>
+            </button>
           </div>
 
           {/* Info */}
