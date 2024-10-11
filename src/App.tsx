@@ -17,6 +17,8 @@ import Home from "./Pages/Home.tsx";
 import Admin from "./Pages/Admin.tsx";
 import Profile from "./Pages/Profile.tsx";
 import EditProfile from "./Pages/EditProfile.tsx";
+import Notebook from "./Pages/Notebook.tsx";
+import Blacklist from "./Pages/Blacklist.tsx";
 import About from "./Pages/About.tsx";
 import Forum from "./Pages/Forum.tsx";
 import Leaderboard from "./Pages/Leaderboard.tsx";
@@ -97,6 +99,24 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <EditProfile />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="/notebook"
+                      element={
+                        <ProtectedRoute>
+                          <Notebook />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="/blacklist"
+                      element={
+                        <ProtectedRoute>
+                          <Blacklist />
                         </ProtectedRoute>
                       }
                     />

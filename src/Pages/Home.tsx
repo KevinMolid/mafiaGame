@@ -1,5 +1,6 @@
 // React
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 // Context
 import { useCharacter } from "../CharacterContext";
@@ -70,6 +71,19 @@ const Home = () => {
   return (
     <div className="text-stone-400">
       {character ? <H1>Welcome {character.username}!</H1> : <H1>Welcome!</H1>}
+
+      <div className="flex gap-4">
+        <Link to="/notebook">
+          <p className="hover:text-white">
+            <i className="fa-solid fa-book text-xl"></i> Notebook
+          </p>
+        </Link>
+        <Link to="/blacklist">
+          <p className="hover:text-white">
+            <i className="fa-solid fa-book-skull text-xl"></i> Blacklist
+          </p>
+        </Link>
+      </div>
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
