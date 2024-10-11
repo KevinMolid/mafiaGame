@@ -14,10 +14,10 @@ import firebaseConfig from "../firebaseConfig";
 import Username from "./Typography/Username";
 
 // Functions
-import { getCurrentRank } from "../Functions/RankFunctions";
+import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
 
 interface CharacterListProps {
-  include: "all" | "admin" | "";
+  include: "all" | "admin" | "moneyRank" | "";
   action: string;
   onClick?: (receiver: string) => void;
 }
@@ -86,9 +86,16 @@ const CharacterList = ({ include, action, onClick }: CharacterListProps) => {
                   {character.username}
                 </button>
               )}
-              {action === "link" && <Username character={character}></Username>}
+              {action === "link" && <Username character={character} />}
+
+              {/* Includde rank */}
               {(include === "all" || include === "admin") && (
                 <> - {getCurrentRank(character.xp)}</>
+              )}
+
+              {/* Includde Money rank */}
+              {include === "moneyRank" && (
+                <> - {getMoneyRank(character.money)}</>
               )}
 
               {include === "admin" && (
