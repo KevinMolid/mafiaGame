@@ -66,35 +66,36 @@ const Profile = () => {
 
   return (
     <section>
-      <div className="flex flex-col items-center lg:grid lg:grid-cols-[max-content_max-content] gap-4 sm:gap-8 pb-4 border-b border-neutral-700">
+      <div className="flex flex-col items-center md:grid md:grid-cols-[max-content_max-content] gap-4 lg:gap-8 pb-4 border-b border-neutral-700">
         <img
           className="w-52 h-52 object-cover"
           src={characterData.img || "/default.jpg"}
           alt=""
         />
 
-        {/* Icons */}
-        <div className="text-3xl flex gap-4">
-          <Link to="/chat">
-            <div className="hover:text-white">
-              <i className="fa-solid fa-envelope"></i>
-            </div>
-          </Link>
+        <div className="flex flex-col h-full justify-between gap-4">
+          {/* Icons */}
+          <div className="text-3xl flex gap-4">
+            <Link to="/chat">
+              <div className="hover:text-white">
+                <i className="fa-solid fa-envelope"></i>
+              </div>
+            </Link>
 
-          <Link to="/notebook">
-            <div className="hover:text-white">
-              <i className="fa-solid fa-book"></i>
-            </div>
-          </Link>
+            <Link to="/notebook">
+              <div className="hover:text-white">
+                <i className="fa-solid fa-book"></i>
+              </div>
+            </Link>
 
-          <Link to="/blacklist">
-            <div className="hover:text-white">
-              <i className="fa-solid fa-book-skull"></i>
-            </div>
-          </Link>
-        </div>
+            <Link to="/blacklist">
+              <div className="hover:text-white">
+                <i className="fa-solid fa-book-skull"></i>
+              </div>
+            </Link>
+          </div>
 
-        <div>
+          {/* Info */}
           <ul className="grid grid-cols-[min-content_max-content] gap-x-4">
             <li className="text-stone-400">Username</li>
             <li>
