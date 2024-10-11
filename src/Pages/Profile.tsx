@@ -81,13 +81,13 @@ const Profile = () => {
             </div>
           </Link>
 
-          <Link to="/chat">
+          <Link to="/notebook">
             <div className="hover:text-white">
               <i className="fa-solid fa-book"></i>
             </div>
           </Link>
 
-          <Link to="/chat">
+          <Link to="/blacklist">
             <div className="hover:text-white">
               <i className="fa-solid fa-book-skull"></i>
             </div>
