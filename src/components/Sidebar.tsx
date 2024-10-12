@@ -1,6 +1,6 @@
 // React
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 // Context
 import { useCharacter } from "../CharacterContext";
@@ -16,6 +16,9 @@ const Sidebar = () => {
   const { character } = useCharacter();
   const [showNav, setShowNav] = useState(false);
 
+  const characterMenuRef = useRef<HTMLDivElement | null>(null);
+  const characterAvatarRef = useRef<HTMLDivElement | null>(null);
+
   if (!character) {
     return null;
   }
@@ -24,20 +27,45 @@ const Sidebar = () => {
     setShowNav(!showNav);
   };
 
+  // Close menu if clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        characterMenuRef.current &&
+        !characterMenuRef.current.contains(event.target as Node) &&
+        characterAvatarRef.current &&
+        !characterAvatarRef.current.contains(event.target as Node) &&
+        showNav
+      ) {
+        setShowNav(false); // Close character menu if clicking outside
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showNav]); // Listen only when Character Menu open
+
   return (
     <div className="hidden sm:block bg-neutral-800 p-8 text-sm leading-relaxed h-full pb-24">
       <div className="mb-6">
         <div className="relative">
-          <img
-            className="border border-neutral-500 size-36 object-cover m-auto mb-2 hover:cursor-pointer"
-            src={character.img || "/default.jpg"}
-            alt="Profile picture"
-            onClick={toggleNav}
-          />
+          <div ref={characterAvatarRef}>
+            <img
+              className="border border-neutral-500 size-36 object-cover m-auto mb-2 hover:cursor-pointer"
+              src={character.img || "/default.jpg"}
+              alt="Profile picture"
+              onClick={toggleNav}
+            />
+          </div>
 
           {/* Character dropdown menu*/}
           {showNav && (
-            <nav className="bg-sky-800 border border-neutral-500 absolute bottom-0 right-[-130px]">
+            <div
+              className="bg-sky-800 border border-neutral-500 absolute bottom-0 right-[-130px]"
+              ref={characterMenuRef}
+            >
               <ul>
                 <li className="hover:bg-sky-900 py-2 px-4">
                   <Link
@@ -53,7 +81,7 @@ const Sidebar = () => {
                   </Link>
                 </li>
               </ul>
-            </nav>
+            </div>
           )}
         </div>
 
