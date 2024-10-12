@@ -71,12 +71,17 @@ const Sidebar = () => {
                   <Link
                     to={`/profile/${character.id}`}
                     className="flex gap-2 items-center"
+                    onClick={() => setShowNav(false)}
                   >
                     <i className="fa-solid fa-user"></i> Show profile
                   </Link>
                 </li>
                 <li className="hover:bg-sky-900 py-2 px-4">
-                  <Link to="/editprofile" className="flex gap-2 items-center">
+                  <Link
+                    to="/editprofile"
+                    className="flex gap-2 items-center"
+                    onClick={() => setShowNav(false)}
+                  >
                     <i className="fa-solid fa-pen"></i> Edit profile
                   </Link>
                 </li>
