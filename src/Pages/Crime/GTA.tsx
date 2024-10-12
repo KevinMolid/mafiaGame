@@ -1,9 +1,14 @@
+// Components
 import H1 from "../../components/Typography/H1";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
-import { useState } from "react";
 
+// Data
+import ParkingTypes from "../../Data/ParkingTypes";
 import Cars from "../../Data/Cars";
+
+// React
+import { useState } from "react";
 
 import { useCharacter } from "../../CharacterContext";
 
@@ -71,6 +76,31 @@ const GTA = () => {
 
     try {
       const characterRef = doc(db, "Characters", character.id);
+
+      // Get player's parking facility
+      const facilityType = character.parkingFacilities?.[character.location];
+
+      // Check if the parking facility type is valid
+      if (facilityType === undefined || facilityType === 0) {
+        setMessageType("failure");
+        setMessage("You do not own any parking facility at this location.");
+        return;
+      }
+
+      // Get the number of slots available in the parking facility
+      const availableSlots = ParkingTypes[facilityType].slots;
+
+      // Get the number of cars the player already has at the current location
+      const currentCars = character.cars?.[character.location] || [];
+
+      // Check if the player has available slots
+      if (currentCars.length >= availableSlots) {
+        setMessageType("failure");
+        setMessage(
+          "No available parking slots in your facility. Upgrade your parking facility or sell cars to free up space."
+        );
+        return;
+      }
 
       // Update the character's cars list
       const updatedCars = [

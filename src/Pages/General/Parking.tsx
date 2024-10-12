@@ -168,7 +168,10 @@ const Parking = () => {
         </tbody>
       </table>
       <p>
-        <strong className="text-white">1</strong> of{" "}
+        <strong className="text-white">
+          {character.cars?.[character.location]?.length || 0}
+        </strong>{" "}
+        of{" "}
         <strong className="text-white">
           {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
         </strong>{" "}
