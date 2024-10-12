@@ -39,15 +39,9 @@ const Login = () => {
 
   /* Handle Login*/
   function logIn() {
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        // Signed in
-        const user = userCredential.user;
-        setError(user.uid);
-      })
-      .catch((error) => {
-        setError(error.code);
-      });
+    signInWithEmailAndPassword(auth, email, password).catch((error) => {
+      setError(error.code);
+    });
   }
 
   return (
