@@ -1,10 +1,44 @@
 import H2 from "../components/Typography/H2";
+import Box from "../components/Box";
+import Button from "../components/Button";
+
+import { useState } from "react";
 
 const Notebook = () => {
+  const [notes, setNotes] = useState("Here are your notes. Click to Edit.");
+  const [editing, setEditing] = useState(false);
+
+  const handleChange = (e: any) => {
+    setNotes(e.target.value);
+  };
+
   return (
-    <div>
-      <H2>Notes</H2>
-      <p>Here are your notes...</p>
+    <div className="flex flex-col gap-2">
+      <H2>Notebook</H2>
+      <div className="mb-2">
+        <Box>
+          {!editing && (
+            <p className="h-52" onClick={() => setEditing(true)}>
+              {notes}
+            </p>
+          )}
+          {editing && (
+            <textarea
+              name=""
+              id=""
+              className="bg-inherit w-full h-52 resize-none text-white"
+              value={notes}
+              onChange={handleChange}
+            ></textarea>
+          )}
+        </Box>
+      </div>
+      {editing && (
+        <div>
+          {" "}
+          <Button onClick={() => setEditing(false)}>Save changes</Button>
+        </div>
+      )}
     </div>
   );
 };
