@@ -19,10 +19,6 @@ const Sidebar = () => {
   const characterMenuRef = useRef<HTMLDivElement | null>(null);
   const characterAvatarRef = useRef<HTMLDivElement | null>(null);
 
-  if (!character) {
-    return null;
-  }
-
   const toggleNav = () => {
     setShowNav(!showNav);
   };
@@ -46,6 +42,11 @@ const Sidebar = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showNav]); // Listen only when Character Menu open
+
+  // Render null if character is not available
+  if (!character) {
+    return null;
+  }
 
   return (
     <div className="hidden sm:block bg-neutral-800 p-8 text-sm leading-relaxed h-full pb-24">

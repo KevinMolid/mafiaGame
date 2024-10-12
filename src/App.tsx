@@ -1,5 +1,6 @@
 // React
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ErrorBoundary from "./components/ErrorBoundary.tsx";
 
 // Context
 import { AuthProvider } from "./AuthContext";
@@ -55,7 +56,9 @@ function App() {
               <Infobar />
               <div className="flex flex-col flex-grow">
                 <Layout>
-                  <Sidebar />
+                  <ErrorBoundary>
+                    <Sidebar />
+                  </ErrorBoundary>
                   <main className="pb-24 sm:pb-24 p-4 sm:p-12 text-stone-400">
                     <Routes>
                       {/* Public Routes */}

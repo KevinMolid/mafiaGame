@@ -179,7 +179,7 @@ const Header = () => {
                 <i className="fa-solid fa-medal"></i> Leaderboard
               </Link>
             </li>
-            {userData ? (
+            {userData && (
               <li className="hover:text-stone-200">
                 <button
                   onClick={() => {
@@ -190,7 +190,9 @@ const Header = () => {
                   Log out
                 </button>
               </li>
-            ) : (
+            )}
+
+            {!userData && (
               <li className="hover:text-stone-200">
                 <Link to="/signup" onClick={() => setMenuOpen(false)}>
                   Log in / Sign up
@@ -205,7 +207,7 @@ const Header = () => {
       <nav className="hidden sm:flex">
         <ul className="gap-6 flex">
           <li className="text-yellow-400 hover:text-yellow-200">
-            {userData && userData.type === "admin" && (
+            {userData?.type === "admin" && (
               <Link to="/admin">
                 <i className="fa-solid fa-gear"></i> Admin
               </Link>
