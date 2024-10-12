@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import H1 from "../components/Typography/H1";
 import Button from "../components/Button";
+import InfoBox from "../components/InfoBox";
 
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
@@ -20,6 +21,10 @@ const EditProfile = () => {
   const [profileTxt, setProfileTxt] = useState(
     character ? character.profileText : ""
   );
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<
+    "success" | "failure" | "info"
+  >("info");
 
   const handleImgChange = (e: any) => {
     setimgUrl(e.target.value);
@@ -39,14 +44,20 @@ const EditProfile = () => {
         img: imgUrl,
         profileText: profileTxt,
       });
+
+      setMessage("Your profile page was successfully updated!");
+      setMessageType("success");
     } catch (error) {
-      console.error("Error updating img:", error);
+      console.error("Error updating profile:", error);
+      setMessage("There was an error while updating your profile page!");
+      setMessageType("failure");
     }
   };
 
   return (
     <section>
       <H1>Edit profile</H1>
+      {message && <InfoBox type={messageType}>{message}</InfoBox>}
       <form action="" className="flex flex-col gap-4 mb-4">
         <div className="flex flex-col">
           <label htmlFor="profileImg">Profile Image</label>
