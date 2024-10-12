@@ -148,12 +148,23 @@ const Parking = () => {
           </tr>
         </thead>
         <tbody>
-          <tr className="border bg-neutral-800 border-neutral-700">
-            <td className="px-2 py-1">Toyota RAV4</td>
-            <td className="px-2 py-1">203 hp</td>
-            <td className="px-2 py-1">{"$" + (15000).toLocaleString()}</td>
-            <td className="px-2 py-1">sell</td>
-          </tr>
+          {character.cars[character.location]?.map(
+            (car: any, index: number) => {
+              return (
+                <tr
+                  className="border bg-neutral-800 border-neutral-700"
+                  key={index}
+                >
+                  <td className="px-2 py-1">{car.name}</td>
+                  <td className="px-2 py-1">{car.hp} hp</td>
+                  <td className="px-2 py-1">
+                    {"$" + car.value.toLocaleString()}
+                  </td>
+                  <td className="px-2 py-1">sell</td>
+                </tr>
+              );
+            }
+          )}
         </tbody>
       </table>
       <p>
