@@ -5,14 +5,20 @@ interface LinkProps {
   to: string;
   icon: string;
   children: ReactNode;
+  onClick?: () => void;
 }
 
-const SidebarLink = ({ to, icon, children }: LinkProps) => {
+const SidebarLink = ({ to, icon, children, onClick }: LinkProps) => {
   return (
-    <Link to={to}>
-      <h2 className="uppercase text-xs pb-1 text-stone-400 hover:text-stone-200">
-        <i className={`fa-solid fa-${icon}`}></i> {children}
-      </h2>
+    <Link to={to} onClick={onClick}>
+      <div className="text-stone-400 hover:text-stone-200 grid grid-cols-[30px_auto]">
+        <div>
+          <i className={`fa-solid fa-${icon}`}></i>
+        </div>
+        <div>
+          <p>{children}</p>
+        </div>
+      </div>
     </Link>
   );
 };

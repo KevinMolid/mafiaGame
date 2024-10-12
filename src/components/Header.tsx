@@ -1,4 +1,5 @@
 import logo from "../assets/LogoV2.png";
+import SidebarLink from "./SidebarLink";
 
 // React
 import { Link } from "react-router-dom";
@@ -88,47 +89,97 @@ const Header = () => {
       {actionsOpen && (
         <nav
           ref={actionsRef}
-          className="absolute top-16 left-0 bg-neutral-950 p-4 sm:hidden z-10 min-w-40"
+          className="absolute flex flex-col gap-2 top-16 left-0 bg-neutral-950 p-4 sm:hidden z-10 min-w-40 select-none"
         >
           <p>Actions</p>
-          <hr className="border-neutral-500 mb-2" />
-          <ul className="flex flex-col gap-2 text-stone-400">
-            <li className="hover:text-stone-200">
-              <Link to="/influence" onClick={() => setActionsOpen(false)}>
-                <i className="fa-solid fa-handshake-simple"></i> Influence
-              </Link>
-            </li>
-            <li className="hover:text-stone-200">
-              <Link to="/streetcrime" onClick={() => setActionsOpen(false)}>
-                <i className="fa-solid fa-money-bill"></i> Street Crimes
-              </Link>
-            </li>
-            <li className="hover:text-stone-200">
-              <Link to="/family" onClick={() => setActionsOpen(false)}>
-                <i className="fa-solid fa-users"></i> Family
-              </Link>
-            </li>
-            <li className="hover:text-stone-200">
-              <Link to="/parking" onClick={() => setActionsOpen(false)}>
-                <i className="fa-solid fa-square-parking"></i> Parking
-              </Link>
-            </li>
-            <li className="hover:text-stone-200">
-              <Link to="/prison" onClick={() => setActionsOpen(false)}>
-                <i className="fa-solid fa-handcuffs"></i> Prison
-              </Link>
-            </li>
-            <li className="hover:text-stone-200">
-              <Link to="/travel" onClick={() => setActionsOpen(false)}>
-                <i className="fa-solid fa-plane"></i> Travel
-              </Link>
-            </li>
-            <li className="hover:text-stone-200">
-              <Link to="/assassinate" onClick={() => setActionsOpen(false)}>
-                <i className="fa-solid fa-gun"></i> Assassinate
-              </Link>
-            </li>
-          </ul>
+          <hr className="border-neutral-500" />
+          <SidebarLink
+            to="selectcharacater"
+            icon="people-group"
+            onClick={() => setActionsOpen(false)}
+          >
+            Select Character
+          </SidebarLink>
+
+          <hr className="border-neutral-600" />
+
+          <SidebarLink
+            to="family"
+            icon="users"
+            onClick={() => setActionsOpen(false)}
+          >
+            Family
+          </SidebarLink>
+
+          <SidebarLink
+            to="chat"
+            icon="comment-dots"
+            onClick={() => setActionsOpen(false)}
+          >
+            Chat
+          </SidebarLink>
+
+          <hr className="border-neutral-600" />
+
+          <SidebarLink
+            to="influence"
+            icon="handshake-simple"
+            onClick={() => setActionsOpen(false)}
+          >
+            Influence
+          </SidebarLink>
+
+          <hr className="border-neutral-600" />
+
+          <SidebarLink
+            to="streetcrime"
+            icon="money-bill"
+            onClick={() => setActionsOpen(false)}
+          >
+            Street crime
+          </SidebarLink>
+
+          <SidebarLink
+            to="gta"
+            icon="car"
+            onClick={() => setActionsOpen(false)}
+          >
+            Grand Theft Auto
+          </SidebarLink>
+
+          <SidebarLink
+            to="assassinate"
+            icon="gun"
+            onClick={() => setActionsOpen(false)}
+          >
+            Assassinate
+          </SidebarLink>
+
+          <hr className="border-neutral-600" />
+
+          <SidebarLink
+            to="prison"
+            icon="handcuffs"
+            onClick={() => setActionsOpen(false)}
+          >
+            Prison
+          </SidebarLink>
+
+          <SidebarLink
+            to="parking"
+            icon="square-parking"
+            onClick={() => setActionsOpen(false)}
+          >
+            Parking
+          </SidebarLink>
+
+          <SidebarLink
+            to="travel"
+            icon="plane"
+            onClick={() => setActionsOpen(false)}
+          >
+            Travel
+          </SidebarLink>
         </nav>
       )}
 
@@ -154,52 +205,65 @@ const Header = () => {
       {menuOpen && (
         <nav
           ref={menuRef}
-          className="absolute top-16 right-0 bg-neutral-950 p-4 sm:hidden z-10"
+          className="absolute flex flex-col gap-2 top-16 right-0 bg-neutral-950 p-4 sm:hidden z-10 min-w-40 select-none"
         >
           <p>Menu</p>
-          <hr className="border-neutral-500 mb-2" />
-          <ul className="flex flex-col gap-2 text-stone-400">
-            <li className="hover:text-stone-200">
-              <Link to="/about" onClick={() => setMenuOpen(false)}>
-                <i className="fa-solid fa-circle-info"></i> About
-              </Link>
-            </li>
-            <Link to="/chat" onClick={() => setMenuOpen(false)}>
-              <h2 className="hover:text-stone-200">
-                <i className="fa-solid fa-comment-dots"></i> Chat
-              </h2>
-            </Link>
-            <li className="hover:text-stone-200">
-              <Link to="/forum" onClick={() => setMenuOpen(false)}>
-                <i className="fa-solid fa-comments"></i> Forum
-              </Link>
-            </li>
-            <li className="hover:text-stone-200">
-              <Link to="/leaderboard" onClick={() => setMenuOpen(false)}>
-                <i className="fa-solid fa-medal"></i> Leaderboard
-              </Link>
-            </li>
-            {userData && (
-              <li className="hover:text-stone-200">
-                <button
-                  onClick={() => {
-                    logOut();
-                    setMenuOpen(false);
-                  }}
-                >
-                  Log out
-                </button>
-              </li>
-            )}
+          <hr className="border-neutral-500" />
 
-            {!userData && (
-              <li className="hover:text-stone-200">
-                <Link to="/signup" onClick={() => setMenuOpen(false)}>
-                  Log in / Sign up
-                </Link>
-              </li>
-            )}
-          </ul>
+          {userData?.type === "admin" && (
+            <SidebarLink
+              to="admin"
+              icon="gear"
+              onClick={() => setMenuOpen(false)}
+            >
+              Admin
+            </SidebarLink>
+          )}
+
+          <SidebarLink
+            to="about"
+            icon="circle-info"
+            onClick={() => setMenuOpen(false)}
+          >
+            About
+          </SidebarLink>
+
+          <SidebarLink
+            to="forum"
+            icon="comments"
+            onClick={() => setMenuOpen(false)}
+          >
+            Forum
+          </SidebarLink>
+
+          <SidebarLink
+            to="leaderboard"
+            icon="medal"
+            onClick={() => setMenuOpen(false)}
+          >
+            Leaderboard
+          </SidebarLink>
+
+          {userData && (
+            <div className="text-stone-400 hover:text-stone-200">
+              <button
+                onClick={() => {
+                  logOut();
+                  setMenuOpen(false);
+                }}
+              >
+                Log out
+              </button>
+            </div>
+          )}
+
+          {!userData && (
+            <div className="text-stone-400 hover:text-stone-200">
+              <Link to="/signup" onClick={() => setMenuOpen(false)}>
+                Log in / Sign up
+              </Link>
+            </div>
+          )}
         </nav>
       )}
 
