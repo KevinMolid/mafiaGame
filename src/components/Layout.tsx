@@ -1,15 +1,23 @@
 import { ReactNode } from "react";
+import { useAuth } from "../AuthContext";
 
 interface LayoutInterface {
   children: ReactNode;
 }
 
 const Layout = ({ children }: LayoutInterface) => {
-  return (
-    <div className="flex flex-col sm:grid sm:grid-cols-[220px_auto] flex-grow">
-      {children}
-    </div>
-  );
+  const { userData } = useAuth();
+
+  if (userData) {
+    return (
+      <div className="flex flex-col sm:grid sm:grid-cols-[220px_auto] flex-grow">
+        {children}
+      </div>
+    );
+  }
+  if (!userData) {
+    return <div className="flex">{children}</div>;
+  }
 };
 
 export default Layout;
