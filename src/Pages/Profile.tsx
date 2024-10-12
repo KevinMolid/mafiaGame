@@ -7,6 +7,7 @@ import Username from "../components/Typography/Username";
 // Components
 import Notebook from "./Notebook";
 import Blacklist from "./Blacklist";
+import EditProfile from "./EditProfile";
 
 // Firebase
 import { doc, getDoc } from "firebase/firestore";
@@ -26,9 +27,9 @@ const Profile = () => {
   const [characterData, setCharacterData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<"profile" | "notebook" | "blacklist">(
-    "profile"
-  );
+  const [view, setView] = useState<
+    "profile" | "notebook" | "blacklist" | "edit"
+  >("profile");
 
   useEffect(() => {
     const fetchCharacterData = async () => {
@@ -110,6 +111,13 @@ const Profile = () => {
               <i className="fa-solid fa-book-skull"></i>
             </div>
 
+            <div
+              className="hover:text-white hover:cursor-pointer"
+              onClick={() => setView("edit")}
+            >
+              <i className="fa-solid fa-edit"></i>
+            </div>
+
             <button
               className="hover:text-white"
               title={`Blacklist ${characterData.username}`}
@@ -163,6 +171,12 @@ const Profile = () => {
       {view === "blacklist" && (
         <div className="py-6">
           <Blacklist></Blacklist>
+        </div>
+      )}
+
+      {view === "edit" && (
+        <div className="py-6">
+          <EditProfile></EditProfile>
         </div>
       )}
     </section>
