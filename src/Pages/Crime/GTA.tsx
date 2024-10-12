@@ -5,6 +5,15 @@ import { useState } from "react";
 
 import Cars from "../../Data/Cars";
 
+import { useCharacter } from "../../CharacterContext";
+
+import { getFirestore, doc, updateDoc } from "firebase/firestore";
+import { initializeApp } from "firebase/app";
+import firebaseConfig from "../../firebaseConfig";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 type Car = {
   name: string;
   value: number;
@@ -27,6 +36,7 @@ const GTA = () => {
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "info"
   >("info");
+  const { character, setCharacter } = useCharacter();
 
   // Helper function to get random number in range
   const getRandom = (min: number, max: number) =>
@@ -45,7 +55,13 @@ const GTA = () => {
     return 1; // Fallback to Tier 1
   };
 
-  const stealCar = () => {
+  const stealCar = async () => {
+    if (!character) {
+      setMessageType("failure");
+      setMessage("Character not loaded.");
+      return;
+    }
+
     const tier = getRandomTier();
     const selectedTierCars = tiers[tier];
 
@@ -53,8 +69,35 @@ const GTA = () => {
     const randomCar =
       selectedTierCars[getRandom(0, selectedTierCars.length - 1)];
 
-    setMessageType("success");
-    setMessage(`You stole a ${randomCar.name}!`);
+    try {
+      const characterRef = doc(db, "Characters", character.id);
+
+      // Update the character's cars list
+      const updatedCars = [
+        ...(character.cars?.[character.location] || []), // Get existing cars in current location
+        randomCar, // Add the stolen car
+      ];
+
+      await updateDoc(characterRef, {
+        [`cars.${character.location}`]: updatedCars, // Update cars for the current location
+      });
+
+      // Update the local character state with the new car
+      setCharacter({
+        ...character, // Spread the current character data
+        cars: {
+          ...character.cars,
+          [character.location]: updatedCars, // Update cars for the current location
+        },
+      });
+
+      setMessageType("success");
+      setMessage(`You stole a ${randomCar.name}!`);
+    } catch (error) {
+      setMessageType("failure");
+      setMessage("Failed to steal the car. Try again.");
+      console.error("Error updating car:", error);
+    }
   };
 
   return (
