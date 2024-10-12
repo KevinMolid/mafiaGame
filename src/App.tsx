@@ -12,7 +12,7 @@ import Layout from "./components/Layout";
 import Infobar from "./components/Infobar";
 import Footer from "./components/Footer";
 
-// Pages
+/***** PAGES *****/
 import Home from "./Pages/Home.tsx";
 import Admin from "./Pages/Admin.tsx";
 import Profile from "./Pages/Profile.tsx";
@@ -26,14 +26,21 @@ import Signup from "./Pages/Signup.tsx";
 import Login from "./Pages/Login.tsx";
 import CreateCharacter from "./Pages/CreateCharacter.tsx";
 import SelectCharacter from "./Pages/SelectCharacter.tsx";
-import Chat from "./Pages/Chat.tsx";
 import Influence from "./Pages/Reputation/Influence";
+
+// Crimes
 import StreetCrime from "./Pages/Crime/StreetCrime.tsx";
+import GTA from "./Pages/Crime/GTA.tsx";
+import Assassinate from "./Pages/Crime/Assassinate.tsx";
+
+// General
 import Travel from "./Pages/General/Travel.tsx";
 import Prison from "./Pages/General/Prison.tsx";
 import Parking from "./Pages/General/Parking.tsx";
+
+// Social
 import Family from "./Pages/Family.tsx";
-import Assassinate from "./Pages/Crime/Assassinate.tsx";
+import Chat from "./Pages/Chat.tsx";
 
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
 
@@ -159,6 +166,24 @@ function App() {
                       />
 
                       <Route
+                        path="/gta"
+                        element={
+                          <ProtectedRoute>
+                            <GTA />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="/assassinate"
+                        element={
+                          <ProtectedRoute>
+                            <Assassinate />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
                         path="/parking"
                         element={
                           <ProtectedRoute>
@@ -181,15 +206,6 @@ function App() {
                         element={
                           <ProtectedRoute>
                             <Travel />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="/assassinate"
-                        element={
-                          <ProtectedRoute>
-                            <Assassinate />
                           </ProtectedRoute>
                         }
                       />

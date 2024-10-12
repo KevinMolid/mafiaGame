@@ -77,6 +77,10 @@ const Sidebar = () => {
 
         <hr className="border-neutral-600" />
 
+        <SidebarLink to="family" icon="users">
+          Family
+        </SidebarLink>
+
         <SidebarLink to="chat" icon="comment-dots">
           Chat
         </SidebarLink>
@@ -93,6 +97,14 @@ const Sidebar = () => {
           Street crime
         </SidebarLink>
 
+        <SidebarLink to="gta" icon="car">
+          Grand Theft Auto
+        </SidebarLink>
+
+        <SidebarLink to="assassinate" icon="gun">
+          Assassinate
+        </SidebarLink>
+
         <hr className="border-neutral-600" />
 
         <SidebarLink to="prison" icon="handcuffs">
@@ -105,18 +117,6 @@ const Sidebar = () => {
 
         <SidebarLink to="travel" icon="plane">
           Travel
-        </SidebarLink>
-
-        <hr className="border-neutral-600" />
-
-        <SidebarLink to="assassinate" icon="gun">
-          Assassinate
-        </SidebarLink>
-
-        <hr className="border-neutral-600" />
-
-        <SidebarLink to="family" icon="users">
-          Family
         </SidebarLink>
       </nav>
     </div>
