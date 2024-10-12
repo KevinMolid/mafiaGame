@@ -43,7 +43,7 @@ const Login = () => {
       .then((userCredential) => {
         // Signed in
         const user = userCredential.user;
-        console.log("Logged in as " + user.uid);
+        setError(user.uid);
       })
       .catch((error) => {
         setError(error.code);
