@@ -148,7 +148,7 @@ const Parking = () => {
           </tr>
         </thead>
         <tbody>
-          {character.cars[character.location]?.map(
+          {character.cars?.[character.location]?.map(
             (car: any, index: number) => {
               return (
                 <tr
