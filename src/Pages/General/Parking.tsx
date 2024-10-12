@@ -1,6 +1,8 @@
 import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
+import H3 from "../../components/Typography/H3";
 import Button from "../../components/Button";
+import Box from "../../components/Box";
 
 import { useState, useEffect } from "react";
 
@@ -73,7 +75,7 @@ const Parking = () => {
           {character?.location}
         </p>
       </div>
-      <div>
+      <Box color="slate">
         <H2>{parking !== null ? ParkingTypes[parking].name : "Loading..."}</H2>
         <div className="flex gap-4">
           {/* Show loading if parking is still null */}
@@ -94,8 +96,8 @@ const Parking = () => {
         {canUpgrade && (
           <div className="mt-2">
             <p>Next upgrade:</p>
-            <div className="bg-sky-950 border border-sky-700 text-slate-400 px-4 py-2 rounded-lg mt-1">
-              <H2>{ParkingTypes[parking + 1].name}</H2>
+            <Box color="slate">
+              <H3>{ParkingTypes[parking + 1].name}</H3>
               <div className="grid grid-cols-2">
                 <div>
                   <p>
@@ -130,14 +132,14 @@ const Parking = () => {
                       )
                     }
                   >
-                    Upgrade
+                    Buy Upgrade
                   </Button>
                 </div>
               </div>
-            </div>
+            </Box>
           </div>
         )}
-      </div>
+      </Box>
       <table className="w-full table-auto border border-collapse text-left">
         <thead>
           <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
