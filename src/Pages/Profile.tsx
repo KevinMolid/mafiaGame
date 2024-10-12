@@ -4,6 +4,10 @@ import { useParams, Link } from "react-router-dom";
 
 import Username from "../components/Typography/Username";
 
+// Components
+import Notebook from "./Notebook";
+import Blacklist from "./Blacklist";
+
 // Firebase
 import { doc, getDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
@@ -22,6 +26,9 @@ const Profile = () => {
   const [characterData, setCharacterData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<"profile" | "notebook" | "blacklist">(
+    "profile"
+  );
 
   useEffect(() => {
     const fetchCharacterData = async () => {
@@ -75,24 +82,33 @@ const Profile = () => {
 
         <div className="flex flex-col h-full justify-between gap-4">
           {/* Icons */}
-          <div className="text-3xl flex gap-4">
+          <div className="text-2xl flex gap-4">
             <Link to="/chat">
               <div className="hover:text-white">
                 <i className="fa-solid fa-envelope"></i>
               </div>
             </Link>
 
-            <Link to="/notebook">
-              <div className="hover:text-white">
-                <i className="fa-solid fa-book"></i>
-              </div>
-            </Link>
+            <div
+              className="hover:text-white hover:cursor-pointer"
+              onClick={() => setView("profile")}
+            >
+              <i className="fa-solid fa-user"></i>
+            </div>
 
-            <Link to="/blacklist">
-              <div className="hover:text-white">
-                <i className="fa-solid fa-book-skull"></i>
-              </div>
-            </Link>
+            <div
+              className="hover:text-white hover:cursor-pointer"
+              onClick={() => setView("notebook")}
+            >
+              <i className="fa-solid fa-book"></i>
+            </div>
+
+            <div
+              className="hover:text-white hover:cursor-pointer"
+              onClick={() => setView("blacklist")}
+            >
+              <i className="fa-solid fa-book-skull"></i>
+            </div>
 
             <button
               className="hover:text-white"
@@ -133,7 +149,22 @@ const Profile = () => {
         </div>
       </div>
 
-      <div className="py-6">{characterData.profileText}</div>
+      {/* Views */}
+      {view === "profile" && (
+        <div className="py-6">{characterData.profileText}</div>
+      )}
+
+      {view === "notebook" && (
+        <div className="py-6">
+          <Notebook></Notebook>
+        </div>
+      )}
+
+      {view === "blacklist" && (
+        <div className="py-6">
+          <Blacklist></Blacklist>
+        </div>
+      )}
     </section>
   );
 };
