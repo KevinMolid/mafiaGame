@@ -2,12 +2,12 @@
 import { useState, useEffect } from "react";
 
 // Firebase
-import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 // Context
 import { useCharacter } from "../../CharacterContext";
 import { useAuth } from "../../AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useCooldown } from "../../CooldownContext";
 
 // Components
 import H1 from "../../components/Typography/H1";
@@ -23,21 +23,25 @@ const StreetCrime = () => {
   const { userData } = useAuth();
   const navigate = useNavigate();
 
+  const { cooldownTime, startCooldown, fetchCooldown } = useCooldown();
+
   const [selectedCrime, setSelectedCrime] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "important" | "warning" | "info"
   >("success");
 
-  const db = getFirestore();
-  const [cooldownTime, setCooldownTime] = useState(0);
-
   useEffect(() => {
     if (!userData) {
       navigate("/login");
       return;
     }
-  }, [userData, navigate]);
+
+    if (userData.activeCharacter) {
+      // Fetch cooldown when the component mounts
+      fetchCooldown(userData.activeCharacter);
+    }
+  }, [userData, navigate, fetchCooldown]);
 
   // Function for comitting a crime
   const handleClick = async () => {
@@ -63,68 +67,14 @@ const StreetCrime = () => {
           setMessageType,
         });
 
-        // Set timestaamp in db
-        const timestamp = new Date().getTime(); // Current time in milliseconds
-        await updateDoc(doc(db, "Characters", userData.activeCharacter), {
-          lastCrimeTimestamp: timestamp,
-        });
-
-        setCooldownTime(120);
+        // Start the cooldown after a crime
+        startCooldown(90, userData.activeCharacter);
       }
     } else {
       setMessage("No crime selected! Please select a crime first.");
       setMessageType("info");
     }
   };
-
-  useEffect(() => {
-    const fetchCooldown = async () => {
-      if (!userData?.activeCharacter) return;
-
-      const characterRef = doc(db, "Characters", userData.activeCharacter);
-      const characterSnap = await getDoc(characterRef);
-
-      if (characterSnap.exists()) {
-        const characterData = characterSnap.data();
-        const lastCrimeTimestamp = characterData.lastCrimeTimestamp;
-
-        if (lastCrimeTimestamp) {
-          const currentTime = new Date().getTime();
-          const elapsedTime = Math.floor(
-            (currentTime - lastCrimeTimestamp) / 1000
-          ); // in seconds
-
-          // Calculate remaining cooldown (120 seconds cooldown)
-          const remainingCooldown = 120 - elapsedTime;
-
-          if (remainingCooldown > 0) {
-            setCooldownTime(remainingCooldown);
-          } else {
-            setCooldownTime(0); // No cooldown
-          }
-        }
-      }
-    };
-
-    fetchCooldown();
-  }, [db, userData?.activeCharacter]);
-
-  // Effect to handle the cooldown timer
-  useEffect(() => {
-    if (cooldownTime > 0) {
-      const timer = setInterval(() => {
-        setCooldownTime((prevTime) => prevTime - 1);
-      }, 1000);
-
-      // Cleanup the interval when cooldown reaches 0
-      if (cooldownTime <= 0) {
-        clearInterval(timer);
-      }
-
-      // Cleanup the interval on unmount or when cooldownTime reaches 0
-      return () => clearInterval(timer);
-    }
-  }, [cooldownTime]);
 
   // Crime options array
   const crimes = [
