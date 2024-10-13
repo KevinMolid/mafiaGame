@@ -132,9 +132,13 @@ const Sidebar = () => {
         <hr className="border-neutral-600" />
 
         <SidebarLink to="streetcrime" icon="money-bill">
-          Street crime{" "}
-          {cooldownTime > 0 && (
-            <span className="text-white">{cooldownTime}</span>
+          <div>Street crime</div>
+          {cooldownTime > 0 ? (
+            <div className="text-neutral-200 font-medium">{cooldownTime}</div>
+          ) : (
+            <div className="text-green-400">
+              <i className="fa-solid fa-check"></i>
+            </div>
           )}
         </SidebarLink>
 
