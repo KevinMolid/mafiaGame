@@ -53,7 +53,7 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
         const elapsedTime = Math.floor(
           (currentTime - lastCrimeTimestamp) / 1000
         ); // in seconds
-        const remainingCooldown = 120 - elapsedTime; // Assuming a 120 second cooldown
+        const remainingCooldown = 90 - elapsedTime;
 
         if (remainingCooldown > 0) {
           setCooldownTime(remainingCooldown);

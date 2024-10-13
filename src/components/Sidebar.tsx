@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 
 // Context
 import { useCharacter } from "../CharacterContext";
+import { useCooldown } from "../CooldownContext";
 
 // Components
 import SidebarLink from "./SidebarLink";
@@ -15,6 +16,9 @@ import { getCurrentRank } from "../Functions/RankFunctions";
 const Sidebar = () => {
   const { character } = useCharacter();
   const [showNav, setShowNav] = useState(false);
+
+  // Street Crime cooldown
+  const { cooldownTime } = useCooldown();
 
   const characterMenuRef = useRef<HTMLDivElement | null>(null);
   const characterAvatarRef = useRef<HTMLDivElement | null>(null);
@@ -49,7 +53,7 @@ const Sidebar = () => {
   }
 
   return (
-    <div className="hidden sm:block bg-neutral-800 p-8 text-sm leading-relaxed h-full pb-24">
+    <div className="hidden sm:block bg-neutral-800 px-4 py-8 text-sm leading-relaxed h-full pb-24">
       <div className="mb-6">
         <div className="relative">
           <div ref={characterAvatarRef}>
@@ -128,7 +132,10 @@ const Sidebar = () => {
         <hr className="border-neutral-600" />
 
         <SidebarLink to="streetcrime" icon="money-bill">
-          Street crime
+          Street crime{" "}
+          {cooldownTime > 0 && (
+            <span className="text-white">{cooldownTime}</span>
+          )}
         </SidebarLink>
 
         <SidebarLink to="gta" icon="car">
