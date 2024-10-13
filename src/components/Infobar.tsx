@@ -1,5 +1,7 @@
 import Tooltip from "./Tooltip";
 
+import { Link } from "react-router-dom";
+
 // Context
 import { useCharacter } from "../CharacterContext";
 
@@ -26,7 +28,7 @@ const Infobar = () => {
 
   return (
     <section className="bg-neutral-700 px-4 sm:px-8 py-2 flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 justify-center text-stone-400 text-sm sm:text-base">
-      <div className="flex items-center gap-1 sm:gap-2">
+      <Link to="/" className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-heart"></i>
         <Tooltip label="Health bar">
           <div className="bg-neutral-800 h-1 w-20 sm:w-36">
@@ -36,9 +38,9 @@ const Infobar = () => {
             ></div>
           </div>
         </Tooltip>
-      </div>
+      </Link>
 
-      <div className="flex items-center gap-1 sm:gap-2">
+      <Link to="/" className="flex items-center gap-1 sm:gap-2">
         <p className="text-sm font-bold">XP</p>
         <Tooltip label={`${character.stats.xp - minXP} / ${maxXP - minXP}`}>
           <div className="bg-neutral-800 h-1 w-20 sm:w-36">
@@ -48,9 +50,9 @@ const Infobar = () => {
             ></div>
           </div>
         </Tooltip>
-      </div>
+      </Link>
 
-      <div className="flex items-center gap-1 sm:gap-2">
+      <Link to="/" className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-fire-flame-curved"></i>{" "}
         <Tooltip label="Heat">
           <div className="bg-neutral-800 h-1 w-20 sm:w-36">
@@ -60,14 +62,14 @@ const Infobar = () => {
             ></div>
           </div>
         </Tooltip>
-      </div>
+      </Link>
 
-      <div className="flex items-center gap-1 sm:gap-2">
+      <Link to="/family" className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-users"></i>{" "}
         <Tooltip label="Family">
           <p>{character.familyName || "No family"}</p>
         </Tooltip>
-      </div>
+      </Link>
 
       <div className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-location-dot"></i>

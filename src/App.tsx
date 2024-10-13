@@ -42,6 +42,7 @@ import Parking from "./Pages/General/Parking.tsx";
 
 // Social
 import Family from "./Pages/Family.tsx";
+import FamilyProfile from "./Pages/FamilyProfile.tsx";
 import Chat from "./Pages/Chat.tsx";
 
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
@@ -142,6 +143,15 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <Family />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/family/:characterID"
+                          element={
+                            <ProtectedRoute>
+                              <FamilyProfile />
                             </ProtectedRoute>
                           }
                         />
