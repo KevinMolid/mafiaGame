@@ -3,8 +3,16 @@ import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 
 type CooldownContextType = {
   cooldownTime: number;
-  startCooldown: (duration: number, activeCharacter: string) => void;
-  fetchCooldown: (activeCharacter: string) => void;
+  startCooldown: (
+    duration: number,
+    cooldownType: string,
+    activeCharacter: string
+  ) => void;
+  fetchCooldown: (
+    cooldownType: string,
+    duration: number,
+    activeCharacter: string
+  ) => void;
 };
 
 const CooldownContext = createContext<CooldownContextType | undefined>(
@@ -24,41 +32,53 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
         setCooldownTime((prevTime) => prevTime - 1);
       }, 1000);
 
-      // Cleanup the interval on unmount or when cooldownTime reaches 0
       return () => clearInterval(timer);
     }
   }, [cooldownTime]);
 
   // Start cooldown for a specified duration
-  const startCooldown = async (duration: number, activeCharacter: string) => {
+  const startCooldown = async (
+    duration: number,
+    cooldownType: string,
+    activeCharacter: string
+  ) => {
     setCooldownTime(duration);
 
-    const timestamp = new Date().getTime(); // Current time in milliseconds
+    const timestamp = new Date().getTime();
+    const field = `last${
+      cooldownType.charAt(0).toUpperCase() + cooldownType.slice(1)
+    }Timestamp`;
+
     await updateDoc(doc(db, "Characters", activeCharacter), {
-      lastCrimeTimestamp: timestamp,
+      [field]: timestamp,
     });
   };
 
   // Fetch cooldown time from the database
-  const fetchCooldown = async (activeCharacter: string) => {
+  const fetchCooldown = async (
+    cooldownType: string,
+    duration: number,
+    activeCharacter: string
+  ) => {
     const characterRef = doc(db, "Characters", activeCharacter);
     const characterSnap = await getDoc(characterRef);
 
     if (characterSnap.exists()) {
       const characterData = characterSnap.data();
-      const lastCrimeTimestamp = characterData.lastCrimeTimestamp;
+      const field = `last${
+        cooldownType.charAt(0).toUpperCase() + cooldownType.slice(1)
+      }Timestamp`;
+      const lastTimestamp = characterData[field];
 
-      if (lastCrimeTimestamp) {
+      if (lastTimestamp) {
         const currentTime = new Date().getTime();
-        const elapsedTime = Math.floor(
-          (currentTime - lastCrimeTimestamp) / 1000
-        ); // in seconds
-        const remainingCooldown = 90 - elapsedTime;
+        const elapsedTime = Math.floor((currentTime - lastTimestamp) / 1000); // in seconds
+        const remainingCooldown = duration - elapsedTime;
 
         if (remainingCooldown > 0) {
           setCooldownTime(remainingCooldown);
         } else {
-          setCooldownTime(0); // No cooldown
+          setCooldownTime(0);
         }
       }
     }

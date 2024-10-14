@@ -39,7 +39,7 @@ const StreetCrime = () => {
 
     if (userData.activeCharacter) {
       // Fetch cooldown when the component mounts
-      fetchCooldown(userData.activeCharacter);
+      fetchCooldown("crime", 90, userData.activeCharacter);
     }
   }, [userData, navigate, fetchCooldown]);
 
@@ -68,7 +68,7 @@ const StreetCrime = () => {
         });
 
         // Start the cooldown after a crime
-        startCooldown(90, userData.activeCharacter);
+        startCooldown(120, "crime", userData.activeCharacter);
       }
     } else {
       setMessage("No crime selected! Please select a crime first.");
