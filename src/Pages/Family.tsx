@@ -3,6 +3,7 @@ import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import InfoBox from "../components/InfoBox";
 import Button from "../components/Button";
+import Username from "../components/Typography/Username";
 
 import { useState, useEffect } from "react";
 import { useCharacter } from "../CharacterContext";
@@ -129,15 +130,19 @@ const Family = () => {
           <div className="flex gap-4 mb-2">
             <p>
               Leader:{" "}
-              <strong className="text-white">{family.leaderName}</strong>
+              <Username
+                character={{ id: family.leaderId, username: family.leaderName }}
+              />
             </p>
             <p>
               Members:{" "}
-              <strong className="text-white">{family.members.length}</strong>
+              <strong className="text-neutral-200">
+                {family.members.length}
+              </strong>
             </p>
             <p>
               Wealth:{" "}
-              <strong className="text-white">
+              <strong className="text-neutral-200">
                 ${family.wealth.toLocaleString()}
               </strong>
             </p>
@@ -152,8 +157,13 @@ const Family = () => {
             {family.members.map((member) => {
               return (
                 <p key={member.id}>
-                  <strong className="text-white">{member.name}</strong> -{" "}
-                  {member.rank}
+                  <Username
+                    character={{
+                      id: member.id,
+                      username: member.name,
+                    }}
+                  />{" "}
+                  - {member.rank}
                 </p>
               );
             })}
