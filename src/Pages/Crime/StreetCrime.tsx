@@ -23,7 +23,7 @@ const StreetCrime = () => {
   const { userData } = useAuth();
   const navigate = useNavigate();
 
-  const { cooldownTime, startCooldown, fetchCooldown } = useCooldown();
+  const { cooldowns, startCooldown, fetchCooldown } = useCooldown();
 
   const [selectedCrime, setSelectedCrime] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -45,7 +45,7 @@ const StreetCrime = () => {
 
   // Function for comitting a crime
   const handleClick = async () => {
-    if (cooldownTime > 0) {
+    if (cooldowns["crime"] > 0) {
       setMessage("You must wait before committing another crime.");
       setMessageType("info");
       return;
@@ -120,10 +120,11 @@ const StreetCrime = () => {
     <section>
       <H1>Street Crimes</H1>
 
-      {cooldownTime > 0 && (
+      {cooldowns["crime"] > 0 && (
         <p className="mb-4 text-stone-400">
           You can commit another crime in{" "}
-          <span className="font-bold text-white">{cooldownTime}</span> seconds.
+          <span className="font-bold text-white">{cooldowns["crime"]}</span>{" "}
+          seconds.
         </p>
       )}
 

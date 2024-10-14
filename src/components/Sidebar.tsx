@@ -18,7 +18,7 @@ const Sidebar = () => {
   const [showNav, setShowNav] = useState(false);
 
   // Street Crime cooldown
-  const { cooldownTime } = useCooldown();
+  const { cooldowns } = useCooldown();
 
   const characterMenuRef = useRef<HTMLDivElement | null>(null);
   const characterAvatarRef = useRef<HTMLDivElement | null>(null);
@@ -133,8 +133,10 @@ const Sidebar = () => {
 
         <SidebarLink to="streetcrime" icon="money-bill">
           <div>Street crime</div>
-          {cooldownTime > 0 ? (
-            <div className="text-neutral-200 font-medium">{cooldownTime}</div>
+          {cooldowns["crime"] > 0 ? (
+            <div className="text-neutral-200 font-medium">
+              {cooldowns["crime"]}
+            </div>
           ) : (
             <div className="text-green-400">
               <i className="fa-solid fa-check"></i>
@@ -143,7 +145,16 @@ const Sidebar = () => {
         </SidebarLink>
 
         <SidebarLink to="gta" icon="car">
-          Grand Theft Auto
+          <div>Grand Theft Auto</div>
+          {cooldowns["gta"] > 0 ? (
+            <div className="text-neutral-200 font-medium">
+              {cooldowns["gta"]}
+            </div>
+          ) : (
+            <div className="text-green-400">
+              <i className="fa-solid fa-check"></i>
+            </div>
+          )}
         </SidebarLink>
 
         <SidebarLink to="assassinate" icon="gun">

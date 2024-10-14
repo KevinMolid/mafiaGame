@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 
 type CooldownContextType = {
-  cooldownTime: number;
+  cooldowns: { [key: string]: number };
   startCooldown: (
     duration: number,
     cooldownType: string,
@@ -22,19 +22,31 @@ const CooldownContext = createContext<CooldownContextType | undefined>(
 export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [cooldownTime, setCooldownTime] = useState<number>(0);
+  const [cooldowns, setCooldowns] = useState<{ [key: string]: number }>({});
   const db = getFirestore();
 
-  // Effect to handle the countdown timer
+  // Effect to handle the countdown timer for each cooldown
   useEffect(() => {
-    if (cooldownTime > 0) {
+    const activeCooldowns = Object.keys(cooldowns).filter(
+      (type) => cooldowns[type] > 0
+    );
+
+    if (activeCooldowns.length > 0) {
       const timer = setInterval(() => {
-        setCooldownTime((prevTime) => prevTime - 1);
+        setCooldowns((prevCooldowns) => {
+          const updatedCooldowns = { ...prevCooldowns };
+          activeCooldowns.forEach((type) => {
+            if (updatedCooldowns[type] > 0) {
+              updatedCooldowns[type] -= 1;
+            }
+          });
+          return updatedCooldowns;
+        });
       }, 1000);
 
       return () => clearInterval(timer);
     }
-  }, [cooldownTime]);
+  }, [cooldowns]);
 
   // Start cooldown for a specified duration
   const startCooldown = async (
@@ -42,7 +54,10 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
     cooldownType: string,
     activeCharacter: string
   ) => {
-    setCooldownTime(duration);
+    setCooldowns((prevCooldowns) => ({
+      ...prevCooldowns,
+      [cooldownType]: duration,
+    }));
 
     const timestamp = new Date().getTime();
     const field = `last${
@@ -75,18 +90,17 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
         const elapsedTime = Math.floor((currentTime - lastTimestamp) / 1000); // in seconds
         const remainingCooldown = duration - elapsedTime;
 
-        if (remainingCooldown > 0) {
-          setCooldownTime(remainingCooldown);
-        } else {
-          setCooldownTime(0);
-        }
+        setCooldowns((prevCooldowns) => ({
+          ...prevCooldowns,
+          [cooldownType]: remainingCooldown > 0 ? remainingCooldown : 0,
+        }));
       }
     }
   };
 
   return (
     <CooldownContext.Provider
-      value={{ cooldownTime, startCooldown, fetchCooldown }}
+      value={{ cooldowns, startCooldown, fetchCooldown }}
     >
       {children}
     </CooldownContext.Provider>

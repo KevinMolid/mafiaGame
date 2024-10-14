@@ -8,13 +8,18 @@ import ParkingTypes from "../../Data/ParkingTypes";
 import Cars from "../../Data/Cars";
 
 // React
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "../../AuthContext";
+import { useCooldown } from "../../CooldownContext";
 
+// Context
 import { useCharacter } from "../../CharacterContext";
 
+// Firebase
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../../firebaseConfig";
+import { useNavigate } from "react-router-dom";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -39,9 +44,24 @@ const tierWeights = [0.6, 0.25, 0.1, 0.05];
 const GTA = () => {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<
-    "success" | "failure" | "info"
+    "success" | "failure" | "info" | "warning"
   >("info");
   const { character, setCharacter } = useCharacter();
+  const { userData } = useAuth();
+  const { cooldowns, startCooldown, fetchCooldown } = useCooldown();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!userData) {
+      navigate("/login");
+      return;
+    }
+
+    if (userData.activeCharacter) {
+      // Fetch cooldown when the component mounts
+      fetchCooldown("gta", 240, userData.activeCharacter);
+    }
+  }, [userData, navigate, fetchCooldown]);
 
   // Helper function to get random number in range
   const getRandom = (min: number, max: number) =>
@@ -60,10 +80,17 @@ const GTA = () => {
     return 1; // Fallback to Tier 1
   };
 
+  // Function for stealing a random car
   const stealCar = async () => {
     if (!character) {
       setMessageType("failure");
       setMessage("Character not loaded.");
+      return;
+    }
+
+    if (cooldowns["gta"] > 0) {
+      setMessageType("warning");
+      setMessage("You must wait before committing another crime.");
       return;
     }
 
@@ -123,6 +150,9 @@ const GTA = () => {
 
       setMessageType("success");
       setMessage(`You stole a ${randomCar.name}!`);
+
+      // Start the cooldown after a crime
+      startCooldown(120, "gta", character.id);
     } catch (error) {
       setMessageType("failure");
       setMessage("Failed to steal the car. Try again.");
@@ -133,6 +163,15 @@ const GTA = () => {
   return (
     <div>
       <H1>Grand Theft Auto</H1>
+
+      {cooldowns["gta"] > 0 && (
+        <p className="mb-4 text-stone-400">
+          You can commit another GTA in{" "}
+          <span className="font-bold text-white">{cooldowns["gta"]}</span>{" "}
+          seconds.
+        </p>
+      )}
+
       <p className="pb-2">
         Steal a car from the street, from a random player or from a player of
         your choosing.
