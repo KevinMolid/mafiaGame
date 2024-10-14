@@ -47,7 +47,7 @@ const StreetCrime = () => {
   const handleClick = async () => {
     if (cooldowns["crime"] > 0) {
       setMessage("You must wait before committing another crime.");
-      setMessageType("info");
+      setMessageType("warning");
       return;
     }
 
