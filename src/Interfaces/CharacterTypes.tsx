@@ -2,6 +2,7 @@ export interface Stats {
   hp: number;
   xp: number;
   heat: number;
+  bank: number;
   money: number;
   protection: number;
 }

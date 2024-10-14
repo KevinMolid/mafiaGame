@@ -36,6 +36,7 @@ import GTA from "./Pages/Crime/GTA.tsx";
 import Assassinate from "./Pages/Crime/Assassinate.tsx";
 
 // General
+import Bank from "./Pages/General/Bank.tsx";
 import Travel from "./Pages/General/Travel.tsx";
 import Prison from "./Pages/General/Prison.tsx";
 import Parking from "./Pages/General/Parking.tsx";
@@ -197,6 +198,15 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <Assassinate />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/bank"
+                          element={
+                            <ProtectedRoute>
+                              <Bank />
                             </ProtectedRoute>
                           }
                         />

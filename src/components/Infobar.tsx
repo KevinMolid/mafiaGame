@@ -78,12 +78,12 @@ const Infobar = () => {
         </Tooltip>
       </Link>
 
-      <div className="flex items-center gap-1 sm:gap-2">
+      <Link to="/bank" className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-dollar-sign"></i>
         <Tooltip label="Money">
           <p>{character.stats.money.toLocaleString()}</p>
         </Tooltip>
-      </div>
+      </Link>
 
       <Link to="/" className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-shield-halved"></i>
