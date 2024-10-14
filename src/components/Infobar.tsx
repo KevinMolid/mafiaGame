@@ -71,12 +71,12 @@ const Infobar = () => {
         </Tooltip>
       </Link>
 
-      <div className="flex items-center gap-1 sm:gap-2">
+      <Link to="/travel" className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-location-dot"></i>
         <Tooltip label="Location">
           <p>{character.location}</p>
         </Tooltip>
-      </div>
+      </Link>
 
       <div className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-dollar-sign"></i>
@@ -85,12 +85,12 @@ const Infobar = () => {
         </Tooltip>
       </div>
 
-      <div className="flex items-center gap-1 sm:gap-2">
+      <Link to="/" className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-shield-halved"></i>
         <Tooltip label="Protection">
           <p>{character.stats.protection}%</p>
         </Tooltip>
-      </div>
+      </Link>
     </section>
   );
 };
