@@ -4,7 +4,7 @@ import H3 from "../../components/Typography/H3";
 import Button from "../../components/Button";
 import Box from "../../components/Box";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 import { useCharacter } from "../../CharacterContext";
 
@@ -65,6 +65,16 @@ const Parking = () => {
   };
 
   const canUpgrade = parking !== null && parking < ParkingTypes.length - 1;
+
+  // Calculate the total value of cars in the current location
+  const totalValue = useMemo(() => {
+    return (
+      character.cars?.[character.location]?.reduce(
+        (acc: number, car: any) => acc + car.value,
+        0
+      ) || 0
+    );
+  }, [character]);
 
   return (
     <section className="flex flex-col gap-4">
@@ -168,6 +178,14 @@ const Parking = () => {
             }
           )}
         </tbody>
+        <tfoot>
+          <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
+            <td></td>
+            <td className="px-2 py-1">Total</td>
+            <td>${totalValue.toLocaleString()}</td>
+            <td>Sell all</td>
+          </tr>
+        </tfoot>
       </table>
       <p>
         <strong className="text-white">
