@@ -164,18 +164,19 @@ const GTA = () => {
     <div>
       <H1>Grand Theft Auto</H1>
 
-      {cooldowns["gta"] > 0 && (
-        <p className="mb-4 text-stone-400">
-          You can commit another GTA in{" "}
-          <span className="font-bold text-white">{cooldowns["gta"]}</span>{" "}
-          seconds.
-        </p>
-      )}
-
       <p className="pb-2">
         Steal a car from the street, from a random player or from a player of
         your choosing.
       </p>
+
+      {cooldowns["gta"] > 0 && (
+        <p className="mb-4 text-stone-400">
+          You can commit another GTA in{" "}
+          <span className="font-bold text-neutral-200">{cooldowns["gta"]}</span>{" "}
+          seconds.
+        </p>
+      )}
+
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
       <Button onClick={stealCar}>Commit Theft</Button>
     </div>

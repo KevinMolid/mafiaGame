@@ -59,7 +59,7 @@ const StreetCrime = () => {
           activeCharacter: userData.activeCharacter,
           xpReward: crime.xpReward, // XP reward for the crime
           moneyReward: crime.moneyReward || 0, // Optional money reward for the crime
-          successMessage: `You successfully committed ${crime.name}`,
+          successMessage: `You successfully committed ${crime.name}.`,
           failureMessage: `You failed to commit ${crime.name}. Better luck next time!`,
           successRate: crime.successRate,
           setCharacter,
@@ -120,10 +120,17 @@ const StreetCrime = () => {
     <section>
       <H1>Street Crimes</H1>
 
+      <p className="pb-2">
+        Here you can commit street crimes to earn easy xp and a little bit of
+        money. More difficult actions reward more xp and money.
+      </p>
+
       {cooldowns["crime"] > 0 && (
         <p className="mb-4 text-stone-400">
           You can commit another crime in{" "}
-          <span className="font-bold text-white">{cooldowns["crime"]}</span>{" "}
+          <span className="font-bold text-neutral-200">
+            {cooldowns["crime"]}
+          </span>{" "}
           seconds.
         </p>
       )}
