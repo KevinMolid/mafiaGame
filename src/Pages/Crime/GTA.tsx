@@ -151,8 +151,8 @@ const GTA = () => {
       setMessageType("success");
       setMessage(`You stole a ${randomCar.name}!`);
 
-      // Start the cooldown after a crime
-      startCooldown(120, "gta", character.id);
+      // Start the cooldown after a GTA
+      startCooldown(240, "gta", character.id);
     } catch (error) {
       setMessageType("failure");
       setMessage("Failed to steal the car. Try again.");

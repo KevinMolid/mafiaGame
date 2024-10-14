@@ -68,7 +68,7 @@ const StreetCrime = () => {
         });
 
         // Start the cooldown after a crime
-        startCooldown(120, "crime", userData.activeCharacter);
+        startCooldown(90, "crime", userData.activeCharacter);
       }
     } else {
       setMessage("No crime selected! Please select a crime first.");
