@@ -25,28 +25,22 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
   const [cooldowns, setCooldowns] = useState<{ [key: string]: number }>({});
   const db = getFirestore();
 
-  // Effect to handle the countdown timer for each cooldown
+  // Effect to handle the countdown timer for all cooldowns
   useEffect(() => {
-    const activeCooldowns = Object.keys(cooldowns).filter(
-      (type) => cooldowns[type] > 0
-    );
-
-    if (activeCooldowns.length > 0) {
-      const timer = setInterval(() => {
-        setCooldowns((prevCooldowns) => {
-          const updatedCooldowns = { ...prevCooldowns };
-          activeCooldowns.forEach((type) => {
-            if (updatedCooldowns[type] > 0) {
-              updatedCooldowns[type] -= 1;
-            }
-          });
-          return updatedCooldowns;
+    const interval = setInterval(() => {
+      setCooldowns((prevCooldowns) => {
+        const newCooldowns = { ...prevCooldowns };
+        Object.keys(newCooldowns).forEach((key) => {
+          if (newCooldowns[key] > 0) {
+            newCooldowns[key] -= 1;
+          }
         });
-      }, 1000);
+        return newCooldowns;
+      });
+    }, 1000);
 
-      return () => clearInterval(timer);
-    }
-  }, [cooldowns]);
+    return () => clearInterval(interval);
+  }, []);
 
   // Start cooldown for a specified duration
   const startCooldown = async (
@@ -54,10 +48,7 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
     cooldownType: string,
     activeCharacter: string
   ) => {
-    setCooldowns((prevCooldowns) => ({
-      ...prevCooldowns,
-      [cooldownType]: duration,
-    }));
+    setCooldowns((prev) => ({ ...prev, [cooldownType]: duration }));
 
     const timestamp = new Date().getTime();
     const field = `last${

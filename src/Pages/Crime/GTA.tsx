@@ -57,11 +57,11 @@ const GTA = () => {
       return;
     }
 
-    if (userData.activeCharacter) {
-      // Fetch cooldown when the component mounts
+    if (userData.activeCharacter && cooldowns["gta"] === undefined) {
+      // Fetch cooldown only if it hasn't been fetched yet
       fetchCooldown("gta", 240, userData.activeCharacter);
     }
-  }, [userData, navigate, fetchCooldown]);
+  }, [userData, navigate, cooldowns, fetchCooldown]);
 
   // Helper function to get random number in range
   const getRandom = (min: number, max: number) =>

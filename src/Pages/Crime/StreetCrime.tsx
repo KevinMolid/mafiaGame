@@ -37,11 +37,11 @@ const StreetCrime = () => {
       return;
     }
 
-    if (userData.activeCharacter) {
-      // Fetch cooldown when the component mounts
+    if (userData.activeCharacter && cooldowns["crime"] === undefined) {
+      // Fetch cooldown only if it hasn't been fetched yet
       fetchCooldown("crime", 90, userData.activeCharacter);
     }
-  }, [userData, navigate, fetchCooldown]);
+  }, [userData, navigate, cooldowns, fetchCooldown]);
 
   // Function for comitting a crime
   const handleClick = async () => {
