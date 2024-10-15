@@ -11,7 +11,15 @@ import { useState } from "react";
 import { useCharacter } from "../../CharacterContext";
 
 // Firebase
-import { getFirestore, doc, updateDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  updateDoc,
+  getDocs,
+  collection,
+  query,
+  where,
+} from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../../firebaseConfig";
 
@@ -146,8 +154,86 @@ const Bank = () => {
     }
   };
 
-  const transfer = () => {
-    console.log(targetCharacter);
+  const transfer = async () => {
+    try {
+      if (amountToSend === "" || targetCharacter === "") {
+        setMessageType("warning");
+        setMessage("Please enter a valid amount and username.");
+        return;
+      }
+
+      const transferAmount = Number(amountToSend);
+
+      if (transferAmount <= 0) {
+        setMessageType("warning");
+        setMessage("The amount must be greater than 0.");
+        return;
+      }
+
+      // Apply 5% fee to the transfer amount
+      const fee = transferAmount * 0.05;
+      const totalAmount = transferAmount + fee;
+
+      // Check if the sender has enough money
+      if (character.stats.money < totalAmount) {
+        setMessageType("warning");
+        setMessage("You don't have enough money to transfer that amount.");
+        return;
+      }
+
+      // Query to find the target character by username
+      const charactersRef = collection(db, "Characters");
+      const targetQuery = query(
+        charactersRef,
+        where("username", "==", targetCharacter)
+      );
+      const targetQuerySnapshot = await getDocs(targetQuery);
+
+      // Check if the target character exists
+      if (targetQuerySnapshot.empty) {
+        setMessageType("warning");
+        setMessage("The target character does not exist.");
+        return;
+      }
+
+      const targetCharacterDoc = targetQuerySnapshot.docs[0];
+      const targetData = targetCharacterDoc.data();
+
+      // Calculate the new balances
+      const newSenderMoney = character.stats.money - totalAmount;
+      const newReceiverMoney = targetData.stats.money + transferAmount;
+
+      // Update both the sender's and receiver's money in Firestore
+      const senderRef = doc(db, "Characters", character.id);
+      await updateDoc(senderRef, {
+        "stats.money": newSenderMoney,
+      });
+
+      await updateDoc(targetCharacterDoc.ref, {
+        "stats.money": newReceiverMoney,
+      });
+
+      setCharacter((prevCharacter: any) => ({
+        ...prevCharacter,
+        stats: {
+          ...prevCharacter.stats,
+          money: newSenderMoney,
+        },
+      }));
+
+      setMessageType("success");
+      setMessage(
+        `You successfully transferred $${transferAmount.toLocaleString()} to ${targetCharacter}. A $${fee.toLocaleString()} transaction fee was applied.`
+      );
+
+      // Reset the input fields
+      setTargetCharacter("");
+      setAmountToSend("");
+    } catch (error) {
+      console.error("Error transferring money:", error);
+      setMessageType("warning");
+      setMessage("An error occurred while transferring money.");
+    }
   };
 
   return (
