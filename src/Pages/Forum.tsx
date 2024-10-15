@@ -4,7 +4,12 @@ import H3 from "../components/Typography/H3";
 import Username from "../components/Typography/Username";
 import Button from "../components/Button";
 
+import { useCharacter } from "../CharacterContext";
+
+// React
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
   getFirestore,
   collection,
@@ -27,6 +32,9 @@ const Forum = () => {
   const [threads, setThreads] = useState<any[]>([]);
   const [newThreadTitle, setNewThreadTitle] = useState<string>("");
   const [newThreadContent, setNewThreadContent] = useState<string>("");
+
+  const { character } = useCharacter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -60,15 +68,15 @@ const Forum = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newThreadTitle || !newThreadContent) return; // Prevent empty submissions
+    if (!newThreadTitle || !newThreadContent) return;
 
     const newThread = {
       title: newThreadTitle,
       content: newThreadContent,
       categoryId: selectedCategory,
       createdAt: new Date().toISOString(),
-      authorId: "currentUserId", // Replace with actual logged-in user ID
-      authorName: "currentUsername", // Replace with actual logged-in username
+      authorId: character?.id,
+      authorName: character?.username,
     };
 
     // Add new thread to Firestore
@@ -78,6 +86,10 @@ const Forum = () => {
     setThreads((prev) => [...prev, newThread]);
     setNewThreadTitle("");
     setNewThreadContent("");
+  };
+
+  const handleThreadClick = (threadId: string) => {
+    navigate(`/forum/thread/${threadId}`);
   };
 
   if (loading) {
@@ -118,21 +130,27 @@ const Forum = () => {
       {selectedCategory && (
         <div>
           <H2>Threads in Selected Category</H2>
-          <ul>
+          <ul className="mb-4">
             {threads.length > 0 ? (
               threads.map((thread) => (
-                <li key={thread.id}>
-                  <H3>{thread.title}</H3>
-                  <p>{thread.content}</p>
-                  <p>
-                    Posted by:{" "}
+                <li
+                  className="border border-neutral-700 px-4 py-1 hover:cursor-pointer"
+                  key={thread.id || "new"}
+                  onClick={() => handleThreadClick(thread.id)}
+                >
+                  <p className="text-stone-200 font-bold text-lg">
+                    {thread.title}
+                  </p>
+                  <small>
+                    By{" "}
                     <Username
                       character={{
                         id: thread.authorId,
                         username: thread.authorName,
                       }}
-                    ></Username>
-                  </p>
+                    ></Username>{" "}
+                    - Created at: {new Date(thread.createdAt).toLocaleString()}
+                  </small>
                 </li>
               ))
             ) : (
