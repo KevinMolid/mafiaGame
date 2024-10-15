@@ -46,9 +46,10 @@ const Bank = () => {
   const handleInputChange = (e: any) => {
     const value = e.target.value;
     if (value === "") {
-      setAmount(""); // Set to empty string when input is cleared
+      setAmount("");
     } else {
-      setAmount(parseFloat(value) || ""); // Parse float, or set to empty string if NaN
+      const intValue = parseInt(value, 10);
+      setAmount(isNaN(intValue) ? "" : intValue);
     }
   };
 
@@ -59,9 +60,10 @@ const Bank = () => {
   const handleAmountToSendInputChange = (e: any) => {
     const value = e.target.value;
     if (value === "") {
-      setAmountToSend(""); // Set to empty string when input is cleared
+      setAmountToSend("");
     } else {
-      setAmountToSend(parseFloat(value) || ""); // Parse float, or set to empty string if NaN
+      const intValue = parseInt(value, 10);
+      setAmountToSend(isNaN(intValue) ? "" : intValue);
     }
   };
 
