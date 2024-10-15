@@ -32,6 +32,7 @@ import Influence from "./Pages/Reputation/Influence";
 
 // Crimes
 import StreetCrime from "./Pages/Crime/StreetCrime.tsx";
+import Robbery from "./Pages/Crime/Robbery.tsx";
 import GTA from "./Pages/Crime/GTA.tsx";
 import Assassinate from "./Pages/Crime/Assassinate.tsx";
 
@@ -180,6 +181,15 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <StreetCrime />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/robbery"
+                          element={
+                            <ProtectedRoute>
+                              <Robbery />
                             </ProtectedRoute>
                           }
                         />

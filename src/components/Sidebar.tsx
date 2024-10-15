@@ -161,6 +161,10 @@ const Sidebar = () => {
           )}
         </SidebarLink>
 
+        <SidebarLink to="robbery" icon="sack-dollar">
+          Robbery
+        </SidebarLink>
+
         <SidebarLink to="assassinate" icon="gun">
           Assassinate
         </SidebarLink>

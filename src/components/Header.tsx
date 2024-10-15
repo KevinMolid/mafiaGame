@@ -156,6 +156,14 @@ const Header = () => {
           </SidebarLink>
 
           <SidebarLink
+            to="robbery"
+            icon="sack-dollar"
+            onClick={() => setActionsOpen(false)}
+          >
+            Robbery
+          </SidebarLink>
+
+          <SidebarLink
             to="assassinate"
             icon="gun"
             onClick={() => setActionsOpen(false)}
