@@ -133,12 +133,16 @@ const Forum = () => {
     <section>
       {/* Categories Section */}
       <div>
-        <ul className="mb-8">
+        <ul className="mb-8 flex">
           {categories.length > 0 ? (
             categories.map((category) => (
               <li
                 key={category.id}
-                className="bg-neutral-800 hover:bg-neutral-700 px-4 py-2 max-w-44 border-b-2"
+                className={
+                  " hover:bg-neutral-800 px-4 py-2 max-w-44 border-b-2 border-neutral-700 cursor-pointer " +
+                  (selectedCategoryTitle === category.title &&
+                    "bg-neutral-800 hover:bg-neutral-800 border-white")
+                }
                 onClick={() =>
                   fetchThreads(
                     category.id,
@@ -147,9 +151,7 @@ const Forum = () => {
                   )
                 }
               >
-                <p className="text-neutral-200 font-medium cursor-pointer">
-                  {category.title}
-                </p>
+                <p className="text-neutral-200 font-medium">{category.title}</p>
               </li>
             ))
           ) : (
