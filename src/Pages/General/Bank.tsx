@@ -25,16 +25,29 @@ const Bank = () => {
     "success" | "warning" | "info"
   >("info");
 
+  const [targetCharacter, setTargetCharacter] = useState<string>("");
+  const [amountToSend, setAmountToSend] = useState<number | "">("");
+
   const { character, setCharacter } = useCharacter();
 
   if (!character) {
     return null;
   }
 
+  // Handle inputs
   const handleInputChange = (e: any) => {
     setAmount(parseFloat(e.target.value));
   };
 
+  const handleTargetCharacterInputChange = (e: any) => {
+    setTargetCharacter(e.target.value);
+  };
+
+  const handleAmountToSendInputChange = (e: any) => {
+    setAmountToSend(parseFloat(e.target.value));
+  };
+
+  // Banking functions
   const deposit = async () => {
     try {
       const characterRef = doc(db, "Characters", character.id);
@@ -133,6 +146,10 @@ const Bank = () => {
     }
   };
 
+  const transfer = () => {
+    console.log(targetCharacter);
+  };
+
   return (
     <section>
       <H1>Bank</H1>
@@ -147,27 +164,56 @@ const Bank = () => {
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
-      <H2>Bank account</H2>
-      <p className="mb-4">
-        Balance:{" "}
-        <span className="font-bold text-neutral-200">
-          ${character?.stats.bank?.toLocaleString() || 0}
-        </span>
-      </p>
-      <form className="flex flex-col gap-2" action="">
-        <input
-          className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
-          type="number"
-          value={amount}
-          placeholder="Enter amount"
-          onChange={handleInputChange}
-        />
-        <div className="flex gap-2">
-          {" "}
-          <Button onClick={withdraw}>Withdraw</Button>
-          <Button onClick={deposit}>Deposit</Button>
-        </div>
-      </form>
+      <div>
+        <H2>Bank account</H2>
+        <p className="mb-4">
+          Balance:{" "}
+          <span className="font-bold text-neutral-200">
+            ${character?.stats.bank?.toLocaleString() || 0}
+          </span>
+        </p>
+        <form className="flex flex-col gap-2" action="">
+          <input
+            className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
+            type="number"
+            value={amount}
+            placeholder="Enter amount"
+            onChange={handleInputChange}
+          />
+          <div className="flex gap-2">
+            {" "}
+            <Button onClick={withdraw}>Withdraw</Button>
+            <Button onClick={deposit}>Deposit</Button>
+          </div>
+        </form>
+      </div>
+
+      <div className="my-6">
+        <H2>Send to player</H2>
+        <p className="mb-4">
+          The bank will take 5% of the transfered amount as transaction fee.
+        </p>
+        <form className="flex flex-col gap-2" action="">
+          <input
+            className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
+            type="text"
+            placeholder="Enter username"
+            value={targetCharacter}
+            onChange={handleTargetCharacterInputChange}
+          />
+          <input
+            className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
+            type="number"
+            placeholder="Enter amount"
+            value={amountToSend}
+            onChange={handleAmountToSendInputChange}
+          />
+          <div>
+            {" "}
+            <Button onClick={transfer}>Transfer</Button>
+          </div>
+        </form>
+      </div>
     </section>
   );
 };
