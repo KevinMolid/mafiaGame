@@ -113,6 +113,10 @@ const Sidebar = () => {
           Select Character
         </SidebarLink>
 
+        <SidebarLink to="bank" icon="landmark">
+          Bank
+        </SidebarLink>
+
         <hr className="border-neutral-600" />
 
         <SidebarLink to="family" icon="users">

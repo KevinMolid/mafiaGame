@@ -101,6 +101,14 @@ const Header = () => {
             Select Character
           </SidebarLink>
 
+          <SidebarLink
+            to="bank"
+            icon="landmark"
+            onClick={() => setActionsOpen(false)}
+          >
+            Bank
+          </SidebarLink>
+
           <hr className="border-neutral-600" />
 
           <SidebarLink
