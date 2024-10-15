@@ -166,7 +166,7 @@ const Forum = () => {
             {!creatingNew && (
               <div>
                 <Button onClick={() => setCreatingNew(true)}>
-                  <i className="fa-solid fa-circle-plus mr-1"></i> New Post
+                  <i className="fa-solid fa-plus mr-1"></i> New Post
                 </Button>
               </div>
             )}
