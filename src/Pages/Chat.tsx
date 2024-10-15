@@ -163,7 +163,7 @@ const Chat = () => {
                       {message.timestamp
                         ? format(
                             message.timestamp.toDate(),
-                            "yyyy-MM-dd HH:mm:ss"
+                            "dd.MM.yyyy - HH:mm"
                           )
                         : "Sending..."}
                     </p>

@@ -6,6 +6,8 @@ import Button from "../components/Button";
 
 import { useCharacter } from "../CharacterContext";
 
+import { format } from "date-fns";
+
 // React
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -149,7 +151,9 @@ const Forum = () => {
                         username: thread.authorName,
                       }}
                     ></Username>{" "}
-                    - Created at: {new Date(thread.createdAt).toLocaleString()}
+                    {thread.createdAt
+                      ? format(thread.createdAt.toDate(), "dd.MM.yyyy - HH:mm")
+                      : "Sending..."}
                   </small>
                 </li>
               ))

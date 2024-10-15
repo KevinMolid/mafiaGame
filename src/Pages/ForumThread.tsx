@@ -8,6 +8,8 @@ import H1 from "../components/Typography/H1";
 import Username from "../components/Typography/Username";
 import Button from "../components/Button"; // in case we want actions like replying
 
+import { format } from "date-fns";
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -54,7 +56,11 @@ const ForumThread = () => {
               character={{ id: thread.authorId, username: thread.authorName }}
             />
           </p>
-          <p>Created at: {new Date(thread.createdAt).toLocaleString()}</p>
+          <p>
+            {thread.createdAt
+              ? format(thread.createdAt.toDate(), "dd.MM.yyyy - HH:mm")
+              : "Sending..."}
+          </p>
         </div>
       </div>
 
