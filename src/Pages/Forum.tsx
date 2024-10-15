@@ -30,7 +30,13 @@ const db = getFirestore(app);
 const Forum = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategoryTitle, setSelectedCategoryTitle] =
+    useState<string>("");
+  const [selectedCategoryDescription, setSelectedCategoryDescription] =
+    useState<string>("");
+
   const [threads, setThreads] = useState<any[]>([]);
   const [newThreadTitle, setNewThreadTitle] = useState<string>("");
   const [newThreadContent, setNewThreadContent] = useState<string>("");
@@ -53,7 +59,11 @@ const Forum = () => {
     fetchCategories();
   }, []);
 
-  const fetchThreads = async (categoryId: string) => {
+  const fetchThreads = async (
+    categoryId: string,
+    categoryTitle: string,
+    categoryDescription: string
+  ) => {
     const querySnapshot = await getDocs(
       query(
         collection(db, "ForumThreads"),
@@ -66,6 +76,8 @@ const Forum = () => {
     });
     setThreads(fetchedThreads);
     setSelectedCategory(categoryId);
+    setSelectedCategoryTitle(categoryTitle);
+    setSelectedCategoryDescription(categoryDescription);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,26 +112,25 @@ const Forum = () => {
 
   return (
     <section>
-      <H1>Forum</H1>
-      <p>
-        Welcome to the Mafia Reign forum! Discuss, share, and strategize with
-        other players.
-      </p>
-
       {/* Categories Section */}
       <div>
-        <H2>Forum Categories</H2>
-        <ul>
+        <ul className="mb-8">
           {categories.length > 0 ? (
             categories.map((category) => (
-              <li key={category.id}>
-                <p
-                  className="hover:text-neutral-200 font-medium cursor-pointer"
-                  onClick={() => fetchThreads(category.id)}
-                >
+              <li
+                key={category.id}
+                className="bg-neutral-800 hover:bg-neutral-700 px-4 py-2 max-w-44 border-b-2"
+                onClick={() =>
+                  fetchThreads(
+                    category.id,
+                    category.title,
+                    category.description
+                  )
+                }
+              >
+                <p className="text-neutral-200 font-medium cursor-pointer">
                   {category.title}
                 </p>
-                <p>{category.description}</p>
               </li>
             ))
           ) : (
@@ -131,12 +142,13 @@ const Forum = () => {
       {/* Threads Section */}
       {selectedCategory && (
         <div>
-          <H2>Threads in Selected Category</H2>
-          <ul className="mb-4">
+          <H1>{selectedCategoryTitle}</H1>
+          <p>{selectedCategoryDescription}</p>
+          <ul className="mt-2 mb-4">
             {threads.length > 0 ? (
               threads.map((thread) => (
                 <li
-                  className="border border-neutral-700 px-4 py-1 hover:cursor-pointer"
+                  className="border-b border-neutral-700 p-4 hover:cursor-pointer"
                   key={thread.id || "new"}
                   onClick={() => handleThreadClick(thread.id)}
                 >
