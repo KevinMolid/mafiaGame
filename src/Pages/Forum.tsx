@@ -18,6 +18,7 @@ import {
   query,
   where,
   addDoc,
+  orderBy,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
@@ -53,6 +54,18 @@ const Forum = () => {
       });
       setCategories(fetchedCategories);
       setLoading(false);
+
+      // Automatically select "General Discussion" after categories are fetched
+      const generalDiscussion = fetchedCategories.find(
+        (category) => category.title === "General Discussion"
+      );
+      if (generalDiscussion) {
+        fetchThreads(
+          generalDiscussion.id,
+          generalDiscussion.title,
+          generalDiscussion.description
+        );
+      }
     };
 
     fetchCategories();
@@ -66,7 +79,8 @@ const Forum = () => {
     const querySnapshot = await getDocs(
       query(
         collection(db, "ForumThreads"),
-        where("categoryId", "==", categoryId)
+        where("categoryId", "==", categoryId),
+        orderBy("createdAt", "desc")
       )
     );
     const fetchedThreads: any[] = [];
