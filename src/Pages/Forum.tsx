@@ -38,6 +38,8 @@ const Forum = () => {
     useState<string>("");
 
   const [threads, setThreads] = useState<any[]>([]);
+
+  const [creatingNew, setCreatingNew] = useState<boolean>(false);
   const [newThreadTitle, setNewThreadTitle] = useState<string>("");
   const [newThreadContent, setNewThreadContent] = useState<string>("");
 
@@ -159,67 +161,94 @@ const Forum = () => {
       {/* Threads Section */}
       {selectedCategory && (
         <div>
-          <H1>{selectedCategoryTitle}</H1>
-          <p>{selectedCategoryDescription}</p>
-          <ul className="mt-2 mb-4">
-            {threads.length > 0 ? (
-              threads.map((thread) => (
-                <li
-                  className="border-b border-neutral-700 p-4 hover:cursor-pointer"
-                  key={thread.id || "new"}
-                  onClick={() => handleThreadClick(thread.id)}
-                >
-                  <p className="text-stone-200 font-bold text-lg">
-                    {thread.title}
-                  </p>
-                  <small>
-                    By{" "}
-                    <Username
-                      character={{
-                        id: thread.authorId,
-                        username: thread.authorName,
-                      }}
-                    ></Username>{" "}
-                    {thread.createdAt
-                      ? format(
-                          typeof thread.createdAt === "string"
-                            ? new Date(thread.createdAt)
-                            : thread.createdAt.toDate(),
-                          "dd.MM.yyyy - HH:mm"
-                        )
-                      : "Sending..."}
-                  </small>
-                </li>
-              ))
-            ) : (
-              <p>No threads found in this category.</p>
+          <div className="flex justify-between">
+            <H1>{selectedCategoryTitle}</H1>
+            {!creatingNew && (
+              <div>
+                <Button onClick={() => setCreatingNew(true)}>
+                  <i className="fa-solid fa-circle-plus mr-1"></i> New Post
+                </Button>
+              </div>
             )}
-          </ul>
+          </div>
+          <p>{selectedCategoryDescription}</p>
+
+          {/* Threads */}
+          {!creatingNew && (
+            <ul className="mt-2 mb-4">
+              {threads.length > 0 ? (
+                threads.map((thread) => (
+                  <li
+                    className="border-b border-neutral-700 p-4 hover:cursor-pointer"
+                    key={thread.id || "new"}
+                    onClick={() => handleThreadClick(thread.id)}
+                  >
+                    <p className="text-stone-200 font-bold text-lg">
+                      {thread.title}
+                    </p>
+                    <small>
+                      By{" "}
+                      <Username
+                        character={{
+                          id: thread.authorId,
+                          username: thread.authorName,
+                        }}
+                      ></Username>{" "}
+                      {thread.createdAt
+                        ? format(
+                            typeof thread.createdAt === "string"
+                              ? new Date(thread.createdAt)
+                              : thread.createdAt.toDate(),
+                            "dd.MM.yyyy - HH:mm"
+                          )
+                        : "Sending..."}
+                    </small>
+                  </li>
+                ))
+              ) : (
+                <p>No threads found in this category.</p>
+              )}
+            </ul>
+          )}
 
           {/* New Thread Form */}
-          <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
-            <H3>Create a New Thread</H3>
-            <input
-              type="text"
-              placeholder="Thread Title"
-              value={newThreadTitle}
-              onChange={(e) => setNewThreadTitle(e.target.value)}
-              className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full"
-              required
-            />
-            <textarea
-              placeholder="Thread Content"
-              value={newThreadContent}
-              onChange={(e) => setNewThreadContent(e.target.value)}
-              className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full"
-              required
-            />
+          {creatingNew && (
+            <form className="flex flex-col gap-2 mt-4" onSubmit={handleSubmit}>
+              <div className="flex justify-between items-center">
+                <H3>Create a New Thread</H3>
+                <div>
+                  {" "}
+                  <button
+                    className="flex justify-center items-center gap-1  hover:text-neutral-200 px-2 py-1"
+                    onClick={() => setCreatingNew(false)}
+                  >
+                    <i className="fa-solid fa-xmark"></i> Cancel Thread
+                  </button>
+                </div>
+              </div>
+              <input
+                type="text"
+                placeholder="Title"
+                value={newThreadTitle}
+                onChange={(e) => setNewThreadTitle(e.target.value)}
+                className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full"
+                required
+              />
+              <textarea
+                placeholder="Content"
+                rows={8}
+                value={newThreadContent}
+                onChange={(e) => setNewThreadContent(e.target.value)}
+                className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full"
+                required
+              />
 
-            <div>
-              {" "}
-              <Button type="submit">Create Thread</Button>
-            </div>
-          </form>
+              <div>
+                {" "}
+                <Button type="submit">Create Thread</Button>
+              </div>
+            </form>
+          )}
         </div>
       )}
     </section>
