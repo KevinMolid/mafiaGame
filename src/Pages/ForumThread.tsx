@@ -42,17 +42,23 @@ const ForumThread = () => {
 
   return (
     <section>
-      <H1>{thread.title}</H1>
-      <p>{thread.content}</p>
-      <p>
-        Posted by:{" "}
-        <Username
-          character={{ id: thread.authorId, username: thread.authorName }}
-        />
-      </p>
-      <p>Created at: {new Date(thread.createdAt).toLocaleString()}</p>
+      <div className="grid grid-cols-[3fr_1fr] gap-4 mb-4">
+        <div className="bg-neutral-800 p-4">
+          <H1>{thread.title}</H1>
+          <p>{thread.content}</p>
+        </div>
+        <div className="text-xs bg-neutral-950 p-4">
+          <p>
+            Posted by:{" "}
+            <Username
+              character={{ id: thread.authorId, username: thread.authorName }}
+            />
+          </p>
+          <p>Created at: {new Date(thread.createdAt).toLocaleString()}</p>
+        </div>
+      </div>
 
-      {/* You can add reply functionality here later */}
+      {/* Add reply functionality here later */}
       <Button onClick={() => alert("Reply feature coming soon!")}>Reply</Button>
     </section>
   );
