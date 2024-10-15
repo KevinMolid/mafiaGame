@@ -22,7 +22,6 @@ import EditProfile from "./Pages/EditProfile.tsx";
 import Notebook from "./Pages/Notebook.tsx";
 import Blacklist from "./Pages/Blacklist.tsx";
 import About from "./Pages/About.tsx";
-import Forum from "./Pages/Forum.tsx";
 import Leaderboard from "./Pages/Leaderboard.tsx";
 import Signup from "./Pages/Signup.tsx";
 import Login from "./Pages/Login.tsx";
@@ -46,6 +45,8 @@ import Parking from "./Pages/General/Parking.tsx";
 import Family from "./Pages/Family.tsx";
 import FamilyProfile from "./Pages/FamilyProfile.tsx";
 import Chat from "./Pages/Chat.tsx";
+import Forum from "./Pages/Forum.tsx";
+import ForumThread from "./Pages/ForumThread.tsx";
 
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
 
@@ -150,7 +151,7 @@ function App() {
                         />
 
                         <Route
-                          path="/family/:characterID"
+                          path="/family/:familyID"
                           element={
                             <ProtectedRoute>
                               <FamilyProfile />
@@ -163,6 +164,15 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <Forum />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/forum/thread/:threadId"
+                          element={
+                            <ProtectedRoute>
+                              <ForumThread />
                             </ProtectedRoute>
                           }
                         />
