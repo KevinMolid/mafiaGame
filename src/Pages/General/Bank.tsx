@@ -44,7 +44,12 @@ const Bank = () => {
 
   // Handle inputs
   const handleInputChange = (e: any) => {
-    setAmount(parseFloat(e.target.value));
+    const value = e.target.value;
+    if (value === "") {
+      setAmount(""); // Set to empty string when input is cleared
+    } else {
+      setAmount(parseFloat(value) || ""); // Parse float, or set to empty string if NaN
+    }
   };
 
   const handleTargetCharacterInputChange = (e: any) => {
@@ -52,7 +57,12 @@ const Bank = () => {
   };
 
   const handleAmountToSendInputChange = (e: any) => {
-    setAmountToSend(parseFloat(e.target.value));
+    const value = e.target.value;
+    if (value === "") {
+      setAmountToSend(""); // Set to empty string when input is cleared
+    } else {
+      setAmountToSend(parseFloat(value) || ""); // Parse float, or set to empty string if NaN
+    }
   };
 
   // Banking functions
@@ -99,6 +109,7 @@ const Bank = () => {
             money: newMoney,
           },
         }));
+        setAmount("");
       }
     } catch (error) {
       console.error("Error depositing funds:", error);
@@ -148,6 +159,7 @@ const Bank = () => {
             money: newMoney,
           },
         }));
+        setAmount("");
       }
     } catch (error) {
       console.error("Error widthdrawing funds:", error);
