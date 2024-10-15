@@ -70,17 +70,17 @@ const ForumThread = () => {
 
   return (
     <section>
-      <div className="grid grid-cols-[3fr_1fr] gap-4 mb-4">
-        <div className="bg-neutral-800 p-4">
+      <div className="grid grid-cols-[2fr_1fr] md:grid-cols-[3fr_1fr] gap-2 md:gap-4 mb-2 md:mb-4">
+        <div className="bg-neutral-800 p-2 md:p-4">
           <H1>{thread.title}</H1>
           <p>{thread.content}</p>
         </div>
-        <div className="bg-neutral-950 p-4 text-xs">
+        <div className="bg-neutral-950 p-2 md:p-4 text-xs">
           {author?.img && (
             <img
               src={author.img}
               alt={`${thread.authorName}'s avatar`}
-              className="w-28 h-28 mb-4 border border-neutral-600 object-cover"
+              className="w-24 h-24 md:w-28 md:h-28 mb-4 border border-neutral-600 object-cover"
             />
           )}
           <p>
