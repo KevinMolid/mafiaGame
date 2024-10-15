@@ -92,7 +92,12 @@ const ForumThread = () => {
 
           <p>
             {thread.createdAt
-              ? format(thread.createdAt.toDate(), "dd.MM.yyyy - HH:mm")
+              ? format(
+                  typeof thread.createdAt === "string"
+                    ? new Date(thread.createdAt)
+                    : thread.createdAt.toDate(),
+                  "dd.MM.yyyy - HH:mm"
+                )
               : "Sending..."}
           </p>
         </div>

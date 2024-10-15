@@ -1,5 +1,4 @@
 import H1 from "../components/Typography/H1";
-import H2 from "../components/Typography/H2";
 import H3 from "../components/Typography/H3";
 import Username from "../components/Typography/Username";
 import Button from "../components/Button";
@@ -80,6 +79,7 @@ const Forum = () => {
     setSelectedCategoryDescription(categoryDescription);
   };
 
+  // Handle submision of new forum post
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newThreadTitle || !newThreadContent) return;
@@ -93,13 +93,16 @@ const Forum = () => {
       authorName: character?.username,
     };
 
-    // Add new thread to Firestore
-    await addDoc(collection(db, "ForumThreads"), newThread);
+    try {
+      const docRef = await addDoc(collection(db, "ForumThreads"), newThread);
 
-    // Update local state
-    setThreads((prev) => [...prev, newThread]);
-    setNewThreadTitle("");
-    setNewThreadContent("");
+      setThreads((prev) => [...prev, { ...newThread, id: docRef.id }]);
+
+      setNewThreadTitle("");
+      setNewThreadContent("");
+    } catch (error) {
+      console.error("Error creating thread: ", error);
+    }
   };
 
   const handleThreadClick = (threadId: string) => {
@@ -164,7 +167,12 @@ const Forum = () => {
                       }}
                     ></Username>{" "}
                     {thread.createdAt
-                      ? format(thread.createdAt.toDate(), "dd.MM.yyyy - HH:mm")
+                      ? format(
+                          typeof thread.createdAt === "string"
+                            ? new Date(thread.createdAt)
+                            : thread.createdAt.toDate(),
+                          "dd.MM.yyyy - HH:mm"
+                        )
                       : "Sending..."}
                   </small>
                 </li>
