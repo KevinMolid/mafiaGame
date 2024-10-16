@@ -121,8 +121,8 @@ const StreetCrime = () => {
       <H1>Street Crimes</H1>
 
       <p className="pb-2">
-        Here you can commit street crimes to earn easy xp and a little bit of
-        money. More difficult actions reward more xp and money.
+        Commit street crimes to earn xp and money. More difficult actions yield
+        greater rewards.
       </p>
 
       {cooldowns["crime"] > 0 && (
