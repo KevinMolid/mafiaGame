@@ -52,10 +52,24 @@ const Parking = () => {
     newParkingIndex: number
   ) => {
     const characterRef = doc(db, "Characters", characterId);
+    const upgradePrice = ParkingTypes[newParkingIndex].price;
+
+    // Check if the character has enough money
+    if (character.stats.money < upgradePrice) {
+      setMessageType("failure");
+      setMessage(
+        `You do not have enough money to upgrade to ${ParkingTypes[newParkingIndex].name}.`
+      );
+      return;
+    }
+
+    // Subtract the upgrade cost from the user's money
+    const newMoney = character.stats.money - upgradePrice;
 
     try {
       await updateDoc(characterRef, {
         [`parkingFacilities.${city}`]: newParkingIndex,
+        [`stats.money`]: newMoney,
       });
 
       setCharacter((prevCharacter) =>
@@ -65,6 +79,10 @@ const Parking = () => {
               parkingFacilities: {
                 ...prevCharacter.parkingFacilities,
                 [city]: newParkingIndex,
+              },
+              stats: {
+                ...prevCharacter.stats,
+                money: newMoney,
               },
             }
           : prevCharacter
