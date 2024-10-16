@@ -52,14 +52,13 @@ const Parking = () => {
     newParkingIndex: number
   ) => {
     const characterRef = doc(db, "Characters", characterId);
+    const upgradeName = ParkingTypes[newParkingIndex].name;
     const upgradePrice = ParkingTypes[newParkingIndex].price;
 
     // Check if the character has enough money
     if (character.stats.money < upgradePrice) {
       setMessageType("failure");
-      setMessage(
-        `You do not have enough money to upgrade to ${ParkingTypes[newParkingIndex].name}.`
-      );
+      setMessage(`You do not have enough money to upgrade to ${upgradeName}.`);
       return;
     }
 
@@ -89,6 +88,10 @@ const Parking = () => {
       );
 
       setParking(newParkingIndex);
+      setMessageType("success");
+      setMessage(
+        `You bought ${upgradeName} for $${upgradePrice.toLocaleString()}.`
+      );
     } catch (error) {
       console.error("Error updating parking facility: ", error);
     }
