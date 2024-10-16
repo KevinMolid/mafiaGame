@@ -38,6 +38,9 @@ const Forum = () => {
     useState<string>("");
 
   const [threads, setThreads] = useState<any[]>([]);
+  const [repliesCount, setRepliesCount] = useState<{ [key: string]: number }>(
+    {}
+  );
 
   const [creatingNew, setCreatingNew] = useState<boolean>(false);
   const [newThreadTitle, setNewThreadTitle] = useState<string>("");
@@ -93,6 +96,16 @@ const Forum = () => {
     setSelectedCategory(categoryId);
     setSelectedCategoryTitle(categoryTitle);
     setSelectedCategoryDescription(categoryDescription);
+
+    // Fetch replies count for each thread
+    const repliesCountObj: { [key: string]: number } = {};
+    for (const thread of fetchedThreads) {
+      const repliesSnapshot = await getDocs(
+        collection(db, "ForumThreads", thread.id, "Replies")
+      );
+      repliesCountObj[thread.id] = repliesSnapshot.size;
+    }
+    setRepliesCount(repliesCountObj);
   };
 
   // Handle submision of new forum post
@@ -182,30 +195,42 @@ const Forum = () => {
               {threads.length > 0 ? (
                 threads.map((thread) => (
                   <li
-                    className="border-b border-neutral-700 p-4 hover:cursor-pointer"
+                    className="border-b border-neutral-700 pt-4 pb-2 hover:cursor-pointer"
                     key={thread.id || "new"}
                     onClick={() => handleThreadClick(thread.id)}
                   >
-                    <p className="text-stone-200 font-bold text-lg">
-                      {thread.title}
-                    </p>
-                    <small>
-                      By{" "}
-                      <Username
-                        character={{
-                          id: thread.authorId,
-                          username: thread.authorName,
-                        }}
-                      ></Username>{" "}
-                      {thread.createdAt
-                        ? format(
-                            typeof thread.createdAt === "string"
-                              ? new Date(thread.createdAt)
-                              : thread.createdAt.toDate(),
-                            "dd.MM.yyyy - HH:mm"
-                          )
-                        : "Sending..."}
-                    </small>
+                    <div className="grid grid-cols-[auto_max-content]">
+                      <small>
+                        <Username
+                          character={{
+                            id: thread.authorId,
+                            username: thread.authorName,
+                          }}
+                        ></Username>{" "}
+                      </small>
+                      <small>
+                        <i className="fa-regular fa-clock"></i>{" "}
+                        {thread.createdAt
+                          ? format(
+                              typeof thread.createdAt === "string"
+                                ? new Date(thread.createdAt)
+                                : thread.createdAt.toDate(),
+                              "dd.MM.yyyy - HH:mm"
+                            )
+                          : "Sending..."}
+                      </small>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <p className="text-stone-200 font-bold text-lg">
+                        {thread.title}
+                      </p>
+                      <p>
+                        {repliesCount[thread.id] > 0 && (
+                          <small>{repliesCount[thread.id]} replies</small>
+                        )}
+                      </p>
+                    </div>
                   </li>
                 ))
               ) : (
