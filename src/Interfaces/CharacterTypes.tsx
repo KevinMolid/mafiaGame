@@ -15,7 +15,7 @@ export interface Reputation {
 }
 
 export interface Character {
-  id: string;
+  id?: string;
   location: string;
   stats: Stats;
   createdAt: Date;
