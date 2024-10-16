@@ -76,6 +76,43 @@ const Parking = () => {
     );
   }, [character]);
 
+  // Function to sell a car
+  const sellCar = async (carIndex: number) => {
+    const carToSell = character.cars[character.location][carIndex];
+    const updatedCars = character.cars[character.location].filter(
+      (_: any, index: number) => index !== carIndex
+    );
+    const newMoney = character.stats.money + carToSell.value;
+
+    const characterRef = doc(db, "Characters", character.id);
+
+    try {
+      await updateDoc(characterRef, {
+        [`cars.${character.location}`]: updatedCars,
+        [`stats.money`]: newMoney,
+      });
+
+      // Update the character locally
+      setCharacter((prevCharacter) =>
+        prevCharacter
+          ? {
+              ...prevCharacter,
+              cars: {
+                ...prevCharacter.cars,
+                [character.location]: updatedCars,
+              },
+              stats: {
+                ...prevCharacter.stats,
+                money: newMoney,
+              },
+            }
+          : prevCharacter
+      );
+    } catch (error) {
+      console.error("Error selling car: ", error);
+    }
+  };
+
   return (
     <section className="flex flex-col gap-4">
       <div>
@@ -172,7 +209,9 @@ const Parking = () => {
                   <td className="px-2 py-1">
                     {"$" + car.value.toLocaleString()}
                   </td>
-                  <td className="px-2 py-1">sell</td>
+                  <td className="px-2 py-1">
+                    <button onClick={() => sellCar(index)}>Sell</button>
+                  </td>
                 </tr>
               );
             }
