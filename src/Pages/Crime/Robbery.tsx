@@ -1,11 +1,20 @@
+// Components
 import H1 from "../../components/Typography/H1";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import Box from "../../components/Box";
 
+// Context
+import { useAuth } from "../../AuthContext";
+import { useCooldown } from "../../CooldownContext";
 import { useCharacter } from "../../CharacterContext";
 import { Character } from "../../Interfaces/CharacterTypes";
 
+// React
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
+// Firebase
 import { initializeApp } from "firebase/app";
 import {
   getFirestore,
@@ -18,7 +27,6 @@ import {
 } from "firebase/firestore";
 
 import firebaseConfig from "../../firebaseConfig";
-import { useState } from "react";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -29,18 +37,41 @@ const Robbery = () => {
     "success" | "failure" | "warning" | "info"
   >("info");
   const [helpActive, setHelpActive] = useState(false);
-  const { character } = useCharacter();
+
+  const { userData } = useAuth();
+  const { character, setCharacter } = useCharacter();
+  const { cooldowns, startCooldown, fetchCooldown } = useCooldown();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!userData) {
+      navigate("/login");
+      return;
+    }
+
+    if (userData.activeCharacter && cooldowns["gta"] === undefined) {
+      // Fetch cooldown only if it hasn't been fetched yet
+      fetchCooldown("robbery", 300, userData.activeCharacter);
+    }
+  }, [userData, navigate, cooldowns, fetchCooldown]);
 
   // Function to commit robbery
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    try {
-      if (!character || !character.id) {
-        setMessage("Character not found.");
-        setMessageType("warning");
-        return;
-      }
 
+    if (!character || !character.id) {
+      setMessageType("failure");
+      setMessage("Character not loaded.");
+      return;
+    }
+
+    if (cooldowns["robbery"] > 0) {
+      setMessageType("warning");
+      setMessage("You must wait before committing another robbery.");
+      return;
+    }
+
+    try {
       // Find players in same location
       const charactersRef = query(
         collection(db, "Characters"),
@@ -93,10 +124,22 @@ const Robbery = () => {
           "stats.money": character.stats.money + stolenAmount,
         });
 
+        // Update the local character state with new money
+        setCharacter({
+          ...character,
+          stats: {
+            ...character.stats,
+            money: character.stats.money + stolenAmount,
+          },
+        });
+
         setMessage(
           `Success! You robbed ${randomTarget.username} for $${stolenAmount}.`
         );
         setMessageType("success");
+
+        // Start the cooldown after a robbery
+        startCooldown(300, "robbery", character.id);
       } else {
         setMessage("Robbery failed. Better luck next time!");
         setMessageType("failure");
@@ -143,6 +186,16 @@ const Robbery = () => {
             </div>
           </Box>
         </div>
+      )}
+
+      {cooldowns["robbery"] > 0 && (
+        <p className="mb-4 text-stone-400">
+          You can commit another robbery in{" "}
+          <span className="font-bold text-neutral-200">
+            {cooldowns["robbery"]}
+          </span>{" "}
+          seconds.
+        </p>
       )}
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}

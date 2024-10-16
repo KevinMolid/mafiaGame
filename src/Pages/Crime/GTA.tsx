@@ -9,17 +9,17 @@ import Cars from "../../Data/Cars";
 
 // React
 import { useState, useEffect } from "react";
-import { useAuth } from "../../AuthContext";
-import { useCooldown } from "../../CooldownContext";
+import { useNavigate } from "react-router-dom";
 
 // Context
+import { useAuth } from "../../AuthContext";
 import { useCharacter } from "../../CharacterContext";
+import { useCooldown } from "../../CooldownContext";
 
 // Firebase
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../../firebaseConfig";
-import { useNavigate } from "react-router-dom";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -82,7 +82,7 @@ const GTA = () => {
 
   // Function for stealing a random car
   const stealCar = async () => {
-    if (!character) {
+    if (!character || !character.id) {
       setMessageType("failure");
       setMessage("Character not loaded.");
       return;
@@ -90,7 +90,7 @@ const GTA = () => {
 
     if (cooldowns["gta"] > 0) {
       setMessageType("warning");
-      setMessage("You must wait before committing another crime.");
+      setMessage("You must wait before committing another GTA.");
       return;
     }
 
