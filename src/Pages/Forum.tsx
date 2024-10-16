@@ -19,6 +19,8 @@ import {
   where,
   addDoc,
   orderBy,
+  limit,
+  Timestamp,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
@@ -41,6 +43,9 @@ const Forum = () => {
   const [repliesCount, setRepliesCount] = useState<{ [key: string]: number }>(
     {}
   );
+  const [lastReplies, setLastReplies] = useState<{
+    [key: string]: { authorName: string; createdAt: Timestamp };
+  }>({});
 
   const [creatingNew, setCreatingNew] = useState<boolean>(false);
   const [newThreadTitle, setNewThreadTitle] = useState<string>("");
@@ -97,8 +102,12 @@ const Forum = () => {
     setSelectedCategoryTitle(categoryTitle);
     setSelectedCategoryDescription(categoryDescription);
 
-    // Fetch replies count for each thread
+    // Fetch replies count and last reply for each thread
     const repliesCountObj: { [key: string]: number } = {};
+    const lastRepliesObj: {
+      [key: string]: { authorName: string; createdAt: Timestamp };
+    } = {};
+
     for (const thread of fetchedThreads) {
       const repliesSnapshot = await getDocs(
         collection(db, "ForumThreads", thread.id, "Replies")
@@ -106,6 +115,31 @@ const Forum = () => {
       repliesCountObj[thread.id] = repliesSnapshot.size;
     }
     setRepliesCount(repliesCountObj);
+
+    for (const thread of fetchedThreads) {
+      const repliesSnapshot = await getDocs(
+        collection(db, "ForumThreads", thread.id, "Replies")
+      );
+      repliesCountObj[thread.id] = repliesSnapshot.size;
+
+      // Fetch the last reply (if it exists)
+      const lastReplySnapshot = await getDocs(
+        query(
+          collection(db, "ForumThreads", thread.id, "Replies"),
+          orderBy("createdAt", "desc"),
+          limit(1)
+        )
+      );
+      if (!lastReplySnapshot.empty) {
+        const lastReply = lastReplySnapshot.docs[0].data();
+        lastRepliesObj[thread.id] = {
+          authorName: lastReply.authorName,
+          createdAt: lastReply.createdAt,
+        };
+      }
+    }
+    setRepliesCount(repliesCountObj);
+    setLastReplies(lastRepliesObj);
   };
 
   // Handle submision of new forum post
@@ -174,7 +208,7 @@ const Forum = () => {
         </ul>
       </div>
 
-      {/* Threads Section */}
+      {/* Category Section */}
       {selectedCategory && (
         <div>
           <div className="flex justify-between">
@@ -221,15 +255,33 @@ const Forum = () => {
                       </small>
                     </div>
 
-                    <div className="flex flex-col">
-                      <p className="text-stone-200 font-bold text-lg">
-                        {thread.title}
-                      </p>
-                      <p>
-                        {repliesCount[thread.id] > 0 && (
-                          <small>{repliesCount[thread.id]} replies</small>
-                        )}
-                      </p>
+                    <p className="text-stone-200 font-bold text-lg">
+                      {thread.title}
+                    </p>
+                    <div className="flex gap-2">
+                      {repliesCount[thread.id] > 0 && (
+                        <small>
+                          <strong>{repliesCount[thread.id]} replies</strong>
+                        </small>
+                      )}
+
+                      {lastReplies[thread.id] && (
+                        <small>
+                          Last reply by{" "}
+                          <Username
+                            character={{
+                              username: lastReplies[thread.id].authorName,
+                            }}
+                          />{" "}
+                          {" at "}
+                          {lastReplies[thread.id]?.createdAt
+                            ? format(
+                                lastReplies[thread.id].createdAt.toDate(),
+                                "dd.MM.yyyy - HH:mm"
+                              )
+                            : "No replies"}
+                        </small>
+                      )}
                     </div>
                   </li>
                 ))
