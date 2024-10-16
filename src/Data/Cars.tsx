@@ -17,8 +17,8 @@ const Cars = [
   { name: "Tesla Model S", value: 95000, hp: 670 },
   // Tier 3
   { name: "Porsche 911 Carrera", value: 115000, hp: 379 },
-  { name: "Mercedes-Benz S 580", value: 12000, hp: 496 },
-  { name: "Tesla Model X Plaid", value: 13000, hp: 1020 },
+  { name: "Mercedes-Benz S 580", value: 120000, hp: 496 },
+  { name: "Tesla Model X Plaid", value: 130000, hp: 1020 },
   { name: "BMW M8 Competition", value: 135000, hp: 617 },
   { name: "Audi R8 V10 Performance", value: 200000, hp: 602 },
   // Tier 4
