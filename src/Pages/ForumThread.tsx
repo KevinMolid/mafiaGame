@@ -60,6 +60,11 @@ const ForumThread = () => {
     fetchThread();
   }, [threadId]);
 
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    console.log("posting");
+  };
+
   if (loading) {
     return <p>Loading thread...</p>;
   }
@@ -103,7 +108,17 @@ const ForumThread = () => {
         </div>
       </div>
 
-      <Button onClick={() => alert("Reply feature coming soon!")}>Reply</Button>
+      {/* Form to reply */}
+      <form action="" onSubmit={handleSubmit} className="flex flex-col gap-2">
+        <textarea
+          className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full resize-none"
+          name=""
+          id=""
+          placeholder="Write here..."
+          rows={8}
+        ></textarea>
+        <Button type="submit">Reply</Button>
+      </form>
     </section>
   );
 };

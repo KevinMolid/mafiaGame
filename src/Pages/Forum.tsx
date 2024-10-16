@@ -116,6 +116,7 @@ const Forum = () => {
 
       setNewThreadTitle("");
       setNewThreadContent("");
+      setCreatingNew(false);
     } catch (error) {
       console.error("Error creating thread: ", error);
     }
@@ -241,7 +242,7 @@ const Forum = () => {
                 rows={8}
                 value={newThreadContent}
                 onChange={(e) => setNewThreadContent(e.target.value)}
-                className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full"
+                className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full resize-none"
                 required
               />
 
