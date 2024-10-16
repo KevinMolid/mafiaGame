@@ -71,6 +71,9 @@ const Robbery = () => {
       return;
     }
 
+    // Start the cooldown after a robbery
+    startCooldown(300, "robbery", character.id);
+
     try {
       // Find players in same location
       const charactersRef = query(
@@ -137,9 +140,6 @@ const Robbery = () => {
           `Success! You robbed ${randomTarget.username} for $${stolenAmount}.`
         );
         setMessageType("success");
-
-        // Start the cooldown after a robbery
-        startCooldown(300, "robbery", character.id);
       } else {
         setMessage("Robbery failed. Better luck next time!");
         setMessageType("failure");
