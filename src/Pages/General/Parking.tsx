@@ -3,6 +3,7 @@ import H2 from "../../components/Typography/H2";
 import H3 from "../../components/Typography/H3";
 import Button from "../../components/Button";
 import Box from "../../components/Box";
+import InfoBox from "../../components/InfoBox";
 
 import { useState, useEffect, useMemo } from "react";
 
@@ -20,6 +21,10 @@ const db = getFirestore(app);
 const Parking = () => {
   const { character, setCharacter } = useCharacter();
   const [parking, setParking] = useState<number | null>(null);
+  const [message, setMessage] = useState<string>("");
+  const [messageType, setMessageType] = useState<
+    "success" | "failure" | "info"
+  >("info");
 
   if (!character) {
     return null;
@@ -108,6 +113,11 @@ const Parking = () => {
             }
           : prevCharacter
       );
+
+      setMessageType("success");
+      setMessage(
+        `Sold a ${carToSell.name} for $${carToSell.value.toLocaleString()}`
+      );
     } catch (error) {
       console.error("Error selling car: ", error);
     }
@@ -122,6 +132,11 @@ const Parking = () => {
           {character?.location}
         </p>
       </div>
+
+      {/* Infobox */}
+      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
+      {/* Parking facility */}
       <Box color="slate">
         <H2>{parking !== null ? ParkingTypes[parking].name : "Loading..."}</H2>
         <div className="flex gap-4">
@@ -210,7 +225,12 @@ const Parking = () => {
                     {"$" + car.value.toLocaleString()}
                   </td>
                   <td className="px-2 py-1">
-                    <button onClick={() => sellCar(index)}>Sell</button>
+                    <button
+                      onClick={() => sellCar(index)}
+                      className="font-medium hover:text-neutral-200"
+                    >
+                      Sell
+                    </button>
                   </td>
                 </tr>
               );
