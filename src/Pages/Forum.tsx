@@ -44,7 +44,11 @@ const Forum = () => {
     {}
   );
   const [lastReplies, setLastReplies] = useState<{
-    [key: string]: { authorName: string; createdAt: Timestamp };
+    [key: string]: {
+      authorId: String;
+      authorName: string;
+      createdAt: Timestamp;
+    };
   }>({});
 
   const [creatingNew, setCreatingNew] = useState<boolean>(false);
@@ -105,7 +109,11 @@ const Forum = () => {
     // Fetch replies count and last reply for each thread
     const repliesCountObj: { [key: string]: number } = {};
     const lastRepliesObj: {
-      [key: string]: { authorName: string; createdAt: Timestamp };
+      [key: string]: {
+        authorId: String;
+        authorName: string;
+        createdAt: Timestamp;
+      };
     } = {};
 
     for (const thread of fetchedThreads) {
@@ -133,6 +141,7 @@ const Forum = () => {
       if (!lastReplySnapshot.empty) {
         const lastReply = lastReplySnapshot.docs[0].data();
         lastRepliesObj[thread.id] = {
+          authorId: lastReply.authorId,
           authorName: lastReply.authorName,
           createdAt: lastReply.createdAt,
         };
@@ -229,9 +238,8 @@ const Forum = () => {
               {threads.length > 0 ? (
                 threads.map((thread) => (
                   <li
-                    className="border-b border-neutral-700 pt-4 pb-2 hover:cursor-pointer"
+                    className="border-b border-neutral-700 pt-4 pb-2"
                     key={thread.id || "new"}
-                    onClick={() => handleThreadClick(thread.id)}
                   >
                     <div className="grid grid-cols-[auto_max-content]">
                       <small>
@@ -255,7 +263,10 @@ const Forum = () => {
                       </small>
                     </div>
 
-                    <p className="text-stone-200 font-bold text-lg">
+                    <p
+                      className="text-stone-200 font-bold text-lg hover:underline cursor-pointer"
+                      onClick={() => handleThreadClick(thread.id)}
+                    >
                       {thread.title}
                     </p>
                     <div className="flex gap-2">
@@ -270,6 +281,7 @@ const Forum = () => {
                           Last reply by{" "}
                           <Username
                             character={{
+                              id: lastReplies[thread.id].authorId,
                               username: lastReplies[thread.id].authorName,
                             }}
                           />{" "}
