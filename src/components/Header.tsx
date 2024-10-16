@@ -1,5 +1,6 @@
 import logo from "../assets/LogoV2.png";
 import SidebarLink from "./SidebarLink";
+import DropdownMenu from "./DropdownMenu";
 
 // React
 import { Link } from "react-router-dom";
@@ -87,116 +88,9 @@ const Header = () => {
 
       {/* Small screen Action dropdown menu */}
       {actionsOpen && (
-        <nav
-          ref={actionsRef}
-          className="absolute flex flex-col gap-2 top-16 left-0 bg-neutral-950 p-4 sm:hidden z-10 min-w-40 select-none"
-        >
-          <p>Actions</p>
-          <hr className="border-neutral-500" />
-          <SidebarLink
-            to="selectcharacater"
-            icon="people-group"
-            onClick={() => setActionsOpen(false)}
-          >
-            Select Character
-          </SidebarLink>
-
-          <SidebarLink
-            to="bank"
-            icon="landmark"
-            onClick={() => setActionsOpen(false)}
-          >
-            Bank
-          </SidebarLink>
-
-          <hr className="border-neutral-600" />
-
-          <SidebarLink
-            to="family"
-            icon="users"
-            onClick={() => setActionsOpen(false)}
-          >
-            Family
-          </SidebarLink>
-
-          <SidebarLink
-            to="chat"
-            icon="comment-dots"
-            onClick={() => setActionsOpen(false)}
-          >
-            Chat
-          </SidebarLink>
-
-          <hr className="border-neutral-600" />
-
-          <SidebarLink
-            to="influence"
-            icon="handshake-simple"
-            onClick={() => setActionsOpen(false)}
-          >
-            Influence
-          </SidebarLink>
-
-          <hr className="border-neutral-600" />
-
-          <SidebarLink
-            to="streetcrime"
-            icon="money-bill"
-            onClick={() => setActionsOpen(false)}
-          >
-            Street crime
-          </SidebarLink>
-
-          <SidebarLink
-            to="gta"
-            icon="car"
-            onClick={() => setActionsOpen(false)}
-          >
-            Grand Theft Auto
-          </SidebarLink>
-
-          <SidebarLink
-            to="robbery"
-            icon="sack-dollar"
-            onClick={() => setActionsOpen(false)}
-          >
-            Robbery
-          </SidebarLink>
-
-          <SidebarLink
-            to="assassinate"
-            icon="gun"
-            onClick={() => setActionsOpen(false)}
-          >
-            Assassinate
-          </SidebarLink>
-
-          <hr className="border-neutral-600" />
-
-          <SidebarLink
-            to="prison"
-            icon="handcuffs"
-            onClick={() => setActionsOpen(false)}
-          >
-            Prison
-          </SidebarLink>
-
-          <SidebarLink
-            to="parking"
-            icon="square-parking"
-            onClick={() => setActionsOpen(false)}
-          >
-            Parking
-          </SidebarLink>
-
-          <SidebarLink
-            to="travel"
-            icon="plane"
-            onClick={() => setActionsOpen(false)}
-          >
-            Travel
-          </SidebarLink>
-        </nav>
+        <div className={"absolute top-16 left-0 z-10"} ref={actionsRef}>
+          <DropdownMenu linkOnClick={() => setActionsOpen(false)} />
+        </div>
       )}
 
       {/* Logo */}
