@@ -13,6 +13,8 @@ import {
   query,
   where,
   getDocs,
+  doc,
+  updateDoc,
 } from "firebase/firestore";
 
 import firebaseConfig from "../../firebaseConfig";
@@ -33,7 +35,7 @@ const Robbery = () => {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     try {
-      if (!character) {
+      if (!character || !character.id) {
         setMessage("Character not found.");
         setMessageType("warning");
         return;
@@ -73,11 +75,23 @@ const Robbery = () => {
           return;
         }
 
-        // Transfer money from target to current player
+        // Calculate the amount to steal (between 10% and 50% of the target's money)
         const stealPercentage = Math.random() * (0.5 - 0.1) + 0.1;
         const stolenAmount = Math.floor(
           randomTarget.stats.money * stealPercentage
         );
+
+        // Update target's money
+        const targetDocRef = doc(db, "Characters", randomTarget.id);
+        await updateDoc(targetDocRef, {
+          "stats.money": randomTarget.stats.money - stolenAmount,
+        });
+
+        // Update player's money
+        const playerDocRef = doc(db, "Characters", character.id);
+        await updateDoc(playerDocRef, {
+          "stats.money": character.stats.money + stolenAmount,
+        });
 
         setMessage(
           `Success! You robbed ${randomTarget.username} for $${stolenAmount}.`
