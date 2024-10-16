@@ -162,7 +162,16 @@ const Sidebar = () => {
         </SidebarLink>
 
         <SidebarLink to="robbery" icon="sack-dollar">
-          Robbery
+          <div>Robbery</div>
+          {cooldowns["robbery"] > 0 ? (
+            <div className="text-neutral-200 font-medium">
+              {cooldowns["robbery"]}
+            </div>
+          ) : (
+            <div className="text-green-400">
+              <i className="fa-solid fa-check"></i>
+            </div>
+          )}
         </SidebarLink>
 
         <SidebarLink to="assassinate" icon="gun">
