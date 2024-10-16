@@ -18,6 +18,13 @@ import ParkingTypes from "../../Data/ParkingTypes";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Define the Car type according to your existing car structure
+type Car = {
+  name: string;
+  hp: number;
+  value: number;
+};
+
 const Parking = () => {
   const { character, setCharacter } = useCharacter();
   const [parking, setParking] = useState<number | null>(null);
@@ -84,7 +91,7 @@ const Parking = () => {
   // Function to sell a car
   const sellCar = async (carIndex: number) => {
     const carToSell = character.cars[character.location][carIndex];
-    const updatedCars = character.cars[character.location].filter(
+    const updatedCars: Car[] = character.cars[character.location].filter(
       (_: any, index: number) => index !== carIndex
     );
     const newMoney = character.stats.money + carToSell.value;
@@ -116,10 +123,63 @@ const Parking = () => {
 
       setMessageType("success");
       setMessage(
-        `Sold a ${carToSell.name} for $${carToSell.value.toLocaleString()}`
+        `Sold a ${carToSell.name} for $${carToSell.value.toLocaleString()}.`
       );
     } catch (error) {
       console.error("Error selling car: ", error);
+      setMessageType("failure");
+      setMessage(`An unknown error occured when trying to sell a car.`);
+    }
+  };
+
+  // Function to sell all cars
+  const sellAllCars = async () => {
+    const carsToSell = character.cars[character.location] || [];
+    if (carsToSell.length === 0) {
+      setMessageType("info");
+      setMessage("No cars to sell.");
+      return;
+    }
+
+    const characterRef = doc(db, "Characters", character.id);
+    const updatedCars: Car[] = [];
+    let totalSoldValue = 0;
+
+    for (const car of carsToSell) {
+      totalSoldValue += car.value;
+    }
+
+    try {
+      await updateDoc(characterRef, {
+        [`cars.${character.location}`]: updatedCars,
+        [`stats.money`]: character.stats.money + totalSoldValue,
+      });
+
+      // Update the character locally
+      setCharacter((prevCharacter) =>
+        prevCharacter
+          ? {
+              ...prevCharacter,
+              cars: {
+                ...prevCharacter.cars,
+                [character.location]: updatedCars,
+              },
+              stats: {
+                ...prevCharacter.stats,
+                money: prevCharacter.stats.money + totalSoldValue,
+              },
+            }
+          : prevCharacter
+      );
+
+      setMessageType("success");
+      setMessage(
+        `Sold all cars for a total of $${totalSoldValue.toLocaleString()}.`
+      );
+    } catch (error) {
+      console.error("Error selling all cars: ", error);
+      setMessageType("failure");
+      setMessage(`An unknown error occurred when trying to sell all cars.`);
     }
   };
 
@@ -212,37 +272,52 @@ const Parking = () => {
           </tr>
         </thead>
         <tbody>
-          {character.cars?.[character.location]?.map(
-            (car: any, index: number) => {
-              return (
-                <tr
-                  className="border bg-neutral-800 border-neutral-700"
-                  key={index}
-                >
-                  <td className="px-2 py-1">{car.name}</td>
-                  <td className="px-2 py-1">{car.hp} hp</td>
-                  <td className="px-2 py-1">
-                    {"$" + car.value.toLocaleString()}
-                  </td>
-                  <td className="px-2 py-1">
-                    <button
-                      onClick={() => sellCar(index)}
-                      className="font-medium hover:text-neutral-200"
-                    >
-                      Sell
-                    </button>
-                  </td>
-                </tr>
-              );
-            }
+          {character.cars?.[character.location]?.length ? (
+            character.cars[character.location].map(
+              (car: any, index: number) => {
+                return (
+                  <tr
+                    className="border bg-neutral-800 border-neutral-700"
+                    key={index}
+                  >
+                    <td className="px-2 py-1">{car.name}</td>
+                    <td className="px-2 py-1">{car.hp} hp</td>
+                    <td className="px-2 py-1">
+                      {"$" + car.value.toLocaleString()}
+                    </td>
+                    <td className="px-2 py-1">
+                      <button
+                        onClick={() => sellCar(index)}
+                        className="font-medium hover:text-neutral-200"
+                      >
+                        Sell
+                      </button>
+                    </td>
+                  </tr>
+                );
+              }
+            )
+          ) : (
+            <tr className="border bg-neutral-800 border-neutral-700">
+              <td colSpan={4} className="px-2 py-1">
+                You do not have any cars in this location.
+              </td>
+            </tr>
           )}
         </tbody>
         <tfoot>
           <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
-            <td></td>
+            <td className="px-2 py-1"></td>
             <td className="px-2 py-1">Total</td>
-            <td>${totalValue.toLocaleString()}</td>
-            <td>Sell all</td>
+            <td className="px-2 py-1">${totalValue.toLocaleString()}</td>
+            <td className="px-2 py-1">
+              <button
+                onClick={sellAllCars}
+                className="font-medium hover:text-neutral-200"
+              >
+                Sell All
+              </button>
+            </td>
           </tr>
         </tfoot>
       </table>
