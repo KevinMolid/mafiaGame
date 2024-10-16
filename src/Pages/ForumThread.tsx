@@ -1,6 +1,19 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+
+import { useCharacter } from "../CharacterContext";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  orderBy,
+  onSnapshot,
+} from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
 
@@ -21,48 +34,113 @@ interface Thread {
   content: string;
   authorId: string;
   authorName: string;
-  createdAt: string | any;
+  createdAt: any;
+}
+
+interface Reply {
+  id: string;
+  content: string;
+  authorId: string;
+  authorName: string;
+  createdAt: any;
 }
 
 const ForumThread = () => {
-  const { threadId } = useParams<{ threadId: string }>(); // Get threadId from URL params
-  const [thread, setThread] = useState<Thread | null>(null); // Thread state now uses the Thread interface
+  const { threadId } = useParams<{ threadId: string }>();
+  const [thread, setThread] = useState<Thread | null>(null);
   const [loading, setLoading] = useState(true);
-  const [author, setAuthor] = useState<any | null>(null); // State to hold the author's character data
+  const [author, setAuthor] = useState<any | null>(null);
+  const [replies, setReplies] = useState<Reply[]>([]);
+  const [newReply, setNewReply] = useState<string>("");
+  const { character } = useCharacter();
 
   useEffect(() => {
     const fetchThread = async () => {
       if (threadId) {
-        const threadDoc = await getDoc(doc(db, "ForumThreads", threadId));
-        if (threadDoc.exists()) {
-          const threadData = {
-            id: threadDoc.id,
-            ...threadDoc.data(),
-          } as Thread; // Type assertion to tell TypeScript that this data conforms to the Thread type
+        try {
+          const threadDoc = await getDoc(doc(db, "ForumThreads", threadId));
+          if (threadDoc.exists()) {
+            const threadData = {
+              id: threadDoc.id,
+              ...threadDoc.data(),
+            } as Thread;
 
-          setThread(threadData);
+            setThread(threadData);
 
-          // Fetch the author's character data
-          if (threadData.authorId) {
-            const authorDoc = await getDoc(
-              doc(db, "Characters", threadData.authorId)
-            );
-            if (authorDoc.exists()) {
-              setAuthor(authorDoc.data()); // Set the author data, which includes the img
+            // Fetch the author's character data
+            if (threadData.authorId) {
+              const authorDoc = await getDoc(
+                doc(db, "Characters", threadData.authorId)
+              );
+              if (authorDoc.exists()) {
+                setAuthor(authorDoc.data()); // Set the author data, which includes the img
+              }
             }
+
+            // Fetch replies for the thread
+            const repliesQuery = query(
+              collection(db, "ForumThreads", threadId, "Replies"),
+              orderBy("createdAt", "asc")
+            );
+            const unsubscribe = onSnapshot(repliesQuery, (snapshot) => {
+              const repliesData = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+              })) as Reply[];
+              setReplies(repliesData);
+            });
+
+            // Cleanup subscription when component unmounts
+            return () => unsubscribe();
+          } else {
+            console.log("No such thread!");
           }
-        } else {
-          console.log("No such thread!");
+        } catch (error) {
+          console.error("Error fetching thread: ", error);
+        } finally {
+          // Ensure loading is set to false even if an error occurs
+          setLoading(false);
         }
-        setLoading(false);
       }
     };
     fetchThread();
   }, [threadId]);
 
-  const handleSubmit = (e: any) => {
+  const handleReplyChange = (e: any) => {
+    setNewReply(e.target.value);
+  };
+
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-    console.log("posting");
+    const replyContent = e.target.elements.reply.value.trim();
+
+    if (!replyContent) {
+      console.log("Reply cannot be empty");
+      return;
+    }
+
+    if (!threadId) {
+      console.error("No thread ID found.");
+      return;
+    }
+
+    try {
+      const replyData = {
+        content: newReply,
+        authorId: character?.id,
+        authorName: character?.username,
+        createdAt: serverTimestamp(),
+      };
+
+      await addDoc(
+        collection(db, "ForumThreads", threadId, "Replies"),
+        replyData
+      );
+
+      setNewReply("");
+    } catch (error) {
+      console.error("Error adding reply: ", error);
+    }
   };
 
   if (loading) {
@@ -108,14 +186,35 @@ const ForumThread = () => {
         </div>
       </div>
 
+      {/* Display replies */}
+      <div className="mb-4">
+        {replies.map((reply) => (
+          <div key={reply.id} className="bg-neutral-800 p-2 mb-2">
+            <p className="text-xs mb-2">
+              By{" "}
+              <Username
+                character={{ id: reply.authorId, username: reply.authorName }}
+              />
+              {" - "}
+              {reply.createdAt
+                ? format(reply.createdAt.toDate(), "dd.MM.yyyy - HH:mm")
+                : "Sending..."}
+            </p>
+            <p>{reply.content}</p>
+          </div>
+        ))}
+      </div>
+
       {/* Form to reply */}
       <form action="" onSubmit={handleSubmit} className="flex flex-col gap-2">
         <textarea
           className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full resize-none"
-          name=""
-          id=""
+          name="reply"
+          id="reply"
           placeholder="Write here..."
-          rows={8}
+          rows={6}
+          onChange={handleReplyChange}
+          value={newReply}
         ></textarea>
         <Button type="submit">Reply</Button>
       </form>
