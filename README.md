@@ -12,19 +12,29 @@ https://mafiareign.netlify.app/
 
 ## Featues
 
-Sign up (email)
-Create Character
-Create Family
+### Authentication 
+Using Firebase for authentication with e-mail
+Planning to add Google/Facebook and option to reset password
 
-Global chat
-Prison chat (Prison not working yet)
+### Character Creation
 
-## Featues being developed
+### Families
+Function to create families
+Families have no function for now, but planning to add family chat, safehouses, donations, family features like extra protection and family profile page
 
-Prison
-Families
+### Chat function
+For now there is a global chat and a prison chat, but the prison is not yey implemented
+
+### Forums
+General discussion and Marketplace forums.
+Players can create and reply to threads.
+
+### Assassination
+Function to kill players. The user must be in the same location as the target player to successfully assassinate the player.
+
 
 ## Planned features
+### Prison
+Players go to prison if they get catched attempting to commit a crime.
 
-Kill players
-Reputation system
+### Reputation system
