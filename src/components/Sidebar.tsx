@@ -17,7 +17,6 @@ const Sidebar = () => {
   const { character } = useCharacter();
   const [showNav, setShowNav] = useState(false);
 
-  // Street Crime cooldown
   const { cooldowns } = useCooldown();
 
   const characterMenuRef = useRef<HTMLDivElement | null>(null);
