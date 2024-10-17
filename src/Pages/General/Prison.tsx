@@ -9,7 +9,7 @@ const Prison = () => {
   const { character } = useCharacter();
 
   return (
-    <Main>
+    <Main img="PrisonBg">
       <H1>{character?.location} Prison</H1>
       <div className="grid grid-cols-2">
         <div>

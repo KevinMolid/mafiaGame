@@ -2,13 +2,16 @@ import { ReactNode } from "react";
 
 interface MainInterface {
   children: ReactNode;
+  img?: string;
 }
 
-const Main = ({ children }: MainInterface) => {
+const Main = ({ children, img }: MainInterface) => {
   return (
     <main
-      className="pb-24 sm:pb-24 p-4 sm:p-12 text-stone-400 flex-grow 
-    bg-[url('/PrisonBg.jpg')] bg-cover"
+      className={
+        "pb-24 sm:pb-24 p-4 sm:p-12 text-stone-400 flex-grow " +
+        (img && `bg-[url('/${img}.jpg')] bg-cover`)
+      }
     >
       {children}
     </main>

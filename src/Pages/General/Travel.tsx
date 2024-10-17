@@ -73,7 +73,7 @@ const Travel = () => {
   };
 
   return (
-    <Main>
+    <Main img="TravelBg">
       <H1>Travel</H1>
       {message && <InfoBox type="success">{message}</InfoBox>}
       {!targetLocation && (
