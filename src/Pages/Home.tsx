@@ -70,7 +70,7 @@ const Home = () => {
   const heatPercentage = character ? (character.stats.heat / maxHeat) * 100 : 0;
 
   return (
-    <Main>
+    <Main img="MafiaBg">
       {character ? <H1>Welcome {character.username}!</H1> : <H1>Welcome!</H1>}
 
       <div className="flex gap-4">

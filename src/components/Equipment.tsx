@@ -1,6 +1,15 @@
 const Equipment = () => {
   return (
-    <section className="grid grid-cols-5 grid-rows-5 h-[250px] w-[250px] bg-neutral-800 gap-1 p-2">
+    <section
+      className="grid grid-cols-5 grid-rows-5 h-[300px] w-[250px] bg-neutral-800 gap-1 p-2"
+      style={{
+        backgroundImage: "url('Character.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundPositionY: "top",
+      }}
+    >
       <div></div>
       <div></div>
       <div className="border border-neutral-600 bg-neutral-900">H</div>
