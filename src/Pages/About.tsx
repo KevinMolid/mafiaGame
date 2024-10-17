@@ -4,7 +4,7 @@ import H1 from "../components/Typography/H1";
 
 const About = () => {
   return (
-    <Main>
+    <Main img="MafiaBg">
       <H1>About MafiaReign</H1>
       <div className="flex flex-col gap-4">
         <p>

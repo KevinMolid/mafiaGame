@@ -14,6 +14,7 @@ const Main = ({ children, img }: MainInterface) => {
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
+        backgroundPositionY: "top",
       }}
     >
       {children}
