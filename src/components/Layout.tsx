@@ -16,7 +16,7 @@ const Layout = ({ children }: LayoutInterface) => {
     );
   }
   if (!userData) {
-    return <div className="flex">{children}</div>;
+    return <div className="flex flex-grow">{children}</div>;
   }
 };
 

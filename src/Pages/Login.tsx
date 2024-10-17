@@ -46,36 +46,38 @@ const Login = () => {
   }
 
   return (
-    <Main>
-      <H1>Log in</H1>
-      <form action="" className="flex flex-col gap-2">
-        <div className="flex flex-col">
-          <label htmlFor="email">Email</label>
-          <input
-            className="bg-neutral-800 px-2 py-1"
-            id="email"
-            type="text"
-            onChange={handleEmailChange}
-          />
-        </div>
-        <div className="flex flex-col">
-          <label htmlFor="pw">Password</label>
-          <input
-            className="bg-neutral-800 px-2 py-1"
-            id="pw"
-            type="password"
-            onChange={handlePwChange}
-          />
-        </div>
-        {error && <span className="text-red-500">{error}</span>}
-      </form>
-      <Button onClick={logIn}>Log in</Button>
-      <p className="text-stone-400">
-        Dont have an account?{" "}
-        <Link to="/signup">
-          <span className="text-white hover:underline">Sign up here!</span>
-        </Link>
-      </p>
+    <Main img="Mafia">
+      <div className="w-4/5 sm:w-2/3 max-w-[500px] bg-neutral-900/80 border border-neutral-500 p-6 rounded-lg flex flex-col gap-4 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+        <H1>Log in</H1>
+        <form action="" className="flex flex-col gap-2">
+          <div className="flex flex-col">
+            <label htmlFor="email">Email</label>
+            <input
+              className="bg-transparent px-2 py-1 border-b border-neutral-500"
+              id="email"
+              type="text"
+              onChange={handleEmailChange}
+            />
+          </div>
+          <div className="flex flex-col">
+            <label htmlFor="pw">Password</label>
+            <input
+              className="bg-transparent px-2 py-1 border-b border-neutral-500"
+              id="pw"
+              type="password"
+              onChange={handlePwChange}
+            />
+          </div>
+          {error && <span className="text-red-500">{error}</span>}
+        </form>
+        <Button onClick={logIn}>Log in</Button>
+        <p className="text-stone-400">
+          Dont have an account?{" "}
+          <Link to="/signup">
+            <span className="text-white hover:underline">Sign up here!</span>
+          </Link>
+        </p>
+      </div>
     </Main>
   );
 };
