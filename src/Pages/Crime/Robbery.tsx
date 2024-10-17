@@ -85,7 +85,7 @@ const Robbery = () => {
 
       // Filter out the current player
       const potentialTargets = charactersSnapshot.docs
-        .map((doc) => ({ id: doc.id, ...(doc.data() as Character) }))
+        .map((doc) => ({ ...(doc.data() as Character) }))
         .filter((char: any) => char.id !== character?.id);
 
       if (potentialTargets.length === 0) {
