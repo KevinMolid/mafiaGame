@@ -32,3 +32,21 @@ export interface Character {
   familyId?: string;
   familyName?: string;
 }
+
+export interface Target {
+  location: string;
+  stats: Stats;
+  createdAt: Date;
+  diedAt?: Date | null;
+  img: string;
+  lastCrimeTimestamp?: Date;
+  profileText: string;
+  reputation: Reputation;
+  status: string;
+  uid: string;
+  username: string;
+  parkingFacilities?: any;
+  cars?: any;
+  familyId?: string;
+  familyName?: string;
+}

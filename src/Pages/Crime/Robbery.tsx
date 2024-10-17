@@ -8,7 +8,7 @@ import Box from "../../components/Box";
 import { useAuth } from "../../AuthContext";
 import { useCooldown } from "../../CooldownContext";
 import { useCharacter } from "../../CharacterContext";
-import { Character } from "../../Interfaces/CharacterTypes";
+import { Target } from "../../Interfaces/CharacterTypes";
 
 // React
 import { useState, useEffect } from "react";
@@ -85,7 +85,7 @@ const Robbery = () => {
 
       // Filter out the current player
       const potentialTargets = charactersSnapshot.docs
-        .map((doc) => ({ ...(doc.data() as Character) }))
+        .map((doc) => ({ id: doc.id, ...(doc.data() as Target) }))
         .filter((char: any) => char.id !== character?.id);
 
       if (potentialTargets.length === 0) {
