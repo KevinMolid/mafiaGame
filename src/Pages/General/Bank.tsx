@@ -1,4 +1,5 @@
 // Components
+import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
 import Button from "../../components/Button";
@@ -251,7 +252,7 @@ const Bank = () => {
   };
 
   return (
-    <section>
+    <Main>
       <H1>Bank</H1>
       <p className="mb-2">
         Here you can deposit and withdraw money from your bank account. Money in
@@ -314,7 +315,7 @@ const Bank = () => {
           </div>
         </form>
       </div>
-    </section>
+    </Main>
   );
 };
 

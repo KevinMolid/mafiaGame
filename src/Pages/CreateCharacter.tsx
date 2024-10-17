@@ -1,3 +1,8 @@
+// Components
+import Main from "../components/Main";
+import H1 from "../components/Typography/H1";
+import Button from "../components/Button";
+
 // React
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
@@ -20,10 +25,6 @@ import {
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
-
-// Components
-import H1 from "../components/Typography/H1";
-import Button from "../components/Button";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -106,15 +107,17 @@ const CreateCharacter = () => {
   }
 
   return (
-    <>
+    <Main>
       {/* Current character dead */}
-      <div>
-        <h2>
-          Your character <strong>{character?.username}</strong> have been
-          assassinated and is{" "}
-          <span className="text-red-500">{character?.status}</span>.
-        </h2>
-      </div>
+      {character?.status === "dead" && (
+        <div>
+          <h2>
+            Your character <strong>{character?.username}</strong> have been
+            assassinated and is{" "}
+            <span className="text-red-500">{character?.status}</span>.
+          </h2>
+        </div>
+      )}
 
       <H1>Create your character</H1>
       <form action="" className="flex flex-col mb-4 gap-2">
@@ -129,7 +132,7 @@ const CreateCharacter = () => {
         {error && <span className="text-red-500">{error}</span>}
       </form>
       <Button onClick={handleClick}>Create character</Button>
-    </>
+    </Main>
   );
 };
 

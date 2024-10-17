@@ -1,8 +1,10 @@
+// Components
+import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
 
 const About = () => {
   return (
-    <div>
+    <Main>
       <H1>About MafiaReign</H1>
       <div className="flex flex-col gap-4">
         <p>
@@ -22,7 +24,7 @@ const About = () => {
           for dominance.
         </p>
       </div>
-    </div>
+    </Main>
   );
 };
 

@@ -1,5 +1,4 @@
 // Components
-import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import CharacterList from "../components/CharacterList";
 
@@ -96,10 +95,10 @@ const Chat = () => {
   };
 
   return (
-    <section className="h-full pb-16">
-      <H1>Chat</H1>
+    <section className="flex-grow">
       <div className="grid grid-cols-[1fr_4fr] h-full">
-        <div className="h-full bg-neutral-800 p-4">
+        {/* Left panel */}
+        <div className="h-full px-4 py-8 border-r border-neutral-700">
           <H2>Channels</H2>
           <p className="text-lg text-white">Players</p>
           <CharacterList
@@ -138,24 +137,30 @@ const Chat = () => {
             </li>
           </ul>
         </div>
+
+        {/* Message panel */}
         <div
           id="right_panel"
-          className="grid grid-rows-[min-content_auto_min-content] p-4"
+          className="grid grid-rows-[min-content_auto_min-content] px-4 pt-8 pb-24"
         >
           {/* Channel header */}
           <div
             id="right_panel_heading"
             className="border-b border-neutral-600 mb-2"
           >
-            <H2>{receiver}</H2>
+            <H2>{receiver} Chat</H2>
           </div>
 
           {/* Messages */}
-          <div id="messages_div">
+          <div
+            id="messages_div"
+            className="mb-4 pb-2 border-b border-neutral-600"
+          >
             <ul>
               {messages.map((message) => (
                 <li key={message.id} className="mb-2">
-                  <div className="flex gap-2 mb-1">
+                  {/* Sender and timestamp */}
+                  <div className="flex gap-2 mb-1 text-stone-400 text-xs sm:text-sm">
                     <Link to="#">
                       <strong>{message.senderName}</strong>
                     </Link>
@@ -192,21 +197,14 @@ const Chat = () => {
                 onChange={handleInputChange}
                 className="w-full resize-none bg-inherit rounded-lg px-4 py-2"
               ></textarea>
-              <div id="icons" className="flex">
-                <button
-                  type="submit"
-                  id="send_icon"
-                  className="w-8 flex justify-center items-center hover:text-white hover:cursor-pointer"
-                >
-                  <i className=" text-xl fa-solid fa-paper-plane"></i>
-                </button>
-                <div
-                  id="send_icon"
-                  className="w-8 flex justify-center items-center hover:text-white hover:cursor-pointer"
-                >
-                  <i className="fa-solid fa-face-smile"></i>
-                </div>
-              </div>
+
+              <button
+                type="submit"
+                id="send_icon"
+                className="w-8 flex justify-center items-center hover:text-white hover:cursor-pointer"
+              >
+                <i className=" text-xl fa-solid fa-paper-plane"></i>
+              </button>
             </form>
           </div>
         </div>

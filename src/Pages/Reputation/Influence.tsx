@@ -1,46 +1,49 @@
+// Components
+import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
+import H2 from "../../components/Typography/H2";
 
 const Influence = () => {
   return (
-    <>
+    <Main>
       <H1>Influence</H1>
 
-      <aside className="grid grid-cols-4 gap-6 border border-neutral-700 px-6 py-4 pb-6 mb-6">
-        <h2 className="col-span-full text-2xl text-stone-500 leading-none">
-          Reputation
-        </h2>
-        <article>
-          <h3>
-            <i className="fa-solid fa-shield"></i> Police Force
-          </h3>
-          <div className="h-3 bg-neutral-800">
-            <div className="h-3 bg-blue-400 w-2/4"></div>
-          </div>
-        </article>
-        <article>
-          <h3>
-            <i className="fa-solid fa-landmark"></i> Political Corruption
-          </h3>
-          <div className="h-3 bg-neutral-800">
-            <div className="h-3 bg-red-400 w-1/4"></div>
-          </div>
-        </article>
-        <article>
-          <h3>
-            <i className="fa-solid fa-gun"></i> Street Gangs
-          </h3>
-          <div className="h-3 bg-neutral-800">
-            <div className="h-3 bg-yellow-400 w-3/4"></div>
-          </div>
-        </article>
-        <article>
-          <h3>
-            <i className="fa-solid fa-leaf"></i> Community Organizations
-          </h3>
-          <div className="h-3 bg-neutral-800">
-            <div className="h-3 bg-green-400 w-1/12"></div>
-          </div>
-        </article>
+      <aside className="border bg-neutral-900 border-neutral-700 px-6 py-4 pb-6 mb-6">
+        <H2>Reputation</H2>
+        <div className="grid grid-cols-2 gap-6">
+          <article>
+            <h3>
+              <i className="fa-solid fa-shield"></i> Police Force
+            </h3>
+            <div className="h-3 bg-neutral-800">
+              <div className="h-3 bg-blue-400 w-2/4"></div>
+            </div>
+          </article>
+          <article>
+            <h3>
+              <i className="fa-solid fa-landmark"></i> Political Corruption
+            </h3>
+            <div className="h-3 bg-neutral-800">
+              <div className="h-3 bg-red-400 w-1/4"></div>
+            </div>
+          </article>
+          <article>
+            <h3>
+              <i className="fa-solid fa-gun"></i> Street Gangs
+            </h3>
+            <div className="h-3 bg-neutral-800">
+              <div className="h-3 bg-yellow-400 w-3/4"></div>
+            </div>
+          </article>
+          <article>
+            <h3>
+              <i className="fa-solid fa-leaf"></i> Community Organizations
+            </h3>
+            <div className="h-3 bg-neutral-800">
+              <div className="h-3 bg-green-400 w-1/12"></div>
+            </div>
+          </article>
+        </div>
       </aside>
 
       <div className="grid grid-cols-2 gap-6 border border-neutral-700 px-6 py-4 pb-6 mb-6">
@@ -118,7 +121,7 @@ const Influence = () => {
           <li>Influence Community Leaders</li>
         </ul>
       </div>
-    </>
+    </Main>
   );
 };
 

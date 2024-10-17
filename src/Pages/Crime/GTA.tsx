@@ -1,4 +1,5 @@
 // Components
+import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
@@ -161,7 +162,7 @@ const GTA = () => {
   };
 
   return (
-    <div>
+    <Main>
       <H1>Grand Theft Auto</H1>
 
       <p className="pb-2">
@@ -179,7 +180,7 @@ const GTA = () => {
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
       <Button onClick={stealCar}>Commit Theft</Button>
-    </div>
+    </Main>
   );
 };
 

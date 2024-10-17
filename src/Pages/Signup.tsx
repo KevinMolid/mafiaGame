@@ -1,3 +1,8 @@
+// Components
+import Main from "../components/Main";
+import H1 from "../components/Typography/H1";
+import Button from "../components/Button";
+
 // React
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -11,10 +16,6 @@ import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 
 import firebaseConfig from "../firebaseConfig";
-
-// Components
-import H1 from "../components/Typography/H1";
-import Button from "../components/Button";
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -68,7 +69,7 @@ const Signup = () => {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <Main>
       <H1>Sign up</H1>
       <form action="" className="flex flex-col gap-2">
         <div className="flex flex-col">
@@ -98,7 +99,7 @@ const Signup = () => {
           <span className="text-white hover:underline">Log in here!</span>
         </Link>
       </p>
-    </div>
+    </Main>
   );
 };
 

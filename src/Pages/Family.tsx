@@ -1,4 +1,5 @@
 // Components
+import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import InfoBox from "../components/InfoBox";
@@ -121,7 +122,7 @@ const Family = () => {
   }
 
   return (
-    <div>
+    <Main>
       {family ? (
         <>
           <H1>
@@ -191,7 +192,7 @@ const Family = () => {
           {error && <p style={{ color: "red" }}>{error}</p>}
         </>
       )}
-    </div>
+    </Main>
   );
 };
 

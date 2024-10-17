@@ -1,3 +1,5 @@
+// Components
+import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
@@ -71,7 +73,7 @@ const Travel = () => {
   };
 
   return (
-    <section>
+    <Main>
       <H1>Travel</H1>
       {message && <InfoBox type="success">{message}</InfoBox>}
       {!targetLocation && (
@@ -130,7 +132,7 @@ const Travel = () => {
       {targetLocation && (
         <Button onClick={handleTravel}>Travel to {targetLocation}</Button>
       )}
-    </section>
+    </Main>
   );
 };
 

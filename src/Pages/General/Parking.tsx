@@ -1,3 +1,4 @@
+import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
 import H3 from "../../components/Typography/H3";
@@ -205,7 +206,7 @@ const Parking = () => {
   };
 
   return (
-    <section className="flex flex-col gap-4">
+    <Main>
       <div>
         <H1>{character?.location} Parking</H1>
         <p>
@@ -352,7 +353,7 @@ const Parking = () => {
         </strong>{" "}
         parking slots used
       </p>
-    </section>
+    </Main>
   );
 };
 

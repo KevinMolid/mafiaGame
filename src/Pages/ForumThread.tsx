@@ -1,3 +1,9 @@
+// Components
+import Main from "../components/Main";
+import H1 from "../components/Typography/H1";
+import Username from "../components/Typography/Username";
+import Button from "../components/Button";
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
@@ -16,10 +22,6 @@ import {
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
-
-import H1 from "../components/Typography/H1";
-import Username from "../components/Typography/Username";
-import Button from "../components/Button";
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -152,7 +154,7 @@ const ForumThread = () => {
   }
 
   return (
-    <section>
+    <Main>
       <div className="grid grid-cols-[2fr_1fr] md:grid-cols-[3fr_1fr] gap-2 md:gap-4 mb-2 md:mb-4">
         <div className="bg-neutral-800 p-2 md:p-4">
           <H1>{thread.title}</H1>
@@ -218,7 +220,7 @@ const ForumThread = () => {
         ></textarea>
         <Button type="submit">Reply</Button>
       </form>
-    </section>
+    </Main>
   );
 };
 

@@ -1,3 +1,8 @@
+// Components
+import Main from "../components/Main";
+import H1 from "../components/Typography/H1";
+import Button from "../components/Button";
+
 // React
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -7,10 +12,6 @@ import { useAuth } from "../AuthContext";
 
 // Firebaase
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-
-// Components
-import H1 from "../components/Typography/H1";
-import Button from "../components/Button";
 
 const Login = () => {
   const auth = getAuth();
@@ -45,7 +46,7 @@ const Login = () => {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <Main>
       <H1>Log in</H1>
       <form action="" className="flex flex-col gap-2">
         <div className="flex flex-col">
@@ -75,7 +76,7 @@ const Login = () => {
           <span className="text-white hover:underline">Sign up here!</span>
         </Link>
       </p>
-    </div>
+    </Main>
   );
 };
 

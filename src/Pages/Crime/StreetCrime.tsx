@@ -1,3 +1,10 @@
+// Components
+import Main from "../../components/Main";
+import H1 from "../../components/Typography/H1";
+import Button from "../../components/Button";
+import CrimeBox from "../../components/CrimeBox";
+import InfoBox from "../../components/InfoBox";
+
 // React
 import { useState, useEffect } from "react";
 
@@ -8,12 +15,6 @@ import { useNavigate } from "react-router-dom";
 import { useCharacter } from "../../CharacterContext";
 import { useAuth } from "../../AuthContext";
 import { useCooldown } from "../../CooldownContext";
-
-// Components
-import H1 from "../../components/Typography/H1";
-import Button from "../../components/Button";
-import CrimeBox from "../../components/CrimeBox";
-import InfoBox from "../../components/InfoBox";
 
 // Functions
 import { attemptReward } from "../../Functions/RewardFunctions";
@@ -117,7 +118,7 @@ const StreetCrime = () => {
   ];
 
   return (
-    <section>
+    <Main>
       <H1>Street Crimes</H1>
 
       <p className="pb-2">
@@ -155,7 +156,7 @@ const StreetCrime = () => {
         ))}
       </div>
       <Button onClick={handleClick}>Commit Crime</Button>
-    </section>
+    </Main>
   );
 };
 

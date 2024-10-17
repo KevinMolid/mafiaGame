@@ -1,3 +1,4 @@
+import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
 import Button from "../../components/Button";
@@ -91,7 +92,7 @@ const Assassinate = () => {
   };
 
   return (
-    <section>
+    <Main>
       <H1>Assassinate player</H1>
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
       <H2>Who would you like to assassinate?</H2>
@@ -105,7 +106,7 @@ const Assassinate = () => {
         />
         <Button onClick={killPlayer}>Kill player</Button>
       </div>
-    </section>
+    </Main>
   );
 };
 

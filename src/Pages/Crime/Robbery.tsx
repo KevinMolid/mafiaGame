@@ -1,4 +1,5 @@
 // Components
+import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
@@ -150,7 +151,7 @@ const Robbery = () => {
   };
 
   return (
-    <section>
+    <Main>
       <div className="flex justify-between">
         <H1>Robbery</H1>
         {!helpActive && (
@@ -202,7 +203,7 @@ const Robbery = () => {
       <form onSubmit={handleSubmit} action="" className="mt-4">
         <Button type="submit">Commit Robbery</Button>
       </form>
-    </section>
+    </Main>
   );
 };
 

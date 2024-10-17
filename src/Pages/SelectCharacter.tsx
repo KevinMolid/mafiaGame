@@ -1,3 +1,5 @@
+// Components
+import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
 import Button from "../components/Button";
 
@@ -56,7 +58,7 @@ const SelectCharacter = () => {
   };
 
   return (
-    <div>
+    <Main>
       <H1>Select Character</H1>
       <div className="flex gap-4 flex-wrap">
         {characters.length === 0 ? (
@@ -103,7 +105,7 @@ const SelectCharacter = () => {
           ))
         )}
       </div>
-    </div>
+    </Main>
   );
 };
 

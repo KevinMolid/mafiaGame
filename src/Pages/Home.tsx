@@ -1,3 +1,11 @@
+// Components
+import Main from "../components/Main";
+import H1 from "../components/Typography/H1";
+import H2 from "../components/Typography/H2";
+import Equipment from "../components/Equipment";
+import Button from "../components/Button";
+import InfoBox from "../components/InfoBox";
+
 // React
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -5,13 +13,6 @@ import { Link } from "react-router-dom";
 // Context
 import { useCharacter } from "../CharacterContext";
 import { useAuth } from "../AuthContext";
-
-// Components
-import H1 from "../components/Typography/H1";
-import H2 from "../components/Typography/H2";
-import Equipment from "../components/Equipment";
-import Button from "../components/Button";
-import InfoBox from "../components/InfoBox";
 
 // Functions
 import { attemptReward } from "../Functions/RewardFunctions";
@@ -69,7 +70,7 @@ const Home = () => {
   const heatPercentage = character ? (character.stats.heat / maxHeat) * 100 : 0;
 
   return (
-    <div className="text-stone-400">
+    <Main>
       {character ? <H1>Welcome {character.username}!</H1> : <H1>Welcome!</H1>}
 
       <div className="flex gap-4">
@@ -145,7 +146,7 @@ const Home = () => {
       ) : (
         <p>No character selected</p>
       )}
-    </div>
+    </Main>
   );
 };
 

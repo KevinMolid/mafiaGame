@@ -1,3 +1,5 @@
+// Components
+import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
 import H3 from "../components/Typography/H3";
 import Username from "../components/Typography/Username";
@@ -187,7 +189,7 @@ const Forum = () => {
   }
 
   return (
-    <section>
+    <Main>
       {/* Categories Section */}
       <div>
         <ul className="mb-8 flex">
@@ -343,7 +345,7 @@ const Forum = () => {
           )}
         </div>
       )}
-    </section>
+    </Main>
   );
 };
 

@@ -1,13 +1,13 @@
-// React
-import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-
-import Username from "../components/Typography/Username";
-
 // Components
+import Main from "../components/Main";
 import Notebook from "./Notebook";
 import Blacklist from "./Blacklist";
 import EditProfile from "./EditProfile";
+import Username from "../components/Typography/Username";
+
+// React
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
 
 // Firebase
 import { doc, getDoc } from "firebase/firestore";
@@ -73,7 +73,7 @@ const Profile = () => {
   }
 
   return (
-    <section>
+    <Main>
       <div className="flex flex-col items-center md:grid md:grid-cols-[max-content_max-content] gap-4 lg:gap-8 pb-4 border-b border-neutral-700">
         <img
           className="w-52 h-52 object-cover"
@@ -179,7 +179,7 @@ const Profile = () => {
           <EditProfile></EditProfile>
         </div>
       )}
-    </section>
+    </Main>
   );
 };
 
