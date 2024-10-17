@@ -3,7 +3,7 @@ import SidebarLink from "./SidebarLink";
 import DropdownMenu from "./DropdownMenu";
 
 // React
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 
 // Firebase
@@ -23,11 +23,13 @@ const Header = () => {
   const actionsRef = useRef<HTMLDivElement | null>(null);
   const actionsButtonRef = useRef<HTMLDivElement | null>(null);
 
+  const navigate = useNavigate();
+
   // Sign out
   function logOut() {
     signOut(auth)
       .then(() => {
-        // Sign-out successful.
+        navigate("/login");
       })
       .catch((error) => {
         console.log(error.message);
