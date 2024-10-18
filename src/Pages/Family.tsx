@@ -45,7 +45,6 @@ const Family = () => {
   const [activePanel, setActivePanel] = useState<
     "members" | "profile" | "settings"
   >("members");
-  const [invitingPlayer, setinvitingPlayer] = useState<boolean>(false);
 
   if (!character) return;
 
@@ -379,10 +378,76 @@ const Family = () => {
           {activePanel === "settings" && (
             <div>
               <H2>Settings</H2>
-              <button onClick={() => setinvitingPlayer(true)}>
-                Invite player
-              </button>
-              <p>Assign roles</p>
+              <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
+                <H3>Invite player</H3>
+                <input
+                  className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full"
+                  type="text"
+                />
+                <Button>Send Invitation</Button>
+              </div>
+
+              <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
+                <H3>Assign roles</H3>
+                <div>
+                  <p>
+                    Boss:{" "}
+                    <Username
+                      character={{
+                        id: family.leaderId,
+                        username: family.leaderName,
+                      }}
+                    />
+                  </p>
+                  <p>
+                    Consigliere:{" "}
+                    <Username
+                      character={{
+                        id: family.leaderId,
+                        username: family.leaderName,
+                      }}
+                    />
+                  </p>
+                  <p>
+                    Underboss:{" "}
+                    <Username
+                      character={{
+                        id: family.leaderId,
+                        username: family.leaderName,
+                      }}
+                    />
+                  </p>
+                  <p>Caporegimes:</p>
+                  <p>
+                    {" "}
+                    <Username
+                      character={{
+                        id: family.leaderId,
+                        username: family.leaderName,
+                      }}
+                    />
+                  </p>
+                  <p>
+                    {" "}
+                    <Username
+                      character={{
+                        id: family.leaderId,
+                        username: family.leaderName,
+                      }}
+                    />
+                  </p>
+                  <p>
+                    {" "}
+                    <Username
+                      character={{
+                        id: family.leaderId,
+                        username: family.leaderName,
+                      }}
+                    />
+                  </p>
+                </div>
+              </div>
+
               <hr className="my-2 border-neutral-600" />
               <p>Edit Family rules</p>
               <p>Edit Family profile</p>
@@ -393,27 +458,6 @@ const Family = () => {
               >
                 <i className="fa-solid fa-ban"></i> Disband family
               </p>
-
-              {/* Invite player*/}
-              {invitingPlayer && (
-                <div className="fixed top-1/2 left-1/2 z-10 bg-black/50 w-full h-full -translate-x-1/2 -translate-y-1/2">
-                  <div className="fixed w-2/3 min-w-[320px] max-w-[400px] top-1/2 left-1/2 bg-neutral-900 -translate-x-1/2 -translate-y-1/2 p-8 border border-neutral-600 rounded-lg flex flex-col gap-2">
-                    <div
-                      className="absolute top-0 right-0 bg-neutral-700 hover:bg-neutral-600 w-10 h-10 flex justify-center items-center rounded-tr-md cursor-pointer"
-                      onClick={() => setinvitingPlayer(false)}
-                    >
-                      <i className="text-neutral-200 text-xl fa-solid fa-x"></i>
-                    </div>
-                    <H3>Invite player</H3>
-                    <p>Invite a player to {family.name}</p>
-                    <input
-                      className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full"
-                      type="text"
-                    />
-                    <Button>Send Invitation</Button>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </>
