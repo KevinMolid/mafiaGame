@@ -5,7 +5,7 @@ import Button from "../components/Button";
 
 // React
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 // Context
 import { useAuth } from "../AuthContext";
@@ -31,9 +31,11 @@ const db = getFirestore(app);
 
 const CreateCharacter = () => {
   const { user } = useAuth();
-  const { character } = useCharacter();
+  const { character, setCharacter } = useCharacter();
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
+
+  const navigate = useNavigate();
 
   if (character && character.status === "alive") {
     return <Navigate to="/" />;
@@ -81,7 +83,7 @@ const CreateCharacter = () => {
       }
 
       // Add the new character to the "Characters" collection
-      const docRef = await addDoc(collection(db, "Characters"), {
+      const newCharacterData = {
         uid: user.uid,
         username: username,
         img: "",
@@ -93,21 +95,34 @@ const CreateCharacter = () => {
         diedAt: null,
         lastCrimeTimestamp: null,
         profileText: "",
-      });
+      };
+
+      const docRef = await addDoc(
+        collection(db, "Characters"),
+        newCharacterData
+      );
 
       // Update the user document in the "Users" collection
       const userDocRef = doc(db, "Users", user.uid);
       await updateDoc(userDocRef, {
-        characters: arrayUnion(docRef.id), // Add the new character to the user's characters array
-        activeCharacter: docRef.id, // Set the new character as the active character
+        characters: arrayUnion(docRef.id),
+        activeCharacter: docRef.id,
       });
+
+      // Set character in local state
+      setCharacter({
+        id: docRef.id,
+        ...newCharacterData,
+      });
+
+      navigate("/");
     } catch (e) {
       console.error("Error adding document: ", e);
     }
   }
 
   return (
-    <Main>
+    <Main img="MafiaBg">
       {/* Current character dead */}
       {character?.status === "dead" && (
         <div>

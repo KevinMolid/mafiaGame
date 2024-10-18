@@ -21,7 +21,7 @@ export interface Character {
   createdAt: Date;
   diedAt?: Date | null;
   img: string;
-  lastCrimeTimestamp?: Date;
+  lastCrimeTimestamp?: Date | null;
   profileText: string;
   reputation: Reputation;
   status: string;
@@ -39,7 +39,7 @@ export interface Target {
   createdAt: Date;
   diedAt?: Date | null;
   img: string;
-  lastCrimeTimestamp?: Date;
+  lastCrimeTimestamp?: Date | null;
   profileText: string;
   reputation: Reputation;
   status: string;
