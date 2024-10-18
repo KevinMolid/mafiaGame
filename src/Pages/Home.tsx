@@ -134,7 +134,7 @@ const Home = () => {
                 <div className="bg-neutral-700 h-5 min-w-52 w-full grid grid-cols-1">
                   <div
                     className="h-5 bg-red-400 transition-all duration-300 col-start-1 row-start-1"
-                    style={{ width: `${heatPercentage + 50}%` }}
+                    style={{ width: `${heatPercentage}%` }}
                   ></div>
                   <div className="flex justify-center items-center z-10 col-start-1 row-start-1">
                     <p className="text-red-50 text-xs">
