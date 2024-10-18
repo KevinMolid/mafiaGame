@@ -151,7 +151,7 @@ function App() {
                       />
 
                       <Route
-                        path="/family/:familyID"
+                        path="/family/profile/:familyID"
                         element={
                           <ProtectedRoute>
                             <FamilyProfile />
