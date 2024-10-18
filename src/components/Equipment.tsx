@@ -7,7 +7,7 @@ const EquipmentBox = ({ letter, span }: EquipmentInterface) => {
   return (
     <div
       className={
-        "border border-neutral-400 bg-neutral-950/30 text-sm flex justify-center items-center rounded-md " +
+        "border border-neutral-400 bg-neutral-900/90 text-sm flex justify-center items-center rounded-md " +
         (span && "col-span-2 row-span-2")
       }
     >
@@ -21,7 +21,7 @@ const Equipment = () => {
     <section
       className="grid grid-cols-5 grid-rows-6 h-[427px] w-[287px] bg-neutral-800 gap-1 p-2"
       style={{
-        backgroundImage: "url('Character.jpg')",
+        backgroundImage: "url('CharacterV4.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -41,13 +41,13 @@ const Equipment = () => {
       <div></div>
       <EquipmentBox letter="R1"></EquipmentBox>
       {/* 2. row */}
-      <EquipmentBox letter="N"></EquipmentBox>
+      <EquipmentBox letter="T"></EquipmentBox>
       <div></div>
       <div></div>
       <div></div>
       <EquipmentBox letter="R2"></EquipmentBox>
       {/* 3. row */}
-      <EquipmentBox letter="T"></EquipmentBox>
+      <EquipmentBox letter="C"></EquipmentBox>
       <div></div>
       <div></div>
       <div></div>
