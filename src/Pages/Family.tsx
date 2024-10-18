@@ -388,6 +388,8 @@ const Family = () => {
               >
                 <i className="fa-solid fa-ban"></i> Disband family
               </p>
+
+              <div className="border-l border-neutral-600"></div>
             </div>
           )}
         </>
