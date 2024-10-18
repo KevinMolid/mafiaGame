@@ -3,15 +3,13 @@ import Main from "../components/Main";
 import Notebook from "./Notebook";
 import Blacklist from "./Blacklist";
 import EditProfile from "./EditProfile";
-import Username from "../components/Typography/Username";
 
 // React
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
 // Firebase
-import { doc, getDoc } from "firebase/firestore";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
 
@@ -130,7 +128,7 @@ const Profile = () => {
           <ul className="grid grid-cols-[min-content_max-content] gap-x-4">
             <li className="text-stone-400">Username</li>
             <li>
-              <Username character={characterData} />
+              <p className="text-white font-bold">{characterData.username}</p>
             </li>
 
             <li className="text-stone-400">Rank</li>
@@ -140,7 +138,17 @@ const Profile = () => {
             <li>{getMoneyRank(characterData.stats.money)}</li>
 
             <li className="text-stone-400">Family</li>
-            <li>{characterData.familyName || "No family"}</li>
+            <li>
+              {characterData.familyName ? (
+                <Link to={`/family/profile/${characterData.familyId}`}>
+                  <strong className="text-white hover:underline">
+                    {characterData.familyName}
+                  </strong>
+                </Link>
+              ) : (
+                "No family"
+              )}
+            </li>
 
             <li className="text-stone-400">Status</li>
             <li
