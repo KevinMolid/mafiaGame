@@ -15,12 +15,19 @@ import { getCurrentRank } from "../Functions/RankFunctions";
 
 const Sidebar = () => {
   const { character } = useCharacter();
+  const { cooldowns, fetchCooldown } = useCooldown();
   const [showNav, setShowNav] = useState(false);
-
-  const { cooldowns } = useCooldown();
 
   const characterMenuRef = useRef<HTMLDivElement | null>(null);
   const characterAvatarRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (character) {
+      fetchCooldown("crime", 90, character.id);
+      fetchCooldown("gta", 240, character.id);
+      fetchCooldown("robbery", 300, character.id);
+    }
+  }, [character?.id]);
 
   const toggleNav = () => {
     setShowNav(!showNav);
