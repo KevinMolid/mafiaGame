@@ -144,19 +144,189 @@ const Family = () => {
           {activePanel === "members" && (
             <div>
               <H2>Members</H2>
-              {family.members.map((member) => {
-                return (
-                  <p key={member.id}>
+
+              {/* Family structure */}
+              <div className="mb-10 text-center flex flex-col gap-4">
+                {/* 1. row: Boss & Consigliere */}
+                <div className="grid grid-cols-3">
+                  <div></div>
+                  <div>
+                    <p>Boss</p>
+                    <p>
+                      <Username
+                        character={{
+                          id: family.leaderId,
+                          username: family.leaderName,
+                        }}
+                      />
+                    </p>
+                  </div>
+                  <div>
+                    <p>Consigliere</p>
+                    <p>
+                      <Username
+                        character={{
+                          id: family.leaderId,
+                          username: family.leaderName,
+                        }}
+                      />
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2. row: Underboss */}
+                <div>
+                  <p>Underboss</p>
+                  <p>
                     <Username
                       character={{
-                        id: member.id,
-                        username: member.name,
+                        id: family.leaderId,
+                        username: family.leaderName,
                       }}
-                    />{" "}
-                    - {member.rank}
+                    />
                   </p>
-                );
-              })}
+                </div>
+
+                {/* 3. row: Caporegimes */}
+
+                <div className="grid grid-cols-3">
+                  <div>
+                    <p>Caporegime</p>
+                    <p>
+                      <Username
+                        character={{
+                          id: family.leaderId,
+                          username: family.leaderName,
+                        }}
+                      />
+                    </p>
+                  </div>
+                  <div>
+                    <p>Caporegime</p>
+                    <p>
+                      <Username
+                        character={{
+                          id: family.leaderId,
+                          username: family.leaderName,
+                        }}
+                      />
+                    </p>
+                  </div>
+                  <div>
+                    <p>Caporegime</p>
+                    <p>
+                      <Username
+                        character={{
+                          id: family.leaderId,
+                          username: family.leaderName,
+                        }}
+                      />
+                    </p>
+                  </div>
+                </div>
+
+                {/* 4. row:: Soldiers */}
+                <div className="grid grid-cols-3">
+                  <div>
+                    <p>Soldiers</p>
+                    <p>
+                      <Username
+                        character={{
+                          id: family.leaderId,
+                          username: family.leaderName,
+                        }}
+                      />
+                    </p>
+                    <p>
+                      <Username
+                        character={{
+                          id: family.leaderId,
+                          username: family.leaderName,
+                        }}
+                      />
+                    </p>
+                    <p>
+                      <Username
+                        character={{
+                          id: family.leaderId,
+                          username: family.leaderName,
+                        }}
+                      />
+                    </p>
+                  </div>
+                  <div>
+                    <p>Soldiers</p>
+                    <p>
+                      <Username
+                        character={{
+                          id: family.leaderId,
+                          username: family.leaderName,
+                        }}
+                      />
+                    </p>
+                    <p>
+                      <Username
+                        character={{
+                          id: family.leaderId,
+                          username: family.leaderName,
+                        }}
+                      />
+                    </p>
+                    <p>
+                      <Username
+                        character={{
+                          id: family.leaderId,
+                          username: family.leaderName,
+                        }}
+                      />
+                    </p>
+                  </div>
+                  <div>
+                    <p>Soldiers</p>
+                    <p>
+                      <Username
+                        character={{
+                          id: family.leaderId,
+                          username: family.leaderName,
+                        }}
+                      />
+                    </p>
+                    <p>
+                      <Username
+                        character={{
+                          id: family.leaderId,
+                          username: family.leaderName,
+                        }}
+                      />
+                    </p>
+                    <p>
+                      <Username
+                        character={{
+                          id: family.leaderId,
+                          username: family.leaderName,
+                        }}
+                      />
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Associates */}
+              <div>
+                <p>Associates</p>
+                {family.members.map((member) => {
+                  return (
+                    <p key={member.id}>
+                      <Username
+                        character={{
+                          id: member.id,
+                          username: member.name,
+                        }}
+                      />
+                    </p>
+                  );
+                })}
+              </div>
             </div>
           )}
 
