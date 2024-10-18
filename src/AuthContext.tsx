@@ -16,7 +16,7 @@ const AuthContext = createContext<any>(null);
 
 // Create a provider component
 export const AuthProvider = ({ children }: any) => {
-  const [user, setUser] = useState<any>(null); // USer from Auth
+  const [user, setUser] = useState<any>(null); // User from Auth
   const [userData, setUserData] = useState<any>(null); // User data from Firestore
   const [loading, setLoading] = useState(true);
 
@@ -43,7 +43,11 @@ export const AuthProvider = ({ children }: any) => {
       const userDocSnap = await getDoc(userDocRef); // Fetch the document snapshot
 
       if (userDocSnap.exists()) {
-        return userDocSnap.data(); // Return user document data if it exists
+        const userData = userDocSnap.data();
+        return {
+          ...userData,
+          characters: userData.characters || [], // Initialize characters as an empty array if undefined
+        };
       } else {
         console.log("No such document!");
         return null;
@@ -55,7 +59,7 @@ export const AuthProvider = ({ children }: any) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, userData, loading }}>
+    <AuthContext.Provider value={{ user, userData, setUserData, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

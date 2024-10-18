@@ -13,20 +13,16 @@ export const giveReward = async (
   money: number = 0
 ) => {
   try {
-    // Reference to the player's document in Firestore
     const characterRef = doc(db, "Characters", characterID);
 
-    // Calculate new XP and Money
     const newXp = character.stats.xp + xp;
     const newMoney = character.stats.money + money;
 
-    // Update XP and Money in Firestore
     await updateDoc(characterRef, {
       "stats.xp": newXp,
       "stats.money": newMoney,
     });
 
-    // Return updated XP and Money
     return { xp: newXp, money: newMoney };
   } catch (error) {
     console.error("Error updating rewards:", error);

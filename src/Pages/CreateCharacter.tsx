@@ -30,7 +30,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const CreateCharacter = () => {
-  const { user } = useAuth();
+  const { user, setUserData } = useAuth();
   const { character, setCharacter } = useCharacter();
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
@@ -115,6 +115,14 @@ const CreateCharacter = () => {
         ...newCharacterData,
       });
 
+      // Update user data in local state
+      setUserData({
+        ...user,
+        characters: [...(user.characters || []), docRef.id],
+        activeCharacter: docRef.id,
+      });
+
+      // Navigate to home page after character is created
       navigate("/");
     } catch (e) {
       console.error("Error adding document: ", e);

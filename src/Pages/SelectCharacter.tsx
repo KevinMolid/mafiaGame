@@ -20,6 +20,8 @@ const SelectCharacter = () => {
     null
   );
 
+  console.log(userData);
+
   useEffect(() => {
     const fetchCharacters = async () => {
       if (userData.characters) {
