@@ -8,7 +8,14 @@ import Username from "../components/Typography/Username";
 import NoFamily from "../components/NoFamily";
 import { useState, useEffect } from "react";
 import { useCharacter } from "../CharacterContext";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  deleteDoc,
+  updateDoc,
+} from "firebase/firestore";
 
 const db = getFirestore();
 
@@ -29,7 +36,7 @@ type FamilyData = {
 };
 
 const Family = () => {
-  const { character } = useCharacter();
+  const { character, setCharacter } = useCharacter();
   const [family, setFamily] = useState<FamilyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +70,33 @@ const Family = () => {
       setLoading(false);
     }
   }, [character]);
+
+  // Function to disband the family
+  const disbandFamily = async () => {
+    if (family && character.familyId && character?.id === family.leaderId) {
+      try {
+        // Delete family document from Firestore
+        const familyRef = doc(db, "Families", character.familyId);
+        await deleteDoc(familyRef);
+
+        // Update the character's familyId to null
+        const characterRef = doc(db, "Characters", character.id);
+        await updateDoc(characterRef, { familyId: null, familyName: null });
+
+        // Update the local character context
+        setCharacter((prev) =>
+          prev ? { ...prev, familyId: null, familyName: null } : prev
+        ); // Set to null
+
+        // Clear family state
+        setFamily(null);
+      } catch (error) {
+        setError("Error disbanding the family.");
+      }
+    } else {
+      setError("Only the family leader can disband the family.");
+    }
+  };
 
   if (loading) {
     return <p>Loading...</p>;
@@ -348,7 +382,12 @@ const Family = () => {
               <p>Edit Family rules</p>
               <p>Edit Family profile</p>
               <hr className="my-2 border-neutral-600" />
-              <p className="text-red-400">Disband family</p>
+              <p
+                className="text-red-400 cursor-pointer hover:underline"
+                onClick={disbandFamily}
+              >
+                <i className="fa-solid fa-ban"></i> Disband family
+              </p>
             </div>
           )}
         </>

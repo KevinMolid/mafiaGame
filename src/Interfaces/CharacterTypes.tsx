@@ -29,8 +29,8 @@ export interface Character {
   username: string;
   parkingFacilities?: any;
   cars?: any;
-  familyId?: string;
-  familyName?: string;
+  familyId?: string | null;
+  familyName?: string | null;
 }
 
 export interface Target {
@@ -47,6 +47,6 @@ export interface Target {
   username: string;
   parkingFacilities?: any;
   cars?: any;
-  familyId?: string;
-  familyName?: string;
+  familyId?: string | null;
+  familyName?: string | null;
 }
