@@ -1,6 +1,7 @@
 // Components
 import H2 from "../components/Typography/H2";
 import CharacterList from "../components/CharacterList";
+import Username from "../components/Typography/Username";
 
 // Firebase
 import {
@@ -18,7 +19,6 @@ import { format } from "date-fns";
 
 // React
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 
 // Context
 import { useCharacter } from "../CharacterContext";
@@ -161,9 +161,12 @@ const Chat = () => {
                 <li key={message.id} className="mb-2">
                   {/* Sender and timestamp */}
                   <div className="flex gap-2 mb-1 text-stone-400 text-xs sm:text-sm">
-                    <Link to="#">
-                      <strong>{message.senderName}</strong>
-                    </Link>
+                    <Username
+                      character={{
+                        id: message.senderId,
+                        username: message.senderName,
+                      }}
+                    />
                     <p>
                       {message.timestamp
                         ? format(
