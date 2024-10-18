@@ -33,8 +33,26 @@ Players can create and reply to threads.
 Function to kill players. The user must be in the same location as the target player to successfully assassinate the player.
 
 
-## Planned features
-### Prison
-Players go to prison if they get catched attempting to commit a crime.
+## To do
+### Create a working prison
+- Players should dgo to prison if they get catched attempting to commit Street Crime / GTA / Robbery / Assassination.
+- Implement Heat value: Increased heat -> Higher chance for being arrested.
+- Move Prison chat from Chat to Prison.
 
-### Reputation system
+### Create a working Reputation system
+- Reputation with Police Force: Increased Protection
+- Reputation with Street Gangs: Increased Attack
+- Reputation with Political Corruption: Increased Income from Assets
+- Reputation with Local Organizations: Remove or come up with an idea
+
+### Create a working User-to-User Chat
+
+### Develop Families further
+- Add Application to join Family
+- Add Faamily bank and Donations
+- Create function for Safehose -> Added Protection
+
+### Develop Assassination further
+- Add weapons and ammunition
+- Add logic for protection and HP
+
