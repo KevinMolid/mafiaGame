@@ -43,7 +43,7 @@ const Family = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<
-    "members" | "profile" | "settings"
+    "members" | "safehouse" | "chat" | "profile" | "settings"
   >("members");
 
   if (!character) return;
@@ -146,7 +146,7 @@ const Family = () => {
           {error && <p style={{ color: "red" }}>{error}</p>}
 
           {/* Tabs */}
-          <ul className="mb-8 flex">
+          <ul className="mb-8 flex flex-wrap">
             <li
               className={
                 " hover:bg-neutral-800 px-4 py-2 max-w-44 border-b-2 border-neutral-700 cursor-pointer " +
@@ -159,12 +159,31 @@ const Family = () => {
             <li
               className={
                 " hover:bg-neutral-800 px-4 py-2 max-w-44 border-b-2 border-neutral-700 cursor-pointer " +
+                (activePanel === "chat" && "bg-neutral-800 border-white")
+              }
+              onClick={() => setActivePanel("chat")}
+            >
+              <p className="text-neutral-200 font-medium">Chat</p>
+            </li>
+            <li
+              className={
+                " hover:bg-neutral-800 px-4 py-2 max-w-44 border-b-2 border-neutral-700 cursor-pointer " +
+                (activePanel === "safehouse" && "bg-neutral-800 border-white")
+              }
+              onClick={() => setActivePanel("safehouse")}
+            >
+              <p className="text-neutral-200 font-medium">Safehouse</p>
+            </li>
+            <li
+              className={
+                " hover:bg-neutral-800 px-4 py-2 max-w-44 border-b-2 border-neutral-700 cursor-pointer " +
                 (activePanel === "profile" && "bg-neutral-800 border-white")
               }
               onClick={() => setActivePanel("profile")}
             >
               <p className="text-neutral-200 font-medium">Profile</p>
             </li>
+
             <li
               className={
                 " hover:bg-neutral-800 px-4 py-2 max-w-44 border-b-2 border-neutral-700 cursor-pointer " +
@@ -362,6 +381,35 @@ const Family = () => {
                     </p>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Chat panel */}
+          {activePanel === "chat" && (
+            <div>
+              <H2>Chat</H2>
+            </div>
+          )}
+
+          {/* Safehouse panel */}
+          {activePanel === "safehouse" && (
+            <div>
+              <H2>Safehouse</H2>
+              <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
+                <H3>Enter Safehouse</H3>
+                <p>Slots filled: 1/10</p>
+                <Button>Enter Safehouse</Button>
+              </div>
+
+              <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
+                <H3>Donate</H3>
+                <p>Donate money to the family</p>
+                <input
+                  className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full"
+                  type="text"
+                />
+                <Button>Donate Money</Button>
               </div>
             </div>
           )}
