@@ -104,7 +104,7 @@ const Robbery = () => {
         // Check if the target has at least $100
         if (randomTarget.stats.money < 100) {
           setMessage(
-            `Target ${randomTarget.username} was found but had no money to steal.`
+            `You tried to rob ${randomTarget.username}, but did not find anything to steal.`
           );
           setMessageType("warning");
           return;
@@ -138,11 +138,15 @@ const Robbery = () => {
         });
 
         setMessage(
-          `Success! You robbed ${randomTarget.username} for $${stolenAmount}.`
+          `Success! You robbed ${
+            randomTarget.username
+          } for $${stolenAmount.toLocaleString()}.`
         );
         setMessageType("success");
       } else {
-        setMessage("Robbery failed. Better luck next time!");
+        setMessage(
+          `You tried to rob ${randomTarget.username}, but failed. Better luck next time!`
+        );
         setMessageType("failure");
       }
     } catch (error) {
