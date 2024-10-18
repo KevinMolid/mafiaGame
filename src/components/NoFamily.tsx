@@ -35,7 +35,10 @@ interface NoFamilyInterface {
 const NoFamily = ({ family, setFamily }: NoFamilyInterface) => {
   const [familyName, setFamilyName] = useState("");
   const { character, setCharacter } = useCharacter();
-  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [messageType, setMessageType] = useState<
+    "success" | "failure" | "warning" | "info"
+  >("info");
 
   if (!character) return;
   if (family) return;
@@ -44,7 +47,8 @@ const NoFamily = ({ family, setFamily }: NoFamilyInterface) => {
   const createFamily = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!familyName.trim()) {
-      setError("You must enter a family name.");
+      setMessageType("warning");
+      setMessage("You must enter a family name.");
       return;
     }
     try {
@@ -90,26 +94,39 @@ const NoFamily = ({ family, setFamily }: NoFamilyInterface) => {
       setFamily(newFamily);
       setFamilyName("");
     } catch (error) {
-      setError("Error creating family.");
+      setMessageType("failure");
+      setMessage("Error creating family.");
     }
   };
 
   return (
     <>
       <H1>Family</H1>
-      <InfoBox type="info">You are not part of a family.</InfoBox>
-      <H2>Create a New Family</H2>
-      <form action="" onSubmit={createFamily} className="flex flex-col gap-4">
-        <input
-          className="bg-neutral-700 py-2 px-4 text-white"
-          type="text"
-          value={familyName}
-          onChange={(e) => setFamilyName(e.target.value)}
-          placeholder="Enter family name"
-        />
-        <Button type="submit">Create Family</Button>
-      </form>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      <p className="mb-2">You are not part of a family.</p>
+      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
+      {/* Create family */}
+      <div className="border border-neutral-600 p-4 mb-4">
+        <H2>Create a New Family</H2>
+        <p className="mb-2">
+          Price: <strong className="text-yellow-400">$250,000,000</strong>
+        </p>
+        <form action="" onSubmit={createFamily} className="flex flex-col gap-2">
+          <input
+            className="bg-neutral-700 py-2 px-4 placeholder-neutral-400 text-white"
+            type="text"
+            value={familyName}
+            onChange={(e) => setFamilyName(e.target.value)}
+            placeholder="Enter family name"
+          />
+          <Button type="submit">Create Family</Button>
+        </form>
+      </div>
+
+      {/* Apply to family */}
+      <div className="border border-neutral-600 p-4">
+        <H2>Join a Family</H2>
+      </div>
     </>
   );
 };
