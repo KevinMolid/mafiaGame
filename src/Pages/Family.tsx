@@ -2,8 +2,10 @@
 import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
+import H3 from "../components/Typography/H3";
 import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
+import Button from "../components/Button";
 
 import NoFamily from "../components/NoFamily";
 import { useState, useEffect } from "react";
@@ -43,6 +45,7 @@ const Family = () => {
   const [activePanel, setActivePanel] = useState<
     "members" | "profile" | "settings"
   >("members");
+  const [invitingPlayer, setinvitingPlayer] = useState<boolean>(false);
 
   if (!character) return;
 
@@ -376,7 +379,9 @@ const Family = () => {
           {activePanel === "settings" && (
             <div>
               <H2>Settings</H2>
-              <p>Invite player</p>
+              <button onClick={() => setinvitingPlayer(true)}>
+                Invite player
+              </button>
               <p>Assign roles</p>
               <hr className="my-2 border-neutral-600" />
               <p>Edit Family rules</p>
@@ -389,7 +394,26 @@ const Family = () => {
                 <i className="fa-solid fa-ban"></i> Disband family
               </p>
 
-              <div className="border-l border-neutral-600"></div>
+              {/* Invite player*/}
+              {invitingPlayer && (
+                <div className="fixed top-1/2 left-1/2 z-10 bg-black/50 w-full h-full -translate-x-1/2 -translate-y-1/2">
+                  <div className="fixed w-2/3 min-w-[320px] max-w-[400px] top-1/2 left-1/2 bg-neutral-900 -translate-x-1/2 -translate-y-1/2 p-8 border border-neutral-600 rounded-lg flex flex-col gap-2">
+                    <div
+                      className="absolute top-0 right-0 bg-neutral-700 hover:bg-neutral-600 w-10 h-10 flex justify-center items-center rounded-tr-md cursor-pointer"
+                      onClick={() => setinvitingPlayer(false)}
+                    >
+                      <i className="text-neutral-200 text-xl fa-solid fa-x"></i>
+                    </div>
+                    <H3>Invite player</H3>
+                    <p>Invite a player to {family.name}</p>
+                    <input
+                      className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full"
+                      type="text"
+                    />
+                    <Button>Send Invitation</Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </>
