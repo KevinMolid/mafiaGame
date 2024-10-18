@@ -108,10 +108,6 @@ const Sidebar = () => {
 
       {/* Navigation */}
       <nav className="flex flex-col gap-2">
-        <SidebarLink to="selectcharacater" icon="people-group">
-          Select Character
-        </SidebarLink>
-
         <SidebarLink to="bank" icon="landmark">
           Bank
         </SidebarLink>

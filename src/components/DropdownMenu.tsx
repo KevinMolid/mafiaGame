@@ -13,13 +13,6 @@ const DropdownMenu = ({ linkOnClick }: DropdownInterface) => {
     <nav className="flex flex-col gap-2 bg-neutral-950 p-4 sm:hidden min-w-56 select-none">
       <p>Actions</p>
       <hr className="border-neutral-500" />
-      <SidebarLink
-        to="selectcharacater"
-        icon="people-group"
-        onClick={linkOnClick}
-      >
-        Select Character
-      </SidebarLink>
 
       <SidebarLink to="bank" icon="landmark" onClick={linkOnClick}>
         Bank
