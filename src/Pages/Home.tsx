@@ -5,9 +5,13 @@ import H2 from "../components/Typography/H2";
 import Equipment from "../components/Equipment";
 import Button from "../components/Button";
 import InfoBox from "../components/InfoBox";
+import Username from "../components/Typography/Username";
+
+import { getCurrentRank } from "../Functions/RankFunctions";
 
 // React
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 // Context
 import { useCharacter } from "../CharacterContext";
@@ -70,10 +74,35 @@ const Home = () => {
 
   return (
     <Main img="MafiaBg">
-      {character ? <p>Welcome {character.username}!</p> : <p>Welcome!</p>}
       <H1>Headquarters</H1>
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
+      <div className="flex gap-4 mb-2">
+        <Link to={`/profile/${character.id}`}>
+          <img
+            className="border border-neutral-500 size-36 object-cover mb-2 hover:cursor-pointer"
+            src={character.img || "/default.jpg"}
+            alt="Profile picture"
+          />
+        </Link>
+        <div>
+          <p>
+            <Username character={character} />
+          </p>
+          <p>{getCurrentRank(character.stats.xp)}</p>
+          <p>Money: ${character.stats.money.toLocaleString()}</p>
+          <p>Bank: ${character.stats.bank.toLocaleString()}</p>
+          <p>
+            Family:{" "}
+            <Link to={`family/profile/${character.familyId}`}>
+              <strong className="text-neutral-200 hover:underline">
+                {character.familyName}
+              </strong>
+            </Link>
+          </p>
+        </div>
+      </div>
 
       {/* Button for testing only */}
       {false && <Button onClick={handleAction}>Get XP</Button>}
