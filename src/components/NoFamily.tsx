@@ -1,13 +1,20 @@
 import H1 from "./Typography/H1";
 import H2 from "./Typography/H2";
 import InfoBox from "./InfoBox";
+import Username from "./Typography/Username";
 import Button from "./Button";
 
 import { useCharacter } from "../CharacterContext";
 import { Character } from "../Interfaces/CharacterTypes";
 
-import { useState } from "react";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { useState, useEffect } from "react";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDocs,
+  collection,
+} from "firebase/firestore";
 
 const db = getFirestore();
 
@@ -39,9 +46,28 @@ const NoFamily = ({ family, setFamily }: NoFamilyInterface) => {
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "warning" | "info"
   >("info");
+  const [families, setFamilies] = useState<FamilyData[]>([]);
 
   if (!character) return;
   if (family) return;
+
+  // Fetch all families from Firestore
+  useEffect(() => {
+    const fetchFamilies = async () => {
+      try {
+        const familiesSnapshot = await getDocs(collection(db, "Families"));
+        const familiesData: FamilyData[] = familiesSnapshot.docs.map((doc) => ({
+          ...(doc.data() as FamilyData),
+        }));
+        setFamilies(familiesData);
+      } catch (error) {
+        setMessageType("failure");
+        setMessage("Error fetching families.");
+      }
+    };
+
+    fetchFamilies();
+  }, []);
 
   // Create new family
   const createFamily = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -126,6 +152,39 @@ const NoFamily = ({ family, setFamily }: NoFamilyInterface) => {
       {/* Apply to family */}
       <div className="border border-neutral-600 p-4">
         <H2>Join a Family</H2>
+        {families.length > 0 ? (
+          <ul>
+            {families.map((family) => (
+              <li
+                key={family.name}
+                className="mb-4 flex justify-between items-center"
+              >
+                <div>
+                  <p>
+                    <strong className="text-neutral-200">{family.name}</strong>
+                  </p>
+                  <small>
+                    Leader:{" "}
+                    <Username
+                      character={{
+                        id: family.leaderId,
+                        username: family.leaderName,
+                      }}
+                    />
+                  </small>
+                </div>
+
+                <div>
+                  <Button onClick={() => console.log("Joining family")}>
+                    Apply to Family
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No families available to join.</p>
+        )}
       </div>
     </>
   );
