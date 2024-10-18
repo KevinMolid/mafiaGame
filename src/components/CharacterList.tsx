@@ -17,18 +17,14 @@ import Username from "./Typography/Username";
 import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
 
 interface CharacterListProps {
-  include: "all" | "admin" | "moneyRank" | "";
-  action: string;
+  type?: "rank" | "admin" | "chat" | "";
   sortBy?: "username" | "xp" | "money";
-  showRank?: boolean;
   onClick?: (receiver: string) => void;
 }
 
 const CharacterList = ({
-  include,
-  action,
+  type = "",
   sortBy = "username",
-  showRank = false,
   onClick,
 }: CharacterListProps) => {
   const [characters, setCharacters] = useState<Array<any>>([]);
@@ -92,96 +88,138 @@ const CharacterList = ({
     return <p>Loading characters...</p>;
   }
 
-  return (
-    <section>
-      {characters.length === 0 ? (
-        <p>No characters found.</p>
-      ) : (
-        <ul>
-          {sortedCharacters.map((character, index) => (
-            <li key={character.id}>
-              {/* Include Rank */}
-              {showRank && (
-                <span
-                  className={
-                    "font-bold mr-2 " +
-                    (index === 0
-                      ? "text-yellow-400"
-                      : index === 1
-                      ? "text-slate-300"
-                      : index === 2
-                      ? "text-amber-600"
-                      : "text-neutral-500")
-                  }
-                >
-                  #{index + 1}
-                </span>
-              )}
+  if (characters.length === 0) {
+    return <p>No characters found.</p>;
+  }
 
-              {/* Username */}
-              {action === "log" && onClick !== undefined && (
+  // Type == Rank
+  if (type === "rank") {
+    return (
+      <section>
+        <ul>
+          <li className="grid grid-cols-[40px_120px_auto] border-b border-neutral-700 mb-2 font-bold text-neutral-200">
+            <p>#</p>
+            <p>Player</p>
+            <p>Rank</p>
+          </li>
+          {sortedCharacters.map((character, index) => (
+            <li key={character.id} className="grid grid-cols-[40px_120px_auto]">
+              <p
+                className={
+                  "mr-2 " +
+                  (index === 0
+                    ? "font-bold text-yellow-400"
+                    : index === 1
+                    ? "font-bold text-slate-300"
+                    : index === 2
+                    ? "font-bold text-amber-600"
+                    : index < 10
+                    ? "font-bold text-stone-400"
+                    : "font-medium text-stone-500")
+                }
+              >
+                #{index + 1}
+              </p>
+              <Username character={character} />
+              {sortBy === "xp" && <p>{getCurrentRank(character.xp)}</p>}
+              {sortBy === "money" && <p>{getMoneyRank(character.money)}</p>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  }
+
+  // Type == Admin
+  if (type === "admin") {
+    return (
+      <section>
+        <ul>
+          {sortedCharacters.map((character) => (
+            <li key={character.id}>
+              <Username character={character} /> -{" "}
+              {getCurrentRank(character.xp)}
+              <div>
+                <div className="bg-slate-600 text-slate-300 px-4 py-1 text-sm flex gap-4">
+                  {character.status === "alive" && (
+                    <button onClick={() => killPlayer(character)}>
+                      <i className="fa-solid fa-gun"></i> Kill
+                    </button>
+                  )}
+                  {character.status === "dead" && (
+                    <button onClick={() => ressurectPlayer(character)}>
+                      <i className="fa-solid fa-hand"></i> Ressurect
+                    </button>
+                  )}
+                </div>
+                <div className="mb-2 bg-slate-700 text-slate-300 px-4 py-2 text-sm flex flex-wrap gap-x-4 gap-y-1">
+                  <p>
+                    Status:{" "}
+                    <span
+                      className={
+                        "capitalize " +
+                        (character.status === "dead"
+                          ? "text-red-400"
+                          : "text-green-400")
+                      }
+                    >
+                      {character.status}
+                    </span>
+                  </p>
+                  <p>
+                    Family:{" "}
+                    {character.familyName ? (
+                      <strong>{character.familyName}</strong>
+                    ) : (
+                      "No family"
+                    )}
+                  </p>
+                  <p>Xp: {character.xp}</p>
+                  <p>Money: ${character.money.toLocaleString()}</p>
+                  <p>Location: {character.location}</p>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  }
+
+  // Type == "Chat"
+  if (type === "chat") {
+    return (
+      <section>
+        <ul>
+          {sortedCharacters.map((character) => (
+            <li key={character.id}>
+              {onClick && (
                 <button onClick={() => onClick(character.username)}>
                   {character.username}
                 </button>
               )}
-              {action === "link" && <Username character={character} />}
-
-              {/* Includde rank */}
-              {(include === "all" || include === "admin") && (
-                <> - {getCurrentRank(character.xp)}</>
-              )}
-
-              {/* Includde Money rank */}
-              {include === "moneyRank" && (
-                <> - {getMoneyRank(character.money)}</>
-              )}
-
-              {include === "admin" && (
-                <div>
-                  <div className="bg-slate-600 text-slate-300 px-4 py-1 text-sm flex gap-4">
-                    {character.status === "alive" && (
-                      <button onClick={() => killPlayer(character)}>
-                        <i className="fa-solid fa-gun"></i> Kill
-                      </button>
-                    )}
-                    {character.status === "dead" && (
-                      <button onClick={() => ressurectPlayer(character)}>
-                        <i className="fa-solid fa-hand"></i> Ressurect
-                      </button>
-                    )}
-                  </div>
-                  <div className="mb-2 bg-slate-700 text-slate-300 px-4 py-2 text-sm flex flex-wrap gap-x-4 gap-y-1">
-                    <p>
-                      Status:{" "}
-                      <span
-                        className={
-                          "capitalize " +
-                          (character.status === "dead"
-                            ? "text-red-400"
-                            : "text-green-400")
-                        }
-                      >
-                        {character.status}
-                      </span>
-                    </p>
-                    <p>
-                      Family:{" "}
-                      {character.familyName ? (
-                        <strong>{character.familyName}</strong>
-                      ) : (
-                        "No family"
-                      )}
-                    </p>
-                    <p>Xp: {character.xp}</p>
-                    <p>Money: ${character.money.toLocaleString()}</p>
-                    <p>Location: {character.location}</p>
-                  </div>
-                </div>
-              )}
+              {!onClick && <Username character={character}></Username>}
             </li>
           ))}
         </ul>
-      )}
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      <ul>
+        {sortedCharacters.map((character) => (
+          <li key={character.id}>
+            {onClick && (
+              <button onClick={() => onClick(character.username)}>
+                {character.username}
+              </button>
+            )}
+            {!onClick && <Username character={character}></Username>}
+          </li>
+        ))}
+      </ul>
     </section>
   );
 };

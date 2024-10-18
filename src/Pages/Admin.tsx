@@ -19,7 +19,7 @@ const Admin = () => {
   return (
     <Main>
       <H1>Admin Control Panel</H1>
-      <div className="border p-4 border-neutral-600">
+      <div className="border p-4 border-neutral-600 mb-4">
         <H2>Actions</H2>
         <SidebarLink to="/selectcharacater" icon="people-group">
           Select Character
@@ -27,7 +27,7 @@ const Admin = () => {
       </div>
 
       <H2>Players</H2>
-      <CharacterList include="admin" action="link"></CharacterList>
+      <CharacterList type="admin"></CharacterList>
     </Main>
   );
 };

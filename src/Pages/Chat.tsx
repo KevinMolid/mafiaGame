@@ -101,11 +101,7 @@ const Chat = () => {
         <div className="h-full px-4 py-8 border-r border-neutral-700">
           <H2>Channels</H2>
           <p className="text-lg text-white">Players</p>
-          <CharacterList
-            include=""
-            action="log"
-            onClick={() => console.log("hehe")}
-          />
+          <CharacterList type="chat" onClick={() => console.log("hehe")} />
 
           <ul>
             <li>
