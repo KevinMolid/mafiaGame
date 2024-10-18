@@ -69,7 +69,7 @@ const Family = () => {
   }
 
   return (
-    <Main>
+    <Main img="MafiaBg">
       {/* No family */}
       <NoFamily family={family} setFamily={setFamily}></NoFamily>
 
