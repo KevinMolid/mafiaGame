@@ -1,7 +1,25 @@
+interface EquipmentInterface {
+  letter: string;
+  span?: 2;
+}
+
+const EquipmentBox = ({ letter, span }: EquipmentInterface) => {
+  return (
+    <div
+      className={
+        "border border-neutral-400 bg-neutral-950/30 text-sm flex justify-center items-center rounded-md " +
+        (span && "col-span-2 row-span-2")
+      }
+    >
+      {letter}
+    </div>
+  );
+};
+
 const Equipment = () => {
   return (
     <section
-      className="grid grid-cols-5 grid-rows-5 h-[300px] w-[250px] bg-neutral-800 gap-1 p-2"
+      className="grid grid-cols-5 grid-rows-6 h-[427px] w-[287px] bg-neutral-800 gap-1 p-2"
       style={{
         backgroundImage: "url('Character.jpg')",
         backgroundSize: "cover",
@@ -10,30 +28,39 @@ const Equipment = () => {
         backgroundPositionY: "top",
       }}
     >
-      <div></div>
-      <div></div>
-      <div className="border border-neutral-600 bg-neutral-900">H</div>
-      <div></div>
+      {/* Top row*/}
       <div></div>
       <div></div>
       <div></div>
-      <div className="border border-neutral-600 bg-neutral-900">N</div>
       <div></div>
       <div></div>
-      <div className="border border-neutral-600 bg-neutral-900">R1</div>
-      <div className="border border-neutral-600 bg-neutral-900">R2</div>
-      <div className="border border-neutral-600 bg-neutral-900">T</div>
-      <div></div>
-      <div className="border border-neutral-600 bg-neutral-900">G</div>
-      <div className="border border-neutral-600 bg-neutral-900 col-span-2 row-span-2">
-        W
-      </div>
-      <div className="border border-neutral-600 bg-neutral-900">L</div>
+      {/* Top row*/}
+      <EquipmentBox letter="H"></EquipmentBox>
       <div></div>
       <div></div>
-      <div className="border border-neutral-600 bg-neutral-900">F</div>
+      <div></div>
+      <EquipmentBox letter="R1"></EquipmentBox>
+      {/* 2. row */}
+      <EquipmentBox letter="N"></EquipmentBox>
       <div></div>
       <div></div>
+      <div></div>
+      <EquipmentBox letter="R2"></EquipmentBox>
+      {/* 3. row */}
+      <EquipmentBox letter="T"></EquipmentBox>
+      <div></div>
+      <div></div>
+      <div></div>
+      <EquipmentBox letter="G"></EquipmentBox>
+      {/* 4. row */}
+      <EquipmentBox letter="W" span={2}></EquipmentBox>
+      <div></div>
+      <div></div>
+      <EquipmentBox letter="L"></EquipmentBox>
+      {/* 5. row */}
+      <div></div>
+      <div></div>
+      <EquipmentBox letter="F"></EquipmentBox>
     </section>
   );
 };

@@ -8,7 +8,6 @@ import InfoBox from "../components/InfoBox";
 
 // React
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 
 // Context
 import { useCharacter } from "../CharacterContext";
@@ -71,20 +70,8 @@ const Home = () => {
 
   return (
     <Main img="MafiaBg">
-      {character ? <H1>Welcome {character.username}!</H1> : <H1>Welcome!</H1>}
-
-      <div className="flex gap-4">
-        <Link to="/notebook">
-          <p className="hover:text-white">
-            <i className="fa-solid fa-book text-xl"></i> Notebook
-          </p>
-        </Link>
-        <Link to="/blacklist">
-          <p className="hover:text-white">
-            <i className="fa-solid fa-book-skull text-xl"></i> Blacklist
-          </p>
-        </Link>
-      </div>
+      {character ? <p>Welcome {character.username}!</p> : <p>Welcome!</p>}
+      <H1>Headquarters</H1>
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
@@ -93,54 +80,90 @@ const Home = () => {
 
       {character ? (
         <>
-          <H2>Stats</H2>
-          <div className="flex flex-col lg:flex-row flex-wrap gap-4 mb-6">
-            <div className="flex flex-col gap-1">
-              <p>
-                Health: {character.stats.hp} / {healthPercentage}
-              </p>
-              <div className="h-1 w-[250px] bg-neutral-700">
-                <div
-                  className="h-1 bg-green-500 transition-all duration-300"
-                  style={{ width: `${healthPercentage}%` }}
-                ></div>
+          {/* Stats */}
+          <div className="border border-neutral-500 p-4 mb-4">
+            <H2>Stats</H2>
+            <div className="flex flex-col lg:flex-row flex-wrap gap-4 mb-6">
+              <div className="flex flex-col gap-1">
+                <p>
+                  Health:{" "}
+                  <strong className="text-neutral-200">
+                    {healthPercentage}%
+                  </strong>
+                </p>
+                <div className="h-5 min-w-52 w-full bg-neutral-700 grid grid-cols-1">
+                  <div
+                    className="h-5 bg-green-500 transition-all duration-300 flex justify-center items-center col-start-1 row-start-1"
+                    style={{ width: `${healthPercentage}%` }}
+                  ></div>
+                  <div className="flex justify-center items-center z-10 col-start-1 row-start-1">
+                    <p className="text-slate-50 text-xs">
+                      {xp - minXP} / {maxXP - minXP} xp
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-1">
-              <p>
-                Experience: {xp - minXP} / {maxXP - minXP}
-              </p>
-              <div className="bg-neutral-700 h-1 w-[250px]">
-                <div
-                  className="h-1 bg-slate-400 transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                ></div>
+              <div className="flex flex-col gap-1">
+                <p>
+                  Experience:{" "}
+                  <strong className="text-neutral-200">
+                    {progress.toFixed(2)}%
+                  </strong>
+                </p>
+                <div className="bg-neutral-700 h-5 min-w-52 w-full grid grid-cols-1">
+                  <div
+                    className="h-5 bg-slate-400 transition-all duration-300 col-start-1 row-start-1"
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                  <div className="flex justify-center items-center z-10 col-start-1 row-start-1">
+                    <p className="text-slate-50 text-xs">
+                      {xp - minXP} / {maxXP - minXP} xp
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-1">
-              <p>Heat: {character.stats.heat} / 100</p>
-              <div className="bg-neutral-700 h-1 w-[250px]">
-                <div
-                  className="h-1 bg-red-400 transition-all duration-300"
-                  style={{ width: `${heatPercentage}%` }}
-                ></div>
+              <div className="flex flex-col gap-1">
+                <p>
+                  Heat:{" "}
+                  <strong className="text-neutral-200">
+                    {heatPercentage}%
+                  </strong>
+                </p>
+                <div className="bg-neutral-700 h-5 min-w-52 w-full grid grid-cols-1">
+                  <div
+                    className="h-5 bg-red-400 transition-all duration-300 col-start-1 row-start-1"
+                    style={{ width: `${heatPercentage + 50}%` }}
+                  ></div>
+                  <div className="flex justify-center items-center z-10 col-start-1 row-start-1">
+                    <p className="text-red-50 text-xs">
+                      {character.stats.heat} / 100 heat
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <H2>Reputation</H2>
-          <div className="flex gap-4 mb-6">
-            <p>Police Force: {character.reputation.police}</p>
-            <p>Political Corruption: {character.reputation.politics}</p>
-            <p>Street Gangs: {character.reputation.gangs}</p>
-            <p>Community Organizations: {character.reputation.community}</p>
+          {/* Reputation */}
+          <div className="border border-neutral-500 p-4 mb-4">
+            <H2>Reputation</H2>
+            <div className="flex gap-4 mb-6">
+              <p>Police Force: {character.reputation.police}</p>
+              <p>Political Corruption: {character.reputation.politics}</p>
+              <p>Street Gangs: {character.reputation.gangs}</p>
+              <p>Community Organizations: {character.reputation.community}</p>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <H2>Equipment</H2>
-            <Equipment />
+          <div className="border border-neutral-500 mb-4 grid grid-cols-1 w-fit">
+            <div className="col-start-1 row-start-1 z-10 p-4">
+              <H2>Equipment</H2>
+            </div>
+            <div className="col-start-1 row-start-1">
+              <Equipment />
+            </div>
           </div>
         </>
       ) : (
