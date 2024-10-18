@@ -90,7 +90,7 @@ const Header = () => {
 
       {/* Small screen Action dropdown menu */}
       {actionsOpen && (
-        <div className={"absolute top-16 left-0 z-10"} ref={actionsRef}>
+        <div className={"absolute top-16 left-0 z-40"} ref={actionsRef}>
           <DropdownMenu linkOnClick={() => setActionsOpen(false)} />
         </div>
       )}

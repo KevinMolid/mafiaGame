@@ -98,7 +98,7 @@ const Home = () => {
                   ></div>
                   <div className="flex justify-center items-center z-10 col-start-1 row-start-1">
                     <p className="text-slate-50 text-xs">
-                      {xp - minXP} / {maxXP - minXP} xp
+                      {character.stats.hp} / {maxHealth} hp
                     </p>
                   </div>
                 </div>
@@ -149,11 +149,31 @@ const Home = () => {
           {/* Reputation */}
           <div className="border border-neutral-500 p-4 mb-4">
             <H2>Reputation</H2>
-            <div className="flex gap-4 mb-6">
-              <p>Police Force: {character.reputation.police}</p>
-              <p>Political Corruption: {character.reputation.politics}</p>
-              <p>Street Gangs: {character.reputation.gangs}</p>
-              <p>Community Organizations: {character.reputation.community}</p>
+            <div className="flex gap-x-4 flex-wrap">
+              <p>
+                Police Force:{" "}
+                <strong className="text-neutral-200">
+                  {character.reputation.police}
+                </strong>
+              </p>
+              <p>
+                Political Corruption:{" "}
+                <strong className="text-neutral-200">
+                  {character.reputation.politics}
+                </strong>
+              </p>
+              <p>
+                Street Gangs:{" "}
+                <strong className="text-neutral-200">
+                  {character.reputation.gangs}
+                </strong>
+              </p>
+              <p>
+                Community Organizations:{" "}
+                <strong className="text-neutral-200">
+                  {character.reputation.community}
+                </strong>
+              </p>
             </div>
           </div>
 
