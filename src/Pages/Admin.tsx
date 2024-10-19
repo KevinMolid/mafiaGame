@@ -24,7 +24,7 @@ const Admin = () => {
         <SidebarLink to="/selectcharacater" icon="people-group">
           Select Character
         </SidebarLink>
-        <SidebarLink to="/createcharacter" icon="user">
+        <SidebarLink to="/createcharacter" icon="user-plus">
           Create Character
         </SidebarLink>
       </div>
