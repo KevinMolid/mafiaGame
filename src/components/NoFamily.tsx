@@ -5,7 +5,6 @@ import Username from "./Typography/Username";
 import Button from "./Button";
 
 import { useCharacter } from "../CharacterContext";
-import { Character } from "../Interfaces/CharacterTypes";
 
 import { useState, useEffect } from "react";
 import {
@@ -108,6 +107,8 @@ const NoFamily = ({ family, setFamily }: NoFamilyInterface) => {
       // Create new family document
       await setDoc(doc(db, "Families", familyId), newFamily);
 
+      const newMoneyValue = character.stats.money - cost;
+
       // Update character with familyId and familyName
       const characterRef = doc(db, "Characters", character.id);
       await setDoc(
@@ -115,16 +116,27 @@ const NoFamily = ({ family, setFamily }: NoFamilyInterface) => {
         {
           familyId: familyId,
           familyName: familyName,
+          stats: {
+            money: newMoneyValue,
+          },
         },
         { merge: true }
       );
 
       // Update character in local state
-      setCharacter((prevCharacter) => ({
-        ...(prevCharacter as Character),
-        familyId: familyId as string,
-        familyName: familyName as string,
-      }));
+      setCharacter((prevCharacter) => {
+        if (!prevCharacter) return prevCharacter; // If null, return without changes
+
+        return {
+          ...prevCharacter,
+          familyId: familyId as string,
+          familyName: familyName as string,
+          stats: {
+            ...prevCharacter.stats,
+            money: newMoneyValue,
+          },
+        };
+      });
 
       // set Family in local state
       setFamily(newFamily);
