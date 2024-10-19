@@ -27,6 +27,7 @@ export interface Character {
   status: string;
   uid: string;
   username: string;
+  username_lowercase: string;
   parkingFacilities?: any;
   cars?: any;
   familyId?: string | null;
@@ -45,6 +46,7 @@ export interface Target {
   status: string;
   uid: string;
   username: string;
+  username_lowercase: string;
   parkingFacilities?: any;
   cars?: any;
   familyId?: string | null;

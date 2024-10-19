@@ -58,9 +58,10 @@ const CreateCharacter = () => {
 
   // Check if the username already exists in the "Characters" collection
   async function isUsernameUnique(username: string) {
+    const lowercaseUsername = username.toLowerCase();
     const q = query(
       collection(db, "Characters"),
-      where("username", "==", username)
+      where("username_lowercase", "==", lowercaseUsername)
     );
     const querySnapshot = await getDocs(q);
 
@@ -86,6 +87,7 @@ const CreateCharacter = () => {
       const newCharacterData = {
         uid: user.uid,
         username: username,
+        username_lowercase: username.toLowerCase(),
         img: "",
         status: "alive",
         stats: { xp: 0, hp: 100, heat: 0, bank: 0, money: 1000, protection: 0 },
