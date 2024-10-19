@@ -92,14 +92,21 @@ const Home = () => {
           </p>
           <p>{getCurrentRank(character.stats.xp)}</p>
           <p>Money: ${character.stats.money.toLocaleString()}</p>
-          <p>Bank: ${character.stats.bank.toLocaleString()}</p>
+          <p>
+            Bank: $
+            {character.stats.bank ? character.stats.bank.toLocaleString() : "0"}
+          </p>
           <p>
             Family:{" "}
-            <Link to={`family/profile/${character.familyId}`}>
-              <strong className="text-neutral-200 hover:underline">
-                {character.familyName}
-              </strong>
-            </Link>
+            {character.familyName ? (
+              <Link to={`family/profile/${character.familyId}`}>
+                <strong className="text-neutral-200 hover:underline">
+                  {character.familyName}
+                </strong>
+              </Link>
+            ) : (
+              "No family"
+            )}
           </p>
         </div>
       </div>
