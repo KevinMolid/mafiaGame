@@ -78,6 +78,15 @@ const NoFamily = ({ family, setFamily }: NoFamilyInterface) => {
       setMessage("You must enter a family name.");
       return;
     }
+
+    // Check if player has enough money
+    const cost = 250000000;
+    if (character.stats.money < cost) {
+      setMessageType("warning");
+      setMessage("You do not have enough money to create a family.");
+      return;
+    }
+
     try {
       const familyId = `family_${Date.now()}`;
       const newFamily = {
