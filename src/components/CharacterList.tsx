@@ -75,13 +75,25 @@ const CharacterList = ({
     await updateDoc(characterRef, {
       status: "dead",
     });
+
+    setCharacters((prevCharacters) =>
+      prevCharacters.map((char) =>
+        char.id === character.id ? { ...char, status: "dead" } : char
+      )
+    );
   };
 
-  const ressurectPlayer = async (character: any) => {
+  const resurrectPlayer = async (character: any) => {
     const characterRef = doc(db, "Characters", character.id);
     await updateDoc(characterRef, {
       status: "alive",
     });
+
+    setCharacters((prevCharacters) =>
+      prevCharacters.map((char) =>
+        char.id === character.id ? { ...char, status: "alive" } : char
+      )
+    );
   };
 
   if (loading) {
@@ -147,8 +159,8 @@ const CharacterList = ({
                     </button>
                   )}
                   {character.status === "dead" && (
-                    <button onClick={() => ressurectPlayer(character)}>
-                      <i className="fa-solid fa-hand"></i> Ressurect
+                    <button onClick={() => resurrectPlayer(character)}>
+                      <i className="fa-solid fa-hand"></i> Resurrect
                     </button>
                   )}
                 </div>
