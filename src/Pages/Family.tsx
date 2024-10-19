@@ -6,18 +6,13 @@ import H3 from "../components/Typography/H3";
 import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
 import Button from "../components/Button";
+import FamilySettings from "../components/FamilySettings";
 
 import NoFamily from "../components/NoFamily";
 import { useState, useEffect } from "react";
 import { useCharacter } from "../CharacterContext";
 
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  deleteDoc,
-  updateDoc,
-} from "firebase/firestore";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 const db = getFirestore();
 
@@ -38,13 +33,17 @@ type FamilyData = {
 };
 
 const Family = () => {
-  const { character, setCharacter } = useCharacter();
+  const { character } = useCharacter();
   const [family, setFamily] = useState<FamilyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<
     "members" | "safehouse" | "chat" | "profile" | "settings"
   >("members");
+  const [message, setMessage] = useState<string>("");
+  const [messageType, setMessageType] = useState<
+    "info" | "success" | "failure" | "warning"
+  >("info");
 
   if (!character) return;
 
@@ -73,33 +72,6 @@ const Family = () => {
     }
   }, [character]);
 
-  // Function to disband the family
-  const disbandFamily = async () => {
-    if (family && character.familyId && character?.id === family.leaderId) {
-      try {
-        // Delete family document from Firestore
-        const familyRef = doc(db, "Families", character.familyId);
-        await deleteDoc(familyRef);
-
-        // Update the character's familyId to null
-        const characterRef = doc(db, "Characters", character.id);
-        await updateDoc(characterRef, { familyId: null, familyName: null });
-
-        // Update the local character context
-        setCharacter((prev) =>
-          prev ? { ...prev, familyId: null, familyName: null } : prev
-        ); // Set to null
-
-        // Clear family state
-        setFamily(null);
-      } catch (error) {
-        setError("Error disbanding the family.");
-      }
-    } else {
-      setError("Only the family leader can disband the family.");
-    }
-  };
-
   if (loading) {
     return <p>Loading...</p>;
   }
@@ -107,7 +79,14 @@ const Family = () => {
   return (
     <Main img="MafiaBg">
       {/* No family */}
-      <NoFamily family={family} setFamily={setFamily}></NoFamily>
+      <NoFamily
+        family={family}
+        setFamily={setFamily}
+        message={message}
+        setMessage={setMessage}
+        messageType={messageType}
+        setMessageType={setMessageType}
+      ></NoFamily>
 
       {family && (
         <>
@@ -116,6 +95,9 @@ const Family = () => {
           <H1>
             Family: <strong>{family.name}</strong>
           </H1>
+
+          {/* InfoBox: Message */}
+          {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
           {/* Family info */}
           <div className="flex gap-4 mb-2">
@@ -424,89 +406,13 @@ const Family = () => {
 
           {/* Settings panel */}
           {activePanel === "settings" && (
-            <div>
-              <H2>Settings</H2>
-              <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
-                <H3>Invite player</H3>
-                <input
-                  className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full"
-                  type="text"
-                />
-                <Button>Send Invitation</Button>
-              </div>
-
-              <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
-                <H3>Assign roles</H3>
-                <div>
-                  <p>
-                    Boss:{" "}
-                    <Username
-                      character={{
-                        id: family.leaderId,
-                        username: family.leaderName,
-                      }}
-                    />
-                  </p>
-                  <p>
-                    Consigliere:{" "}
-                    <Username
-                      character={{
-                        id: family.leaderId,
-                        username: family.leaderName,
-                      }}
-                    />
-                  </p>
-                  <p>
-                    Underboss:{" "}
-                    <Username
-                      character={{
-                        id: family.leaderId,
-                        username: family.leaderName,
-                      }}
-                    />
-                  </p>
-                  <p>Caporegimes:</p>
-                  <p>
-                    {" "}
-                    <Username
-                      character={{
-                        id: family.leaderId,
-                        username: family.leaderName,
-                      }}
-                    />
-                  </p>
-                  <p>
-                    {" "}
-                    <Username
-                      character={{
-                        id: family.leaderId,
-                        username: family.leaderName,
-                      }}
-                    />
-                  </p>
-                  <p>
-                    {" "}
-                    <Username
-                      character={{
-                        id: family.leaderId,
-                        username: family.leaderName,
-                      }}
-                    />
-                  </p>
-                </div>
-              </div>
-
-              <hr className="my-2 border-neutral-600" />
-              <p>Edit Family rules</p>
-              <p>Edit Family profile</p>
-              <hr className="my-2 border-neutral-600" />
-              <p
-                className="text-red-400 cursor-pointer hover:underline"
-                onClick={disbandFamily}
-              >
-                <i className="fa-solid fa-ban"></i> Disband family
-              </p>
-            </div>
+            <FamilySettings
+              setError={setError}
+              family={family}
+              setFamily={setFamily}
+              setMessage={setMessage}
+              setMessageType={setMessageType}
+            />
           )}
         </>
       )}

@@ -35,16 +35,26 @@ type FamilyData = {
 
 interface NoFamilyInterface {
   family: FamilyData | null;
-  setFamily: (newFam: any) => void;
+  setFamily: React.Dispatch<React.SetStateAction<FamilyData | null>>;
+  message: string;
+  setMessage: React.Dispatch<React.SetStateAction<string>>;
+  messageType: "info" | "success" | "failure" | "warning";
+  setMessageType: React.Dispatch<
+    React.SetStateAction<"info" | "success" | "failure" | "warning">
+  >;
 }
 
-const NoFamily = ({ family, setFamily }: NoFamilyInterface) => {
+const NoFamily = ({
+  family,
+  setFamily,
+  message,
+  setMessage,
+  messageType,
+  setMessageType,
+}: NoFamilyInterface) => {
   const [familyName, setFamilyName] = useState("");
   const { character, setCharacter } = useCharacter();
-  const [message, setMessage] = useState<string | null>(null);
-  const [messageType, setMessageType] = useState<
-    "success" | "failure" | "warning" | "info"
-  >("info");
+
   const [families, setFamilies] = useState<FamilyData[]>([]);
 
   // Fetch all families from Firestore
@@ -141,6 +151,9 @@ const NoFamily = ({ family, setFamily }: NoFamilyInterface) => {
       // set Family in local state
       setFamily(newFamily);
       setFamilyName("");
+
+      setMessageType("success");
+      setMessage(`You created ${familyName} for $${cost.toLocaleString()}.`);
     } catch (error) {
       setMessageType("failure");
       setMessage("Error creating family.");
