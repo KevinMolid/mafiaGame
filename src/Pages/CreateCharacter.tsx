@@ -1,6 +1,7 @@
 // Components
 import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
+import H2 from "../components/Typography/H2";
 import Button from "../components/Button";
 
 // React
@@ -32,10 +33,19 @@ const db = getFirestore(app);
 const CreateCharacter = () => {
   const { user, userData, setUserData } = useAuth();
   const { character, setCharacter } = useCharacter();
+  const [location, setLocation] = useState<string>("New York");
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
+
+  const cities = [
+    "Mexico City",
+    "New York",
+    "Moscow",
+    "Rio de Janeiro",
+    "Tokyo",
+  ];
 
   if (userData.type !== "admin" && character && character.status === "alive") {
     return <Navigate to="/" />;
@@ -92,7 +102,7 @@ const CreateCharacter = () => {
         status: "alive",
         stats: { xp: 0, hp: 100, heat: 0, bank: 0, money: 1000, protection: 0 },
         reputation: { police: 0, politics: 0, gangs: 0, community: 0 },
-        location: "New York",
+        location: location,
         createdAt: new Date(),
         diedAt: null,
         lastCrimeTimestamp: null,
@@ -146,15 +156,36 @@ const CreateCharacter = () => {
 
       <H1>Create your character</H1>
       <form action="" className="flex flex-col mb-4 gap-2">
-        <label htmlFor="username">Username</label>
+        <label htmlFor="username">
+          <H2>Username</H2>
+        </label>
         <input
-          className="bg-neutral-800 px-2 py-1"
+          className="bg-neutral-800 px-2 py-1 placeholder-neutral-400"
           id="username"
           type="text"
+          placeholder="Enter username"
           value={username}
           onChange={handleUsernameChange}
         />
         {error && <span className="text-red-500">{error}</span>}
+
+        <H2>Choose starting location</H2>
+        <ul className="flex gap-2 flex-wrap">
+          {cities.map((city) => (
+            <li
+              key={city}
+              className={
+                "border px-4 py-2 flex-grow text-center cursor-pointer " +
+                (city === location
+                  ? "bg-neutral-900 border-neutral-600"
+                  : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
+              }
+              onClick={() => setLocation(city)}
+            >
+              <p className={city === location ? "text-white" : ""}>{city}</p>
+            </li>
+          ))}
+        </ul>
       </form>
       <Button onClick={handleClick}>Create character</Button>
     </Main>
