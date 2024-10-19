@@ -53,17 +53,18 @@ const Travel = () => {
           // Handle case where prevCharacter is null
           return {
             location: targetLocation,
-            id: character.id, // Keep the current character's ID
-            stats: character.stats, // Keep the current stats if needed
-            img: character.img, // Include img if needed
-            username: character.username, // Include username if needed
-            createdAt: character.createdAt, // Include createdAt if needed
-            diedAt: character.diedAt, // Include diedAt if needed
-            lastCrimeTimestamp: character.lastCrimeTimestamp, // Include lastCrimeTimestamp if needed
-            profileText: character.profileText, // Include profileText if needed
-            reputation: character.reputation, // Include reputation if needed
-            status: character.status, // Include status if needed
-            uid: character.uid, // Include uid if needed
+            id: character.id,
+            stats: character.stats,
+            img: character.img,
+            username: character.username,
+            username_lowercase: character.username_lowercase,
+            createdAt: character.createdAt,
+            diedAt: character.diedAt,
+            lastCrimeTimestamp: character.lastCrimeTimestamp,
+            profileText: character.profileText,
+            reputation: character.reputation,
+            status: character.status,
+            uid: character.uid,
           };
         }
       });

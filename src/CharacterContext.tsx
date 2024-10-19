@@ -63,7 +63,8 @@ export const CharacterProvider = ({
                 stats: characterData.stats as Stats,
                 img: characterData.img as string,
                 username: characterData.username as string,
-                createdAt: characterData.createdAt.toDate(), // Assuming Firestore timestamp
+                username_lowercase: characterData.username_lowercase as string,
+                createdAt: characterData.createdAt.toDate(),
                 diedAt: characterData.diedAt
                   ? characterData.diedAt.toDate()
                   : null,
