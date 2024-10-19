@@ -12,13 +12,12 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 import { useAuth } from "../AuthContext";
+import { useCharacter } from "../CharacterContext";
 
 const SelectCharacter = () => {
   const { userData } = useAuth();
-  const [characters, setCharacters] = useState<any[]>([]);
-  const [selectedCharacter, setSelectedCharacter] = useState<string | null>(
-    null
-  );
+  const { character, setCharacter } = useCharacter();
+  const [availableCharacters, setAvailableCharacters] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchCharacters = async () => {
@@ -27,16 +26,13 @@ const SelectCharacter = () => {
           async (characterId: string) => {
             const characterRef = doc(db, "Characters", characterId);
             const characterSnap = await getDoc(characterRef);
-            if (characterId === userData.activeCharacter) {
-              setSelectedCharacter(characterId);
-            }
 
             return { id: characterSnap.id, ...characterSnap.data() };
           }
         );
 
         const characterData = await Promise.all(characterPromises);
-        setCharacters(characterData);
+        setAvailableCharacters(characterData);
       }
     };
 
@@ -44,14 +40,24 @@ const SelectCharacter = () => {
   }, [userData.characters]);
 
   const handleSelectCharacter = async (characterId: string) => {
-    // Set the selected character as the active character
     try {
+      // Update active character in the user's document
       const userDocRef = doc(db, "Users", userData.uid);
       await updateDoc(userDocRef, {
         activeCharacter: characterId,
       });
 
-      setSelectedCharacter(characterId); // Optionally, reflect the selection in the UI
+      // Find the selected character from availableCharacters
+      const selectedCharacterData = availableCharacters.find(
+        (char) => char.id === characterId
+      );
+
+      if (selectedCharacterData) {
+        // Set the selected character in state
+        setCharacter({
+          ...selectedCharacterData,
+        });
+      }
     } catch (error) {
       console.error("Error setting active character: ", error);
     }
@@ -61,41 +67,45 @@ const SelectCharacter = () => {
     <Main>
       <H1>Select Character</H1>
       <div className="flex gap-4 flex-wrap">
-        {characters.length === 0 ? (
+        {availableCharacters.length === 0 ? (
           <p>You have no characters.</p>
         ) : (
-          characters.map((character) => (
+          availableCharacters.map((availableCharacter) => (
             <div
-              key={character.id}
+              key={availableCharacter.id}
               className={
                 "flex flex-col border min-w-44 " +
-                (selectedCharacter !== character.id
+                (character?.id !== availableCharacter.id
                   ? "bg-neutral-800 border-neutral-600 px-4 py-2 rounded-lg"
                   : "border-neutral-400 px-4 py-2 rounded-lg")
               }
             >
               <p>
-                <strong className="text-white">{character.username}</strong>
+                <strong className="text-white">
+                  {availableCharacter.username}
+                </strong>
               </p>
               <div className="flex gap-4 mb-2">
                 <p>
                   Status:{" "}
                   <span
                     className={
-                      character.status === "alive"
+                      availableCharacter.status === "alive"
                         ? "text-green-500"
-                        : character.status === "dead"
+                        : availableCharacter.status === "dead"
                         ? "text-red-500"
                         : ""
                     }
                   >
-                    {character.status[0].toUpperCase() +
-                      character.status.slice(1)}
+                    {availableCharacter.status[0].toUpperCase() +
+                      availableCharacter.status.slice(1)}
                   </span>
                 </p>
               </div>
-              {selectedCharacter !== character.id ? (
-                <Button onClick={() => handleSelectCharacter(character.id)}>
+              {character?.id !== availableCharacter.id ? (
+                <Button
+                  onClick={() => handleSelectCharacter(availableCharacter.id)}
+                >
                   Set as active
                 </Button>
               ) : (
