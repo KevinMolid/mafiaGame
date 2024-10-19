@@ -172,7 +172,7 @@ const Chat = () => {
                         : "Sending..."}
                     </p>
                   </div>
-                  <div className="bg-slate-100 text-neutral-700 font-medium px-2 py-2 rounded-lg">
+                  <div className="bg-slate-100 text-neutral-700 text-sm font-medium px-2 py-2 rounded-lg">
                     {message.text}
                   </div>
                 </li>
@@ -189,6 +189,7 @@ const Chat = () => {
               <textarea
                 name=""
                 id=""
+                rows={5}
                 value={newMessage}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") e.preventDefault();

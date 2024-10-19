@@ -48,11 +48,10 @@ const NoFamily = ({ family, setFamily }: NoFamilyInterface) => {
   >("info");
   const [families, setFamilies] = useState<FamilyData[]>([]);
 
-  if (!character) return;
-  if (family) return;
-
   // Fetch all families from Firestore
   useEffect(() => {
+    if (!character || family) return;
+
     const fetchFamilies = async () => {
       try {
         const familiesSnapshot = await getDocs(collection(db, "Families"));
@@ -72,6 +71,8 @@ const NoFamily = ({ family, setFamily }: NoFamilyInterface) => {
   // Create new family
   const createFamily = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!character) return;
+
     if (!familyName.trim()) {
       setMessageType("warning");
       setMessage("You must enter a family name.");
@@ -124,6 +125,8 @@ const NoFamily = ({ family, setFamily }: NoFamilyInterface) => {
       setMessage("Error creating family.");
     }
   };
+
+  if (family) return;
 
   return (
     <>
