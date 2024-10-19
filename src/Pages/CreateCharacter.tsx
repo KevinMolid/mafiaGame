@@ -30,14 +30,14 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const CreateCharacter = () => {
-  const { user, setUserData } = useAuth();
+  const { user, userData, setUserData } = useAuth();
   const { character, setCharacter } = useCharacter();
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
 
-  if (character && character.status === "alive") {
+  if (userData.type !== "admin" && character && character.status === "alive") {
     return <Navigate to="/" />;
   }
 
