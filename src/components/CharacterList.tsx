@@ -12,6 +12,7 @@ import firebaseConfig from "../firebaseConfig";
 
 // Components
 import Username from "./Typography/Username";
+import InfoBox from "./InfoBox";
 
 // Functions
 import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
@@ -28,6 +29,11 @@ const CharacterList = ({
   onClick,
 }: CharacterListProps) => {
   const [characters, setCharacters] = useState<Array<any>>([]);
+  const [newMoneyValue, setNewMoneyValue] = useState<number | null>(null);
+  const [message, setMessage] = useState<string>("");
+  const [messageType, setMessageType] = useState<
+    "success" | "warning" | "info"
+  >("info");
   const [loading, setLoading] = useState(true);
 
   const app = initializeApp(firebaseConfig);
@@ -96,6 +102,41 @@ const CharacterList = ({
     );
   };
 
+  const setMoney = async (character: any, newMoneyValue: number) => {
+    try {
+      const characterRef = doc(db, "Characters", character.id);
+
+      // Update the money in Firebase
+      await updateDoc(characterRef, {
+        "stats.money": newMoneyValue,
+      });
+
+      // Update the local state
+      setCharacters((prevCharacters) =>
+        prevCharacters.map((char) =>
+          char.id === character.id ? { ...char, money: newMoneyValue } : char
+        )
+      );
+
+      setMessageType("success");
+      setMessage(
+        `Money updated for ${
+          character.username
+        } to $${newMoneyValue.toLocaleString()}`
+      );
+    } catch (error) {
+      console.error("Error updating money:", error);
+    }
+  };
+
+  const handleSetMoney = (character: any) => {
+    if (!newMoneyValue) {
+      setMessage("Please enter a value.");
+    } else {
+      setMoney(character, newMoneyValue);
+    }
+  };
+
   if (loading) {
     return <p>Loading characters...</p>;
   }
@@ -146,12 +187,14 @@ const CharacterList = ({
   if (type === "admin") {
     return (
       <section>
+        {message && <InfoBox type={messageType}>{message}</InfoBox>}
         <ul>
           {sortedCharacters.map((character) => (
             <li key={character.id}>
               <Username character={character} /> -{" "}
               {getCurrentRank(character.xp)}
               <div>
+                {/* Actions */}
                 <div className="bg-slate-600 text-slate-300 px-4 py-1 text-sm flex gap-4">
                   {character.status === "alive" && (
                     <button onClick={() => killPlayer(character)}>
@@ -163,7 +206,22 @@ const CharacterList = ({
                       <i className="fa-solid fa-hand"></i> Resurrect
                     </button>
                   )}
+                  {/* Set money */}
+                  <div className="flex gap-1">
+                    <input
+                      type="number"
+                      placeholder="Value"
+                      onChange={(e) =>
+                        setNewMoneyValue(parseInt(e.target.value))
+                      }
+                      className="bg-slate-700 border border-slate-500 px-2 w-24"
+                    />
+                    <button onClick={() => handleSetMoney(character)}>
+                      <i className="fa-solid fa-dollar-sign"></i> Set money
+                    </button>
+                  </div>
                 </div>
+                {/* Info */}
                 <div className="mb-2 bg-slate-700 text-slate-300 px-4 py-2 text-sm flex flex-wrap gap-x-4 gap-y-1">
                   <p>
                     Status:{" "}
