@@ -85,7 +85,7 @@ const SelectCharacter = () => {
                   {availableCharacter.username}
                 </strong>
               </p>
-              <div className="flex gap-4 mb-2">
+              <div className="flex flex-col mb-2">
                 <p>
                   Status:{" "}
                   <span
@@ -101,6 +101,8 @@ const SelectCharacter = () => {
                       availableCharacter.status.slice(1)}
                   </span>
                 </p>
+                <p>Location: {availableCharacter.location}</p>
+                <p>Money: ${availableCharacter.stats.money.toLocaleString()}</p>
               </div>
               {character?.id !== availableCharacter.id ? (
                 <Button
