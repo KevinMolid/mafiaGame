@@ -207,152 +207,159 @@ const Parking = () => {
 
   return (
     <Main>
-      <div>
-        <H1>{character?.location} Parking</H1>
-        <p>
-          This is an overview of your parking lot and all the cars you own in{" "}
-          {character?.location}
-        </p>
-      </div>
-
-      {/* Infobox */}
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
-
-      {/* Parking facility */}
-      <Box color="slate">
-        <H2>{parking !== null ? ParkingTypes[parking].name : "Loading..."}</H2>
-        <div className="flex gap-4">
-          {/* Show loading if parking is still null */}
+      <div className="flex flex-col gap-4">
+        <div>
+          <H1>{character?.location} Parking</H1>
           <p>
-            Slots:{" "}
-            <strong className="text-white">
-              {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
-            </strong>
-          </p>
-          <p>
-            Security:{" "}
-            <strong className="text-white">
-              {parking !== null ? ParkingTypes[parking].security : "Loading..."}
-              %
-            </strong>
+            This is an overview of your parking lot and all the cars you own in{" "}
+            {character?.location}
           </p>
         </div>
-        {canUpgrade && (
-          <div className="mt-2">
-            <p>Next upgrade:</p>
-            <Box color="slate">
-              <H3>{ParkingTypes[parking + 1].name}</H3>
-              <div className="grid grid-cols-2">
-                <div>
-                  <p>
-                    Slots: <strong>{ParkingTypes[parking].slots}</strong>{" "}
-                    <i className="fa-solid fa-arrow-right-long"></i>{" "}
-                    <strong className="text-green-500">
-                      {ParkingTypes[parking + 1].slots}
-                    </strong>
-                  </p>
-                  <p>
-                    Security: <strong>{ParkingTypes[parking].security}%</strong>{" "}
-                    <i className="fa-solid fa-arrow-right-long"></i>{" "}
-                    <strong className="text-green-500">
-                      {ParkingTypes[parking + 1].security}%
-                    </strong>
-                  </p>
-                  <p>
-                    Price:{" "}
-                    <strong className="text-yellow-400">
-                      ${ParkingTypes[parking + 1].price.toLocaleString()}
-                    </strong>
-                  </p>
-                </div>
-                <div className="flex justify-end items-end">
-                  <Button
-                    onClick={() =>
-                      parking !== null &&
-                      updateParking(
-                        character.id,
-                        character.location,
-                        parking + 1
-                      )
-                    }
-                  >
-                    Buy Upgrade
-                  </Button>
-                </div>
-              </div>
-            </Box>
+
+        {/* Infobox */}
+        {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
+        {/* Parking facility */}
+        <Box color="slate">
+          <H2>
+            {parking !== null ? ParkingTypes[parking].name : "Loading..."}
+          </H2>
+          <div className="flex gap-4">
+            {/* Show loading if parking is still null */}
+            <p>
+              Slots:{" "}
+              <strong className="text-white">
+                {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
+              </strong>
+            </p>
+            <p>
+              Security:{" "}
+              <strong className="text-white">
+                {parking !== null
+                  ? ParkingTypes[parking].security
+                  : "Loading..."}
+                %
+              </strong>
+            </p>
           </div>
-        )}
-      </Box>
-      <table className="w-full table-auto border border-collapse text-left">
-        <thead>
-          <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
-            <th className="px-2 py-1">Car</th>
-            <th className="px-2 py-1">Power</th>
-            <th className="px-2 py-1">Value</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {character.cars?.[character.location]?.length ? (
-            character.cars[character.location].map(
-              (car: any, index: number) => {
-                return (
-                  <tr
-                    className="border bg-neutral-800 border-neutral-700"
-                    key={index}
-                  >
-                    <td className="px-2 py-1">{car.name}</td>
-                    <td className="px-2 py-1">{car.hp} hp</td>
-                    <td className="px-2 py-1">
-                      {"$" + car.value.toLocaleString()}
-                    </td>
-                    <td className="px-2 py-1">
-                      <button
-                        onClick={() => sellCar(index)}
-                        className="font-medium hover:text-neutral-200"
-                      >
-                        Sell
-                      </button>
-                    </td>
-                  </tr>
-                );
-              }
-            )
-          ) : (
-            <tr className="border bg-neutral-800 border-neutral-700">
-              <td colSpan={4} className="px-2 py-1">
-                You do not have any cars in this location.
+          {canUpgrade && (
+            <div className="mt-2">
+              <p>Next upgrade:</p>
+              <Box color="slate">
+                <H3>{ParkingTypes[parking + 1].name}</H3>
+                <div className="grid grid-cols-2">
+                  <div>
+                    <p>
+                      Slots: <strong>{ParkingTypes[parking].slots}</strong>{" "}
+                      <i className="fa-solid fa-arrow-right-long"></i>{" "}
+                      <strong className="text-green-500">
+                        {ParkingTypes[parking + 1].slots}
+                      </strong>
+                    </p>
+                    <p>
+                      Security:{" "}
+                      <strong>{ParkingTypes[parking].security}%</strong>{" "}
+                      <i className="fa-solid fa-arrow-right-long"></i>{" "}
+                      <strong className="text-green-500">
+                        {ParkingTypes[parking + 1].security}%
+                      </strong>
+                    </p>
+                    <p>
+                      Price:{" "}
+                      <strong className="text-yellow-400">
+                        ${ParkingTypes[parking + 1].price.toLocaleString()}
+                      </strong>
+                    </p>
+                  </div>
+                  <div className="flex justify-end items-end">
+                    <Button
+                      onClick={() =>
+                        parking !== null &&
+                        updateParking(
+                          character.id,
+                          character.location,
+                          parking + 1
+                        )
+                      }
+                    >
+                      Buy Upgrade
+                    </Button>
+                  </div>
+                </div>
+              </Box>
+            </div>
+          )}
+        </Box>
+        <table className="w-full table-auto border border-collapse text-left">
+          <thead>
+            <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
+              <th className="px-2 py-1">Car</th>
+              <th className="px-2 py-1">Power</th>
+              <th className="px-2 py-1">Value</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {character.cars?.[character.location]?.length ? (
+              character.cars[character.location].map(
+                (car: any, index: number) => {
+                  return (
+                    <tr
+                      className="border bg-neutral-800 border-neutral-700"
+                      key={index}
+                    >
+                      <td className="px-2 py-1">{car.name}</td>
+                      <td className="px-2 py-1">{car.hp} hp</td>
+                      <td className="px-2 py-1">
+                        {"$" + car.value.toLocaleString()}
+                      </td>
+                      <td className="px-2 py-1">
+                        <button
+                          onClick={() => sellCar(index)}
+                          className="font-medium hover:text-neutral-200"
+                        >
+                          Sell
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                }
+              )
+            ) : (
+              <tr className="border bg-neutral-800 border-neutral-700">
+                <td colSpan={4} className="px-2 py-1">
+                  You do not have any cars in this location.
+                </td>
+              </tr>
+            )}
+          </tbody>
+          <tfoot>
+            <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
+              <td className="px-2 py-1"></td>
+              <td className="px-2 py-1">Total</td>
+              <td className="px-2 py-1">${totalValue.toLocaleString()}</td>
+              <td className="px-2 py-1">
+                <button
+                  onClick={sellAllCars}
+                  className="font-medium hover:text-neutral-200"
+                >
+                  Sell All
+                </button>
               </td>
             </tr>
-          )}
-        </tbody>
-        <tfoot>
-          <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
-            <td className="px-2 py-1"></td>
-            <td className="px-2 py-1">Total</td>
-            <td className="px-2 py-1">${totalValue.toLocaleString()}</td>
-            <td className="px-2 py-1">
-              <button
-                onClick={sellAllCars}
-                className="font-medium hover:text-neutral-200"
-              >
-                Sell All
-              </button>
-            </td>
-          </tr>
-        </tfoot>
-      </table>
-      <p>
-        <strong className="text-white">
-          {character.cars?.[character.location]?.length || 0}
-        </strong>{" "}
-        of{" "}
-        <strong className="text-white">
-          {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
-        </strong>{" "}
-        parking slots used
-      </p>
+          </tfoot>
+        </table>
+        <p>
+          <strong className="text-white">
+            {character.cars?.[character.location]?.length || 0}
+          </strong>{" "}
+          of{" "}
+          <strong className="text-white">
+            {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
+          </strong>{" "}
+          parking slots used
+        </p>
+      </div>
     </Main>
   );
 };
