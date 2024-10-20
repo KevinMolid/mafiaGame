@@ -12,7 +12,7 @@ import NoFamily from "../components/NoFamily";
 import { useState, useEffect } from "react";
 import { useCharacter } from "../CharacterContext";
 
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 
 const db = getFirestore();
 
@@ -44,6 +44,7 @@ const Family = () => {
   const [messageType, setMessageType] = useState<
     "info" | "success" | "failure" | "warning"
   >("info");
+  const [amountToDonate, setAmountToDonate] = useState<number | "">("");
 
   if (!character) return;
 
@@ -71,6 +72,73 @@ const Family = () => {
       setLoading(false);
     }
   }, [character]);
+
+  // Handle inputs
+  const handleInputChange = (e: any) => {
+    const value = e.target.value;
+    if (value === "") {
+      setAmountToDonate("");
+    } else {
+      const intValue = parseInt(value, 10);
+      setAmountToDonate(isNaN(intValue) ? "" : intValue);
+    }
+  };
+
+  // Banking functions
+  const deposit = async () => {
+    if (!family || !character.familyId) return;
+    try {
+      const characterRef = doc(db, "Characters", character.id);
+      const familyRef = doc(db, "Families", character.familyId);
+
+      if (amountToDonate === "") {
+        setMessageType("warning");
+        setMessage("Please enter amount.");
+        return;
+      }
+
+      // Calculate new values
+      if (amountToDonate) {
+        const newBank = family.wealth
+          ? family.wealth + amountToDonate
+          : amountToDonate;
+        const newMoney = character.stats.money - amountToDonate;
+
+        // Check if there is enough money to deposit
+        if (newMoney < 0) {
+          setMessageType("warning");
+          setMessage("You don't have enough money to donate.");
+          return;
+        }
+
+        // Update values in Firestore
+        await updateDoc(characterRef, {
+          "stats.money": newMoney,
+        });
+
+        await updateDoc(familyRef, {
+          wealth: newBank,
+        });
+
+        setFamily((prevFamily) => {
+          if (!prevFamily) return prevFamily; // or handle null case appropriately
+          return {
+            ...prevFamily,
+            wealth: newBank,
+          };
+        });
+
+        setMessageType("success");
+        setMessage(
+          `You donated $${amountToDonate.toLocaleString()} to ${family.name}.`
+        );
+
+        setAmountToDonate("");
+      }
+    } catch (error) {
+      console.error("Error depositing funds:", error);
+    }
+  };
 
   if (loading) {
     return <p>Loading...</p>;
@@ -114,7 +182,7 @@ const Family = () => {
               </strong>
             </p>
             <p>
-              Wealth:{" "}
+              Bank:{" "}
               <strong className="text-neutral-200">
                 ${family.wealth.toLocaleString()}
               </strong>
@@ -387,11 +455,18 @@ const Family = () => {
               <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
                 <H3>Donate</H3>
                 <p>Donate money to the family</p>
-                <input
-                  className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full"
-                  type="text"
-                />
-                <Button>Donate Money</Button>
+                <form className="flex flex-col gap-2" action="">
+                  <input
+                    className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
+                    type="number"
+                    value={amountToDonate}
+                    placeholder="Enter amount"
+                    onChange={handleInputChange}
+                  />
+                  <div>
+                    <Button onClick={deposit}>Donate Money</Button>
+                  </div>
+                </form>
               </div>
             </div>
           )}
