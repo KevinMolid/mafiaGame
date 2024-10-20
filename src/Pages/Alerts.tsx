@@ -61,8 +61,8 @@ const Alerts = () => {
       ) : (
         alerts.map((alert) => (
           <InfoBox key={alert.id} type="info">
-            <p>{alert.message}</p>
             <small>{new Date(alert.timestamp).toLocaleString()}</small>
+            <p>{alert.message}</p>
           </InfoBox>
         ))
       )}
