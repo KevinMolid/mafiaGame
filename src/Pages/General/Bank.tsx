@@ -200,7 +200,7 @@ const Bank = () => {
       const charactersRef = collection(db, "Characters");
       const targetQuery = query(
         charactersRef,
-        where("username", "==", targetCharacter)
+        where("username_lowercase", "==", targetCharacter.toLowerCase())
       );
       const targetQuerySnapshot = await getDocs(targetQuery);
 
@@ -238,7 +238,9 @@ const Bank = () => {
 
       setMessageType("success");
       setMessage(
-        `You successfully transferred $${transferAmount.toLocaleString()} to ${targetCharacter}. A $${fee.toLocaleString()} transaction fee was applied.`
+        `You successfully transferred $${transferAmount.toLocaleString()} to ${
+          targetData.username
+        }. A $${fee.toLocaleString()} transaction fee was applied.`
       );
 
       // Reset the input fields
