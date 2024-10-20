@@ -155,7 +155,7 @@ const Robbery = () => {
           robber: character.username,
         });
 
-        rewardXp(character, setCharacter, 10);
+        rewardXp(character, 10);
 
         setMessage(
           `Success! You robbed ${

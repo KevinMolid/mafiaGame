@@ -5,23 +5,12 @@ import firebaseConfig from "../firebaseConfig";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-export const rewardXp = async (
-  character: any,
-  setCharacter: (value: any) => void,
-  xp: number
-) => {
+export const rewardXp = async (character: any, xp: number) => {
   const newXp = character.stats.xp + xp;
-  const senderRef = doc(db, "Characters", character.id);
-  await updateDoc(senderRef, {
+  const characterRef = doc(db, "Characters", character.id);
+  await updateDoc(characterRef, {
     "stats.xp": newXp,
   });
-  setCharacter((prevCharacter: any) => ({
-    ...prevCharacter,
-    stats: {
-      ...prevCharacter.stats,
-      xp: newXp,
-    },
-  }));
 };
 
 // Update XP and Money in Firestore

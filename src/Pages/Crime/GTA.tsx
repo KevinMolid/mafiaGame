@@ -50,7 +50,7 @@ const GTA = () => {
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "info" | "warning"
   >("info");
-  const { character, setCharacter } = useCharacter();
+  const { character } = useCharacter();
   const { userData } = useAuth();
   const { cooldowns, startCooldown, fetchCooldown } = useCooldown();
   const navigate = useNavigate();
@@ -143,7 +143,7 @@ const GTA = () => {
         [`cars.${character.location}`]: updatedCars,
       });
 
-      rewardXp(character, setCharacter, 10);
+      rewardXp(character, 10);
 
       setMessageType("success");
       setMessage(`You stole a ${randomCar.name}!`);
