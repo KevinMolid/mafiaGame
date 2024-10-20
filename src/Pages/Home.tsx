@@ -3,7 +3,6 @@ import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import Equipment from "../components/Equipment";
-import Button from "../components/Button";
 import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
 
@@ -15,17 +14,14 @@ import { Link } from "react-router-dom";
 
 // Context
 import { useCharacter } from "../CharacterContext";
-import { useAuth } from "../AuthContext";
 
 // Functions
-import { attemptReward } from "../Functions/RewardFunctions";
 import { getRankProgress } from "../Functions/RankFunctions";
 
 const Home = () => {
-  const { character, setCharacter } = useCharacter();
-  const { userData } = useAuth();
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState<
+  const { character } = useCharacter();
+  const [message] = useState("");
+  const [messageType] = useState<
     "success" | "failure" | "important" | "warning" | "info"
   >("success");
 
@@ -42,25 +38,6 @@ const Home = () => {
   if (!character) {
     return null;
   }
-
-  const handleAction = async () => {
-    const xpReward = 50; // Define the XP reward for this action
-    const moneyReward = 50; // Define the money reward for this action
-    const successRate = 1.0; // Define the success rate for the action (80%)
-
-    await attemptReward({
-      character,
-      activeCharacter: userData.activeCharacter,
-      xpReward, // Pass the XP reward
-      moneyReward, // Pass the money reward
-      successMessage: `Action successful!`, // Define success message
-      failureMessage: `Action failed. Better luck next time!`, // Define failure message
-      successRate, // Pass the success rate
-      setCharacter, // Update character state
-      setMessage, // Update message state
-      setMessageType, // Update message type
-    });
-  };
 
   const maxHealth = 100;
   const healthPercentage = character
@@ -110,9 +87,6 @@ const Home = () => {
           </p>
         </div>
       </div>
-
-      {/* Button for testing only */}
-      {false && <Button onClick={handleAction}>Get XP</Button>}
 
       {character ? (
         <>

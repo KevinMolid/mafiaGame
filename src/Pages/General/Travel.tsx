@@ -20,7 +20,7 @@ const locations = [
 ];
 
 const Travel = () => {
-  const { character, setCharacter } = useCharacter();
+  const { character } = useCharacter();
   const [targetLocation, setTargetLocation] = useState("");
   const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -41,33 +41,7 @@ const Travel = () => {
       const charDocRef = doc(db, "Characters", character.id);
       await updateDoc(charDocRef, { location: targetLocation });
 
-      // Update character location in state
-      setCharacter((prevCharacter) => {
-        if (prevCharacter) {
-          setMessage(`You travelled to ${targetLocation}`);
-          return {
-            ...prevCharacter,
-            location: targetLocation,
-          };
-        } else {
-          // Handle case where prevCharacter is null
-          return {
-            location: targetLocation,
-            id: character.id,
-            stats: character.stats,
-            img: character.img,
-            username: character.username,
-            username_lowercase: character.username_lowercase,
-            createdAt: character.createdAt,
-            diedAt: character.diedAt,
-            lastCrimeTimestamp: character.lastCrimeTimestamp,
-            profileText: character.profileText,
-            reputation: character.reputation,
-            status: character.status,
-            uid: character.uid,
-          };
-        }
-      });
+      setMessage(`You travelled to ${targetLocation}`);
     } catch (error) {
       console.error("Error updating character location:", error);
     }
