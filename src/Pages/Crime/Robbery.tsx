@@ -5,6 +5,9 @@ import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import Box from "../../components/Box";
 
+// Functions
+import { rewardXp } from "../../Functions/RewardFunctions";
+
 // Context
 import { useAuth } from "../../AuthContext";
 import { useCooldown } from "../../CooldownContext";
@@ -136,6 +139,8 @@ const Robbery = () => {
             money: character.stats.money + stolenAmount,
           },
         });
+
+        rewardXp(character, setCharacter, 10);
 
         setMessage(
           `Success! You robbed ${
