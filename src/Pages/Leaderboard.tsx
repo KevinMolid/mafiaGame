@@ -4,6 +4,7 @@ import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import H3 from "../components/Typography/H3";
 import CharacterList from "../components/CharacterList";
+import FamilyList from "../components/FamilyList";
 
 const Leaderboard = () => {
   return (
@@ -23,6 +24,7 @@ const Leaderboard = () => {
       <H1>Families</H1>
       <div className="bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-2 my-4">
         <H3>Dominance</H3>
+        <FamilyList />
       </div>
     </Main>
   );
