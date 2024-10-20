@@ -127,8 +127,11 @@ const Header = () => {
         className="flex justify-center items-center rounded-md w-12 h-12 bg-neutral-700 cursor-pointer"
         onClick={toggleMusic}
       >
-        {playing && <i className="text-3xl fa-solid fa-volume-high"></i>}
-        {!playing && <i className="text-3xl fa-solid fa-volume-xmark"></i>}
+        {playing ? (
+          <i className="text-3xl fa-solid fa-volume-high"></i>
+        ) : (
+          <i className="text-3xl fa-solid fa-volume-xmark"></i>
+        )}
       </div>
 
       {/* Menu icon for small screens */}
