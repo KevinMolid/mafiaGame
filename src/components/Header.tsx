@@ -2,6 +2,8 @@ import logo from "../assets/LogoV2.png";
 import SidebarLink from "./SidebarLink";
 import DropdownMenu from "./DropdownMenu";
 
+import AudioPlay from "./Audio";
+
 // React
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
@@ -11,9 +13,11 @@ import { getAuth, signOut } from "firebase/auth";
 
 // Context
 import { useAuth } from "../AuthContext";
+import { useMusicContext } from "../MusicContext";
 
 const Header = () => {
   const { userData } = useAuth();
+  const { playing, setPlaying } = useMusicContext();
   const [menuOpen, setMenuOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const auth = getAuth();
@@ -103,6 +107,18 @@ const Header = () => {
           alt="MafiaReign Logo: Fight for Dominance"
         />
       </Link>
+
+      {/* Music */}
+      <AudioPlay
+        playing={playing}
+        loop={true}
+        audio="MafiaReign.wav"
+      ></AudioPlay>
+      {/* Music panel */}
+      <div
+        className="w-10 h-10 bg-red-500 hover:bg-green-400 cursor-pointer"
+        onClick={() => setPlaying(1)}
+      ></div>
 
       {/* Menu icon for small screens */}
       <div
