@@ -3,8 +3,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { Character, Stats, Reputation } from "./Interfaces/CharacterTypes";
 
 // Firebase
-import { doc, getDoc } from "firebase/firestore";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, doc, onSnapshot } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./firebaseConfig";
 
@@ -42,67 +41,66 @@ export const CharacterProvider = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCharacterData = async () => {
-      if (userData && userData.activeCharacter) {
-        setLoading(true);
-        try {
-          const charDocRef = doc(db, "Characters", userData.activeCharacter);
-          const charDocSnap = await getDoc(charDocRef);
-          if (charDocSnap.exists()) {
-            const characterData = charDocSnap.data();
+    if (userData && userData.activeCharacter) {
+      setLoading(true);
+      const charDocRef = doc(db, "Characters", userData.activeCharacter);
 
-            if (
-              characterData &&
-              characterData.location &&
-              characterData.stats &&
-              characterData.username
-            ) {
-              const newCharacter: Character = {
-                id: charDocSnap.id,
-                location: characterData.location as string,
-                stats: characterData.stats as Stats,
-                img: characterData.img as string,
-                username: characterData.username as string,
-                username_lowercase: characterData.username_lowercase as string,
-                createdAt: characterData.createdAt.toDate(),
-                diedAt: characterData.diedAt
-                  ? characterData.diedAt.toDate()
-                  : null,
-                lastCrimeTimestamp:
-                  characterData.lastCrimeTimestamp &&
-                  characterData.lastCrimeTimestamp.toDate
-                    ? characterData.lastCrimeTimestamp.toDate()
-                    : undefined,
-                profileText: characterData.profileText as string,
-                reputation: characterData.reputation as Reputation,
-                status: characterData.status as string,
-                uid: characterData.uid as string,
-                parkingFacilities: characterData.parkingFacilities as any,
-                cars: characterData.cars as any,
-                familyId: characterData.familyId as string,
-                familyName: characterData.familyName as string,
-              };
+      // Set up the real-time listener
+      const unsubscribe = onSnapshot(charDocRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const characterData = docSnapshot.data();
 
-              setCharacter(newCharacter);
-            } else {
-              console.error("Character data is incomplete or missing stats");
-              setCharacter(null);
-            }
+          if (
+            characterData &&
+            characterData.location &&
+            characterData.stats &&
+            characterData.username
+          ) {
+            const newCharacter: Character = {
+              id: docSnapshot.id,
+              location: characterData.location as string,
+              stats: characterData.stats as Stats,
+              img: characterData.img as string,
+              username: characterData.username as string,
+              username_lowercase: characterData.username_lowercase as string,
+              createdAt: characterData.createdAt.toDate(),
+              diedAt: characterData.diedAt
+                ? characterData.diedAt.toDate()
+                : null,
+              lastCrimeTimestamp:
+                characterData.lastCrimeTimestamp &&
+                characterData.lastCrimeTimestamp.toDate
+                  ? characterData.lastCrimeTimestamp.toDate()
+                  : undefined,
+              profileText: characterData.profileText as string,
+              reputation: characterData.reputation as Reputation,
+              status: characterData.status as string,
+              uid: characterData.uid as string,
+              parkingFacilities: characterData.parkingFacilities as any,
+              cars: characterData.cars as any,
+              familyId: characterData.familyId as string,
+              familyName: characterData.familyName as string,
+            };
+
+            setCharacter(newCharacter);
           } else {
-            console.error("No character document found!");
+            console.error("Character data is incomplete or missing stats");
             setCharacter(null);
           }
-        } catch (error) {
-          console.error("Error fetching character data:", error);
+        } else {
+          console.error("No character document found!");
           setCharacter(null);
         }
-      } else {
-        setCharacter(null);
-      }
-      setLoading(false);
-    };
 
-    fetchCharacterData();
+        setLoading(false);
+      });
+
+      // Clean up the listener when the component unmounts or user changes
+      return () => unsubscribe();
+    } else {
+      setCharacter(null);
+      setLoading(false);
+    }
   }, [userData]);
 
   if (loading) {

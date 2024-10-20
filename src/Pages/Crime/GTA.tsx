@@ -143,15 +143,6 @@ const GTA = () => {
         [`cars.${character.location}`]: updatedCars,
       });
 
-      // Update the local character state with the new car
-      setCharacter({
-        ...character,
-        cars: {
-          ...character.cars,
-          [character.location]: updatedCars,
-        },
-      });
-
       rewardXp(character, setCharacter, 10);
 
       setMessageType("success");
