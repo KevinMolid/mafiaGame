@@ -107,7 +107,7 @@ const Header = () => {
       {/* Menu icon for small screens */}
       <div
         ref={menuButtonRef}
-        className="flex justify-center items-center rounded-md sm:hidden w-12 h-12 bg-neutral-700 hover:cursor-pointer"
+        className="flex justify-center items-center rounded-md w-12 h-12 bg-neutral-700 hover:cursor-pointer"
         onClick={toggleMenu}
       >
         <i className="text-3xl fa-solid fa-bars"></i>
@@ -117,7 +117,7 @@ const Header = () => {
       {menuOpen && (
         <nav
           ref={menuRef}
-          className="absolute flex flex-col gap-2 top-16 right-0 bg-neutral-950 p-4 sm:hidden z-10 min-w-40 select-none"
+          className="absolute flex flex-col gap-2 top-16 right-0 bg-neutral-950 p-4 z-10 min-w-40 select-none"
         >
           <p>Menu</p>
           <hr className="border-neutral-500" />
@@ -131,6 +131,14 @@ const Header = () => {
               Admin
             </SidebarLink>
           )}
+
+          <SidebarLink
+            to="alerts"
+            icon="bell"
+            onClick={() => setMenuOpen(false)}
+          >
+            Alerts
+          </SidebarLink>
 
           <SidebarLink
             to="about"
@@ -180,7 +188,7 @@ const Header = () => {
       )}
 
       {/* Normal navigation menu for larger screens */}
-      <nav className="hidden sm:flex">
+      <nav className="hidden">
         <ul className="gap-6 flex">
           <li className="text-yellow-400 hover:text-yellow-200">
             {userData?.type === "admin" && (
@@ -188,6 +196,9 @@ const Header = () => {
                 <i className="fa-solid fa-gear"></i> Admin
               </Link>
             )}
+          </li>
+          <li className="text-stone-400 hover:text-stone-200">
+            <Link to="/alerts">Alerts</Link>
           </li>
           <li className="text-stone-400 hover:text-stone-200">
             <Link to="/about">About</Link>

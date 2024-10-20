@@ -17,6 +17,7 @@ import Footer from "./components/Footer";
 /***** PAGES *****/
 import Home from "./Pages/Home.tsx";
 import Admin from "./Pages/Admin.tsx";
+import Alerts from "./Pages/Alerts.tsx";
 import Profile from "./Pages/Profile.tsx";
 import EditProfile from "./Pages/EditProfile.tsx";
 import Notebook from "./Pages/Notebook.tsx";
@@ -101,6 +102,15 @@ function App() {
                         element={
                           <ProtectedRoute>
                             <Admin />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="/alerts"
+                        element={
+                          <ProtectedRoute>
+                            <Alerts />
                           </ProtectedRoute>
                         }
                       />
