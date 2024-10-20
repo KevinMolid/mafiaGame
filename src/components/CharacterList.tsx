@@ -49,6 +49,7 @@ const CharacterList = ({
         familyName: doc.data().familyName,
         xp: doc.data().stats.xp,
         money: doc.data().stats.money,
+        bank: doc.data().stats.bank,
         status: doc.data().status,
         location: doc.data().location,
       }));
@@ -246,6 +247,7 @@ const CharacterList = ({
                   </p>
                   <p>Xp: {character.xp}</p>
                   <p>Money: ${character.money.toLocaleString()}</p>
+                  <p>Bank: ${character.bank.toLocaleString()}</p>
                   <p>Location: {character.location}</p>
                 </div>
               </div>
