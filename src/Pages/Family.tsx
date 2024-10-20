@@ -44,7 +44,7 @@ const Family = () => {
   const [messageType, setMessageType] = useState<
     "info" | "success" | "failure" | "warning"
   >("info");
-  const [amountToDonate, setAmountToDonate] = useState<number | "">("");
+  const [amount, setAmount] = useState<number | "">("");
 
   if (!character) return;
 
@@ -77,10 +77,10 @@ const Family = () => {
   const handleInputChange = (e: any) => {
     const value = e.target.value;
     if (value === "") {
-      setAmountToDonate("");
+      setAmount("");
     } else {
       const intValue = parseInt(value, 10);
-      setAmountToDonate(isNaN(intValue) ? "" : intValue);
+      setAmount(isNaN(intValue) ? "" : intValue);
     }
   };
 
@@ -91,18 +91,16 @@ const Family = () => {
       const characterRef = doc(db, "Characters", character.id);
       const familyRef = doc(db, "Families", character.familyId);
 
-      if (amountToDonate === "") {
+      if (amount === "") {
         setMessageType("warning");
         setMessage("Please enter amount.");
         return;
       }
 
       // Calculate new values
-      if (amountToDonate) {
-        const newBank = family.wealth
-          ? family.wealth + amountToDonate
-          : amountToDonate;
-        const newMoney = character.stats.money - amountToDonate;
+      if (amount) {
+        const newBank = family.wealth ? family.wealth + amount : amount;
+        const newMoney = character.stats.money - amount;
 
         // Check if there is enough money to deposit
         if (newMoney < 0) {
@@ -130,13 +128,66 @@ const Family = () => {
 
         setMessageType("success");
         setMessage(
-          `You donated $${amountToDonate.toLocaleString()} to ${family.name}.`
+          `You donated $${amount.toLocaleString()} to ${family.name}.`
         );
 
-        setAmountToDonate("");
+        setAmount("");
       }
     } catch (error) {
       console.error("Error depositing funds:", error);
+    }
+  };
+
+  const withdraw = async () => {
+    if (!family || !character.familyId) return;
+    try {
+      const characterRef = doc(db, "Characters", character.id);
+      const familyRef = doc(db, "Families", character.familyId);
+
+      if (amount === "") {
+        setMessageType("warning");
+        setMessage("Please enter amount.");
+        return;
+      }
+
+      // Calculate new values
+      if (amount) {
+        const newBank = family.wealth ? family.wealth - amount : -amount;
+        const newMoney = character.stats.money + amount;
+
+        // Check if there is enough money to withdraw
+        if (newBank < 0) {
+          setMessageType("warning");
+          setMessage("There is not enough money to withdraw.");
+          return;
+        }
+
+        // Update values in Firestore
+        await updateDoc(characterRef, {
+          "stats.money": newMoney,
+        });
+
+        await updateDoc(familyRef, {
+          wealth: newBank,
+        });
+
+        setFamily((prevFamily) => {
+          if (!prevFamily) return prevFamily; // or handle null case appropriately
+          return {
+            ...prevFamily,
+            wealth: newBank,
+          };
+        });
+
+        setMessageType("success");
+        setMessage(
+          `You withdrew $${amount.toLocaleString()} from ${family.name}.`
+        );
+
+        setAmount("");
+      }
+    } catch (error) {
+      console.error("Error withdrawing funds:", error);
     }
   };
 
@@ -459,12 +510,13 @@ const Family = () => {
                   <input
                     className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
                     type="number"
-                    value={amountToDonate}
+                    value={amount}
                     placeholder="Enter amount"
                     onChange={handleInputChange}
                   />
-                  <div>
+                  <div className="flex gap-2">
                     <Button onClick={deposit}>Donate Money</Button>
+                    <Button onClick={withdraw}>Withdraw Money</Button>
                   </div>
                 </form>
               </div>
