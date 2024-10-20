@@ -20,12 +20,12 @@ const AudioPlay: React.FC<AudioPlayProps> = (props) => {
   function play(sound: string) {
     if (audio.current) {
       audio.current.src = sound; // Update source instead of creating a new Audio instance
-      audio.current.volume = 0.05;
+      audio.current.volume = 0.1;
       audio.current.loop = props.loop ?? false; // Default to false if loop is not provided
       audio.current.play();
     } else {
       audio.current = new Audio(sound);
-      audio.current.volume = 0.01;
+      audio.current.volume = 0.1;
       audio.current.loop = props.loop ?? false;
       audio.current.play();
     }
