@@ -4,6 +4,9 @@ import H1 from "../../components/Typography/H1";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 
+// Functions
+import { rewardXp } from "../../Functions/RewardFunctions";
+
 // Data
 import ParkingTypes from "../../Data/ParkingTypes";
 import Cars from "../../Data/Cars";
@@ -132,22 +135,24 @@ const GTA = () => {
 
       // Update the character's cars list
       const updatedCars = [
-        ...(character.cars?.[character.location] || []), // Get existing cars in current location
-        randomCar, // Add the stolen car
+        ...(character.cars?.[character.location] || []),
+        randomCar,
       ];
 
       await updateDoc(characterRef, {
-        [`cars.${character.location}`]: updatedCars, // Update cars for the current location
+        [`cars.${character.location}`]: updatedCars,
       });
 
       // Update the local character state with the new car
       setCharacter({
-        ...character, // Spread the current character data
+        ...character,
         cars: {
           ...character.cars,
-          [character.location]: updatedCars, // Update cars for the current location
+          [character.location]: updatedCars,
         },
       });
+
+      rewardXp(character, setCharacter, 10);
 
       setMessageType("success");
       setMessage(`You stole a ${randomCar.name}!`);
