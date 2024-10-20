@@ -28,6 +28,7 @@ import {
   getDocs,
   doc,
   updateDoc,
+  addDoc,
 } from "firebase/firestore";
 
 import firebaseConfig from "../../firebaseConfig";
@@ -74,9 +75,6 @@ const Robbery = () => {
       setMessage("You must wait before committing another robbery.");
       return;
     }
-
-    // Start the cooldown after a robbery
-    startCooldown(300, "robbery", character.id);
 
     try {
       // Find players in same location
@@ -140,6 +138,23 @@ const Robbery = () => {
           },
         });
 
+        // Add an alert to the target player's alerts sub-collection
+        const alertRef = collection(
+          db,
+          "Characters",
+          randomTarget.id,
+          "alerts"
+        );
+        await addDoc(alertRef, {
+          type: "robbery",
+          message: `You were robbed by ${
+            character.username
+          } for $${stolenAmount.toLocaleString()}.`,
+          timestamp: new Date().toISOString(),
+          amountLost: stolenAmount,
+          robber: character.username,
+        });
+
         rewardXp(character, setCharacter, 10);
 
         setMessage(
@@ -156,6 +171,9 @@ const Robbery = () => {
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      // Start the cooldown after a robbery
+      startCooldown(300, "robbery", character.id);
     }
   };
 
