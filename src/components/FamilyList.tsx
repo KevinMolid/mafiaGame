@@ -4,6 +4,8 @@ import { initializeApp } from "firebase/app";
 
 import firebaseConfig from "../firebaseConfig";
 
+import Familyname from "./Typography/Familyname";
+
 const FamilyList = () => {
   const [families, setFamilies] = useState<Array<any>>([]);
   const [loading, setLoading] = useState(true);
@@ -55,13 +57,12 @@ const FamilyList = () => {
     return (
       <section>
         <ul>
-          <li className="grid grid-cols-[40px_120px_auto] border-b border-neutral-700 mb-2 font-bold text-neutral-200">
+          <li className="grid grid-cols-[40px_auto] border-b border-neutral-700 mb-2 font-bold text-neutral-200">
             <p>#</p>
-            <p>Player</p>
-            <p>Rank</p>
+            <p>Family</p>
           </li>
           {sortedFamilies.map((family, index) => (
-            <li key={family.id} className="grid grid-cols-[40px_120px_auto]">
+            <li key={family.id} className="grid grid-cols-[40px_auto]">
               <p
                 className={
                   "mr-2 " +
@@ -78,7 +79,7 @@ const FamilyList = () => {
               >
                 #{index + 1}
               </p>
-              {family.name}
+              <Familyname family={family} />
             </li>
           ))}
         </ul>
