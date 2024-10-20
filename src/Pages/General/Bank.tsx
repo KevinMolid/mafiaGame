@@ -37,7 +37,7 @@ const Bank = () => {
   const [targetCharacter, setTargetCharacter] = useState<string>("");
   const [amountToSend, setAmountToSend] = useState<number | "">("");
 
-  const { character, setCharacter } = useCharacter();
+  const { character } = useCharacter();
 
   if (!character) {
     return null;
@@ -104,14 +104,6 @@ const Bank = () => {
           `You deposited $${amount.toLocaleString()} to your bank account.`
         );
 
-        setCharacter((prevCharacter: any) => ({
-          ...prevCharacter,
-          stats: {
-            ...prevCharacter.stats,
-            bank: newBank,
-            money: newMoney,
-          },
-        }));
         setAmount("");
       }
     } catch (error) {
@@ -154,14 +146,6 @@ const Bank = () => {
           `You withdrew $${amount.toLocaleString()} from your bank account.`
         );
 
-        setCharacter((prevCharacter: any) => ({
-          ...prevCharacter,
-          stats: {
-            ...prevCharacter.stats,
-            bank: newBank,
-            money: newMoney,
-          },
-        }));
         setAmount("");
       }
     } catch (error) {
@@ -227,14 +211,6 @@ const Bank = () => {
       await updateDoc(targetCharacterDoc.ref, {
         "stats.money": newReceiverMoney,
       });
-
-      setCharacter((prevCharacter: any) => ({
-        ...prevCharacter,
-        stats: {
-          ...prevCharacter.stats,
-          money: newSenderMoney,
-        },
-      }));
 
       setMessageType("success");
       setMessage(

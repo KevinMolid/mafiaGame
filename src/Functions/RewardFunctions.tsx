@@ -45,7 +45,6 @@ interface GainRewardParams {
   successMessage: string;
   failureMessage: string;
   successRate: number;
-  setCharacter: (value: any) => void;
   setMessage: (message: string) => void;
   setMessageType: (type: "success" | "failure" | "info" | "warning") => void;
 }
@@ -58,7 +57,6 @@ export const attemptReward = async ({
   successMessage,
   failureMessage,
   successRate,
-  setCharacter,
   setMessage,
   setMessageType,
 }: GainRewardParams) => {
@@ -75,18 +73,6 @@ export const attemptReward = async ({
 
     // Ensure rewardResult is not undefined before destructuring
     if (rewardResult) {
-      const { xp, money } = rewardResult;
-
-      // Update the character with the new XP and money
-      setCharacter((prevCharacter: any) => ({
-        ...prevCharacter,
-        stats: {
-          ...prevCharacter.stats,
-          xp,
-          money,
-        },
-      }));
-
       // Format the success message to include both XP and money (if applicable)
       const rewardMessage = `${successMessage}${
         xpReward && moneyReward

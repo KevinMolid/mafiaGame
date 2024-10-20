@@ -44,7 +44,7 @@ const Robbery = () => {
   const [helpActive, setHelpActive] = useState(false);
 
   const { userData } = useAuth();
-  const { character, setCharacter } = useCharacter();
+  const { character } = useCharacter();
   const { cooldowns, startCooldown, fetchCooldown } = useCooldown();
   const navigate = useNavigate();
 
@@ -127,15 +127,6 @@ const Robbery = () => {
         const playerDocRef = doc(db, "Characters", character.id);
         await updateDoc(playerDocRef, {
           "stats.money": character.stats.money + stolenAmount,
-        });
-
-        // Update the local character state with new money
-        setCharacter({
-          ...character,
-          stats: {
-            ...character.stats,
-            money: character.stats.money + stolenAmount,
-          },
         });
 
         // Add an alert to the target player's alerts sub-collection

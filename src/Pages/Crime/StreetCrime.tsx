@@ -20,7 +20,7 @@ import { useCooldown } from "../../CooldownContext";
 import { attemptReward } from "../../Functions/RewardFunctions";
 
 const StreetCrime = () => {
-  const { character, setCharacter } = useCharacter();
+  const { character } = useCharacter();
   const { userData } = useAuth();
   const navigate = useNavigate();
 
@@ -63,7 +63,6 @@ const StreetCrime = () => {
           successMessage: `You successfully committed ${crime.name}.`,
           failureMessage: `You failed to commit ${crime.name}. Better luck next time!`,
           successRate: crime.successRate,
-          setCharacter,
           setMessage,
           setMessageType,
         });

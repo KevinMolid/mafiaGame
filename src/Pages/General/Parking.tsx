@@ -27,7 +27,7 @@ type Car = {
 };
 
 const Parking = () => {
-  const { character, setCharacter } = useCharacter();
+  const { character } = useCharacter();
   const [parking, setParking] = useState<number | null>(null);
   const [message, setMessage] = useState<string>("");
   const [messageType, setMessageType] = useState<
@@ -72,22 +72,6 @@ const Parking = () => {
         [`stats.money`]: newMoney,
       });
 
-      setCharacter((prevCharacter) =>
-        prevCharacter
-          ? {
-              ...prevCharacter,
-              parkingFacilities: {
-                ...prevCharacter.parkingFacilities,
-                [city]: newParkingIndex,
-              },
-              stats: {
-                ...prevCharacter.stats,
-                money: newMoney,
-              },
-            }
-          : prevCharacter
-      );
-
       setParking(newParkingIndex);
       setMessageType("success");
       setMessage(
@@ -126,23 +110,6 @@ const Parking = () => {
         [`stats.money`]: newMoney,
       });
 
-      // Update the character locally
-      setCharacter((prevCharacter) =>
-        prevCharacter
-          ? {
-              ...prevCharacter,
-              cars: {
-                ...prevCharacter.cars,
-                [character.location]: updatedCars,
-              },
-              stats: {
-                ...prevCharacter.stats,
-                money: newMoney,
-              },
-            }
-          : prevCharacter
-      );
-
       setMessageType("success");
       setMessage(
         `Sold a ${carToSell.name} for $${carToSell.value.toLocaleString()}.`
@@ -176,23 +143,6 @@ const Parking = () => {
         [`cars.${character.location}`]: updatedCars,
         [`stats.money`]: character.stats.money + totalSoldValue,
       });
-
-      // Update the character locally
-      setCharacter((prevCharacter) =>
-        prevCharacter
-          ? {
-              ...prevCharacter,
-              cars: {
-                ...prevCharacter.cars,
-                [character.location]: updatedCars,
-              },
-              stats: {
-                ...prevCharacter.stats,
-                money: prevCharacter.stats.money + totalSoldValue,
-              },
-            }
-          : prevCharacter
-      );
 
       setMessageType("success");
       setMessage(
