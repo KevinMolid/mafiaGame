@@ -94,6 +94,9 @@ const Assassinate = () => {
   return (
     <Main>
       <H1>Assassinate player</H1>
+      <p className="mb-4">
+        Here you can attempt to assassinate another player.
+      </p>
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
       <H2>Who would you like to assassinate?</H2>
       <div className="flex flex-col gap-2 ">
@@ -102,9 +105,11 @@ const Assassinate = () => {
           placeholder="Player name"
           value={targetPlayer}
           onChange={handleTargetInput}
-          className="bg-neutral-700 px-4 py-2 text-white"
+          className="bg-neutral-700 px-4 py-2 text-white placeholder-neutral-400"
         />
-        <Button onClick={killPlayer}>Kill player</Button>
+        <div>
+          <Button onClick={killPlayer}>Attack player</Button>
+        </div>
       </div>
     </Main>
   );
