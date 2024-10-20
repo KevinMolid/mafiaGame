@@ -52,6 +52,14 @@ const Header = () => {
     setMenuOpen(false);
   };
 
+  const toggleMusic = () => {
+    if (playing) {
+      setPlaying(0);
+    } else {
+      setPlaying(1);
+    }
+  };
+
   // Close menus if clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -116,14 +124,17 @@ const Header = () => {
       ></AudioPlay>
       {/* Music panel */}
       <div
-        className="w-10 h-10 bg-red-500 hover:bg-green-400 cursor-pointer"
-        onClick={() => setPlaying(1)}
-      ></div>
+        className="flex justify-center items-center rounded-md w-12 h-12 bg-neutral-700 cursor-pointer"
+        onClick={toggleMusic}
+      >
+        {playing && <i className="text-3xl fa-solid fa-volume-high"></i>}
+        {!playing && <i className="text-3xl fa-solid fa-volume-xmark"></i>}
+      </div>
 
       {/* Menu icon for small screens */}
       <div
         ref={menuButtonRef}
-        className="flex justify-center items-center rounded-md w-12 h-12 bg-neutral-700 hover:cursor-pointer"
+        className="flex justify-center items-center rounded-md w-12 h-12 bg-neutral-700 cursor-pointer"
         onClick={toggleMenu}
       >
         <i className="text-3xl fa-solid fa-bars"></i>
