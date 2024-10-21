@@ -168,7 +168,9 @@ const Header = () => {
         className="flex justify-center items-center rounded-md w-12 h-12 bg-neutral-700 cursor-pointer"
         onClick={toggleMenu}
       >
-        {hasUnreadAlerts && <i className="text-3xl fa-solid fa-bell"></i>}
+        {hasUnreadAlerts && (
+          <i className="text-3xl text-yellow-400 fa-regular fa-bell fa-shake"></i>
+        )}
         {!hasUnreadAlerts && <i className="text-3xl fa-solid fa-bars"></i>}
       </div>
 
@@ -191,13 +193,26 @@ const Header = () => {
             </SidebarLink>
           )}
 
-          <SidebarLink
-            to="alerts"
-            icon="bell"
-            onClick={() => setMenuOpen(false)}
-          >
-            Alerts
-          </SidebarLink>
+          {!hasUnreadAlerts && (
+            <SidebarLink
+              to="alerts"
+              icon="bell"
+              onClick={() => setMenuOpen(false)}
+            >
+              Alerts
+            </SidebarLink>
+          )}
+
+          {hasUnreadAlerts && (
+            <SidebarLink
+              to="alerts"
+              icon="bell fa-shake text-yellow-400"
+              onClick={() => setMenuOpen(false)}
+            >
+              <p className="text-yellow-400">Alerts</p>
+              <p>{1}</p>
+            </SidebarLink>
+          )}
 
           <SidebarLink
             to="about"
