@@ -1,6 +1,7 @@
 import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
 import Alert from "../components/Alert";
+import Username from "../components/Typography/Username";
 
 import { useState, useEffect } from "react";
 import { getFirestore, collection, query, getDocs } from "firebase/firestore";
@@ -9,12 +10,23 @@ import { useCharacter } from "../CharacterContext";
 import firebaseConfig from "../firebaseConfig";
 import { initializeApp } from "firebase/app";
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Define the structure of an alert
+interface Alert {
+  id: string;
+  type: string;
+  amountLost?: number;
+  robberId?: string;
+  robberName?: string;
+  timestamp: string; // Timestamp is stored as an ISO 8601 string
+}
+
 const Alerts = () => {
   const { character } = useCharacter();
-  const [alerts, setAlerts] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]); // Use the Alert type for your state
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,10 +39,20 @@ const Alerts = () => {
         const alertsQuery = query(alertsRef);
         const alertsSnapshot = await getDocs(alertsQuery);
 
-        const fetchedAlerts = alertsSnapshot.docs.map((doc) => ({
+        const fetchedAlerts: Alert[] = alertsSnapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data(),
+          type: doc.data().type || "",
+          timestamp: doc.data().timestamp || "",
+          amountLost: doc.data().amountLost || 0,
+          robberId: doc.data().robberId || "",
+          robberName: doc.data().robberName || "",
         }));
+
+        // Sort alerts by timestamp in descending order (newest first)
+        fetchedAlerts.sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
 
         setAlerts(fetchedAlerts);
         setLoading(false);
@@ -57,11 +79,20 @@ const Alerts = () => {
       <H1>Alerts</H1>
 
       {alerts.length === 0 ? (
-        <p>No alerts available.</p>
+        <p>You have no alerts.</p>
       ) : (
         alerts.map((alert) => (
           <Alert key={alert.id}>
-            <p>{alert.message}</p>
+            {alert.type === "robbery" && alert.amountLost && (
+              <p>
+                You where robbed by{" "}
+                <Username
+                  character={{ id: alert.robberId, username: alert.robberName }}
+                />{" "}
+                for ${alert.amountLost.toLocaleString()}.
+              </p>
+            )}
+
             <small>{new Date(alert.timestamp).toLocaleString()}</small>
           </Alert>
         ))

@@ -138,12 +138,10 @@ const Robbery = () => {
         );
         await addDoc(alertRef, {
           type: "robbery",
-          message: `You were robbed by ${
-            character.username
-          } for $${stolenAmount.toLocaleString()}.`,
           timestamp: new Date().toISOString(),
           amountLost: stolenAmount,
-          robber: character.username,
+          robberName: character.username,
+          robberId: character.id,
         });
 
         rewardXp(character, 10);
