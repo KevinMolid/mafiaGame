@@ -30,6 +30,7 @@ const Parking = () => {
   const { character } = useCharacter();
   const [parking, setParking] = useState<number | null>(null);
   const [message, setMessage] = useState<string>("");
+  const [upgrading, setUpgrading] = useState<boolean>(false);
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "info"
   >("info");
@@ -155,6 +156,10 @@ const Parking = () => {
     }
   };
 
+  const toggleUpgrading = () => {
+    setUpgrading(!upgrading);
+  };
+
   return (
     <Main>
       <div className="flex flex-col gap-4">
@@ -162,7 +167,7 @@ const Parking = () => {
           <H1>{character?.location} Parking</H1>
           <p>
             This is an overview of your parking lot and all the cars you own in{" "}
-            {character?.location}
+            {character?.location}.
           </p>
         </div>
 
@@ -170,10 +175,21 @@ const Parking = () => {
         {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
         {/* Parking facility */}
-        <Box color="slate">
-          <H2>
-            {parking !== null ? ParkingTypes[parking].name : "Loading..."}
-          </H2>
+        <Box>
+          <div className="flex items-baseline gap-4">
+            <H2>
+              {parking !== null ? ParkingTypes[parking].name : "Loading..."}
+            </H2>
+            <button className="hover:text-white" onClick={toggleUpgrading}>
+              <strong>Upgrade </strong>
+              {upgrading ? (
+                <i className="fa-solid fa-caret-up"></i>
+              ) : (
+                <i className="fa-solid fa-caret-down"></i>
+              )}
+            </button>
+          </div>
+
           <div className="flex gap-4">
             {/* Show loading if parking is still null */}
             <p>
@@ -192,54 +208,60 @@ const Parking = () => {
               </strong>
             </p>
           </div>
-          {canUpgrade && (
-            <div className="mt-2">
-              <p>Next upgrade:</p>
-              <Box color="slate">
-                <H3>{ParkingTypes[parking + 1].name}</H3>
-                <div className="grid grid-cols-2">
-                  <div>
-                    <p>
-                      Slots: <strong>{ParkingTypes[parking].slots}</strong>{" "}
-                      <i className="fa-solid fa-arrow-right-long"></i>{" "}
-                      <strong className="text-green-500">
-                        {ParkingTypes[parking + 1].slots}
-                      </strong>
-                    </p>
-                    <p>
-                      Security:{" "}
-                      <strong>{ParkingTypes[parking].security}%</strong>{" "}
-                      <i className="fa-solid fa-arrow-right-long"></i>{" "}
-                      <strong className="text-green-500">
-                        {ParkingTypes[parking + 1].security}%
-                      </strong>
-                    </p>
-                    <p>
-                      Price:{" "}
-                      <strong className="text-yellow-400">
-                        ${ParkingTypes[parking + 1].price.toLocaleString()}
-                      </strong>
-                    </p>
-                  </div>
-                  <div className="flex justify-end items-end">
-                    <Button
-                      onClick={() =>
-                        parking !== null &&
-                        updateParking(
-                          character.id,
-                          character.location,
-                          parking + 1
-                        )
-                      }
-                    >
-                      Buy Upgrade
-                    </Button>
-                  </div>
-                </div>
-              </Box>
-            </div>
-          )}
         </Box>
+
+        {canUpgrade && upgrading && (
+          <Box>
+            <H2>Upgrade?</H2>
+            <strong className="text-yellow-400">
+              ${ParkingTypes[parking + 1].price.toLocaleString()}
+            </strong>
+            <div className="flex gap-8">
+              <div>
+                <H3>Slots</H3>
+                <p>
+                  <strong className="text-white">
+                    {ParkingTypes[parking].slots}{" "}
+                  </strong>
+                  <i className="text-yellow-400 fa-solid fa-arrow-right-long"></i>
+                  <strong className="text-white">
+                    {" "}
+                    {ParkingTypes[parking + 1].slots}
+                  </strong>
+                </p>
+              </div>
+
+              <div>
+                <H3>Security</H3>
+                <p>
+                  <strong className="text-white">
+                    {ParkingTypes[parking].security}%{" "}
+                  </strong>
+                  <i className="text-yellow-400 fa-solid fa-arrow-right-long"></i>
+                  <strong className="text-white">
+                    {" "}
+                    {ParkingTypes[parking + 1].security}%
+                  </strong>
+                </p>
+              </div>
+
+              <div className="flex gap-2 justify-end items-end">
+                <Button onClick={toggleUpgrading} style="secondary">
+                  Close
+                </Button>
+                <Button
+                  onClick={() =>
+                    parking !== null &&
+                    updateParking(character.id, character.location, parking + 1)
+                  }
+                >
+                  Buy Upgrade
+                </Button>
+              </div>
+            </div>
+          </Box>
+        )}
+
         <table className="w-full table-auto border border-collapse text-left">
           <thead>
             <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
@@ -278,7 +300,7 @@ const Parking = () => {
             ) : (
               <tr className="border bg-neutral-800 border-neutral-700">
                 <td colSpan={4} className="px-2 py-1">
-                  You do not have any cars in this location.
+                  You currently have no cars in this location.
                 </td>
               </tr>
             )}

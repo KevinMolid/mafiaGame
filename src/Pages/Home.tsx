@@ -5,6 +5,7 @@ import H2 from "../components/Typography/H2";
 import Equipment from "../components/Equipment";
 import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
+import Box from "../components/Box";
 
 import { getCurrentRank } from "../Functions/RankFunctions";
 
@@ -89,9 +90,9 @@ const Home = () => {
       </div>
 
       {character ? (
-        <>
+        <div className="flex gap-4 flex-wrap">
           {/* Stats */}
-          <div className="border border-neutral-500 p-4 mb-4">
+          <Box>
             <H2>Stats</H2>
             <div className="flex flex-col lg:flex-row flex-wrap gap-4 mb-6">
               <div className="flex flex-col gap-1">
@@ -154,10 +155,10 @@ const Home = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </Box>
 
           {/* Reputation */}
-          <div className="border border-neutral-500 p-4 mb-4">
+          <Box>
             <H2>Reputation</H2>
             <div className="flex gap-x-4 flex-wrap">
               <p>
@@ -185,7 +186,7 @@ const Home = () => {
                 </strong>
               </p>
             </div>
-          </div>
+          </Box>
 
           <div className="border border-neutral-500 mb-4 grid grid-cols-1 w-fit">
             <div className="col-start-1 row-start-1 z-10 p-4">
@@ -195,7 +196,7 @@ const Home = () => {
               <Equipment />
             </div>
           </div>
-        </>
+        </div>
       ) : (
         <p>No character selected</p>
       )}

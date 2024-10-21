@@ -109,21 +109,26 @@ const Alerts = () => {
       {alerts.length === 0 ? (
         <p>You have no alerts.</p>
       ) : (
-        alerts.map((alert) => (
-          <Alert key={alert.id} read={alert.read}>
-            {alert.type === "robbery" && alert.amountLost && (
-              <p>
-                You were robbed by{" "}
-                <Username
-                  character={{ id: alert.robberId, username: alert.robberName }}
-                />{" "}
-                for ${alert.amountLost.toLocaleString()}.
-              </p>
-            )}
+        <div className="flex gap-2 flex-col">
+          {alerts.map((alert) => (
+            <Alert key={alert.id} read={alert.read}>
+              {alert.type === "robbery" && alert.amountLost && (
+                <p>
+                  You were robbed by{" "}
+                  <Username
+                    character={{
+                      id: alert.robberId,
+                      username: alert.robberName,
+                    }}
+                  />{" "}
+                  for ${alert.amountLost.toLocaleString()}.
+                </p>
+              )}
 
-            <small>{new Date(alert.timestamp).toLocaleString()}</small>
-          </Alert>
-        ))
+              <small>{new Date(alert.timestamp).toLocaleString()}</small>
+            </Alert>
+          ))}
+        </div>
       )}
     </Main>
   );
