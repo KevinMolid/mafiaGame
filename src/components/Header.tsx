@@ -10,16 +10,23 @@ import { useState, useRef, useEffect } from "react";
 
 // Firebase
 import { getAuth, signOut } from "firebase/auth";
+import { getFirestore, collection, query, getDocs } from "firebase/firestore";
+
+// Initialize Firebase Firestore
+const db = getFirestore();
 
 // Context
 import { useAuth } from "../AuthContext";
 import { useMusicContext } from "../MusicContext";
+import { useCharacter } from "../CharacterContext";
 
 const Header = () => {
   const { userData } = useAuth();
+  const { character } = useCharacter();
   const { playing, setPlaying } = useMusicContext();
   const [menuOpen, setMenuOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [hasUnreadAlerts, setHasUnreadAlerts] = useState(false);
   const auth = getAuth();
 
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -52,6 +59,7 @@ const Header = () => {
     setMenuOpen(false);
   };
 
+  // Toggle Music player
   const toggleMusic = () => {
     if (playing) {
       setPlaying(0);
@@ -59,6 +67,26 @@ const Header = () => {
       setPlaying(1);
     }
   };
+
+  // Fetch unread alerts for the current character
+  useEffect(() => {
+    const fetchUnreadAlerts = async () => {
+      if (!character || !character.id) return;
+
+      try {
+        const alertsRef = collection(db, "Characters", character.id, "alerts");
+        const alertsQuery = query(alertsRef);
+        const alertsSnapshot = await getDocs(alertsQuery);
+
+        const hasUnread = alertsSnapshot.docs.some((doc) => !doc.data().read); // Check if any alert is unread
+        setHasUnreadAlerts(hasUnread);
+      } catch (error) {
+        console.error("Error fetching alerts:", error);
+      }
+    };
+
+    fetchUnreadAlerts();
+  }, [character]);
 
   // Close menus if clicking outside
   useEffect(() => {
@@ -140,7 +168,8 @@ const Header = () => {
         className="flex justify-center items-center rounded-md w-12 h-12 bg-neutral-700 cursor-pointer"
         onClick={toggleMenu}
       >
-        <i className="text-3xl fa-solid fa-bars"></i>
+        {hasUnreadAlerts && <i className="text-3xl fa-solid fa-bell"></i>}
+        {!hasUnreadAlerts && <i className="text-3xl fa-solid fa-bars"></i>}
       </div>
 
       {/* Small screen dropdown menu */}
