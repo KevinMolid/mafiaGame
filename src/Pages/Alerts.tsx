@@ -81,14 +81,7 @@ const Alerts = () => {
           await markAlertsAsRead();
         }
 
-        // Update the state to reflect that alerts are now read
-        setAlerts(
-          fetchedAlerts.map((alert) =>
-            unreadAlerts.some((unreadAlert) => unreadAlert.id === alert.id)
-              ? { ...alert, read: true }
-              : alert
-          )
-        );
+        setAlerts(fetchedAlerts);
 
         setLoading(false);
       } catch (error) {

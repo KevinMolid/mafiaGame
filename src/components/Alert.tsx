@@ -8,8 +8,8 @@ interface AlertInterface {
 const Alert = ({ children, read }: AlertInterface) => {
   return (
     <div
-      className={`flex justify-between py-2 px-4 mb-2 border border-neutral-700 ${
-        read ? "" : "bg-neutral-950 border-neutral-600"
+      className={`flex justify-between py-2 px-4 mb-2 border  ${
+        read ? "border-neutral-800" : "bg-neutral-800 border-neutral-600"
       }`}
     >
       {children}
