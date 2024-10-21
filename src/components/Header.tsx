@@ -144,24 +144,6 @@ const Header = () => {
         />
       </Link>
 
-      {/* Music */}
-      <AudioPlay
-        playing={playing}
-        loop={true}
-        audio="MafiaReign.wav"
-      ></AudioPlay>
-      {/* Music panel */}
-      <div
-        className="flex justify-center items-center rounded-md w-12 h-12 bg-neutral-700 cursor-pointer"
-        onClick={toggleMusic}
-      >
-        {playing ? (
-          <i className="text-3xl fa-solid fa-volume-high"></i>
-        ) : (
-          <i className="text-3xl fa-solid fa-volume-xmark"></i>
-        )}
-      </div>
-
       {/* Menu icon for small screens */}
       <div
         ref={menuButtonRef}
@@ -237,6 +219,26 @@ const Header = () => {
           >
             Leaderboard
           </SidebarLink>
+
+          {/* Music */}
+          <AudioPlay
+            playing={playing}
+            loop={true}
+            audio="MafiaReign.wav"
+          ></AudioPlay>
+
+          {/* Music panel */}
+          <div
+            className="cursor-pointer text-stone-400 hover:text-stone-200"
+            onClick={toggleMusic}
+          >
+            {playing ? (
+              <i className="fa-solid fa-volume-high"></i>
+            ) : (
+              <i className="fa-solid fa-volume-xmark"></i>
+            )}{" "}
+            {playing ? "Music on" : "Music off"}
+          </div>
 
           {userData && (
             <div className="text-stone-400 hover:text-stone-200">
