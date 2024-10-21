@@ -93,22 +93,20 @@ const Assassinate = () => {
 
   return (
     <Main>
-      <H1>Assassinate player</H1>
-      <p className="mb-4">
-        Here you can attempt to assassinate another player.
-      </p>
+      <H1>Drep spiller</H1>
+      <p className="mb-4">Her kan du forsøke å drepe en annen spiller.</p>
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
-      <H2>Who would you like to assassinate?</H2>
+      <H2>Hvem vil du drepe?</H2>
       <div className="flex flex-col gap-2 ">
         <input
           type="text"
-          placeholder="Player name"
+          placeholder="Brukernavn"
           value={targetPlayer}
           onChange={handleTargetInput}
           className="bg-neutral-700 px-4 py-2 text-white placeholder-neutral-400"
         />
         <div>
-          <Button onClick={killPlayer}>Attack player</Button>
+          <Button onClick={killPlayer}>Angrip spiller</Button>
         </div>
       </div>
     </Main>

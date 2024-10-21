@@ -47,7 +47,7 @@ const StreetCrime = () => {
   // Function for comitting a crime
   const handleClick = async () => {
     if (cooldowns["crime"] > 0) {
-      setMessage("You must wait before committing another crime.");
+      setMessage("Du må vente før du kan utføre en kriminell handling.");
       setMessageType("warning");
       return;
     }
@@ -60,8 +60,8 @@ const StreetCrime = () => {
           activeCharacter: userData.activeCharacter,
           xpReward: crime.xpReward, // XP reward for the crime
           moneyReward: crime.moneyReward || 0, // Optional money reward for the crime
-          successMessage: `You successfully committed ${crime.name}.`,
-          failureMessage: `You failed to commit ${crime.name}. Better luck next time!`,
+          successMessage: `Du utførte ${crime.name}.`,
+          failureMessage: `Du prøvde å utføre ${crime.name}, men feilet. Bedre lykke neste gang!`,
           successRate: crime.successRate,
           setMessage,
           setMessageType,
@@ -71,7 +71,7 @@ const StreetCrime = () => {
         startCooldown(90, "crime", userData.activeCharacter);
       }
     } else {
-      setMessage("No crime selected! Please select a crime first.");
+      setMessage("Du må velge en handling!");
       setMessageType("info");
     }
   };
@@ -80,8 +80,8 @@ const StreetCrime = () => {
   const crimes = [
     {
       id: "pickpocket",
-      name: "Pickpocket",
-      description: "Steal from a stranger",
+      name: "Lommetyveri",
+      description: "Stjel småpenger fra en forbipasserende",
       img: "PickpocketBw.png",
       successRate: 0.8, // 80% success rate
       xpReward: 4, // XP for success
@@ -89,8 +89,8 @@ const StreetCrime = () => {
     },
     {
       id: "vandalism",
-      name: "Vandalism",
-      description: "Ruin something for money",
+      name: "Herverk",
+      description: "Gjør herverk for penger",
       img: "VandalismBw.png",
       successRate: 0.6, // 60% success rate
       xpReward: 8, // XP for success
@@ -98,8 +98,8 @@ const StreetCrime = () => {
     },
     {
       id: "protectionRacket",
-      name: "Protection Racket",
-      description: "Offer protection to a venue",
+      name: "Stjel verdisaker",
+      description: "Utfør vektertjenester for penger",
       img: "ProtectionRacketBw.png",
       successRate: 0.4, // 40% success rate
       xpReward: 12, // XP for success
@@ -107,8 +107,8 @@ const StreetCrime = () => {
     },
     {
       id: "streetRacing",
-      name: "Street Racing",
-      description: "Compete in a street race",
+      name: "Stjel fra butikk",
+      description: "Stjel fra kjøpesenter",
       img: "StreetRacingBw.png",
       successRate: 0.2, // 20% success rate
       xpReward: 16, // XP for success
@@ -118,26 +118,26 @@ const StreetCrime = () => {
 
   return (
     <Main>
-      <H1>Street Crimes</H1>
+      <H1>Kriminalitet</H1>
 
       <p className="pb-2">
-        Commit street crimes to earn xp and money. More difficult actions yield
-        greater rewards.
+        Her kan du gjøre kriminelle handlinger for å tjene penger og få
+        erfaring.
       </p>
 
       {cooldowns["crime"] > 0 && (
         <p className="mb-4 text-stone-400">
-          You can commit another crime in{" "}
+          Du må vente{" "}
           <span className="font-bold text-neutral-200">
             {cooldowns["crime"]}
           </span>{" "}
-          seconds.
+          sekunder før du kan gjøre en kriminell handling.
         </p>
       )}
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
-      <p className="mb-4 text-stone-400 font-medium">Select Crime:</p>
+      <p className="mb-4 text-stone-400 font-medium">Velg handling:</p>
       <div className="grid grid-cols-2 lg:grid-cols-[min-content_1fr] gap-2 mb-4">
         {crimes.map((crime) => (
           <CrimeBox
@@ -154,7 +154,7 @@ const StreetCrime = () => {
           </CrimeBox>
         ))}
       </div>
-      <Button onClick={handleClick}>Commit Crime</Button>
+      <Button onClick={handleClick}>Utfør kriminalitet</Button>
     </Main>
   );
 };

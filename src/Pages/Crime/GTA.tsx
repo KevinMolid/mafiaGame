@@ -88,13 +88,13 @@ const GTA = () => {
   const stealCar = async () => {
     if (!character || !character.id) {
       setMessageType("failure");
-      setMessage("Character not loaded.");
+      setMessage("Brukeren er ikke lastet opp.");
       return;
     }
 
     if (cooldowns["gta"] > 0) {
       setMessageType("warning");
-      setMessage("You must wait before committing another GTA.");
+      setMessage("Du må vente før du kan stjele en bil.");
       return;
     }
 
@@ -114,7 +114,7 @@ const GTA = () => {
       // Check if the parking facility type is valid
       if (facilityType === undefined || facilityType === 0) {
         setMessageType("failure");
-        setMessage("You do not own any parking facility at this location.");
+        setMessage("Du har ingen parkeringsplass i denne byen.");
         return;
       }
 
@@ -127,9 +127,7 @@ const GTA = () => {
       // Check if the player has available slots
       if (currentCars.length >= availableSlots) {
         setMessageType("failure");
-        setMessage(
-          "No available parking slots in your facility. Upgrade your parking facility or sell cars to free up space."
-        );
+        setMessage("Du har ingen ledige parkeringsplasser.");
         return;
       }
 
@@ -146,36 +144,33 @@ const GTA = () => {
       rewardXp(character, 10);
 
       setMessageType("success");
-      setMessage(`You stole a ${randomCar.name}!`);
+      setMessage(`Du stjal en ${randomCar.name}!`);
 
       // Start the cooldown after a GTA
       startCooldown(240, "gta", character.id);
     } catch (error) {
       setMessageType("failure");
-      setMessage("Failed to steal the car. Try again.");
-      console.error("Error updating car:", error);
+      setMessage("Du fikk ikke til å stjele en bil. Prøv igjen senere.");
+      console.error("Feil ved oppdatering av bil:", error);
     }
   };
 
   return (
     <Main>
-      <H1>Grand Theft Auto</H1>
+      <H1>Biltyveri</H1>
 
-      <p className="pb-2">
-        Steal a car from the street, from a random player or from a player of
-        your choosing.
-      </p>
+      <p className="pb-2">Her kan du stjele en bil fra gata.</p>
 
       {cooldowns["gta"] > 0 && (
         <p className="mb-4 text-stone-400">
-          You can commit another GTA in{" "}
+          Du må vente{" "}
           <span className="font-bold text-neutral-200">{cooldowns["gta"]}</span>{" "}
-          seconds.
+          sekunder før du kan stjele en bil.
         </p>
       )}
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
-      <Button onClick={stealCar}>Commit Theft</Button>
+      <Button onClick={stealCar}>Gjennomfør biltyveri</Button>
     </Main>
   );
 };

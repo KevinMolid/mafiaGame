@@ -105,7 +105,7 @@ const Robbery = () => {
         // Check if the target has at least $100
         if (randomTarget.stats.money < 100) {
           setMessage(
-            `You tried to rob ${randomTarget.username}, but did not find anything to steal.`
+            `Du prøvde å rane ${randomTarget.username}, men fant ingen ting å stjele.`
           );
           setMessageType("warning");
           return;
@@ -148,14 +148,14 @@ const Robbery = () => {
         rewardXp(character, 10);
 
         setMessage(
-          `Success! You robbed ${
+          `Du ranet ${
             randomTarget.username
           } for $${stolenAmount.toLocaleString()}.`
         );
         setMessageType("success");
       } else {
         setMessage(
-          `You tried to rob ${randomTarget.username}, but failed. Better luck next time!`
+          `Du prøvde å rane ${randomTarget.username}, men feilet. Bedre lykke neste gang!`
         );
         setMessageType("failure");
       }
@@ -169,50 +169,43 @@ const Robbery = () => {
 
   return (
     <Main>
-      <div className="flex justify-between">
-        <H1>Robbery</H1>
-        {!helpActive && (
+      <div className="flex items-baseline gap-4">
+        <H1>Ran spiller</H1>
+        {helpActive ? (
           <i
-            className="hover:text-yellow-400 text-2xl fa-solid fa-question cursor-pointer"
-            onClick={() => setHelpActive(true)}
+            className="text-yellow-400 text-2xl fa-solid fa-question cursor-pointer"
+            onClick={() => setHelpActive(!helpActive)}
+          ></i>
+        ) : (
+          <i
+            className="hover:text-neutral-200 text-2xl fa-solid fa-question cursor-pointer"
+            onClick={() => setHelpActive(!helpActive)}
           ></i>
         )}
       </div>
 
-      <p className="mb-4">
-        Here you can steal money from a random player in your location, or
-        attempt to rob a player of your choosing.
-      </p>
+      <p className="mb-4">Her kan du rane andre spillere for penger.</p>
 
       {/* Help box */}
       {helpActive && (
         <div className="mb-4">
           <Box>
-            <div className="grid grid-cols-[max-content_auto_max-content] gap-4">
-              <div className="flex justify-center items-center">
-                <i className="text-yellow-400 text-2xl fa-solid fa-question"></i>
-              </div>
-              <small>
-                There is a 50% chance of finding a random target player. If
-                target player has $100 or more, you will steal 10-50% of the
-                targets money.
-              </small>
-              <i
-                className="fa-solid fa-x hover:text-neutral-200 cursor-pointer"
-                onClick={() => setHelpActive(false)}
-              ></i>
-            </div>
+            <p>
+              Du har 50% sjanse for å finne en annen spiller. Dersom spilleren
+              har $100 eller mer, har du 50% sjanse til å stjele en del av
+              spillerens penger.
+            </p>
           </Box>
         </div>
       )}
 
       {cooldowns["robbery"] > 0 && (
         <p className="mb-4 text-stone-400">
-          You can commit another robbery in{" "}
+          Du må vente{" "}
           <span className="font-bold text-neutral-200">
             {cooldowns["robbery"]}
           </span>{" "}
-          seconds.
+          sekunder før du kan rane en spiller.
         </p>
       )}
 
