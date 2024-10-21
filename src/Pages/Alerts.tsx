@@ -4,7 +4,14 @@ import Alert from "../components/Alert";
 import Username from "../components/Typography/Username";
 
 import { useState, useEffect } from "react";
-import { getFirestore, collection, query, getDocs } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  query,
+  getDocs,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import { useCharacter } from "../CharacterContext";
 
 import firebaseConfig from "../firebaseConfig";
@@ -22,6 +29,7 @@ interface Alert {
   robberId?: string;
   robberName?: string;
   timestamp: string; // Timestamp is stored as an ISO 8601 string
+  read: boolean;
 }
 
 const Alerts = () => {
@@ -46,6 +54,7 @@ const Alerts = () => {
           amountLost: doc.data().amountLost || 0,
           robberId: doc.data().robberId || "",
           robberName: doc.data().robberName || "",
+          read: doc.data().read || false, // Default to false if not present
         }));
 
         // Sort alerts by timestamp in descending order (newest first)
@@ -54,7 +63,33 @@ const Alerts = () => {
             new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
 
-        setAlerts(fetchedAlerts);
+        // Mark unread alerts as read
+        const unreadAlerts = fetchedAlerts.filter((alert) => !alert.read);
+        if (unreadAlerts.length > 0) {
+          const markAlertsAsRead = async () => {
+            for (const unreadAlert of unreadAlerts) {
+              const alertDocRef = doc(
+                db,
+                "Characters",
+                character.id,
+                "alerts",
+                unreadAlert.id
+              );
+              await updateDoc(alertDocRef, { read: true });
+            }
+          };
+          await markAlertsAsRead();
+        }
+
+        // Update the state to reflect that alerts are now read
+        setAlerts(
+          fetchedAlerts.map((alert) =>
+            unreadAlerts.some((unreadAlert) => unreadAlert.id === alert.id)
+              ? { ...alert, read: true }
+              : alert
+          )
+        );
+
         setLoading(false);
       } catch (error) {
         console.error("Error fetching alerts:", error);
@@ -82,10 +117,10 @@ const Alerts = () => {
         <p>You have no alerts.</p>
       ) : (
         alerts.map((alert) => (
-          <Alert key={alert.id}>
+          <Alert key={alert.id} read={alert.read}>
             {alert.type === "robbery" && alert.amountLost && (
               <p>
-                You where robbed by{" "}
+                You were robbed by{" "}
                 <Username
                   character={{ id: alert.robberId, username: alert.robberName }}
                 />{" "}

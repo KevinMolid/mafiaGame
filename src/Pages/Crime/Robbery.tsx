@@ -142,6 +142,7 @@ const Robbery = () => {
           amountLost: stolenAmount,
           robberName: character.username,
           robberId: character.id,
+          read: false,
         });
 
         rewardXp(character, 10);
