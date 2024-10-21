@@ -1,6 +1,6 @@
 import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
-import InfoBox from "../components/InfoBox";
+import Alert from "../components/Alert";
 
 import { useState, useEffect } from "react";
 import { getFirestore, collection, query, getDocs } from "firebase/firestore";
@@ -60,10 +60,10 @@ const Alerts = () => {
         <p>No alerts available.</p>
       ) : (
         alerts.map((alert) => (
-          <InfoBox key={alert.id} type="info">
-            <small>{new Date(alert.timestamp).toLocaleString()}</small>
+          <Alert key={alert.id}>
             <p>{alert.message}</p>
-          </InfoBox>
+            <small>{new Date(alert.timestamp).toLocaleString()}</small>
+          </Alert>
         ))
       )}
     </Main>
