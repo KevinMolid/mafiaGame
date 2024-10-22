@@ -75,7 +75,7 @@ const Bank = () => {
 
       if (amount === "") {
         setMessageType("warning");
-        setMessage("Please enter amount.");
+        setMessage("Du må skrive en verdi.");
         return;
       }
 
@@ -111,6 +111,38 @@ const Bank = () => {
     }
   };
 
+  const depositAll = async () => {
+    try {
+      const characterRef = doc(db, "Characters", character.id);
+
+      // Calculate new values
+      const newBank = character.stats.bank + character.stats.money;
+      const newMoney = 0;
+
+      // Check if there is enough money to deposit
+      if (character.stats.money <= 0) {
+        setMessageType("warning");
+        setMessage("Du har ingen penger å sette inn.");
+        return;
+      }
+
+      // Update values in Firestore
+      await updateDoc(characterRef, {
+        "stats.bank": newBank,
+        "stats.money": newMoney,
+      });
+
+      setMessageType("success");
+      setMessage(
+        `Du satte inn $${character.stats.money.toLocaleString()} på din bankkonto.`
+      );
+
+      setAmount("");
+    } catch (error) {
+      console.error("Feil ved innskudd av penger:", error);
+    }
+  };
+
   const withdraw = async () => {
     try {
       const characterRef = doc(db, "Characters", character.id);
@@ -128,7 +160,7 @@ const Bank = () => {
           : -amount;
         const newMoney = character.stats.money + amount;
 
-        // Check if there is enough money to deposit
+        // Check if there is enough money to withdraw
         if (newBank < 0) {
           setMessageType("warning");
           setMessage("Du har ikke nok penger å ta ut.");
@@ -146,6 +178,38 @@ const Bank = () => {
 
         setAmount("");
       }
+    } catch (error) {
+      console.error("Feil ved uttak av penger:", error);
+    }
+  };
+
+  const withdrawAll = async () => {
+    try {
+      const characterRef = doc(db, "Characters", character.id);
+
+      // Calculate new values
+      const newBank = 0;
+      const newMoney = character.stats.money + character.stats.bank;
+
+      // Update values in Firestore
+      await updateDoc(characterRef, {
+        "stats.bank": newBank,
+        "stats.money": newMoney,
+      });
+
+      // Check if there is enough money to withdraw
+      if (character.stats.bank <= 0) {
+        setMessageType("warning");
+        setMessage("Du har ingen penger i banken.");
+        return;
+      }
+
+      setMessageType("success");
+      setMessage(
+        `Du tok ut $${character.stats.bank.toLocaleString()} fra din bankkonto.`
+      );
+
+      setAmount("");
     } catch (error) {
       console.error("Feil ved uttak av penger:", error);
     }
@@ -255,8 +319,14 @@ const Bank = () => {
           />
           <div className="flex gap-2">
             {" "}
-            <Button onClick={withdraw}>Ta ut beløp</Button>
-            <Button onClick={deposit}>Sett inn beløp</Button>
+            <Button style="secondary" onClick={withdraw}>
+              Ta ut beløp
+            </Button>
+            <Button style="secondary" onClick={deposit}>
+              Sett inn beløp
+            </Button>
+            <Button onClick={withdrawAll}>Ta ut alt</Button>
+            <Button onClick={depositAll}>Sett inn alt</Button>
           </div>
         </form>
       </div>
