@@ -11,7 +11,7 @@ const DropdownMenu = ({ linkOnClick }: DropdownInterface) => {
 
   return (
     <nav className="flex flex-col gap-2 bg-neutral-950 p-4 sm:hidden min-w-56 select-none">
-      <p>Actions</p>
+      <p>Handlinger</p>
       <hr className="border-neutral-500" />
 
       <SidebarLink to="bank" icon="landmark" onClick={linkOnClick}>
@@ -21,23 +21,23 @@ const DropdownMenu = ({ linkOnClick }: DropdownInterface) => {
       <hr className="border-neutral-600" />
 
       <SidebarLink to="family" icon="users" onClick={linkOnClick}>
-        Family
+        Familie
       </SidebarLink>
 
       <SidebarLink to="chat" icon="comment-dots" onClick={linkOnClick}>
-        Chat
+        Meldinger
       </SidebarLink>
 
       <hr className="border-neutral-600" />
 
       <SidebarLink to="influence" icon="handshake-simple" onClick={linkOnClick}>
-        Influence
+        Innflytelse
       </SidebarLink>
 
       <hr className="border-neutral-600" />
 
       <SidebarLink to="streetcrime" icon="money-bill" onClick={linkOnClick}>
-        <div>Street crime</div>
+        <div>Kriminalitet</div>
         {cooldowns["crime"] > 0 ? (
           <div className="text-neutral-200 font-medium">
             {cooldowns["crime"]}
@@ -50,7 +50,7 @@ const DropdownMenu = ({ linkOnClick }: DropdownInterface) => {
       </SidebarLink>
 
       <SidebarLink to="gta" icon="car" onClick={linkOnClick}>
-        <div>Grand Theft Auto</div>
+        <div>Biltyveri</div>
         {cooldowns["gta"] > 0 ? (
           <div className="text-neutral-200 font-medium">{cooldowns["gta"]}</div>
         ) : (
@@ -61,7 +61,7 @@ const DropdownMenu = ({ linkOnClick }: DropdownInterface) => {
       </SidebarLink>
 
       <SidebarLink to="robbery" icon="sack-dollar" onClick={linkOnClick}>
-        <div>Robbery</div>
+        <div>Ran spiller</div>
         {cooldowns["robbery"] > 0 ? (
           <div className="text-neutral-200 font-medium">
             {cooldowns["robbery"]}
@@ -74,21 +74,21 @@ const DropdownMenu = ({ linkOnClick }: DropdownInterface) => {
       </SidebarLink>
 
       <SidebarLink to="assassinate" icon="gun" onClick={linkOnClick}>
-        Assassinate
+        Drep spiller
       </SidebarLink>
 
       <hr className="border-neutral-600" />
 
       <SidebarLink to="prison" icon="handcuffs" onClick={linkOnClick}>
-        Prison
+        Fengsel
       </SidebarLink>
 
       <SidebarLink to="parking" icon="square-parking" onClick={linkOnClick}>
-        Parking
+        Parkering
       </SidebarLink>
 
       <SidebarLink to="travel" icon="plane" onClick={linkOnClick}>
-        Travel
+        Flyplass
       </SidebarLink>
     </nav>
   );

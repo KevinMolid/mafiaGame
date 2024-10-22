@@ -132,7 +132,7 @@ const Sidebar = () => {
         <hr className="border-neutral-600" />
 
         <SidebarLink to="influence" icon="handshake-simple">
-          Rykte
+          Innflytelse
         </SidebarLink>
 
         <hr className="border-neutral-600" />

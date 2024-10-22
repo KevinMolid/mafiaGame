@@ -2,124 +2,89 @@
 import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
+import Box from "../../components/Box";
 
 const Influence = () => {
   return (
     <Main>
-      <H1>Influence</H1>
+      <H1>Innflytelse</H1>
+      <p className="mb-4">
+        Denne siden har ingen funksjon intill videre. Innflytelse vil utvikles
+        senere, men er ikke en prioritering for øyeblikket.
+      </p>
 
-      <aside className="border bg-neutral-900 border-neutral-700 px-6 py-4 pb-6 mb-6">
-        <H2>Reputation</H2>
-        <div className="grid grid-cols-2 gap-6">
-          <article>
-            <h3>
-              <i className="fa-solid fa-shield"></i> Police Force
-            </h3>
-            <div className="h-3 bg-neutral-800">
-              <div className="h-3 bg-blue-400 w-2/4"></div>
-            </div>
-          </article>
-          <article>
-            <h3>
-              <i className="fa-solid fa-landmark"></i> Political Corruption
-            </h3>
-            <div className="h-3 bg-neutral-800">
-              <div className="h-3 bg-red-400 w-1/4"></div>
-            </div>
-          </article>
-          <article>
-            <h3>
-              <i className="fa-solid fa-gun"></i> Street Gangs
-            </h3>
-            <div className="h-3 bg-neutral-800">
-              <div className="h-3 bg-yellow-400 w-3/4"></div>
-            </div>
-          </article>
-          <article>
-            <h3>
-              <i className="fa-solid fa-leaf"></i> Community Organizations
-            </h3>
-            <div className="h-3 bg-neutral-800">
-              <div className="h-3 bg-green-400 w-1/12"></div>
-            </div>
-          </article>
-        </div>
-      </aside>
-
-      <div className="grid grid-cols-2 gap-6 border border-neutral-700 px-6 py-4 pb-6 mb-6">
-        <div className="flex gap-4 items-center">
-          <i className="fa-solid fa-shield text-6xl text-stone-500"></i>
-          <div>
-            <h2 className="text-2xl">Police Force</h2>
-            <p className="text-stone-400">
-              Gain favor with law enforcement to reduce scrutiny and gain
-              protection.
-            </p>
+      <div className="flex gap-4 flex-col">
+        <Box>
+          <H2>Rykte</H2>
+          <div className="grid lg:grid-cols-2 gap-6">
+            <article>
+              <p>
+                <i className="fa-solid fa-shield"></i> Politi
+              </p>
+              <div className="h-3 bg-neutral-800">
+                <div className="h-3 bg-blue-400 w-2/4"></div>
+              </div>
+            </article>
+            <article>
+              <p>
+                <i className="fa-solid fa-landmark"></i> Styresmakter
+              </p>
+              <div className="h-3 bg-neutral-800">
+                <div className="h-3 bg-red-400 w-1/4"></div>
+              </div>
+            </article>
+            <article>
+              <p>
+                <i className="fa-solid fa-gun"></i> Gjenger
+              </p>
+              <div className="h-3 bg-neutral-800">
+                <div className="h-3 bg-yellow-400 w-3/4"></div>
+              </div>
+            </article>
+            <article>
+              <p>
+                <i className="fa-solid fa-leaf"></i> Organisasjoner
+              </p>
+              <div className="h-3 bg-neutral-800">
+                <div className="h-3 bg-green-400 w-1/12"></div>
+              </div>
+            </article>
           </div>
-        </div>
-        <ul>
-          <li>Bribe a Cop</li>
-          <li>Provide a Tip</li>
-          <li>Protect a Police Informant</li>
-          <li>Fund a Charity Event</li>
-        </ul>
-      </div>
+        </Box>
 
-      <div className="grid grid-cols-2 gap-6 border border-neutral-700 px-6 py-4 pb-6 mb-6">
-        <div className="flex gap-4 items-center">
-          <i className="fa-solid fa-landmark text-6xl text-stone-500"></i>
-          <div>
-            <h2 className="text-2xl">Political Corruption</h2>
-            <p className="text-stone-400">
-              Gain favor with politicians or corrupt officials to gain influence
-              and power.
+        {/* Beskrivelse*/}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Box>
+            <H2>
+              <i className="fa-solid fa-shield"></i> Politi
+            </H2>
+            <p>Gir økt beskyttelse og lavere sjanse for å havne i fengsel.</p>
+          </Box>
+          <Box>
+            <H2>
+              <i className="fa-solid fa-landmark"></i> Styresmakter
+            </H2>
+            <p>
+              Gir økt innflytelse og makt til å ta avgjørelser som påvirker
+              spillet.
             </p>
-          </div>
-        </div>
-        <ul>
-          <li>Bribe a Politician</li>
-          <li>Rig an Election</li>
-          <li>Influence Policy Decisions</li>
-          <li>Blackmail a Politician</li>
-        </ul>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6 border border-neutral-700 px-6 py-4 pb-6 mb-6">
-        <div className="flex gap-4 items-center">
-          <i className="fa-solid fa-gun text-6xl text-stone-500"></i>
-          <div>
-            <h2 className="text-2xl">Street Gangs</h2>
-            <p className="text-stone-400">
-              Build respect and loyalty with local gangs for muscle and
-              street-level influence.
+          </Box>
+          <Box>
+            <H2>
+              <i className="fa-solid fa-gun"></i> Gjenger
+            </H2>
+            <p>Gir økt angrepsstyrke ved forsøk på å drepe spillere.</p>
+          </Box>
+          <Box>
+            <H2>
+              <i className="fa-solid fa-leaf"></i> Organisasjoner
+            </H2>
+            <p>
+              Gir større avkastning på bedrifter og større kapasitet for
+              hvitevasking av penger.
             </p>
-          </div>
+          </Box>
         </div>
-        <ul>
-          <li>Recruit Gang Members</li>
-          <li>Sell Guns/Drugs</li>
-          <li>Organize a Turf War</li>
-          <li>Fix a Gang Problem</li>
-        </ul>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6 border border-neutral-700 px-6 py-4 pb-6 mb-6">
-        <div className="flex gap-4 items-center">
-          <i className="fa-solid fa-leaf text-6xl text-stone-500"></i>
-          <div>
-            <h2 className="text-2xl">Community Organizations</h2>
-            <p className="text-stone-400">
-              Gain respect and influence by appearing as a protector or
-              benefactor to the community.
-            </p>
-          </div>
-        </div>
-        <ul>
-          <li>Donate to a Local Charity</li>
-          <li>Host a Community Event</li>
-          <li>Protect a Local Business</li>
-          <li>Influence Community Leaders</li>
-        </ul>
       </div>
     </Main>
   );
