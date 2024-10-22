@@ -33,7 +33,7 @@ const Travel = () => {
 
   const handleTravel = async () => {
     if (!character) {
-      console.error("Character not found");
+      console.error("Karakter ikke funnet");
       return;
     }
 
@@ -41,27 +41,26 @@ const Travel = () => {
       const charDocRef = doc(db, "Characters", character.id);
       await updateDoc(charDocRef, { location: targetLocation });
 
-      setMessage(`You travelled to ${targetLocation}`);
+      setMessage(`Du reiste til ${targetLocation}`);
     } catch (error) {
-      console.error("Error updating character location:", error);
+      console.error("Feil ved oppdatering aav lokasjon:", error);
     }
   };
 
   return (
     <Main img="TravelBg">
-      <H1>Travel</H1>
+      <H1>Flyplass</H1>
       {message && <InfoBox type="success">{message}</InfoBox>}
       {!targetLocation && (
         <p className="text-stone-400">
-          Current location:{" "}
+          Du befinner deg i{" "}
           <strong className="text-white">{character.location}</strong>{" "}
         </p>
       )}
       {targetLocation && targetLocation !== character.location && (
         <p className="text-stone-400">
-          Traveling from{" "}
-          <strong className="text-white">{character.location}</strong> to{" "}
-          <strong className="text-white">{targetLocation}</strong>
+          Reis fra <strong className="text-white">{character.location}</strong>{" "}
+          til <strong className="text-white">{targetLocation}</strong>
         </p>
       )}
       <div className="relative my-4">
@@ -105,7 +104,7 @@ const Travel = () => {
         ))}
       </div>
       {targetLocation && (
-        <Button onClick={handleTravel}>Travel to {targetLocation}</Button>
+        <Button onClick={handleTravel}>Dra til {targetLocation}</Button>
       )}
     </Main>
   );
