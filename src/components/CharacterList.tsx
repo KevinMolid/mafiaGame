@@ -71,7 +71,7 @@ const CharacterList = ({
     if (sortBy === "xp") {
       return b.xp - a.xp; // Sort by XP
     } else if (sortBy === "money") {
-      return b.money - a.money; // Sort by money
+      return b.money + b.bank - (a.money + a.bank); // Sort by money
     } else {
       return a.username.localeCompare(b.username); // Sort alphabetically
     }
@@ -176,7 +176,9 @@ const CharacterList = ({
               </p>
               <Username character={character} />
               {sortBy === "xp" && <p>{getCurrentRank(character.xp)}</p>}
-              {sortBy === "money" && <p>{getMoneyRank(character.money)}</p>}
+              {sortBy === "money" && (
+                <p>{getMoneyRank(character.money + character.bank)}</p>
+              )}
             </li>
           ))}
         </ul>

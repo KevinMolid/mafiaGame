@@ -135,7 +135,11 @@ const Profile = () => {
             <li>{getCurrentRank(characterData.stats.xp)}</li>
 
             <li className="text-stone-400">Money</li>
-            <li>{getMoneyRank(characterData.stats.money)}</li>
+            <li>
+              {getMoneyRank(
+                characterData.stats.money + characterData.stats.bank
+              )}
+            </li>
 
             <li className="text-stone-400">Family</li>
             <li>
