@@ -211,7 +211,7 @@ const Robbery = () => {
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
       <form onSubmit={handleSubmit} action="" className="mt-4">
-        <Button type="submit">Commit Robbery</Button>
+        <Button type="submit">Gjennomfør ran</Button>
       </form>
     </Main>
   );
