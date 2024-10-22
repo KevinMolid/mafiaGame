@@ -181,7 +181,7 @@ const Header = () => {
               icon="bell"
               onClick={() => setMenuOpen(false)}
             >
-              Alerts
+              Varsler
             </SidebarLink>
           )}
 
@@ -191,7 +191,7 @@ const Header = () => {
               icon="bell fa-shake text-yellow-400"
               onClick={() => setMenuOpen(false)}
             >
-              <p className="text-yellow-400">Alerts</p>
+              <p className="text-yellow-400">Varsler</p>
               <p>{1}</p>
             </SidebarLink>
           )}
@@ -201,7 +201,15 @@ const Header = () => {
             icon="circle-info"
             onClick={() => setMenuOpen(false)}
           >
-            About
+            Spillguide
+          </SidebarLink>
+
+          <SidebarLink
+            to="chat"
+            icon="comment-dots"
+            onClick={() => setMenuOpen(false)}
+          >
+            Meldinger
           </SidebarLink>
 
           <SidebarLink
@@ -217,7 +225,7 @@ const Header = () => {
             icon="medal"
             onClick={() => setMenuOpen(false)}
           >
-            Leaderboard
+            Toppliste
           </SidebarLink>
 
           {/* Music */}
@@ -237,7 +245,7 @@ const Header = () => {
             ) : (
               <i className="fa-solid fa-volume-xmark"></i>
             )}{" "}
-            {playing ? "Music on" : "Music off"}
+            {playing ? "Lyd på" : "Lyd av"}
           </div>
 
           {userData && (
@@ -248,7 +256,7 @@ const Header = () => {
                   setMenuOpen(false);
                 }}
               >
-                Log out
+                Logg ut
               </button>
             </div>
           )}
@@ -262,40 +270,6 @@ const Header = () => {
           )}
         </nav>
       )}
-
-      {/* Normal navigation menu for larger screens */}
-      <nav className="hidden">
-        <ul className="gap-6 flex">
-          <li className="text-yellow-400 hover:text-yellow-200">
-            {userData?.type === "admin" && (
-              <Link to="/admin">
-                <i className="fa-solid fa-gear"></i> Admin
-              </Link>
-            )}
-          </li>
-          <li className="text-stone-400 hover:text-stone-200">
-            <Link to="/alerts">Alerts</Link>
-          </li>
-          <li className="text-stone-400 hover:text-stone-200">
-            <Link to="/about">About</Link>
-          </li>
-          <li className="text-stone-400 hover:text-stone-200">
-            <Link to="/forum">Forum</Link>
-          </li>
-          <li className="text-stone-400 hover:text-stone-200">
-            <Link to="/leaderboard">Leaderboard</Link>
-          </li>
-          {userData ? (
-            <li className="text-stone-400 hover:text-stone-200">
-              <button onClick={logOut}>Log out</button>
-            </li>
-          ) : (
-            <li className="text-stone-400 hover:text-stone-200">
-              <Link to="/signup">Log in / Sign up</Link>
-            </li>
-          )}
-        </ul>
-      </nav>
     </header>
   );
 };

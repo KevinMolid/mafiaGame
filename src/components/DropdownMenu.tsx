@@ -24,10 +24,6 @@ const DropdownMenu = ({ linkOnClick }: DropdownInterface) => {
         Familie
       </SidebarLink>
 
-      <SidebarLink to="chat" icon="comment-dots" onClick={linkOnClick}>
-        Meldinger
-      </SidebarLink>
-
       <hr className="border-neutral-600" />
 
       <SidebarLink to="influence" icon="handshake-simple" onClick={linkOnClick}>

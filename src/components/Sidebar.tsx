@@ -125,10 +125,6 @@ const Sidebar = () => {
           Familie
         </SidebarLink>
 
-        <SidebarLink to="chat" icon="comment-dots">
-          Meldinger
-        </SidebarLink>
-
         <hr className="border-neutral-600" />
 
         <SidebarLink to="influence" icon="handshake-simple">
