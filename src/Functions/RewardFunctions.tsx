@@ -33,7 +33,7 @@ export const giveReward = async (
 
     return { xp: newXp, money: newMoney };
   } catch (error) {
-    console.error("Error updating rewards:", error);
+    console.error("Feil ved oppdatering av belønning:", error);
   }
 };
 
@@ -76,11 +76,11 @@ export const attemptReward = async ({
       // Format the success message to include both XP and money (if applicable)
       const rewardMessage = `${successMessage}${
         xpReward && moneyReward
-          ? ` You earned $${moneyReward} and ${xpReward} XP`
+          ? ` Du fikk $${moneyReward} og ${xpReward} XP`
           : xpReward
-          ? ` You earned ${xpReward} XP`
+          ? ` Du fikk ${xpReward} XP`
           : moneyReward
-          ? ` You earned $${moneyReward}`
+          ? ` Du fikk $${moneyReward}`
           : ""
       }!`;
 
@@ -88,7 +88,7 @@ export const attemptReward = async ({
       setMessageType("success");
     } else {
       // Handle the case where rewardResult is undefined (e.g., an error occurred)
-      setMessage("Error while updating rewards. Please try again.");
+      setMessage("Feil ved oppdatering av belønning. Prøv igjen.");
       setMessageType("failure");
     }
   } else {
