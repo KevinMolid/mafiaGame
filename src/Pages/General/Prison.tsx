@@ -10,15 +10,16 @@ const Prison = () => {
 
   return (
     <Main img="PrisonBg">
-      <H1>{character?.location} Prison</H1>
-      <div className="grid grid-cols-2">
-        <div>
-          <H2>You are in prison</H2>
-          <p>
-            Remaining time: <strong>482</strong>
-          </p>
-        </div>
-      </div>
+      <H1>Fengsel</H1>
+      <p className="mb-4">
+        Her havner du dersom du blir tatt for kriminelle handlinger i{" "}
+        {character?.location}.
+      </p>
+
+      <H2>Du er i fengsel</H2>
+      <p>
+        Du må vente <strong>482</strong> sekunder før du slipper ut.
+      </p>
     </Main>
   );
 };

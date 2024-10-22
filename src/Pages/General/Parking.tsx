@@ -60,7 +60,7 @@ const Parking = () => {
     // Check if the character has enough money
     if (character.stats.money < upgradePrice) {
       setMessageType("failure");
-      setMessage(`You do not have enough money to upgrade to ${upgradeName}.`);
+      setMessage(`Du har ikke nok penger til å oppgradere parkering.`);
       return;
     }
 
@@ -76,10 +76,10 @@ const Parking = () => {
       setParking(newParkingIndex);
       setMessageType("success");
       setMessage(
-        `You bought ${upgradeName} for $${upgradePrice.toLocaleString()}.`
+        `Du kjøpte ${upgradeName} for $${upgradePrice.toLocaleString()}.`
       );
     } catch (error) {
-      console.error("Error updating parking facility: ", error);
+      console.error("Feil ved oppdatering av parkering: ", error);
     }
   };
 
@@ -113,12 +113,12 @@ const Parking = () => {
 
       setMessageType("success");
       setMessage(
-        `Sold a ${carToSell.name} for $${carToSell.value.toLocaleString()}.`
+        `Solgte en ${carToSell.name} for $${carToSell.value.toLocaleString()}.`
       );
     } catch (error) {
-      console.error("Error selling car: ", error);
+      console.error("Feil ved salg av bil: ", error);
       setMessageType("failure");
-      setMessage(`An unknown error occured when trying to sell a car.`);
+      setMessage(`En ukjent feil ddkket opp ved salg av bil.`);
     }
   };
 
@@ -127,7 +127,7 @@ const Parking = () => {
     const carsToSell = character.cars[character.location] || [];
     if (carsToSell.length === 0) {
       setMessageType("info");
-      setMessage("No cars to sell.");
+      setMessage("Du har ingen biler å selge.");
       return;
     }
 
@@ -147,12 +147,12 @@ const Parking = () => {
 
       setMessageType("success");
       setMessage(
-        `Sold all cars for a total of $${totalSoldValue.toLocaleString()}.`
+        `Du solgte alle bilene dine for $${totalSoldValue.toLocaleString()}.`
       );
     } catch (error) {
-      console.error("Error selling all cars: ", error);
+      console.error("Feil ved salg av biler: ", error);
       setMessageType("failure");
-      setMessage(`An unknown error occurred when trying to sell all cars.`);
+      setMessage(`En ukjent feil ddkket opp ved salg av biler.`);
     }
   };
 
@@ -164,10 +164,10 @@ const Parking = () => {
     <Main>
       <div className="flex flex-col gap-4">
         <div>
-          <H1>{character?.location} Parking</H1>
+          <H1>Parkering</H1>
           <p>
-            This is an overview of your parking lot and all the cars you own in{" "}
-            {character?.location}.
+            Dette er en oversikt over parkering og alle bilene du har i{" "}
+            <strong className="text-neutral-200">{character?.location}</strong>.
           </p>
         </div>
 
@@ -181,7 +181,7 @@ const Parking = () => {
               {parking !== null ? ParkingTypes[parking].name : "Loading..."}
             </H2>
             <button className="hover:text-white" onClick={toggleUpgrading}>
-              <strong>Upgrade </strong>
+              <strong>Oppgrader </strong>
               {upgrading ? (
                 <i className="fa-solid fa-caret-up"></i>
               ) : (
@@ -193,13 +193,13 @@ const Parking = () => {
           <div className="flex gap-4">
             {/* Show loading if parking is still null */}
             <p>
-              Slots:{" "}
+              Plasser:{" "}
               <strong className="text-white">
                 {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
               </strong>
             </p>
             <p>
-              Security:{" "}
+              Sikkerhet:{" "}
               <strong className="text-white">
                 {parking !== null
                   ? ParkingTypes[parking].security
@@ -212,13 +212,13 @@ const Parking = () => {
 
         {canUpgrade && upgrading && (
           <Box>
-            <H2>Upgrade?</H2>
+            <H2>Oppgrader parkering?</H2>
             <strong className="text-yellow-400">
               ${ParkingTypes[parking + 1].price.toLocaleString()}
             </strong>
             <div className="flex gap-8">
               <div>
-                <H3>Slots</H3>
+                <H3>Plasser</H3>
                 <p>
                   <strong className="text-white">
                     {ParkingTypes[parking].slots}{" "}
@@ -232,7 +232,7 @@ const Parking = () => {
               </div>
 
               <div>
-                <H3>Security</H3>
+                <H3>Sikkerhet</H3>
                 <p>
                   <strong className="text-white">
                     {ParkingTypes[parking].security}%{" "}
@@ -247,7 +247,7 @@ const Parking = () => {
 
               <div className="flex gap-2 justify-end items-end">
                 <Button onClick={toggleUpgrading} style="secondary">
-                  Close
+                  Lukk
                 </Button>
                 <Button
                   onClick={() =>
@@ -255,7 +255,7 @@ const Parking = () => {
                     updateParking(character.id, character.location, parking + 1)
                   }
                 >
-                  Buy Upgrade
+                  Kjøp oppgradering
                 </Button>
               </div>
             </div>
@@ -265,9 +265,9 @@ const Parking = () => {
         <table className="w-full table-auto border border-collapse text-left">
           <thead>
             <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
-              <th className="px-2 py-1">Car</th>
-              <th className="px-2 py-1">Power</th>
-              <th className="px-2 py-1">Value</th>
+              <th className="px-2 py-1">Bil</th>
+              <th className="px-2 py-1">Motorkraft</th>
+              <th className="px-2 py-1">Verdi</th>
               <th></th>
             </tr>
           </thead>
@@ -290,7 +290,7 @@ const Parking = () => {
                           onClick={() => sellCar(index)}
                           className="font-medium hover:text-neutral-200"
                         >
-                          Sell
+                          Selg bil
                         </button>
                       </td>
                     </tr>
@@ -300,7 +300,7 @@ const Parking = () => {
             ) : (
               <tr className="border bg-neutral-800 border-neutral-700">
                 <td colSpan={4} className="px-2 py-1">
-                  You currently have no cars in this location.
+                  Du har ingen biler.
                 </td>
               </tr>
             )}
@@ -308,14 +308,14 @@ const Parking = () => {
           <tfoot>
             <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
               <td className="px-2 py-1"></td>
-              <td className="px-2 py-1">Total</td>
+              <td className="px-2 py-1">Total verdi</td>
               <td className="px-2 py-1">${totalValue.toLocaleString()}</td>
               <td className="px-2 py-1">
                 <button
                   onClick={sellAllCars}
                   className="font-medium hover:text-neutral-200"
                 >
-                  Sell All
+                  Selg alle
                 </button>
               </td>
             </tr>
@@ -325,11 +325,11 @@ const Parking = () => {
           <strong className="text-white">
             {character.cars?.[character.location]?.length || 0}
           </strong>{" "}
-          of{" "}
+          av{" "}
           <strong className="text-white">
             {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
           </strong>{" "}
-          parking slots used
+          plasser brukt.
         </p>
       </div>
     </Main>
