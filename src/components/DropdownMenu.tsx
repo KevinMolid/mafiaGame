@@ -20,19 +20,23 @@ const DropdownMenu = ({ linkOnClick }: DropdownInterface) => {
 
       <hr className="border-neutral-600" />
 
-      <SidebarLink to="family" icon="users" onClick={linkOnClick}>
+      <SidebarLink to="familie" icon="users" onClick={linkOnClick}>
         Familie
       </SidebarLink>
 
       <hr className="border-neutral-600" />
 
-      <SidebarLink to="influence" icon="handshake-simple" onClick={linkOnClick}>
+      <SidebarLink
+        to="innflytelse"
+        icon="handshake-simple"
+        onClick={linkOnClick}
+      >
         Innflytelse
       </SidebarLink>
 
       <hr className="border-neutral-600" />
 
-      <SidebarLink to="streetcrime" icon="money-bill" onClick={linkOnClick}>
+      <SidebarLink to="kriminalitet" icon="money-bill" onClick={linkOnClick}>
         <div>Kriminalitet</div>
         {cooldowns["crime"] > 0 ? (
           <div className="text-neutral-200 font-medium">
@@ -45,7 +49,7 @@ const DropdownMenu = ({ linkOnClick }: DropdownInterface) => {
         )}
       </SidebarLink>
 
-      <SidebarLink to="gta" icon="car" onClick={linkOnClick}>
+      <SidebarLink to="biltyveri" icon="car" onClick={linkOnClick}>
         <div>Biltyveri</div>
         {cooldowns["gta"] > 0 ? (
           <div className="text-neutral-200 font-medium">{cooldowns["gta"]}</div>
@@ -56,7 +60,7 @@ const DropdownMenu = ({ linkOnClick }: DropdownInterface) => {
         )}
       </SidebarLink>
 
-      <SidebarLink to="robbery" icon="sack-dollar" onClick={linkOnClick}>
+      <SidebarLink to="ran" icon="sack-dollar" onClick={linkOnClick}>
         <div>Ran spiller</div>
         {cooldowns["robbery"] > 0 ? (
           <div className="text-neutral-200 font-medium">
@@ -69,21 +73,21 @@ const DropdownMenu = ({ linkOnClick }: DropdownInterface) => {
         )}
       </SidebarLink>
 
-      <SidebarLink to="assassinate" icon="gun" onClick={linkOnClick}>
+      <SidebarLink to="drep" icon="gun" onClick={linkOnClick}>
         Drep spiller
       </SidebarLink>
 
       <hr className="border-neutral-600" />
 
-      <SidebarLink to="prison" icon="handcuffs" onClick={linkOnClick}>
+      <SidebarLink to="fengsel" icon="handcuffs" onClick={linkOnClick}>
         Fengsel
       </SidebarLink>
 
-      <SidebarLink to="parking" icon="square-parking" onClick={linkOnClick}>
+      <SidebarLink to="parkering" icon="square-parking" onClick={linkOnClick}>
         Parkering
       </SidebarLink>
 
-      <SidebarLink to="travel" icon="plane" onClick={linkOnClick}>
+      <SidebarLink to="flyplass" icon="plane" onClick={linkOnClick}>
         Flyplass
       </SidebarLink>
     </nav>

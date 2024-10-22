@@ -80,7 +80,7 @@ const Sidebar = () => {
               <ul>
                 <li className="hover:bg-sky-900 py-2 px-4">
                   <Link
-                    to={`/profile/${character.id}`}
+                    to={`/profil/${character.id}`}
                     className="flex gap-2 items-center"
                     onClick={() => setShowNav(false)}
                   >
@@ -89,7 +89,7 @@ const Sidebar = () => {
                 </li>
                 <li className="hover:bg-sky-900 py-2 px-4">
                   <Link
-                    to="/editprofile"
+                    to="/endreprofil"
                     className="flex gap-2 items-center"
                     onClick={() => setShowNav(false)}
                   >
@@ -107,8 +107,8 @@ const Sidebar = () => {
             <p>{getCurrentRank(character.stats.xp)}</p>
           </div>
         ) : (
-          <Link to="/createcharacter">
-            <p className="text-center font-medium">Create character</p>
+          <Link to="/nyspiller">
+            <p className="text-center font-medium">Ny spiller</p>
           </Link>
         )}
       </div>
@@ -121,19 +121,19 @@ const Sidebar = () => {
 
         <hr className="border-neutral-600" />
 
-        <SidebarLink to="family" icon="users">
+        <SidebarLink to="familie" icon="users">
           Familie
         </SidebarLink>
 
         <hr className="border-neutral-600" />
 
-        <SidebarLink to="influence" icon="handshake-simple">
+        <SidebarLink to="innflytelse" icon="handshake-simple">
           Innflytelse
         </SidebarLink>
 
         <hr className="border-neutral-600" />
 
-        <SidebarLink to="streetcrime" icon="money-bill">
+        <SidebarLink to="kriminalitet" icon="money-bill">
           <div>Kriminalitet</div>
           {cooldowns["crime"] > 0 ? (
             <div className="text-neutral-200 font-medium">
@@ -146,7 +146,7 @@ const Sidebar = () => {
           )}
         </SidebarLink>
 
-        <SidebarLink to="gta" icon="car">
+        <SidebarLink to="biltyveri" icon="car">
           <div>Biltyveri</div>
           {cooldowns["gta"] > 0 ? (
             <div className="text-neutral-200 font-medium">
@@ -159,7 +159,7 @@ const Sidebar = () => {
           )}
         </SidebarLink>
 
-        <SidebarLink to="robbery" icon="sack-dollar">
+        <SidebarLink to="ran" icon="sack-dollar">
           <div>Ran spiller</div>
           {cooldowns["robbery"] > 0 ? (
             <div className="text-neutral-200 font-medium">
@@ -172,21 +172,21 @@ const Sidebar = () => {
           )}
         </SidebarLink>
 
-        <SidebarLink to="assassinate" icon="gun">
+        <SidebarLink to="drep" icon="gun">
           Drep spiller
         </SidebarLink>
 
         <hr className="border-neutral-600" />
 
-        <SidebarLink to="prison" icon="handcuffs">
+        <SidebarLink to="fengsel" icon="handcuffs">
           Fengsel
         </SidebarLink>
 
-        <SidebarLink to="parking" icon="square-parking">
+        <SidebarLink to="parkering" icon="square-parking">
           Parkering
         </SidebarLink>
 
-        <SidebarLink to="travel" icon="plane">
+        <SidebarLink to="flyplass" icon="plane">
           Flyplass
         </SidebarLink>
       </nav>

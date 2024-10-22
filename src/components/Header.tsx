@@ -40,7 +40,7 @@ const Header = () => {
   function logOut() {
     signOut(auth)
       .then(() => {
-        navigate("/login");
+        navigate("/logginn");
       })
       .catch((error) => {
         console.log(error.message);
@@ -81,7 +81,7 @@ const Header = () => {
         const hasUnread = alertsSnapshot.docs.some((doc) => !doc.data().read); // Check if any alert is unread
         setHasUnreadAlerts(hasUnread);
       } catch (error) {
-        console.error("Error fetching alerts:", error);
+        console.error("Feil ved henting av varsler:", error);
       }
     };
 
@@ -177,7 +177,7 @@ const Header = () => {
 
           {!hasUnreadAlerts && (
             <SidebarLink
-              to="alerts"
+              to="varsler"
               icon="bell"
               onClick={() => setMenuOpen(false)}
             >
@@ -187,7 +187,7 @@ const Header = () => {
 
           {hasUnreadAlerts && (
             <SidebarLink
-              to="alerts"
+              to="varsler"
               icon="bell fa-shake text-yellow-400"
               onClick={() => setMenuOpen(false)}
             >
@@ -197,7 +197,7 @@ const Header = () => {
           )}
 
           <SidebarLink
-            to="about"
+            to="spillguide"
             icon="circle-info"
             onClick={() => setMenuOpen(false)}
           >
@@ -205,7 +205,7 @@ const Header = () => {
           </SidebarLink>
 
           <SidebarLink
-            to="chat"
+            to="meldinger"
             icon="comment-dots"
             onClick={() => setMenuOpen(false)}
           >
@@ -221,7 +221,7 @@ const Header = () => {
           </SidebarLink>
 
           <SidebarLink
-            to="leaderboard"
+            to="toppliste"
             icon="medal"
             onClick={() => setMenuOpen(false)}
           >
@@ -264,7 +264,7 @@ const Header = () => {
           {!userData && (
             <div className="text-stone-400 hover:text-stone-200">
               <Link to="/signup" onClick={() => setMenuOpen(false)}>
-                Log in / Sign up
+                Logg inn / Registrer bruker
               </Link>
             </div>
           )}

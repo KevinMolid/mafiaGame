@@ -21,7 +21,7 @@ const db = getFirestore(app);
 import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
 
 const Profile = () => {
-  const { characterID } = useParams<{ characterID: string }>();
+  const { spillerID } = useParams<{ spillerID: string }>();
   const [characterData, setCharacterData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,14 +31,14 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchCharacterData = async () => {
-      if (!characterID) {
+      if (!spillerID) {
         setError("Character ID is missing.");
         setLoading(false);
         return;
       }
 
       try {
-        const charDocRef = doc(db, "Characters", characterID);
+        const charDocRef = doc(db, "Characters", spillerID);
         const charDocSnap = await getDoc(charDocRef);
         if (charDocSnap.exists()) {
           setCharacterData(charDocSnap.data());
@@ -53,10 +53,10 @@ const Profile = () => {
       }
     };
 
-    if (characterID) {
+    if (spillerID) {
       fetchCharacterData();
     }
-  }, [characterID]);
+  }, [spillerID]);
 
   if (loading) {
     return <div>Loading...</div>;

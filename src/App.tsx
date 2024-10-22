@@ -74,20 +74,20 @@ function App() {
 
                       <Routes>
                         {/* Public Routes */}
-                        <Route path="/about" element={<About />} />
+                        <Route path="/spillguide" element={<About />} />
                         <Route
-                          path="/createcharacter"
+                          path="/nyspiller"
                           element={<CreateCharacter />}
                         />
                         <Route
-                          path="/selectcharacater"
+                          path="/velgspiller"
                           element={<SelectCharacter />}
                         />
-                        <Route path="/chat" element={<Chat />} />
+                        <Route path="/meldinger" element={<Chat />} />
 
-                        <Route path="/leaderboard" element={<Leaderboard />} />
-                        <Route path="/signup" element={<Signup />} />
-                        <Route path="/login" element={<Login />} />
+                        <Route path="/toppliste" element={<Leaderboard />} />
+                        <Route path="/registrer" element={<Signup />} />
+                        <Route path="/logginn" element={<Login />} />
 
                         {/* Protected Routes */}
                         <Route
@@ -109,7 +109,7 @@ function App() {
                         />
 
                         <Route
-                          path="/alerts"
+                          path="/varsler"
                           element={
                             <ProtectedRoute>
                               <Alerts />
@@ -118,7 +118,7 @@ function App() {
                         />
 
                         <Route
-                          path="/profile/:characterID"
+                          path="/profil/:spillerID"
                           element={
                             <ProtectedRoute>
                               <Profile />
@@ -127,7 +127,7 @@ function App() {
                         />
 
                         <Route
-                          path="/editprofile"
+                          path="/endreprofil"
                           element={
                             <ProtectedRoute>
                               <EditProfile />
@@ -136,7 +136,7 @@ function App() {
                         />
 
                         <Route
-                          path="/notebook"
+                          path="/notater"
                           element={
                             <ProtectedRoute>
                               <Notebook />
@@ -145,7 +145,7 @@ function App() {
                         />
 
                         <Route
-                          path="/blacklist"
+                          path="/svarteliste"
                           element={
                             <ProtectedRoute>
                               <Blacklist />
@@ -154,7 +154,7 @@ function App() {
                         />
 
                         <Route
-                          path="/family"
+                          path="/familie"
                           element={
                             <ProtectedRoute>
                               <Family />
@@ -163,7 +163,7 @@ function App() {
                         />
 
                         <Route
-                          path="/family/profile/:familyID"
+                          path="/familie/profil/:familieID"
                           element={
                             <ProtectedRoute>
                               <FamilyProfile />
@@ -181,7 +181,7 @@ function App() {
                         />
 
                         <Route
-                          path="/forum/thread/:threadId"
+                          path="/forum/post/:postId"
                           element={
                             <ProtectedRoute>
                               <ForumThread />
@@ -190,7 +190,7 @@ function App() {
                         />
 
                         <Route
-                          path="/influence"
+                          path="/innflytelse"
                           element={
                             <ProtectedRoute>
                               <Influence />
@@ -199,7 +199,7 @@ function App() {
                         />
 
                         <Route
-                          path="/streetcrime"
+                          path="/kriminalitet"
                           element={
                             <ProtectedRoute>
                               <StreetCrime />
@@ -208,7 +208,7 @@ function App() {
                         />
 
                         <Route
-                          path="/robbery"
+                          path="/ran"
                           element={
                             <ProtectedRoute>
                               <Robbery />
@@ -217,7 +217,7 @@ function App() {
                         />
 
                         <Route
-                          path="/gta"
+                          path="/biltyveri"
                           element={
                             <ProtectedRoute>
                               <GTA />
@@ -226,7 +226,7 @@ function App() {
                         />
 
                         <Route
-                          path="/assassinate"
+                          path="/drep"
                           element={
                             <ProtectedRoute>
                               <Assassinate />
@@ -244,7 +244,7 @@ function App() {
                         />
 
                         <Route
-                          path="/parking"
+                          path="/parkering"
                           element={
                             <ProtectedRoute>
                               <Parking />
@@ -253,7 +253,7 @@ function App() {
                         />
 
                         <Route
-                          path="/prison"
+                          path="/fengsel"
                           element={
                             <ProtectedRoute>
                               <Prison />
@@ -262,7 +262,7 @@ function App() {
                         />
 
                         <Route
-                          path="/travel"
+                          path="/flyplass"
                           element={
                             <ProtectedRoute>
                               <Travel />
