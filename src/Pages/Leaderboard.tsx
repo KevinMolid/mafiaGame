@@ -10,8 +10,8 @@ import Box from "../components/Box";
 const Leaderboard = () => {
   return (
     <Main>
-      <H1>Leaderboard</H1>
-      <H2>Players</H2>
+      <H1>Toppliste</H1>
+      <H2>Spillere</H2>
       <div className="flex gap-4 mb-8 flex-wrap">
         <div className="flex-grow">
           <Box>
@@ -22,17 +22,28 @@ const Leaderboard = () => {
 
         <div className="flex-grow">
           <Box>
-            <H3>Money</H3>
+            <H3>Penger</H3>
             <CharacterList type="rank" sortBy="money" />
           </Box>
         </div>
       </div>
 
-      <H1>Families</H1>
-      <Box>
-        <H3>Dominance</H3>
-        <FamilyList />
-      </Box>
+      <H1>Familier</H1>
+      <div className="flex gap-4 mb-8 flex-wrap">
+        <div className="flex-grow">
+          <Box>
+            <H3>Makt</H3>
+            <FamilyList />
+          </Box>
+        </div>
+
+        <div className="flex-grow">
+          <Box>
+            <H3>Formue</H3>
+            <FamilyList />
+          </Box>
+        </div>
+      </div>
     </Main>
   );
 };

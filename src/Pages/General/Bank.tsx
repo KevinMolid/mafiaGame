@@ -101,13 +101,13 @@ const Bank = () => {
 
         setMessageType("success");
         setMessage(
-          `You deposited $${amount.toLocaleString()} to your bank account.`
+          `Du satte inn $${amount.toLocaleString()} på din bankkonto.`
         );
 
         setAmount("");
       }
     } catch (error) {
-      console.error("Error depositing funds:", error);
+      console.error("Feil ved innskudd av penger:", error);
     }
   };
 
@@ -117,7 +117,7 @@ const Bank = () => {
 
       if (amount === "") {
         setMessageType("warning");
-        setMessage("Please enter amount.");
+        setMessage("Du må skrive en verdi.");
         return;
       }
 
@@ -131,7 +131,7 @@ const Bank = () => {
         // Check if there is enough money to deposit
         if (newBank < 0) {
           setMessageType("warning");
-          setMessage("You don't have enough money to withdraw.");
+          setMessage("Du har ikke nok penger å ta ut.");
           return;
         }
 
@@ -142,14 +142,12 @@ const Bank = () => {
         });
 
         setMessageType("success");
-        setMessage(
-          `You withdrew $${amount.toLocaleString()} from your bank account.`
-        );
+        setMessage(`Du tok ut $${amount.toLocaleString()} fra din bankkonto.`);
 
         setAmount("");
       }
     } catch (error) {
-      console.error("Error widthdrawing funds:", error);
+      console.error("Feil ved uttak av penger:", error);
     }
   };
 
@@ -157,7 +155,7 @@ const Bank = () => {
     try {
       if (amountToSend === "" || targetCharacter === "") {
         setMessageType("warning");
-        setMessage("Please enter a valid amount and username.");
+        setMessage("Du må skrive inn brukernavn og verdi.");
         return;
       }
 
@@ -165,7 +163,7 @@ const Bank = () => {
 
       if (transferAmount <= 0) {
         setMessageType("warning");
-        setMessage("The amount must be greater than 0.");
+        setMessage("Verdien må være større enn 0.");
         return;
       }
 
@@ -176,7 +174,7 @@ const Bank = () => {
       // Check if the sender has enough money
       if (character.stats.money < totalAmount) {
         setMessageType("warning");
-        setMessage("You don't have enough money to transfer that amount.");
+        setMessage("Du har ikke nok penger til å gjennomføre transaksjonen.");
         return;
       }
 
@@ -191,7 +189,7 @@ const Bank = () => {
       // Check if the target character exists
       if (targetQuerySnapshot.empty) {
         setMessageType("warning");
-        setMessage("The target character does not exist.");
+        setMessage("Spilleren finnes ikke.");
         return;
       }
 
@@ -214,9 +212,9 @@ const Bank = () => {
 
       setMessageType("success");
       setMessage(
-        `You successfully transferred $${transferAmount.toLocaleString()} to ${
+        `Du overførte $${transferAmount.toLocaleString()} til ${
           targetData.username
-        }. A $${fee.toLocaleString()} transaction fee was applied.`
+        }. En avgift på $${fee.toLocaleString()} ble betalt til banken.`
       );
 
       // Reset the input fields
@@ -225,28 +223,24 @@ const Bank = () => {
     } catch (error) {
       console.error("Error transferring money:", error);
       setMessageType("warning");
-      setMessage("An error occurred while transferring money.");
+      setMessage("En feil skjedde ved overføring av penger.");
     }
   };
 
   return (
     <Main>
       <H1>Bank</H1>
-      <p className="mb-2">
-        Here you can deposit and withdraw money from your bank account. Money in
-        the bank will not get lost if another player robs you.
-      </p>
+      <p className="mb-2">Sett inn eller ta penger ut av banken.</p>
       <p className="mb-4">
-        At midnight you will receive 5% interest on the money in your bank
-        account.
+        Ved midnatt vil du motta 5% rente på pengene i din bankkonto.
       </p>
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
       <div>
-        <H2>Bank account</H2>
+        <H2>Konto</H2>
         <p className="mb-4">
-          Balance:{" "}
+          Saldo:{" "}
           <span className="font-bold text-neutral-200">
             ${character?.stats.bank?.toLocaleString() || 0}
           </span>
@@ -256,40 +250,40 @@ const Bank = () => {
             className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
             type="number"
             value={amount}
-            placeholder="Enter amount"
+            placeholder="Skriv inn beløp"
             onChange={handleInputChange}
           />
           <div className="flex gap-2">
             {" "}
-            <Button onClick={withdraw}>Withdraw</Button>
-            <Button onClick={deposit}>Deposit</Button>
+            <Button onClick={withdraw}>Ta ut beløp</Button>
+            <Button onClick={deposit}>Sett inn beløp</Button>
           </div>
         </form>
       </div>
 
       <div className="my-6">
-        <H2>Send to player</H2>
+        <H2>Overfør til spiller</H2>
         <p className="mb-4">
-          The bank will take 5% of the transfered amount as transaction fee.
+          En transaksjonskostnad på 5% vil bli lagt til og betalt til banken.
         </p>
         <form className="flex flex-col gap-2" action="">
           <input
             className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
             type="text"
-            placeholder="Enter username"
+            placeholder="Skriv inn brukernavn"
             value={targetCharacter}
             onChange={handleTargetCharacterInputChange}
           />
           <input
             className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
             type="number"
-            placeholder="Enter amount"
+            placeholder="Skriv inn beløp"
             value={amountToSend}
             onChange={handleAmountToSendInputChange}
           />
           <div>
             {" "}
-            <Button onClick={transfer}>Transfer</Button>
+            <Button onClick={transfer}>Overfør penger</Button>
           </div>
         </form>
       </div>

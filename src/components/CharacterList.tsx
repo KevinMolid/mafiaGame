@@ -153,7 +153,7 @@ const CharacterList = ({
         <ul>
           <li className="grid grid-cols-[40px_120px_auto] border-b border-neutral-700 mb-2 font-bold text-neutral-200">
             <p>#</p>
-            <p>Player</p>
+            <p>Spiller</p>
             <p>Rank</p>
           </li>
           {sortedCharacters.map((character, index) => (

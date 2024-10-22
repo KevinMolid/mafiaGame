@@ -30,7 +30,7 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
 
   return (
     <div>
-      <H2>Members</H2>
+      <H2>Medlemmer</H2>
 
       {/* Family structure */}
       <div className="mb-10 text-center flex flex-col gap-4">
@@ -38,7 +38,7 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
         <div className="grid grid-cols-3">
           <div></div>
           <div>
-            <p>Boss</p>
+            <p>Leder</p>
             <p>
               <Username
                 character={{
@@ -49,7 +49,7 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
             </p>
           </div>
           <div>
-            <p>Consigliere</p>
+            <p>Rådgiver</p>
             <p>
               <Username
                 character={{
@@ -63,7 +63,7 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
 
         {/* 2. row: Underboss */}
         <div>
-          <p>Underboss</p>
+          <p>Nestleder</p>
           <p>
             <Username
               character={{
@@ -78,7 +78,7 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
 
         <div className="grid grid-cols-3">
           <div>
-            <p>Caporegime</p>
+            <p>Kaptein</p>
             <p>
               <Username
                 character={{
@@ -89,7 +89,7 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
             </p>
           </div>
           <div>
-            <p>Caporegime</p>
+            <p>Kaptein</p>
             <p>
               <Username
                 character={{
@@ -100,7 +100,7 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
             </p>
           </div>
           <div>
-            <p>Caporegime</p>
+            <p>Kaptein</p>
             <p>
               <Username
                 character={{
@@ -115,7 +115,7 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
         {/* 4. row:: Soldiers */}
         <div className="grid grid-cols-3">
           <div>
-            <p>Soldiers</p>
+            <p>Soldater</p>
             <p>
               <Username
                 character={{
@@ -142,7 +142,7 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
             </p>
           </div>
           <div>
-            <p>Soldiers</p>
+            <p>Soldater</p>
             <p>
               <Username
                 character={{
@@ -169,7 +169,7 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
             </p>
           </div>
           <div>
-            <p>Soldiers</p>
+            <p>Soldater</p>
             <p>
               <Username
                 character={{
@@ -200,7 +200,7 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
 
       {/* Associates */}
       <div>
-        <p>Associates</p>
+        <p>Tilhørere</p>
         {family.members.map((member) => {
           return (
             <p key={member.id}>

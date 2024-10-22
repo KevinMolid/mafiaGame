@@ -59,7 +59,7 @@ const FamilyList = () => {
         <ul>
           <li className="grid grid-cols-[40px_auto] border-b border-neutral-700 mb-2 font-bold text-neutral-200">
             <p>#</p>
-            <p>Family</p>
+            <p>Familie</p>
           </li>
           {sortedFamilies.map((family, index) => (
             <li key={family.id} className="grid grid-cols-[40px_auto]">

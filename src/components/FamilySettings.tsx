@@ -78,21 +78,24 @@ const FamilySettings = ({
 
   return (
     <div>
-      <H2>Settings</H2>
+      <H2>Innstillinger</H2>
       <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
-        <H3>Invite player</H3>
+        <H3>Inviter spiller</H3>
         <input
           className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full"
           type="text"
+          placeholder="Skriv inn brukernavn"
         />
-        <Button>Send Invitation</Button>
+        <div>
+          <Button>Send invitasjon</Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
-        <H3>Assign roles</H3>
+        <H3>Tildel roller</H3>
         <div>
           <p>
-            Boss:{" "}
+            Leder:{" "}
             <Username
               character={{
                 id: family.leaderId,
@@ -101,7 +104,7 @@ const FamilySettings = ({
             />
           </p>
           <p>
-            Consigliere:{" "}
+            Rådgiver:{" "}
             <Username
               character={{
                 id: family.leaderId,
@@ -110,7 +113,7 @@ const FamilySettings = ({
             />
           </p>
           <p>
-            Underboss:{" "}
+            Nestleder:{" "}
             <Username
               character={{
                 id: family.leaderId,
@@ -118,7 +121,7 @@ const FamilySettings = ({
               }}
             />
           </p>
-          <p>Caporegimes:</p>
+          <p>Kapteiner:</p>
           <p>
             {" "}
             <Username
@@ -150,14 +153,14 @@ const FamilySettings = ({
       </div>
 
       <hr className="my-2 border-neutral-600" />
-      <p>Edit Family rules</p>
-      <p>Edit Family profile</p>
+      <p>Endre familiens regler</p>
+      <p>Endre familiens profil</p>
       <hr className="my-2 border-neutral-600" />
       <p
         className="text-red-400 cursor-pointer hover:underline"
         onClick={disbandFamily}
       >
-        <i className="fa-solid fa-ban"></i> Disband family
+        <i className="fa-solid fa-ban"></i> Legg ned familie
       </p>
     </div>
   );

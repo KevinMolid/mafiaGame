@@ -1,29 +1,29 @@
 // Define rank thresholds
 const ranks = [
-  { name: "Street Hustler", minXP: 0, maxXP: 500 },
-  { name: "Thug", minXP: 500, maxXP: 1500 },
-  { name: "Enforcer", minXP: 1500, maxXP: 4000 },
-  { name: "Capo", minXP: 4000, maxXP: 10000 },
-  { name: "Lieutenant", minXP: 10000, maxXP: 25000 },
-  { name: "Underboss", minXP: 25000, maxXP: 50000 },
-  { name: "Consigliere", minXP: 50000, maxXP: 100000 },
-  { name: "Boss", minXP: 100000, maxXP: 200000 },
+  { name: "Nybegynner", minXP: 0, maxXP: 500 },
+  { name: "Gatepøbel", minXP: 500, maxXP: 1500 },
+  { name: "Svindler", minXP: 1500, maxXP: 4000 },
+  { name: "Gangster", minXP: 4000, maxXP: 10000 },
+  { name: "Torpedo", minXP: 10000, maxXP: 25000 },
+  { name: "Leiemorder", minXP: 25000, maxXP: 50000 },
+  { name: "Løytnant", minXP: 50000, maxXP: 100000 },
+  { name: "Kaptein", minXP: 100000, maxXP: 200000 },
   { name: "Don", minXP: 200000, maxXP: 400000 },
-  { name: "Godfather", minXP: 400000, maxXP: Infinity },
+  { name: "Gudfar", minXP: 400000, maxXP: Infinity },
 ];
 
 // Define rank thresholds
 const moneyRanks = [
-  { name: "Broke", minAmount: 0, maxAmount: 999 },
-  { name: "Striver", minAmount: 1000, maxAmount: 9999 },
+  { name: "Fattig", minAmount: 0, maxAmount: 999 },
+  { name: "Sliter", minAmount: 1000, maxAmount: 9999 },
   { name: "Hustler", minAmount: 10000, maxAmount: 99999 },
   { name: "Six-figure Earner", minAmount: 100000, maxAmount: 999999 },
-  { name: "Millionaire", minAmount: 1000000, maxAmount: 9999999 },
-  { name: "Multi-Millionaire", minAmount: 10000000, maxAmount: 99999999 },
-  { name: "Hundred Millionaire", minAmount: 100000000, maxAmount: 999999999 },
-  { name: "Billionaire", minAmount: 1000000000, maxAmount: 9999999999 },
-  { name: "Mogul", minAmount: 10000000000, maxAmount: 99999999999 },
-  { name: "Tycoon", minAmount: 100000000000, maxAmount: Infinity },
+  { name: "Millionær", minAmount: 1000000, maxAmount: 9999999 },
+  { name: "Multimillionær", minAmount: 10000000, maxAmount: 99999999 },
+  { name: "Mangemillionær", minAmount: 100000000, maxAmount: 999999999 },
+  { name: "Milliardær", minAmount: 1000000000, maxAmount: 9999999999 },
+  { name: "Multimilliardær", minAmount: 10000000000, maxAmount: 99999999999 },
+  { name: "Mogul", minAmount: 100000000000, maxAmount: Infinity },
 ];
 
 // Function to get the current rank based on XP

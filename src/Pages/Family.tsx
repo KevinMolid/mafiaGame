@@ -213,7 +213,7 @@ const Family = () => {
           {/* Header */}
 
           <H1>
-            Family: <strong>{family.name}</strong>
+            <strong>{family.name}</strong>
           </H1>
 
           {/* InfoBox: Message */}
@@ -222,19 +222,19 @@ const Family = () => {
           {/* Family info */}
           <div className="flex gap-4 mb-2">
             <p>
-              Leader:{" "}
+              Leder:{" "}
               <Username
                 character={{ id: family.leaderId, username: family.leaderName }}
               />
             </p>
             <p>
-              Members:{" "}
+              Medlemmer:{" "}
               <strong className="text-neutral-200">
                 {family.members.length}
               </strong>
             </p>
             <p>
-              Bank:{" "}
+              Formue:{" "}
               <strong className="text-neutral-200">
                 ${family.wealth.toLocaleString()}
               </strong>
@@ -242,7 +242,7 @@ const Family = () => {
           </div>
 
           <InfoBox type="info">
-            <strong>Family rules:</strong> {family.rules}
+            <strong>Regler:</strong> {family.rules}
           </InfoBox>
 
           {error && <p style={{ color: "red" }}>{error}</p>}
@@ -256,7 +256,7 @@ const Family = () => {
               }
               onClick={() => setActivePanel("members")}
             >
-              <p className="text-neutral-200 font-medium">Members</p>
+              <p className="text-neutral-200 font-medium">Medlemmer</p>
             </li>
             <li
               className={
@@ -265,7 +265,7 @@ const Family = () => {
               }
               onClick={() => setActivePanel("chat")}
             >
-              <p className="text-neutral-200 font-medium">Chat</p>
+              <p className="text-neutral-200 font-medium">Meldinger</p>
             </li>
             <li
               className={
@@ -274,7 +274,7 @@ const Family = () => {
               }
               onClick={() => setActivePanel("safehouse")}
             >
-              <p className="text-neutral-200 font-medium">Safehouse</p>
+              <p className="text-neutral-200 font-medium">Hovedkvarter</p>
             </li>
             <li
               className={
@@ -283,7 +283,7 @@ const Family = () => {
               }
               onClick={() => setActivePanel("profile")}
             >
-              <p className="text-neutral-200 font-medium">Profile</p>
+              <p className="text-neutral-200 font-medium">Profil</p>
             </li>
 
             <li
@@ -293,7 +293,7 @@ const Family = () => {
               }
               onClick={() => setActivePanel("settings")}
             >
-              <p className="text-neutral-200 font-medium">Settings</p>
+              <p className="text-neutral-200 font-medium">Innstillinger</p>
             </li>
           </ul>
 
@@ -303,34 +303,37 @@ const Family = () => {
           {/* Chat panel */}
           {activePanel === "chat" && (
             <div>
-              <H2>Chat</H2>
+              <H2>Meldinger</H2>
             </div>
           )}
 
           {/* Safehouse panel */}
           {activePanel === "safehouse" && (
             <div>
-              <H2>Safehouse</H2>
+              <H2>Hovedkvarter</H2>
               <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
-                <H3>Enter Safehouse</H3>
-                <p>Slots filled: 1/10</p>
-                <Button>Enter Safehouse</Button>
+                <H3>Bunker</H3>
+                <p>Antall plasser: 1/10</p>
+                <div>
+                  {" "}
+                  <Button>Gå i bunker</Button>
+                </div>
               </div>
 
               <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
-                <H3>Donate</H3>
-                <p>Donate money to the family</p>
+                <H3>Doner</H3>
+                <p>Doner penger til familien.</p>
                 <form className="flex flex-col gap-2" action="">
                   <input
                     className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
                     type="number"
                     value={amount}
-                    placeholder="Enter amount"
+                    placeholder="Skriv inn beløp"
                     onChange={handleInputChange}
                   />
                   <div className="flex gap-2">
-                    <Button onClick={deposit}>Donate Money</Button>
-                    <Button onClick={withdraw}>Withdraw Money</Button>
+                    <Button onClick={deposit}>Doner penger</Button>
+                    <Button onClick={withdraw}>Ta ut penger</Button>
                   </div>
                 </form>
               </div>
@@ -340,8 +343,8 @@ const Family = () => {
           {/* Profile panel */}
           {activePanel === "profile" && (
             <div>
-              <H2>Profile</H2>
-              <p>This is the family profile text</p>
+              <H2>Profil</H2>
+              <p>Dette er familiens profil.</p>
             </div>
           )}
 

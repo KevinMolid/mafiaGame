@@ -118,7 +118,7 @@ const Profile = () => {
 
             <button
               className="hover:text-white"
-              title={`Blacklist ${characterData.username}`}
+              title={`Svartelist ${characterData.username}`}
             >
               <i className="fa-solid fa-skull-crossbones"></i>
             </button>
@@ -126,7 +126,7 @@ const Profile = () => {
 
           {/* Info */}
           <ul className="grid grid-cols-[min-content_max-content] gap-x-4">
-            <li className="text-stone-400">Username</li>
+            <li className="text-stone-400">Navn</li>
             <li>
               <p className="text-white font-bold">{characterData.username}</p>
             </li>
@@ -134,14 +134,14 @@ const Profile = () => {
             <li className="text-stone-400">Rank</li>
             <li>{getCurrentRank(characterData.stats.xp)}</li>
 
-            <li className="text-stone-400">Money</li>
+            <li className="text-stone-400">Penger</li>
             <li>
               {getMoneyRank(
                 characterData.stats.money + characterData.stats.bank
               )}
             </li>
 
-            <li className="text-stone-400">Family</li>
+            <li className="text-stone-400">Familie</li>
             <li>
               {characterData.familyName ? (
                 <Link to={`/family/profile/${characterData.familyId}`}>
@@ -163,7 +163,7 @@ const Profile = () => {
                   : "text-red-400")
               }
             >
-              {characterData.status}
+              {characterData.status == "alive" ? "Levende" : "Død"}
             </li>
           </ul>
         </div>
