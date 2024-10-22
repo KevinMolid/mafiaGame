@@ -11,11 +11,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!userData) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/logginn" />;
   }
 
   if (!character || character.status === "dead") {
-    return <Navigate to="/createcharacter" />;
+    return <Navigate to="/nyspiller" />;
   }
 
   return <>{children}</>;

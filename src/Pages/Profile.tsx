@@ -144,13 +144,13 @@ const Profile = () => {
             <li className="text-stone-400">Familie</li>
             <li>
               {characterData.familyName ? (
-                <Link to={`/family/profile/${characterData.familyId}`}>
+                <Link to={`/familie/profil/${characterData.familyId}`}>
                   <strong className="text-white hover:underline">
                     {characterData.familyName}
                   </strong>
                 </Link>
               ) : (
-                "No family"
+                "Ingen familie"
               )}
             </li>
 

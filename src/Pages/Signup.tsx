@@ -75,10 +75,10 @@ const Signup = () => {
           v. <strong>Alpha</strong>
         </small>
         <div className="bg-neutral-900/80 border border-neutral-500 p-6 rounded-lg flex flex-col gap-4 w-full">
-          <H1>Sign up</H1>
+          <H1>Registrer bruker</H1>
           <form action="" className="flex flex-col gap-2">
             <div className="flex flex-col">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">E-post</label>
               <input
                 className="bg-transparent px-2 py-1 border-b border-neutral-500"
                 id="email"
@@ -87,7 +87,7 @@ const Signup = () => {
               />
             </div>
             <div className="flex flex-col">
-              <label htmlFor="pw">Password</label>
+              <label htmlFor="pw">Passord</label>
               <input
                 className="bg-transparent px-2 py-1 border-b border-neutral-500"
                 id="pw"
@@ -97,11 +97,11 @@ const Signup = () => {
             </div>
             {error && <span className="text-red-500">{error}</span>}
           </form>
-          <Button onClick={signUp}>Sign up</Button>
+          <Button onClick={signUp}>Registrer</Button>
           <p className="text-stone-400 text-sm sm:text-base">
-            Already have an account?{" "}
-            <Link to="/login">
-              <span className="text-white hover:underline">Log in here!</span>
+            Har du allerede en bruker?{" "}
+            <Link to="/logginn">
+              <span className="text-white hover:underline">Logg inn her!</span>
             </Link>
           </p>
         </div>

@@ -52,7 +52,7 @@ const Home = () => {
 
   return (
     <Main img="MafiaBg">
-      <H1>Headquarters</H1>
+      <H1>Hovedkvarter</H1>
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
@@ -69,21 +69,21 @@ const Home = () => {
             <Username character={character} />
           </p>
           <p>{getCurrentRank(character.stats.xp)}</p>
-          <p>Money: ${character.stats.money.toLocaleString()}</p>
+          <p>Penger: ${character.stats.money.toLocaleString()}</p>
           <p>
             Bank: $
             {character.stats.bank ? character.stats.bank.toLocaleString() : "0"}
           </p>
           <p>
-            Family:{" "}
+            Familie:{" "}
             {character.familyName ? (
-              <Link to={`family/profile/${character.familyId}`}>
+              <Link to={`familie/profil/${character.familyId}`}>
                 <strong className="text-neutral-200 hover:underline">
                   {character.familyName}
                 </strong>
               </Link>
             ) : (
-              "No family"
+              "Ingen familie"
             )}
           </p>
         </div>
@@ -97,7 +97,7 @@ const Home = () => {
             <div className="flex flex-col lg:flex-row flex-wrap gap-4 mb-6">
               <div className="flex flex-col gap-1">
                 <p>
-                  Health:{" "}
+                  Helse:{" "}
                   <strong className="text-neutral-200">
                     {healthPercentage}%
                   </strong>
@@ -117,7 +117,7 @@ const Home = () => {
 
               <div className="flex flex-col gap-1">
                 <p>
-                  Experience:{" "}
+                  Erfaring:{" "}
                   <strong className="text-neutral-200">
                     {progress.toFixed(2)}%
                   </strong>
@@ -137,7 +137,7 @@ const Home = () => {
 
               <div className="flex flex-col gap-1">
                 <p>
-                  Heat:{" "}
+                  Ettersøkt:{" "}
                   <strong className="text-neutral-200">
                     {heatPercentage}%
                   </strong>
@@ -149,7 +149,7 @@ const Home = () => {
                   ></div>
                   <div className="flex justify-center items-center z-10 col-start-1 row-start-1">
                     <p className="text-red-50 text-xs">
-                      {character.stats.heat} / 100 heat
+                      {character.stats.heat} / 100
                     </p>
                   </div>
                 </div>
@@ -159,28 +159,28 @@ const Home = () => {
 
           {/* Reputation */}
           <Box>
-            <H2>Reputation</H2>
+            <H2>Rykte</H2>
             <div className="flex gap-x-4 flex-wrap">
               <p>
-                Police Force:{" "}
+                Politi:{" "}
                 <strong className="text-neutral-200">
                   {character.reputation.police}
                 </strong>
               </p>
               <p>
-                Political Corruption:{" "}
+                Styresmakt:{" "}
                 <strong className="text-neutral-200">
                   {character.reputation.politics}
                 </strong>
               </p>
               <p>
-                Street Gangs:{" "}
+                Gjenger:{" "}
                 <strong className="text-neutral-200">
                   {character.reputation.gangs}
                 </strong>
               </p>
               <p>
-                Community Organizations:{" "}
+                Organisasjoner:{" "}
                 <strong className="text-neutral-200">
                   {character.reputation.community}
                 </strong>
@@ -190,7 +190,7 @@ const Home = () => {
 
           <div className="border border-neutral-500 mb-4 grid grid-cols-1 w-fit">
             <div className="col-start-1 row-start-1 z-10 p-4">
-              <H2>Equipment</H2>
+              <H2>Utstyr</H2>
             </div>
             <div className="col-start-1 row-start-1">
               <Equipment />
@@ -198,7 +198,7 @@ const Home = () => {
           </div>
         </div>
       ) : (
-        <p>No character selected</p>
+        <p>Ingen spiller funnet.</p>
       )}
     </Main>
   );

@@ -17,42 +17,42 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const FamilyProfile = () => {
-  const { familyID } = useParams<{ familyID: string }>();
+  const { familieID } = useParams<{ familieID: string }>();
   const [familyData, setFamilyData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCharacterData = async () => {
-      if (!familyID) {
+      if (!familieID) {
         setError("Family ID is missing.");
         setLoading(false);
         return;
       }
 
       try {
-        const charDocRef = doc(db, "Families", familyID);
+        const charDocRef = doc(db, "Families", familieID);
         const charDocSnap = await getDoc(charDocRef);
         if (charDocSnap.exists()) {
           setFamilyData(charDocSnap.data());
         } else {
-          setError("Family not found!");
+          setError("Familien ble ikke funnet!");
         }
       } catch (err) {
-        console.error("Error fetching family data:", err);
-        setError("Error fetching family data.");
+        console.error("Feil ved lasting av familie:", err);
+        setError("Feil ved lasting av familie.");
       } finally {
         setLoading(false);
       }
     };
 
-    if (familyID) {
+    if (familieID) {
       fetchCharacterData();
     }
-  }, [familyID]);
+  }, [familieID]);
 
   if (loading) {
-    return <Main>Loading...</Main>;
+    return <Main>Laster familie...</Main>;
   }
 
   if (error) {
@@ -60,14 +60,14 @@ const FamilyProfile = () => {
   }
 
   if (!familyData) {
-    return <div>No family data available.</div>;
+    return <div>Familie ikke tilgjengelig.</div>;
   }
 
   return (
     <Main>
       <H1>{familyData.name}</H1>
       <p>
-        Leader:{" "}
+        Leder:{" "}
         <Username
           character={{
             id: familyData.leaderId,

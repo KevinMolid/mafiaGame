@@ -185,7 +185,7 @@ const Forum = () => {
   };
 
   if (loading) {
-    return <p>Loading categories...</p>;
+    return <p>Laster kategorier...</p>;
   }
 
   return (
@@ -214,7 +214,7 @@ const Forum = () => {
               </li>
             ))
           ) : (
-            <p>No categories found.</p>
+            <p>Ingen kategorier funnet.</p>
           )}
         </ul>
       </div>
@@ -227,7 +227,7 @@ const Forum = () => {
             {!creatingNew && (
               <div>
                 <Button onClick={() => setCreatingNew(true)}>
-                  <i className="fa-solid fa-plus mr-1"></i> New Post
+                  <i className="fa-solid fa-plus mr-1"></i> Ny tråd
                 </Button>
               </div>
             )}
@@ -274,13 +274,13 @@ const Forum = () => {
                     <div className="flex gap-2">
                       {repliesCount[thread.id] > 0 && (
                         <small>
-                          <strong>{repliesCount[thread.id]} replies</strong>
+                          <strong>{repliesCount[thread.id]} svar</strong>
                         </small>
                       )}
 
                       {lastReplies[thread.id] && (
                         <small>
-                          Last reply by{" "}
+                          Sist besvart av{" "}
                           <Username
                             character={{
                               id: lastReplies[thread.id].authorId,
@@ -300,7 +300,7 @@ const Forum = () => {
                   </li>
                 ))
               ) : (
-                <p>No threads found in this category.</p>
+                <p>Det er ingen tråder i denne kategorien.</p>
               )}
             </ul>
           )}
@@ -309,14 +309,14 @@ const Forum = () => {
           {creatingNew && (
             <form className="flex flex-col gap-2 mt-4" onSubmit={handleSubmit}>
               <div className="flex justify-between items-center">
-                <H3>Create a New Thread</H3>
+                <H3>Lag ny tråd</H3>
                 <div>
                   {" "}
                   <button
                     className="flex justify-center items-center gap-1  hover:text-neutral-200 px-2 py-1"
                     onClick={() => setCreatingNew(false)}
                   >
-                    <i className="fa-solid fa-xmark"></i> Cancel Thread
+                    <i className="fa-solid fa-xmark"></i> Avbryt tråd
                   </button>
                 </div>
               </div>

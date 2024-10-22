@@ -30,7 +30,7 @@ const Infobar = () => {
     <section className="bg-neutral-700 px-4 sm:px-8 py-2 flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 justify-center text-stone-400 text-sm sm:text-base">
       <Link to="/" className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-heart"></i>
-        <Tooltip label="Health bar">
+        <Tooltip label="Helse">
           <div className="bg-neutral-800 h-1 w-20 sm:w-36">
             <div
               className="h-1 bg-green-500 transition-all duration-300"
@@ -42,7 +42,7 @@ const Infobar = () => {
 
       <Link to="/" className="flex items-center gap-1 sm:gap-2">
         <p className="text-sm font-bold">XP</p>
-        <Tooltip label={`${character.stats.xp - minXP} / ${maxXP - minXP}`}>
+        <Tooltip label={`Xp: ${character.stats.xp - minXP} / ${maxXP - minXP}`}>
           <div className="bg-neutral-800 h-1 w-20 sm:w-36">
             <div
               className="h-1 bg-slate-400 transition-all duration-300"
@@ -54,7 +54,7 @@ const Infobar = () => {
 
       <Link to="/" className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-fire-flame-curved"></i>{" "}
-        <Tooltip label="Heat">
+        <Tooltip label="Ettersøkt">
           <div className="bg-neutral-800 h-1 w-20 sm:w-36">
             <div
               className="h-1 bg-red-500 transition-all duration-300"
@@ -64,16 +64,16 @@ const Infobar = () => {
         </Tooltip>
       </Link>
 
-      <Link to="/family" className="flex items-center gap-1 sm:gap-2">
+      <Link to="/familie" className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-users"></i>{" "}
-        <Tooltip label="Family">
-          <p>{character.familyName || "No family"}</p>
+        <Tooltip label="Familie">
+          <p>{character.familyName || "Ingen familie"}</p>
         </Tooltip>
       </Link>
 
-      <Link to="/travel" className="flex items-center gap-1 sm:gap-2">
+      <Link to="/flyplass" className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-location-dot"></i>
-        <Tooltip label="Location">
+        <Tooltip label="Lokasjon">
           <p>{character.location}</p>
         </Tooltip>
       </Link>
