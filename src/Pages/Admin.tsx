@@ -18,18 +18,18 @@ const Admin = () => {
 
   return (
     <Main>
-      <H1>Admin Control Panel</H1>
+      <H1>Kontrollpanel</H1>
       <div className="border p-4 border-neutral-600 mb-4">
-        <H2>Actions</H2>
+        <H2>Handlinger</H2>
         <SidebarLink to="/selectcharacater" icon="people-group">
-          Select Character
+          Velg spillkarakter
         </SidebarLink>
         <SidebarLink to="/createcharacter" icon="user-plus">
-          Create Character
+          Ny spillkarakter
         </SidebarLink>
       </div>
 
-      <H2>Players</H2>
+      <H2>Spillere</H2>
       <CharacterList type="admin"></CharacterList>
     </Main>
   );

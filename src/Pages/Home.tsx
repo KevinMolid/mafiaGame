@@ -93,7 +93,7 @@ const Home = () => {
         <div className="flex gap-4 flex-wrap">
           {/* Stats */}
           <Box>
-            <H2>Stats</H2>
+            <H2>Status</H2>
             <div className="flex flex-col lg:flex-row flex-wrap gap-4 mb-6">
               <div className="flex flex-col gap-1">
                 <p>
@@ -159,7 +159,7 @@ const Home = () => {
 
           {/* Reputation */}
           <Box>
-            <H2>Rykte</H2>
+            <H2>Innflytelse</H2>
             <div className="flex gap-x-4 flex-wrap">
               <p>
                 Politi:{" "}
@@ -168,7 +168,7 @@ const Home = () => {
                 </strong>
               </p>
               <p>
-                Styresmakt:{" "}
+                Styresmakter:{" "}
                 <strong className="text-neutral-200">
                   {character.reputation.politics}
                 </strong>

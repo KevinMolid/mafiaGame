@@ -104,7 +104,7 @@ const Alerts = () => {
 
   return (
     <Main>
-      <H1>Alerts</H1>
+      <H1>Varsler</H1>
 
       {alerts.length === 0 ? (
         <p>You have no alerts.</p>
@@ -113,16 +113,20 @@ const Alerts = () => {
           {alerts.map((alert) => (
             <Alert key={alert.id} read={alert.read}>
               {alert.type === "robbery" && alert.amountLost && (
-                <p>
-                  You were robbed by{" "}
+                <small>
+                  Du ble ranet av{" "}
                   <Username
                     character={{
                       id: alert.robberId,
                       username: alert.robberName,
                     }}
                   />{" "}
-                  for ${alert.amountLost.toLocaleString()}.
-                </p>
+                  og mistet{" "}
+                  <span className="text-neutral-200">
+                    ${alert.amountLost.toLocaleString()}
+                  </span>
+                  .
+                </small>
               )}
 
               <small>{new Date(alert.timestamp).toLocaleString()}</small>
