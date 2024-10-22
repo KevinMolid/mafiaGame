@@ -13,7 +13,7 @@ import firebaseConfig from "../firebaseConfig";
 // Components
 import Username from "./Typography/Username";
 import InfoBox from "./InfoBox";
-
+import Familyname from "./Typography/Familyname";
 // Functions
 import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
 
@@ -46,6 +46,7 @@ const CharacterList = ({
       const characterData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         username: doc.data().username,
+        familyId: doc.data().familyId,
         familyName: doc.data().familyName,
         xp: doc.data().stats.xp,
         money: doc.data().stats.money,
@@ -201,12 +202,12 @@ const CharacterList = ({
                 <div className="bg-slate-600 text-slate-300 px-4 py-1 text-sm flex gap-4">
                   {character.status === "alive" && (
                     <button onClick={() => killPlayer(character)}>
-                      <i className="fa-solid fa-gun"></i> Kill
+                      <i className="fa-solid fa-gun"></i> Drep
                     </button>
                   )}
                   {character.status === "dead" && (
                     <button onClick={() => resurrectPlayer(character)}>
-                      <i className="fa-solid fa-hand"></i> Resurrect
+                      <i className="fa-solid fa-hand"></i> Gjennoppliv
                     </button>
                   )}
                   {/* Set money */}
@@ -220,7 +221,7 @@ const CharacterList = ({
                       className="bg-slate-700 border border-slate-500 px-2 w-24"
                     />
                     <button onClick={() => handleSetMoney(character)}>
-                      <i className="fa-solid fa-dollar-sign"></i> Set money
+                      <i className="fa-solid fa-dollar-sign"></i> Sett penger
                     </button>
                   </div>
                 </div>
@@ -236,13 +237,18 @@ const CharacterList = ({
                           : "text-green-400")
                       }
                     >
-                      {character.status}
+                      {character.status === "alive" ? "Levende" : "Død"}
                     </span>
                   </p>
                   <p>
-                    Family:{" "}
+                    Familie:{" "}
                     {character.familyName ? (
-                      <strong>{character.familyName}</strong>
+                      <Familyname
+                        family={{
+                          id: character.familyId,
+                          name: character.familyName,
+                        }}
+                      />
                     ) : (
                       "No family"
                     )}
