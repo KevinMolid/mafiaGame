@@ -5,27 +5,34 @@ import H2 from "../components/Typography/H2";
 import H3 from "../components/Typography/H3";
 import CharacterList from "../components/CharacterList";
 import FamilyList from "../components/FamilyList";
+import Box from "../components/Box";
 
 const Leaderboard = () => {
   return (
     <Main>
       <H1>Leaderboard</H1>
       <H2>Players</H2>
-      <div className="bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-2 my-4">
-        <H3>Rank</H3>
-        <CharacterList type="rank" sortBy="xp" />
-      </div>
+      <div className="flex gap-4 mb-8 flex-wrap">
+        <div className="flex-grow">
+          <Box>
+            <H3>Rank</H3>
+            <CharacterList type="rank" sortBy="xp" />
+          </Box>
+        </div>
 
-      <div className="bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-2 my-4">
-        <H3>Money</H3>
-        <CharacterList type="rank" sortBy="money" />
+        <div className="flex-grow">
+          <Box>
+            <H3>Money</H3>
+            <CharacterList type="rank" sortBy="money" />
+          </Box>
+        </div>
       </div>
 
       <H1>Families</H1>
-      <div className="bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-2 my-4">
+      <Box>
         <H3>Dominance</H3>
         <FamilyList />
-      </div>
+      </Box>
     </Main>
   );
 };
