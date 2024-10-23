@@ -42,7 +42,7 @@ const CreateCharacter = () => {
   const cities = [
     "Mexico City",
     "New York",
-    "Moscow",
+    "Moskva",
     "Rio de Janeiro",
     "Tokyo",
   ];
