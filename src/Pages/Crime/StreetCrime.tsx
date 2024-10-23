@@ -1,8 +1,8 @@
 // Components
 import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
+import H2 from "../../components/Typography/H2";
 import Button from "../../components/Button";
-import CrimeBox from "../../components/CrimeBox";
 import InfoBox from "../../components/InfoBox";
 
 // React
@@ -81,8 +81,6 @@ const StreetCrime = () => {
     {
       id: "pickpocket",
       name: "Lommetyveri",
-      description: "Stjel småpenger fra en forbipasserende",
-      img: "PickpocketBw.png",
       successRate: 0.8, // 80% success rate
       xpReward: 4, // XP for success
       moneyReward: 50, // Money reward for success
@@ -90,8 +88,6 @@ const StreetCrime = () => {
     {
       id: "vandalism",
       name: "Herverk",
-      description: "Gjør herverk for penger",
-      img: "VandalismBw.png",
       successRate: 0.6, // 60% success rate
       xpReward: 8, // XP for success
       moneyReward: 200, // Money reward for success
@@ -99,8 +95,6 @@ const StreetCrime = () => {
     {
       id: "protectionRacket",
       name: "Stjel verdisaker",
-      description: "Utfør vektertjenester for penger",
-      img: "ProtectionRacketBw.png",
       successRate: 0.4, // 40% success rate
       xpReward: 12, // XP for success
       moneyReward: 800, // Money reward for success
@@ -108,8 +102,6 @@ const StreetCrime = () => {
     {
       id: "streetRacing",
       name: "Stjel fra butikk",
-      description: "Stjel fra kjøpesenter",
-      img: "StreetRacingBw.png",
       successRate: 0.2, // 20% success rate
       xpReward: 16, // XP for success
       moneyReward: 3200, // Money reward for success
@@ -137,23 +129,29 @@ const StreetCrime = () => {
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
-      <p className="mb-4 text-stone-400 font-medium">Velg handling:</p>
-      <div className="grid grid-cols-2 lg:grid-cols-[min-content_1fr] gap-2 mb-4">
+      <H2>Hva vil du gjøre?</H2>
+      <ul className="flex gap-2 flex-wrap mb-4">
         {crimes.map((crime) => (
-          <CrimeBox
-            heading={crime.name}
+          <li
             key={crime.id}
-            img={crime.img}
             onClick={() => setSelectedCrime(crime.name)}
-            isSelected={selectedCrime === crime.name}
+            className={
+              "border px-4 py-2 flex-1 flex-grow min-w-[max-content] text-center cursor-pointer " +
+              (selectedCrime === crime.name
+                ? "bg-neutral-900 border-neutral-600"
+                : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
+            }
           >
-            <p className="text-xs">{crime.description}</p>
+            <p className={selectedCrime === crime.name ? "text-white" : ""}>
+              {crime.name}
+            </p>
             <p className="text-neutral-100 font-bold">
               {crime.successRate * 100} %
             </p>
-          </CrimeBox>
+          </li>
         ))}
-      </div>
+      </ul>
+
       <Button onClick={handleClick}>Utfør kriminalitet</Button>
     </Main>
   );
