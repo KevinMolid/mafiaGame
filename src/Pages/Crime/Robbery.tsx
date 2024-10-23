@@ -1,6 +1,7 @@
 // Components
 import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
+import H2 from "../../components/Typography/H2";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import Box from "../../components/Box";
@@ -43,6 +44,7 @@ const Robbery = () => {
   >("info");
   const [helpActive, setHelpActive] = useState(false);
   const [targetCharacter, setTargetCharacter] = useState<string>("");
+  const [isTargetRandom, setIsTargetRandom] = useState<boolean>(true);
 
   const { userData } = useAuth();
   const { character } = useCharacter();
@@ -97,7 +99,7 @@ const Robbery = () => {
         .filter((char: any) => char.id !== character?.id);
 
       if (potentialTargets.length === 0) {
-        setMessage("Det er ingen spillere å rane i denne byen.");
+        setMessage("Du fant ingen spillere å rane i denne byen.");
         setMessageType("warning");
         return;
       }
@@ -218,13 +220,45 @@ const Robbery = () => {
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-2" action="">
-        <input
-          className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
-          type="text"
-          placeholder="Skriv inn brukernavn"
-          value={targetCharacter}
-          onChange={handleTargetCharacterInputChange}
-        />
+        <H2>Hvem vil du rane?</H2>
+        <ul className="flex gap-2 flex-wrap">
+          <li
+            className={
+              "border px-4 py-2 flex-grow text-center cursor-pointer max-w-64 " +
+              (isTargetRandom
+                ? "bg-neutral-900 border-neutral-600"
+                : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
+            }
+            onClick={() => setIsTargetRandom(true)}
+          >
+            <p className={isTargetRandom ? "text-white" : ""}>
+              Tilfeldig spiller
+            </p>
+          </li>
+          <li
+            className={
+              "border px-4 py-2 flex-grow text-center cursor-pointer max-w-64 " +
+              (isTargetRandom
+                ? "bg-neutral-800 hover:bg-neutral-700 border-transparent"
+                : "bg-neutral-900 border-neutral-600")
+            }
+            onClick={() => setIsTargetRandom(false)}
+          >
+            <p className={isTargetRandom ? "" : "text-white"}>
+              Bestemt spiller
+            </p>
+          </li>
+        </ul>
+
+        {!isTargetRandom && (
+          <input
+            className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
+            type="text"
+            placeholder="Skriv inn brukernavn"
+            value={targetCharacter}
+            onChange={handleTargetCharacterInputChange}
+          />
+        )}
 
         <div>
           <Button type="submit">Utfør ran</Button>

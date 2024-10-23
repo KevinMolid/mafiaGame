@@ -21,10 +21,10 @@ const Admin = () => {
       <H1>Kontrollpanel</H1>
       <div className="border p-4 border-neutral-600 mb-4">
         <H2>Handlinger</H2>
-        <SidebarLink to="/selectcharacater" icon="people-group">
+        <SidebarLink to="/velgspiller" icon="people-group">
           Velg spillkarakter
         </SidebarLink>
-        <SidebarLink to="/createcharacter" icon="user-plus">
+        <SidebarLink to="/nyspiller" icon="user-plus">
           Ny spillkarakter
         </SidebarLink>
       </div>
