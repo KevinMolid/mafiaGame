@@ -170,7 +170,7 @@ const GTA = () => {
       )}
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
-      <Button onClick={stealCar}>Gjennomfør biltyveri</Button>
+      <Button onClick={stealCar}>Utfør biltyveri</Button>
     </Main>
   );
 };

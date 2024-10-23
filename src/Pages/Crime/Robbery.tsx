@@ -42,6 +42,7 @@ const Robbery = () => {
     "success" | "failure" | "warning" | "info"
   >("info");
   const [helpActive, setHelpActive] = useState(false);
+  const [targetCharacter, setTargetCharacter] = useState<string>("");
 
   const { userData } = useAuth();
   const { character } = useCharacter();
@@ -60,19 +61,24 @@ const Robbery = () => {
     }
   }, [userData, navigate, cooldowns, fetchCooldown]);
 
+  // Updaate target state
+  const handleTargetCharacterInputChange = (e: any) => {
+    setTargetCharacter(e.target.value);
+  };
+
   // Function to commit robbery
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     if (!character || !character.id) {
       setMessageType("failure");
-      setMessage("Character not loaded.");
+      setMessage("Spilleren ble ikke lastet.");
       return;
     }
 
     if (cooldowns["robbery"] > 0) {
       setMessageType("warning");
-      setMessage("You must wait before committing another robbery.");
+      setMessage("Du må vente før du kan utføre et nytt ran.");
       return;
     }
 
@@ -91,7 +97,7 @@ const Robbery = () => {
         .filter((char: any) => char.id !== character?.id);
 
       if (potentialTargets.length === 0) {
-        setMessage("No players available to rob in this location.");
+        setMessage("Det er ingen spillere å rane i denne byen.");
         setMessageType("warning");
         return;
       }
@@ -210,8 +216,19 @@ const Robbery = () => {
       )}
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
-      <form onSubmit={handleSubmit} action="" className="mt-4">
-        <Button type="submit">Gjennomfør ran</Button>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2" action="">
+        <input
+          className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
+          type="text"
+          placeholder="Skriv inn brukernavn"
+          value={targetCharacter}
+          onChange={handleTargetCharacterInputChange}
+        />
+
+        <div>
+          <Button type="submit">Utfør ran</Button>
+        </div>
       </form>
     </Main>
   );
