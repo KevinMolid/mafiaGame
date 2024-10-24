@@ -193,6 +193,12 @@ const Sidebar = () => {
         <SidebarLink to="flyplass" icon="plane">
           Flyplass
         </SidebarLink>
+
+        <hr className="border-neutral-600" />
+
+        <SidebarLink to="jackpot" icon="7">
+          Jackpot
+        </SidebarLink>
       </nav>
     </div>
   );

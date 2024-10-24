@@ -50,6 +50,9 @@ import Chat from "./Pages/Chat.tsx";
 import Forum from "./Pages/Forum.tsx";
 import ForumThread from "./Pages/ForumThread.tsx";
 
+// Gambling
+import Jackpot from "./Pages/Gambling/Jackpot.tsx";
+
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
 
 function App() {
@@ -266,6 +269,16 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <Travel />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        {/* Gambling */}
+                        <Route
+                          path="/jackpot"
+                          element={
+                            <ProtectedRoute>
+                              <Jackpot />
                             </ProtectedRoute>
                           }
                         />
