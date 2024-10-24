@@ -14,6 +14,10 @@ const DropdownMenu = ({ linkOnClick }: DropdownInterface) => {
       <p>Handlinger</p>
       <hr className="border-neutral-500" />
 
+      <SidebarLink to="/" icon="house" onClick={linkOnClick}>
+        Hovedkvarter
+      </SidebarLink>
+
       <SidebarLink to="bank" icon="landmark" onClick={linkOnClick}>
         Bank
       </SidebarLink>
