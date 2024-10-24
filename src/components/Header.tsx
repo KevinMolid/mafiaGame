@@ -10,7 +10,13 @@ import { useState, useRef, useEffect } from "react";
 
 // Firebase
 import { getAuth, signOut } from "firebase/auth";
-import { getFirestore, collection, query, getDocs } from "firebase/firestore";
+import {
+  getFirestore,
+  onSnapshot,
+  query,
+  where,
+  collection,
+} from "firebase/firestore";
 
 // Initialize Firebase Firestore
 const db = getFirestore();
@@ -26,6 +32,7 @@ const Header = () => {
   const { playing, setPlaying } = useMusicContext();
   const [menuOpen, setMenuOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [unreadAlertCount, setUnreadAlertCount] = useState(0);
   const [hasUnreadAlerts, setHasUnreadAlerts] = useState(false);
   const auth = getAuth();
 
@@ -68,24 +75,21 @@ const Header = () => {
     }
   };
 
-  // Fetch unread alerts for the current character
   useEffect(() => {
-    const fetchUnreadAlerts = async () => {
-      if (!character || !character.id) return;
+    if (!character || !character.id) return;
 
-      try {
-        const alertsRef = collection(db, "Characters", character.id, "alerts");
-        const alertsQuery = query(alertsRef);
-        const alertsSnapshot = await getDocs(alertsQuery);
+    const alertsRef = collection(db, "Characters", character.id, "alerts");
+    const alertsQuery = query(alertsRef, where("read", "==", false)); // Query only unread alerts
 
-        const hasUnread = alertsSnapshot.docs.some((doc) => !doc.data().read); // Check if any alert is unread
-        setHasUnreadAlerts(hasUnread);
-      } catch (error) {
-        console.error("Feil ved henting av varsler:", error);
-      }
-    };
+    // Real-time listener for unread alerts
+    const unsubscribe = onSnapshot(alertsQuery, (snapshot) => {
+      const unreadCount = snapshot.docs.length; // Count the number of unread alerts
+      setUnreadAlertCount(unreadCount); // Set the state with the count
+      setHasUnreadAlerts(unreadCount > 0); // Determine if there are any unread alerts
+    });
 
-    fetchUnreadAlerts();
+    // Clean up the listener on component unmount
+    return () => unsubscribe();
   }, [character]);
 
   // Close menus if clicking outside
@@ -192,7 +196,7 @@ const Header = () => {
               onClick={() => setMenuOpen(false)}
             >
               <p className="text-yellow-400">Varsler</p>
-              <p>{1}</p>
+              <p>{unreadAlertCount}</p>
             </SidebarLink>
           )}
 
