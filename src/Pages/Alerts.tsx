@@ -55,9 +55,12 @@ const Alerts = () => {
           type: doc.data().type || "",
           timestamp: doc.data().timestamp || "",
           amountLost: doc.data().amountLost || 0,
+          amountSent: doc.data().amountSent || 0,
           robberId: doc.data().robberId || "",
           robberName: doc.data().robberName || "",
-          read: doc.data().read || false, // Default to false if not present
+          senderId: doc.data().senderId || "",
+          senderName: doc.data().senderName || "",
+          read: doc.data().read || false,
         }));
 
         // Sort alerts by timestamp in descending order (newest first)
