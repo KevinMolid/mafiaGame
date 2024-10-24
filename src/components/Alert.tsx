@@ -9,11 +9,11 @@ interface AlertInterface {
 
 const Alert = ({ children, read }: AlertInterface) => {
   return (
-    <Box>
-      <div className={`flex justify-between  ${read ? "" : "bg-neutral-800"}`}>
-        {children}
-      </div>
-    </Box>
+    <div className={`${read ? "" : "bg-neutral-800"}`}>
+      <Box>
+        <div className={`flex justify-between `}>{children}</div>
+      </Box>
+    </div>
   );
 };
 
