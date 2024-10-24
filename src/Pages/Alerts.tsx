@@ -26,8 +26,11 @@ interface Alert {
   id: string;
   type: string;
   amountLost?: number;
+  amountSent?: number;
   robberId?: string;
+  senderId?: string;
   robberName?: string;
+  senderName?: string;
   timestamp: string; // Timestamp is stored as an ISO 8601 string
   read: boolean;
 }
@@ -112,6 +115,7 @@ const Alerts = () => {
         <div className="flex gap-2 flex-col">
           {alerts.map((alert) => (
             <Alert key={alert.id} read={alert.read}>
+              {/* Robbery alert */}
               {alert.type === "robbery" && alert.amountLost && (
                 <small>
                   Du ble ranet av{" "}
@@ -126,6 +130,23 @@ const Alerts = () => {
                     ${alert.amountLost.toLocaleString()}
                   </span>
                   .
+                </small>
+              )}
+
+              {/* Bank transfer alert */}
+              {alert.type === "banktransfer" && alert.amountSent && (
+                <small>
+                  <Username
+                    character={{
+                      id: alert.senderId,
+                      username: alert.senderName,
+                    }}
+                  />{" "}
+                  overførte{" "}
+                  <span className="text-neutral-200">
+                    ${alert.amountSent.toLocaleString()}
+                  </span>{" "}
+                  til din bankkonto.
                 </small>
               )}
 

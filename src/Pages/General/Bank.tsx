@@ -20,6 +20,7 @@ import {
   collection,
   query,
   where,
+  addDoc,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../../firebaseConfig";
@@ -272,6 +273,22 @@ const Bank = () => {
 
       await updateDoc(targetCharacterDoc.ref, {
         "stats.money": newReceiverMoney,
+      });
+
+      // Add an alert to the target player's alerts sub-collection
+      const alertRef = collection(
+        db,
+        "Characters",
+        targetCharacterDoc.id,
+        "alerts"
+      );
+      await addDoc(alertRef, {
+        type: "banktransfer",
+        timestamp: new Date().toISOString(),
+        amountSent: transferAmount,
+        senderName: character.username,
+        senderId: character.id,
+        read: false,
       });
 
       setMessageType("success");
