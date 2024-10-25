@@ -4,6 +4,7 @@ import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
+import Box from "../../components/Box";
 
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
 
@@ -93,20 +94,42 @@ const Jackpot = () => {
   return (
     <Main>
       <H1>Jackpot</H1>
+      <div className="mb-4">
+        <Box>
+          <p>
+            <small>
+              <strong>Tre like 7'ere (Jackpot!)</strong> gir 150 ganger
+              innsatsen
+            </small>
+          </p>
+          <p>
+            <small>
+              <strong>Tre like av et annet tall</strong> gir 15 ganger innsatsen
+            </small>
+          </p>
+          <p>
+            <small>
+              <strong>To like</strong> gir 2 ganger innsatsen
+            </small>
+          </p>
+        </Box>
+      </div>
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
       <div className="flex flex-col gap-4">
-        <H2>Hvor mye vil du satse?</H2>
-        <input
-          className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
-          type="number"
-          placeholder="Skriv inn beløp"
-          onChange={(e) => setBetAmount(Number(e.target.value))}
-        />
+        <div>
+          <H2>Hvor mye vil du satse?</H2>
+          <input
+            className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
+            type="number"
+            placeholder="Skriv inn beløp"
+            onChange={(e) => setBetAmount(Number(e.target.value))}
+          />
+        </div>
 
         <div className="w-[max-content]">
-          <div className="flex gap-1 bg-neutral-900 border w-[max-content] px-8 py-4">
+          <div className="flex gap-1 bg-neutral-950 border border-neutral-500 w-[max-content] px-8 py-4">
             <div className="w-12 py-4 flex justify-center items-center bg-neutral-200 border border-neutral-700">
               <i
                 className={
@@ -132,7 +155,7 @@ const Jackpot = () => {
               ></i>
             </div>
           </div>
-          <div className="bg-neutral-900 border flex justify-center p-2">
+          <div className="bg-neutral-950 border border-neutral-500 flex justify-center p-2">
             <Button onClick={spinReels}>Spill!</Button>
           </div>
         </div>
