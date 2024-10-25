@@ -68,7 +68,6 @@ const Robbery = () => {
     setTargetCharacter(e.target.value);
   };
 
-  // Function to commit robbery
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
@@ -85,10 +84,10 @@ const Robbery = () => {
     }
 
     try {
-      // Find players in same location
+      // Step 1: Find players in the same location
       const charactersRef = query(
         collection(db, "Characters"),
-        where("location", "==", character?.location)
+        where("location", "==", character.location)
       );
 
       const charactersSnapshot = await getDocs(charactersRef);
@@ -96,20 +95,28 @@ const Robbery = () => {
       // Filter out the current player
       const potentialTargets = charactersSnapshot.docs
         .map((doc) => ({ id: doc.id, ...(doc.data() as Target) }))
-        .filter((char: any) => char.id !== character?.id);
+        .filter((char) => char.id !== character.id);
 
+      // Check if there are no players to rob
       if (potentialTargets.length === 0) {
         setMessage("Du fant ingen spillere å rane i denne byen.");
         setMessageType("warning");
         return;
       }
 
-      // Randomly select a target from the remaining players
+      // Step 2: Determine if we find a player to rob (50% chance)
+      if (Math.random() <= 0.5) {
+        setMessage("Du fant ingen spillere å rane denne gangen.");
+        setMessageType("info");
+        return;
+      }
+
+      // Randomly select a target from the available players
       const randomTarget =
         potentialTargets[Math.floor(Math.random() * potentialTargets.length)];
 
-      const successChance = Math.random();
-      if (successChance > 0.5) {
+      // Step 3: Attempt the robbery (50% chance of success)
+      if (Math.random() <= 0.5) {
         // Check if the target has at least $100
         if (randomTarget.stats.money < 100) {
           setMessage(
@@ -125,19 +132,18 @@ const Robbery = () => {
           randomTarget.stats.money * stealPercentage
         );
 
-        // Update target's money
+        // Update target's and player's money
         const targetDocRef = doc(db, "Characters", randomTarget.id);
         await updateDoc(targetDocRef, {
           "stats.money": randomTarget.stats.money - stolenAmount,
         });
 
-        // Update player's money
         const playerDocRef = doc(db, "Characters", character.id);
         await updateDoc(playerDocRef, {
           "stats.money": character.stats.money + stolenAmount,
         });
 
-        // Add an alert to the target player's alerts sub-collection
+        // Add an alert to the target player's alerts
         const alertRef = collection(
           db,
           "Characters",
@@ -154,7 +160,6 @@ const Robbery = () => {
         });
 
         rewardXp(character, 10);
-        increaseHeat(character, character.id, 1);
 
         setMessage(
           `Du ranet ${
@@ -163,6 +168,7 @@ const Robbery = () => {
         );
         setMessageType("success");
       } else {
+        // Robbery attempt failed
         setMessage(
           `Du prøvde å rane ${randomTarget.username}, men feilet. Bedre lykke neste gang!`
         );
@@ -170,8 +176,10 @@ const Robbery = () => {
       }
     } catch (error) {
       console.error(error);
+      setMessage("Det oppstod en feil under ranet. Prøv igjen senere.");
+      setMessageType("failure");
     } finally {
-      // Start the cooldown after a robbery
+      increaseHeat(character, character.id, 1);
       startCooldown(300, "robbery", character.id);
     }
   };

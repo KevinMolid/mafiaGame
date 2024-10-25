@@ -1,6 +1,7 @@
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
+import { useNavigate } from "react-router-dom";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -125,5 +126,21 @@ export const resetHeat = async (characterID: string) => {
     });
   } catch (error) {
     console.error("Feil ved oppdatering av Ettersøktnivå:", error);
+  }
+};
+
+export const arrest = async (characterID: string) => {
+  const navigate = useNavigate();
+
+  try {
+    const characterRef = doc(db, "Characters", characterID);
+
+    await updateDoc(characterRef, {
+      inJail: true,
+    });
+
+    navigate("fengsel");
+  } catch (error) {
+    console.error("Feil ved arrestering:", error);
   }
 };
