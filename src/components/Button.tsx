@@ -18,8 +18,8 @@ const Button = ({
       type={type}
       className={
         style === "secondary"
-          ? "bg-neutral-600 px-2 py-1 hover:bg-neutral-700 text-white font-medium"
-          : "bg-sky-600 px-2 py-1 hover:bg-sky-700 text-white font-medium"
+          ? "bg-neutral-600 px-4 py-2 hover:bg-neutral-700 text-white font-medium"
+          : "bg-sky-600 px-4 py-2 hover:bg-sky-700 text-white font-medium"
       }
       onClick={onClick}
     >
