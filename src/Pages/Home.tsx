@@ -57,9 +57,9 @@ const Home = () => {
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
       <div className="flex gap-4 mb-2">
-        <Link to={`/profile/${character.id}`}>
+        <Link to={`/profil/${character.id}`}>
           <img
-            className="border border-neutral-500 size-36 object-cover mb-2 hover:cursor-pointer"
+            className="border border-neutral-500 size-[160px] object-cover mb-2 hover:cursor-pointer"
             src={character.img || "/default.jpg"}
             alt="Profile picture"
           />

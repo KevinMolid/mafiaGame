@@ -64,7 +64,7 @@ const Sidebar = () => {
         <div className="relative">
           <div ref={characterAvatarRef}>
             <img
-              className="border border-neutral-500 size-36 object-cover m-auto mb-2 hover:cursor-pointer"
+              className="border border-neutral-500 w-[160px] h-[160px] object-cover m-auto mb-2 hover:cursor-pointer"
               src={character.img || "/default.jpg"}
               alt="Profile picture"
               onClick={toggleNav}
