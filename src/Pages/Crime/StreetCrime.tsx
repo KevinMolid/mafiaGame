@@ -26,7 +26,7 @@ const StreetCrime = () => {
 
   const { cooldowns, startCooldown, fetchCooldown } = useCooldown();
 
-  const [selectedCrime, setSelectedCrime] = useState<string | null>(null);
+  const [selectedCrime, setSelectedCrime] = useState<string>("Lommetyveri");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "important" | "warning" | "info"
@@ -79,32 +79,32 @@ const StreetCrime = () => {
   // Crime options array
   const crimes = [
     {
-      id: "pickpocket",
+      id: "Lommetyveri",
       name: "Lommetyveri",
-      successRate: 0.8, // 80% success rate
-      xpReward: 4, // XP for success
-      moneyReward: 50, // Money reward for success
+      successRate: 0.9,
+      xpReward: 3,
+      moneyReward: 50,
     },
     {
-      id: "vandalism",
+      id: "Herverk",
       name: "Herverk",
-      successRate: 0.6, // 60% success rate
-      xpReward: 8, // XP for success
-      moneyReward: 200, // Money reward for success
+      successRate: 0.85,
+      xpReward: 4,
+      moneyReward: 200,
     },
     {
-      id: "protectionRacket",
+      id: "verdisaker",
       name: "Stjel verdisaker",
-      successRate: 0.4, // 40% success rate
-      xpReward: 12, // XP for success
-      moneyReward: 800, // Money reward for success
+      successRate: 0.8,
+      xpReward: 5,
+      moneyReward: 800,
     },
     {
-      id: "streetRacing",
-      name: "Stjel fra butikk",
-      successRate: 0.2, // 20% success rate
-      xpReward: 16, // XP for success
-      moneyReward: 3200, // Money reward for success
+      id: "butikk",
+      name: "Ran butikk",
+      successRate: 0.75,
+      xpReward: 6,
+      moneyReward: 3200,
     },
   ];
 
@@ -152,7 +152,7 @@ const StreetCrime = () => {
         ))}
       </ul>
 
-      <Button onClick={handleClick}>Utfør kriminalitet</Button>
+      <Button onClick={handleClick}>Utfør handling</Button>
     </Main>
   );
 };
