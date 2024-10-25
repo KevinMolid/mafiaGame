@@ -47,7 +47,7 @@ const Home = () => {
 
   const { progress, minXP, maxXP } = getRankProgress(character.stats.xp);
 
-  const maxHeat = 100;
+  const maxHeat = 50;
   const heatPercentage = character ? (character.stats.heat / maxHeat) * 100 : 0;
 
   return (
@@ -144,12 +144,19 @@ const Home = () => {
                 </p>
                 <div className="bg-neutral-700 h-5 min-w-52 w-full grid grid-cols-1">
                   <div
-                    className="h-5 bg-red-400 transition-all duration-300 col-start-1 row-start-1"
+                    className={
+                      "h-5 transition-all duration-300 col-start-1 row-start-1 " +
+                      (heatPercentage <= 25
+                        ? "bg-yellow-400"
+                        : heatPercentage <= 50
+                        ? "bg-orange-400"
+                        : "bg-red-400")
+                    }
                     style={{ width: `${heatPercentage}%` }}
                   ></div>
                   <div className="flex justify-center items-center z-10 col-start-1 row-start-1">
                     <p className="text-red-50 text-xs">
-                      {character.stats.heat} / 100
+                      {character.stats.heat} / 50
                     </p>
                   </div>
                 </div>

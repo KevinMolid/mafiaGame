@@ -5,7 +5,7 @@ import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 
 // Functions
-import { rewardXp } from "../../Functions/RewardFunctions";
+import { rewardXp, increaseHeat } from "../../Functions/RewardFunctions";
 
 // Data
 import ParkingTypes from "../../Data/ParkingTypes";
@@ -142,6 +142,7 @@ const GTA = () => {
       });
 
       rewardXp(character, 10);
+      increaseHeat(character, character.id, 1);
 
       setMessageType("success");
       setMessage(`Du stjal en ${randomCar.name}!`);

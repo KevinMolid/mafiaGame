@@ -97,3 +97,33 @@ export const attemptReward = async ({
     setMessageType("failure");
   }
 };
+
+export const increaseHeat = async (
+  character: any,
+  characterID: string,
+  heat: number = 0
+) => {
+  try {
+    const characterRef = doc(db, "Characters", characterID);
+
+    const newHeat = character.stats.heat + heat;
+
+    await updateDoc(characterRef, {
+      "stats.heat": newHeat,
+    });
+  } catch (error) {
+    console.error("Feil ved oppdatering av Ettersøktnivå:", error);
+  }
+};
+
+export const resetHeat = async (characterID: string) => {
+  try {
+    const characterRef = doc(db, "Characters", characterID);
+
+    await updateDoc(characterRef, {
+      "stats.heat": 0,
+    });
+  } catch (error) {
+    console.error("Feil ved oppdatering av Ettersøktnivå:", error);
+  }
+};

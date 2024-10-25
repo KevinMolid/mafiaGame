@@ -7,7 +7,7 @@ import InfoBox from "../../components/InfoBox";
 import Box from "../../components/Box";
 
 // Functions
-import { rewardXp } from "../../Functions/RewardFunctions";
+import { rewardXp, increaseHeat } from "../../Functions/RewardFunctions";
 
 // Context
 import { useAuth } from "../../AuthContext";
@@ -154,6 +154,7 @@ const Robbery = () => {
         });
 
         rewardXp(character, 10);
+        increaseHeat(character, character.id, 1);
 
         setMessage(
           `Du ranet ${

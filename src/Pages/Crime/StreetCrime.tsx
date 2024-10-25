@@ -17,7 +17,7 @@ import { useAuth } from "../../AuthContext";
 import { useCooldown } from "../../CooldownContext";
 
 // Functions
-import { attemptReward } from "../../Functions/RewardFunctions";
+import { attemptReward, increaseHeat } from "../../Functions/RewardFunctions";
 
 const StreetCrime = () => {
   const { character } = useCharacter();
@@ -52,7 +52,7 @@ const StreetCrime = () => {
       return;
     }
 
-    if (selectedCrime) {
+    if (character && selectedCrime) {
       const crime = crimes.find((c) => c.name === selectedCrime);
       if (crime) {
         await attemptReward({
@@ -66,6 +66,8 @@ const StreetCrime = () => {
           setMessage,
           setMessageType,
         });
+
+        increaseHeat(character, character.id, 1);
 
         // Start the cooldown after a crime
         startCooldown(90, "crime", userData.activeCharacter);

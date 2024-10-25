@@ -23,7 +23,7 @@ const Infobar = () => {
 
   const { progress, minXP, maxXP } = getRankProgress(character.stats.xp);
 
-  const maxHeat = 100;
+  const maxHeat = 50;
   const heatPercentage = character ? (character.stats.heat / maxHeat) * 100 : 0;
 
   return (
@@ -57,7 +57,14 @@ const Infobar = () => {
         <Tooltip label="Ettersøkt">
           <div className="bg-neutral-800 h-1 w-20 sm:w-36">
             <div
-              className="h-1 bg-red-500 transition-all duration-300"
+              className={
+                "h-1 transition-all duration-300 " +
+                (heatPercentage <= 25
+                  ? "bg-yellow-400"
+                  : heatPercentage <= 50
+                  ? "bg-orange-400"
+                  : "bg-red-400")
+              }
               style={{ width: `${heatPercentage}%` }}
             ></div>
           </div>
