@@ -7,7 +7,11 @@ import InfoBox from "../../components/InfoBox";
 import Box from "../../components/Box";
 
 // Functions
-import { rewardXp, increaseHeat } from "../../Functions/RewardFunctions";
+import {
+  rewardXp,
+  increaseHeat,
+  arrest,
+} from "../../Functions/RewardFunctions";
 
 // Context
 import { useAuth } from "../../AuthContext";
@@ -97,7 +101,7 @@ const Robbery = () => {
         .map((doc) => ({ id: doc.id, ...(doc.data() as Target) }))
         .filter((char) => char.id !== character.id);
 
-      // Check if there are no players to rob
+      // Check if there are any players to rob
       if (potentialTargets.length === 0) {
         setMessage("Du fant ingen spillere å rane i denne byen.");
         setMessageType("warning");
@@ -173,6 +177,16 @@ const Robbery = () => {
           `Du prøvde å rane ${randomTarget.username}, men feilet. Bedre lykke neste gang!`
         );
         setMessageType("failure");
+
+        // Step 4: Jail chance check based on heat level
+        const jailChance = character.stats.heat;
+        if (character.stats.heat >= 50 || Math.random() * 100 < jailChance) {
+          // Player failed jail check, arrest them
+          arrest(character.id);
+          setMessage("Ranforsøket feilet, og du ble arrestert!");
+          setMessageType("failure");
+          return;
+        }
       }
     } catch (error) {
       console.error(error);

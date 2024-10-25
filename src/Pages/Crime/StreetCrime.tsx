@@ -17,7 +17,11 @@ import { useAuth } from "../../AuthContext";
 import { useCooldown } from "../../CooldownContext";
 
 // Functions
-import { attemptReward, increaseHeat } from "../../Functions/RewardFunctions";
+import {
+  attemptReward,
+  increaseHeat,
+  arrest,
+} from "../../Functions/RewardFunctions";
 
 const StreetCrime = () => {
   const { character } = useCharacter();
@@ -71,6 +75,15 @@ const StreetCrime = () => {
 
         // Start the cooldown after a crime
         startCooldown(90, "crime", userData.activeCharacter);
+
+        const jailChance = character.stats.heat;
+        if (character.stats.heat >= 50 || Math.random() * 100 < jailChance) {
+          // Player failed jail check, arrest them
+          arrest(character.id);
+          setMessage("Ranforsøket feilet, og du ble arrestert!");
+          setMessageType("failure");
+          return;
+        }
       }
     } else {
       setMessage("Du må velge en handling!");
