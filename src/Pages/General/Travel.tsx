@@ -3,6 +3,7 @@ import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
+import JailBox from "../../components/JailBox";
 
 import { useState } from "react";
 
@@ -46,6 +47,14 @@ const Travel = () => {
       console.error("Feil ved oppdatering aav lokasjon:", error);
     }
   };
+
+  if (character?.inJail) {
+    return (
+      <Main>
+        <JailBox />
+      </Main>
+    );
+  }
 
   return (
     <Main img="TravelBg">
