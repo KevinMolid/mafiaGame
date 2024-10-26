@@ -133,6 +133,7 @@ export const arrest = async (characterID: string) => {
     const characterRef = doc(db, "Characters", characterID);
     await updateDoc(characterRef, {
       inJail: true,
+      "stats.heat": 0,
     });
   } catch (error) {
     console.error("Feil ved arrestering:", error);
