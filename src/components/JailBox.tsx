@@ -23,8 +23,14 @@ import { useState, useEffect } from "react";
 
 // Context
 import { useCharacter } from "../CharacterContext";
+import InfoBox from "./InfoBox";
 
-const JailBox = () => {
+interface JailBoxInterface {
+  message: string;
+  messageType: "success" | "failure" | "important" | "warning" | "info";
+}
+
+const JailBox = ({ message, messageType }: JailBoxInterface) => {
   const { character } = useCharacter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,6 +95,8 @@ const JailBox = () => {
         Tid som gjenstår:{" "}
         <strong className="text-neutral-200">120 sekunder</strong>
       </p>
+
+      {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
       {/* CHAT */}
       {loading && <p>Laster chat...</p>}

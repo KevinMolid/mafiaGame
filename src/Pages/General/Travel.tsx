@@ -25,6 +25,9 @@ const Travel = () => {
   const [targetLocation, setTargetLocation] = useState("");
   const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<
+    "info" | "success" | "failure" | "important" | "warning"
+  >("info");
   const db = getFirestore();
 
   // Render nothing if character is null
@@ -42,6 +45,7 @@ const Travel = () => {
       const charDocRef = doc(db, "Characters", character.id);
       await updateDoc(charDocRef, { location: targetLocation });
 
+      setMessageType("success");
       setMessage(`Du reiste til ${targetLocation}`);
     } catch (error) {
       console.error("Feil ved oppdatering aav lokasjon:", error);
@@ -51,7 +55,7 @@ const Travel = () => {
   if (character?.inJail) {
     return (
       <Main>
-        <JailBox />
+        <JailBox message={message} messageType={messageType} />
       </Main>
     );
   }

@@ -202,7 +202,7 @@ const Robbery = () => {
   if (character?.inJail) {
     return (
       <Main>
-        <JailBox />
+        <JailBox message={message} messageType={messageType} />
       </Main>
     );
   }
