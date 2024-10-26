@@ -70,11 +70,9 @@ const Jackpot = () => {
       reels[1] === reels[2] ||
       reels[0] === reels[2]
     ) {
-      newMoney += betAmount * 2; // 2x payout for 2 matches
+      newMoney += betAmount; // 1x payout for 2 matches
       setMessageType("success");
-      setMessage(
-        `Du fikk 2 like og vant $${(betAmount * 2).toLocaleString()}!`
-      );
+      setMessage(`Du fikk 2 like og vant $${betAmount.toLocaleString()}!`);
     } else {
       newMoney -= betAmount; // Deduct bet amount if no match
       setMessageType("failure");
@@ -118,7 +116,7 @@ const Jackpot = () => {
           </p>
           <p>
             <small>
-              <strong>To like</strong> gir 2 ganger innsatsen
+              <strong>To like</strong> gir 1 gang innsatsen
             </small>
           </p>
         </Box>
