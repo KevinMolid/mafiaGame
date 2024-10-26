@@ -216,7 +216,7 @@ const Parking = () => {
             <strong className="text-yellow-400">
               ${ParkingTypes[parking + 1].price.toLocaleString()}
             </strong>
-            <div className="flex gap-8">
+            <div className="flex gap-8 flex-wrap">
               <div>
                 <H3>Plasser</H3>
                 <p>
@@ -255,7 +255,7 @@ const Parking = () => {
                     updateParking(character.id, character.location, parking + 1)
                   }
                 >
-                  Kjøp oppgradering
+                  Oppgrader
                 </Button>
               </div>
             </div>
