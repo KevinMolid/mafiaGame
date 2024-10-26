@@ -1,4 +1,4 @@
-import logo from "../assets/LogoV2.png";
+import logo from "../assets/UD.png";
 import SidebarLink from "./SidebarLink";
 import DropdownMenu from "./DropdownMenu";
 
@@ -142,7 +142,7 @@ const Header = () => {
       {/* Logo */}
       <Link to="/">
         <img
-          className="h-12 sm:h-14"
+          className="h-12 sm:h-20"
           src={logo}
           alt="MafiaReign Logo: Fight for Dominance"
         />
