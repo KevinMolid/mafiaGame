@@ -16,6 +16,7 @@ const db = getFirestore();
 // functions
 import { sendMessage, Message } from "../Functions/messageService";
 import { format } from "date-fns";
+import { breakOut } from "../Functions/RewardFunctions";
 
 // React
 import { useState, useEffect } from "react";
@@ -161,7 +162,9 @@ const JailBox = () => {
         </div>
       )}
 
-      <Button>Stikk av</Button>
+      {character && (
+        <Button onClick={() => breakOut(character.id)}>Stikk av</Button>
+      )}
     </div>
   );
 };

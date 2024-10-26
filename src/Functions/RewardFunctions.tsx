@@ -138,3 +138,14 @@ export const arrest = async (characterID: string) => {
     console.error("Feil ved arrestering:", error);
   }
 };
+
+export const breakOut = async (characterID: string) => {
+  try {
+    const characterRef = doc(db, "Characters", characterID);
+    await updateDoc(characterRef, {
+      inJail: false,
+    });
+  } catch (error) {
+    console.error("Feil ved utbrytning:", error);
+  }
+};
