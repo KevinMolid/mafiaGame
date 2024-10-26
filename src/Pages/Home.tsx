@@ -48,7 +48,9 @@ const Home = () => {
   const { progress, minXP, maxXP } = getRankProgress(character.stats.xp);
 
   const maxHeat = 50;
-  const heatPercentage = character ? (character.stats.heat / maxHeat) * 100 : 0;
+  const heatPercentage = character
+    ? Math.round((character.stats.heat / maxHeat) * 100)
+    : 0;
 
   return (
     <Main img="MafiaBg">
