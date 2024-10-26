@@ -70,12 +70,20 @@ const Home = () => {
           <p>
             <Username character={character} />
           </p>
-          <p>{getCurrentRank(character.stats.xp)}</p>
-          <p>Penger: ${character.stats.money.toLocaleString()}</p>
-          <p>
-            Bank: $
-            {character.stats.bank ? character.stats.bank.toLocaleString() : "0"}
-          </p>
+          <Link to="/spillguide">
+            <p>{getCurrentRank(character.stats.xp)}</p>
+          </Link>
+          <Link to="/bank">
+            <p>Penger: ${character.stats.money.toLocaleString()}</p>
+          </Link>
+          <Link to="/bank">
+            <p>
+              Bank: $
+              {character.stats.bank
+                ? character.stats.bank.toLocaleString()
+                : "0"}
+            </p>
+          </Link>
           <p>
             Familie:{" "}
             {character.familyName ? (
@@ -85,7 +93,7 @@ const Home = () => {
                 </strong>
               </Link>
             ) : (
-              "Ingen familie"
+              <Link to="/familie">Ingen familie</Link>
             )}
           </p>
         </div>
