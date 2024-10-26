@@ -8,7 +8,9 @@ interface MainInterface {
 const Main = ({ children, img }: MainInterface) => {
   return (
     <main
-      className={"pb-24 sm:pb-24 p-4 sm:p-8 md:p-12 text-stone-400 flex-grow "}
+      className={
+        "px-4 sm:px-8 md:px-12 pt-4 sm:pt-8 md:pt-12 pb-24 text-stone-400 flex-grow "
+      }
       style={{
         backgroundImage: img ? `url('/${img}.jpg')` : `url('/MafiaBg.jpg')`,
         backgroundSize: "cover",

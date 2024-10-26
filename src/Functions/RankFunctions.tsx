@@ -1,5 +1,5 @@
 // Define rank thresholds
-const ranks = [
+export const ranks = [
   { name: "Nybegynner", minXP: 0, maxXP: 500 },
   { name: "Pøbel", minXP: 500, maxXP: 1500 },
   { name: "Svindler", minXP: 1500, maxXP: 4000 },
