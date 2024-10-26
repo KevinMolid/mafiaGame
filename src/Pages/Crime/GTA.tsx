@@ -6,7 +6,11 @@ import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
 
 // Functions
-import { rewardXp, increaseHeat } from "../../Functions/RewardFunctions";
+import {
+  rewardXp,
+  increaseHeat,
+  arrest,
+} from "../../Functions/RewardFunctions";
 
 // Data
 import ParkingTypes from "../../Data/ParkingTypes";
@@ -132,24 +136,43 @@ const GTA = () => {
         return;
       }
 
-      // Update the character's cars list
-      const updatedCars = [
-        ...(character.cars?.[character.location] || []),
-        randomCar,
-      ];
+      // Try to steal a car
+      if (Math.random() <= 0.5) {
+        // Success: Update characters car list
+        const updatedCars = [
+          ...(character.cars?.[character.location] || []),
+          randomCar,
+        ];
 
-      await updateDoc(characterRef, {
-        [`cars.${character.location}`]: updatedCars,
-      });
+        await updateDoc(characterRef, {
+          [`cars.${character.location}`]: updatedCars,
+        });
 
-      rewardXp(character, 10);
-      increaseHeat(character, character.id, 1);
+        rewardXp(character, 10);
+        increaseHeat(character, character.id, 1);
 
-      setMessageType("success");
-      setMessage(`Du stjal en ${randomCar.name}!`);
+        setMessageType("success");
+        setMessage(`Du stjal en ${randomCar.name}!`);
 
-      // Start the cooldown after a GTA
-      startCooldown(240, "gta", character.id);
+        // Start the cooldown after a GTA
+        startCooldown(240, "gta", character.id);
+      } else {
+        // GTA attempt failed
+        setMessage(
+          `Du prøvde å stjele en bil, men feilet. Bedre lykke neste gang!`
+        );
+        setMessageType("failure");
+
+        // Step 4: Jail chance check based on heat level
+        const jailChance = character.stats.heat;
+        if (character.stats.heat >= 50 || Math.random() * 100 < jailChance) {
+          // Player failed jail check, arrest them
+          arrest(character.id);
+          setMessage("Ranforsøket feilet, og du ble arrestert!");
+          setMessageType("failure");
+          return;
+        }
+      }
     } catch (error) {
       setMessageType("failure");
       setMessage("Du fikk ikke til å stjele en bil. Prøv igjen senere.");

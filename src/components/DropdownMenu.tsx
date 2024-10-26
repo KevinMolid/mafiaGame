@@ -94,6 +94,12 @@ const DropdownMenu = ({ linkOnClick }: DropdownInterface) => {
       <SidebarLink to="flyplass" icon="plane" onClick={linkOnClick}>
         Flyplass
       </SidebarLink>
+
+      <hr className="border-neutral-600" />
+
+      <SidebarLink to="jackpot" icon="7" onClick={linkOnClick}>
+        Jackpot
+      </SidebarLink>
     </nav>
   );
 };
