@@ -154,22 +154,22 @@ const CreateCharacter = () => {
         </div>
       )}
 
-      <H1>Create your character</H1>
+      <H1>Opprett ny spillkarakter</H1>
       <form action="" className="flex flex-col mb-4 gap-2">
         <label htmlFor="username">
-          <H2>Username</H2>
+          <H2>Velg brukernavn</H2>
         </label>
         <input
           className="bg-neutral-800 px-2 py-1 placeholder-neutral-400"
           id="username"
           type="text"
-          placeholder="Enter username"
+          placeholder="Ønsket brukernavn"
           value={username}
           onChange={handleUsernameChange}
         />
         {error && <span className="text-red-500">{error}</span>}
 
-        <H2>Choose starting location</H2>
+        <H2>Velg hvor du vil starte</H2>
         <ul className="flex gap-2 flex-wrap">
           {cities.map((city) => (
             <li
@@ -187,7 +187,7 @@ const CreateCharacter = () => {
           ))}
         </ul>
       </form>
-      <Button onClick={handleClick}>Create character</Button>
+      <Button onClick={handleClick}>Opprett karakter</Button>
     </Main>
   );
 };

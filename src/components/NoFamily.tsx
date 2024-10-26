@@ -70,7 +70,7 @@ const NoFamily = ({
         setFamilies(familiesData);
       } catch (error) {
         setMessageType("failure");
-        setMessage("Error fetching families.");
+        setMessage("Feil ved henting av familier.");
       }
     };
 
@@ -84,7 +84,7 @@ const NoFamily = ({
 
     if (!familyName.trim()) {
       setMessageType("warning");
-      setMessage("You must enter a family name.");
+      setMessage("Du må skrive inn ønsket familienavn.");
       return;
     }
 
@@ -92,7 +92,7 @@ const NoFamily = ({
     const cost = 250000000;
     if (character.stats.money < cost) {
       setMessageType("warning");
-      setMessage("You do not have enough money to create a family.");
+      setMessage("Du har ikke nok penger til å opprette familie.");
       return;
     }
 
@@ -153,10 +153,12 @@ const NoFamily = ({
       setFamilyName("");
 
       setMessageType("success");
-      setMessage(`You created ${familyName} for $${cost.toLocaleString()}.`);
+      setMessage(
+        `Du opprettet ${familyName} og betalte $${cost.toLocaleString()}.`
+      );
     } catch (error) {
       setMessageType("failure");
-      setMessage("Error creating family.");
+      setMessage("Feil ved opprettelse av familie.");
     }
   };
 
@@ -164,15 +166,15 @@ const NoFamily = ({
 
   return (
     <>
-      <H1>Family</H1>
-      <p className="mb-2">You are not part of a family.</p>
+      <H1>Familie</H1>
+      <p className="mb-2">Du tilhører ingen familie.</p>
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
       {/* Create family */}
       <div className="border border-neutral-600 p-4 mb-4">
-        <H2>Create a New Family</H2>
+        <H2>Opprett ny familie</H2>
         <p className="mb-2">
-          Price: <strong className="text-yellow-400">$250,000,000</strong>
+          Kostnad: <strong className="text-yellow-400">$250,000,000</strong>
         </p>
         <form action="" onSubmit={createFamily} className="flex flex-col gap-2">
           <input
@@ -180,15 +182,15 @@ const NoFamily = ({
             type="text"
             value={familyName}
             onChange={(e) => setFamilyName(e.target.value)}
-            placeholder="Enter family name"
+            placeholder="Ønsket familienavn"
           />
-          <Button type="submit">Create Family</Button>
+          <Button type="submit">Opprett familie</Button>
         </form>
       </div>
 
       {/* Apply to family */}
       <div className="border border-neutral-600 p-4">
-        <H2>Join a Family</H2>
+        <H2>Bli med i en familie</H2>
         {families.length > 0 ? (
           <ul>
             {families.map((family) => (
@@ -201,7 +203,7 @@ const NoFamily = ({
                     <strong className="text-neutral-200">{family.name}</strong>
                   </p>
                   <small>
-                    Leader:{" "}
+                    Leder:{" "}
                     <Username
                       character={{
                         id: family.leaderId,
@@ -213,7 +215,7 @@ const NoFamily = ({
 
                 <div>
                   <Button onClick={() => console.log("Joining family")}>
-                    Apply to Family
+                    Skriv søknad
                   </Button>
                 </div>
               </li>
