@@ -334,16 +334,20 @@ const Bank = () => {
             placeholder="Skriv inn beløp"
             onChange={handleInputChange}
           />
-          <div className="flex gap-2">
-            {" "}
-            <Button style="secondary" onClick={withdraw}>
-              Ta ut beløp
-            </Button>
-            <Button style="secondary" onClick={deposit}>
-              Sett inn beløp
-            </Button>
-            <Button onClick={withdrawAll}>Ta ut alt</Button>
-            <Button onClick={depositAll}>Sett inn alt</Button>
+          <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2">
+              <Button style="secondary" onClick={withdraw}>
+                Ta ut beløp
+              </Button>
+              <Button style="secondary" onClick={deposit}>
+                Sett inn beløp
+              </Button>
+            </div>
+
+            <div className="flex gap-2">
+              <Button onClick={withdrawAll}>Ta ut alt</Button>
+              <Button onClick={depositAll}>Sett inn alt</Button>
+            </div>
           </div>
         </form>
       </div>
