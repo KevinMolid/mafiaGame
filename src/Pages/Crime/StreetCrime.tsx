@@ -4,6 +4,7 @@ import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
+import JailBox from "../../components/JailBox";
 
 // React
 import { useState, useEffect } from "react";
@@ -122,6 +123,14 @@ const StreetCrime = () => {
       moneyReward: 3200,
     },
   ];
+
+  if (character?.inJail) {
+    return (
+      <Main>
+        <JailBox />
+      </Main>
+    );
+  }
 
   return (
     <Main>

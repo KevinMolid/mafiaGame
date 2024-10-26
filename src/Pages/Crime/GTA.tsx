@@ -3,6 +3,7 @@ import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
+import JailBox from "../../components/JailBox";
 
 // Functions
 import { rewardXp, increaseHeat } from "../../Functions/RewardFunctions";
@@ -155,6 +156,14 @@ const GTA = () => {
       console.error("Feil ved oppdatering av bil:", error);
     }
   };
+
+  if (character?.inJail) {
+    return (
+      <Main>
+        <JailBox />
+      </Main>
+    );
+  }
 
   return (
     <Main>

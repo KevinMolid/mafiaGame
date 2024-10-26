@@ -32,6 +32,7 @@ export interface Character {
   cars?: any;
   familyId?: string | null;
   familyName?: string | null;
+  inJail?: boolean | null;
 }
 
 export interface Target {
@@ -51,4 +52,5 @@ export interface Target {
   cars?: any;
   familyId?: string | null;
   familyName?: string | null;
+  inJail?: boolean | null;
 }

@@ -5,6 +5,7 @@ import H2 from "../../components/Typography/H2";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import Box from "../../components/Box";
+import JailBox from "../../components/JailBox";
 
 // Functions
 import {
@@ -197,6 +198,14 @@ const Robbery = () => {
       startCooldown(300, "robbery", character.id);
     }
   };
+
+  if (character?.inJail) {
+    return (
+      <Main>
+        <JailBox />
+      </Main>
+    );
+  }
 
   return (
     <Main>

@@ -80,6 +80,7 @@ export const CharacterProvider = ({
               cars: characterData.cars as any,
               familyId: characterData.familyId as string,
               familyName: characterData.familyName as string,
+              inJail: characterData.inJail as boolean,
             };
 
             setCharacter(newCharacter);
