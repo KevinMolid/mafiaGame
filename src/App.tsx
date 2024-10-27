@@ -55,6 +55,8 @@ import ForumThread from "./Pages/ForumThread.tsx";
 import Jackpot from "./Pages/Gambling/Jackpot.tsx";
 
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
+import DropdownMenu from "./components/DropdownLeft.tsx";
+import DropdownRight from "./components/DropdownRight.tsx";
 
 function App() {
   return (
@@ -71,10 +73,12 @@ function App() {
                   <div id="content-wrap" className="flex flex-col flex-grow">
                     <Header />
                     <Infobar />
-                    <div className="flex flex-col flex-grow">
+                    <div className="relative flex flex-col flex-grow">
                       <Layout>
                         <ErrorBoundary>
                           <Sidebar />
+                          <DropdownMenu />
+                          <DropdownRight />
                         </ErrorBoundary>
 
                         <Routes>

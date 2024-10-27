@@ -113,7 +113,7 @@ const Alerts = () => {
       <H1>Varsler</H1>
 
       {alerts.length === 0 ? (
-        <p>You have no alerts.</p>
+        <p>Du har ingen varsler.</p>
       ) : (
         <div className="flex gap-2 flex-col">
           {alerts.map((alert) => (
