@@ -163,12 +163,15 @@ const GTA = () => {
         );
         setMessageType("failure");
 
+        // Start the cooldown after a GTA
+        startCooldown(240, "gta", character.id);
+
         // Step 4: Jail chance check based on heat level
         const jailChance = character.stats.heat;
         if (character.stats.heat >= 50 || Math.random() * 100 < jailChance) {
           // Player failed jail check, arrest them
           arrest(character.id);
-          setMessage("Ranforsøket feilet, og du ble arrestert!");
+          setMessage("Du prøvde å stjele en bil, men ble arrestert!");
           setMessageType("failure");
           return;
         }
