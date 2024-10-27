@@ -3,7 +3,7 @@ import SidebarLink from "./SidebarLink";
 import { useCooldown } from "../CooldownContext";
 import { useMenuContext } from "../MenuContext";
 
-const DropdownMenu = () => {
+const DropdownLeft = () => {
   const { actionsOpen, toggleActions } = useMenuContext();
   const { cooldowns } = useCooldown();
 
@@ -114,4 +114,4 @@ const DropdownMenu = () => {
   );
 };
 
-export default DropdownMenu;
+export default DropdownLeft;

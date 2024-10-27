@@ -55,7 +55,7 @@ import ForumThread from "./Pages/ForumThread.tsx";
 import Jackpot from "./Pages/Gambling/Jackpot.tsx";
 
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
-import DropdownMenu from "./components/DropdownLeft.tsx";
+import DropdownLeft from "./components/DropdownLeft.tsx";
 import DropdownRight from "./components/DropdownRight.tsx";
 
 function App() {
@@ -77,7 +77,7 @@ function App() {
                       <Layout>
                         <ErrorBoundary>
                           <Sidebar />
-                          <DropdownMenu />
+                          <DropdownLeft />
                           <DropdownRight />
                         </ErrorBoundary>
 
