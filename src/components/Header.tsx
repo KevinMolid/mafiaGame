@@ -1,8 +1,8 @@
 import logo from "../assets/UD.png";
 import SidebarLink from "./SidebarLink";
-import DropdownMenu from "./DropdownMenu";
 
 import AudioPlay from "./Audio";
+import { useMenuContext } from "../MenuContext";
 
 // React
 import { Link, useNavigate } from "react-router-dom";
@@ -29,9 +29,9 @@ import { useCharacter } from "../CharacterContext";
 const Header = () => {
   const { userData } = useAuth();
   const { character } = useCharacter();
+  const { actionsOpen, toggleActions, menuOpen, toggleMenu, closeMenus } =
+    useMenuContext();
   const { playing, setPlaying } = useMusicContext();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [actionsOpen, setActionsOpen] = useState(false);
   const [unreadAlertCount, setUnreadAlertCount] = useState(0);
   const [hasUnreadAlerts, setHasUnreadAlerts] = useState(false);
   const auth = getAuth();
@@ -53,18 +53,6 @@ const Header = () => {
         console.log(error.message);
       });
   }
-
-  // Toggle the menu open/close state
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-    setActionsOpen(false);
-  };
-
-  // Toggle the menu open/close state
-  const toggleActions = () => {
-    setActionsOpen(!actionsOpen);
-    setMenuOpen(false);
-  };
 
   // Toggle Music player
   const toggleMusic = () => {
@@ -102,7 +90,7 @@ const Header = () => {
         !menuButtonRef.current.contains(event.target as Node) &&
         menuOpen
       ) {
-        setMenuOpen(false); // Close menu if clicking outside
+        closeMenus(); // Close menu if clicking outside
       }
       if (
         actionsRef.current &&
@@ -111,7 +99,7 @@ const Header = () => {
         !actionsButtonRef.current.contains(event.target as Node) &&
         actionsOpen
       ) {
-        setActionsOpen(false); // Close actions menu if clicking outside
+        closeMenus(); // Close actions menu if clicking outside
       }
     }
 
@@ -131,13 +119,6 @@ const Header = () => {
       >
         <i className="text-3xl fa-solid fa-location-crosshairs"></i>
       </div>
-
-      {/* Small screen Action dropdown menu */}
-      {actionsOpen && (
-        <div className={"absolute top-16 left-0 z-40"} ref={actionsRef}>
-          <DropdownMenu linkOnClick={() => setActionsOpen(false)} />
-        </div>
-      )}
 
       {/* Logo */}
       <Link to="/">
@@ -170,21 +151,13 @@ const Header = () => {
           <hr className="border-neutral-500" />
 
           {userData?.type === "admin" && (
-            <SidebarLink
-              to="admin"
-              icon="gear"
-              onClick={() => setMenuOpen(false)}
-            >
+            <SidebarLink to="admin" icon="gear" onClick={() => closeMenus()}>
               Admin
             </SidebarLink>
           )}
 
           {!hasUnreadAlerts && (
-            <SidebarLink
-              to="varsler"
-              icon="bell"
-              onClick={() => setMenuOpen(false)}
-            >
+            <SidebarLink to="varsler" icon="bell" onClick={() => closeMenus()}>
               Varsler
             </SidebarLink>
           )}
@@ -193,7 +166,7 @@ const Header = () => {
             <SidebarLink
               to="varsler"
               icon="bell fa-shake text-yellow-400"
-              onClick={() => setMenuOpen(false)}
+              onClick={() => closeMenus()}
             >
               <p className="text-yellow-400">Varsler</p>
               <p>{unreadAlertCount}</p>
@@ -203,7 +176,7 @@ const Header = () => {
           <SidebarLink
             to="spillguide"
             icon="circle-info"
-            onClick={() => setMenuOpen(false)}
+            onClick={() => closeMenus()}
           >
             Spillguide
           </SidebarLink>
@@ -211,24 +184,16 @@ const Header = () => {
           <SidebarLink
             to="meldinger"
             icon="comment-dots"
-            onClick={() => setMenuOpen(false)}
+            onClick={() => closeMenus()}
           >
             Meldinger
           </SidebarLink>
 
-          <SidebarLink
-            to="forum"
-            icon="comments"
-            onClick={() => setMenuOpen(false)}
-          >
+          <SidebarLink to="forum" icon="comments" onClick={() => closeMenus()}>
             Forum
           </SidebarLink>
 
-          <SidebarLink
-            to="toppliste"
-            icon="medal"
-            onClick={() => setMenuOpen(false)}
-          >
+          <SidebarLink to="toppliste" icon="medal" onClick={() => closeMenus()}>
             Toppliste
           </SidebarLink>
 
@@ -257,7 +222,7 @@ const Header = () => {
               <button
                 onClick={() => {
                   logOut();
-                  setMenuOpen(false);
+                  closeMenus();
                 }}
               >
                 Logg ut
@@ -267,7 +232,7 @@ const Header = () => {
 
           {!userData && (
             <div className="text-stone-400 hover:text-stone-200">
-              <Link to="/signup" onClick={() => setMenuOpen(false)}>
+              <Link to="/signup" onClick={() => closeMenus()}>
                 Logg inn / Registrer bruker
               </Link>
             </div>
