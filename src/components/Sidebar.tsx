@@ -1,6 +1,6 @@
 // React
 import { Link } from "react-router-dom";
-import { useState, useRef, useEffect } from "react";
+import { useEffect } from "react";
 
 // Context
 import { useCharacter } from "../CharacterContext";
@@ -16,10 +16,6 @@ import { getCurrentRank } from "../Functions/RankFunctions";
 const Sidebar = () => {
   const { character } = useCharacter();
   const { cooldowns, fetchCooldown } = useCooldown();
-  const [showNav, setShowNav] = useState(false);
-
-  const characterMenuRef = useRef<HTMLDivElement | null>(null);
-  const characterAvatarRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (character) {
@@ -29,76 +25,19 @@ const Sidebar = () => {
     }
   }, [character?.id]);
 
-  const toggleNav = () => {
-    setShowNav(!showNav);
-  };
-
-  // Close menu if clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        characterMenuRef.current &&
-        !characterMenuRef.current.contains(event.target as Node) &&
-        characterAvatarRef.current &&
-        !characterAvatarRef.current.contains(event.target as Node) &&
-        showNav
-      ) {
-        setShowNav(false); // Close character menu if clicking outside
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showNav]); // Listen only when Character Menu open
-
-  // Render null if character is not available
-  if (!character) {
-    return null;
-  }
+  if (!character) return;
 
   return (
     <div className="hidden sm:block bg-neutral-800 px-4 py-8 text-sm leading-relaxed h-full pb-24">
       <div className="mb-6">
         <div className="relative">
-          <div ref={characterAvatarRef}>
+          <Link to={`/profil/${character.id}`}>
             <img
               className="border border-neutral-500 w-[160px] h-[160px] object-cover m-auto mb-2 hover:cursor-pointer"
               src={character.img || "/default.jpg"}
               alt="Profile picture"
-              onClick={toggleNav}
             />
-          </div>
-
-          {/* Character dropdown menu*/}
-          {showNav && (
-            <div
-              className="bg-sky-800 border border-neutral-500 absolute bottom-0 right-[-130px]"
-              ref={characterMenuRef}
-            >
-              <ul>
-                <li className="hover:bg-sky-900 py-2 px-4">
-                  <Link
-                    to={`/profil/${character.id}`}
-                    className="flex gap-2 items-center"
-                    onClick={() => setShowNav(false)}
-                  >
-                    <i className="fa-solid fa-user"></i> Vis profil
-                  </Link>
-                </li>
-                <li className="hover:bg-sky-900 py-2 px-4">
-                  <Link
-                    to="/endreprofil"
-                    className="flex gap-2 items-center"
-                    onClick={() => setShowNav(false)}
-                  >
-                    <i className="fa-solid fa-pen"></i> Endre profil
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          )}
+          </Link>
         </div>
 
         {character ? (
