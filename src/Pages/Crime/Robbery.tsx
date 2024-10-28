@@ -105,15 +105,15 @@ const Robbery = () => {
 
       // Check if there are any players to rob
       if (potentialTargets.length === 0) {
-        setMessage("Du fant ingen spillere å rane i denne byen.");
-        setMessageType("warning");
+        setMessage("Det er ingen spillere å rane i denne byen.");
+        setMessageType("failure");
         return;
       }
 
       // Step 2: Determine if we find a player to rob (75% chance)
       if (Math.random() <= 0.75) {
-        setMessage("Du fant ingen spillere å rane denne gangen.");
-        setMessageType("info");
+        setMessage("Du fant ingen spillere å rane.");
+        setMessageType("failure");
         return;
       }
 
@@ -128,7 +128,7 @@ const Robbery = () => {
           setMessage(
             `Du prøvde å rane ${randomTarget.username}, men fant ingen ting å stjele.`
           );
-          setMessageType("warning");
+          setMessageType("failure");
           return;
         }
 

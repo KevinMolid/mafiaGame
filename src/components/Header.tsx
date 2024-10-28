@@ -1,4 +1,4 @@
-import logo from "../assets/LogoV2.png";
+import logo from "../assets/LogoV4.png";
 
 import { useMenuContext } from "../MenuContext";
 
