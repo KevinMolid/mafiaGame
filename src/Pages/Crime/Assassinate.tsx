@@ -93,11 +93,7 @@ const Assassinate = () => {
   };
 
   if (character?.inJail) {
-    return (
-      <Main>
-        <JailBox message={message} messageType={messageType} />
-      </Main>
-    );
+    return <JailBox message={message} messageType={messageType} />;
   }
 
   return (
