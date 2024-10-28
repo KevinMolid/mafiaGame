@@ -75,9 +75,9 @@ const DropdownRight = () => {
         <p>Meny</p>
         <hr className="border-neutral-500" />
 
-        {userData?.type === "/admin" && (
-          <SidebarLink to="admin" icon="gear" onClick={toggleMenu}>
-            Admin
+        {userData?.type === "admin" && (
+          <SidebarLink to="/admin" icon="gear" onClick={toggleMenu}>
+            <p className="text-yellow-400 hover:text-yellow-200">Admin</p>
           </SidebarLink>
         )}
 
