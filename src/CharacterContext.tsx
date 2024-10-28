@@ -2,8 +2,17 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { Character, Stats, Reputation } from "./Interfaces/CharacterTypes";
 
+// Import necessary functions
+import { getCurrentRank } from "./Functions/RankFunctions.tsx";
+
 // Firebase
-import { getFirestore, doc, onSnapshot } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  onSnapshot,
+  collection,
+  addDoc,
+} from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./firebaseConfig";
 
@@ -40,13 +49,16 @@ export const CharacterProvider = ({
   const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // State to track previous XP and money for rank changes
+  const [prevXP, setPrevXP] = useState<number | undefined>(undefined);
+
   useEffect(() => {
     if (userData && userData.activeCharacter) {
       setLoading(true);
       const charDocRef = doc(db, "Characters", userData.activeCharacter);
 
       // Set up the real-time listener
-      const unsubscribe = onSnapshot(charDocRef, (docSnapshot) => {
+      const unsubscribe = onSnapshot(charDocRef, async (docSnapshot) => {
         if (docSnapshot.exists()) {
           const characterData = docSnapshot.data();
 
@@ -84,6 +96,31 @@ export const CharacterProvider = ({
               jailReleaseTime: characterData.jailReleaseTime as any,
             };
 
+            const currentXP = newCharacter.stats.xp;
+            console.log("1: prevXP:", prevXP, "currentXP:", currentXP);
+
+            // Check for XP rank change
+            if (prevXP !== undefined && prevXP !== currentXP) {
+              const prevRank = getCurrentRank(prevXP);
+              const newRank = getCurrentRank(currentXP);
+              console.log("2: prevXP:", prevXP, "currentXP:", currentXP);
+              if (prevRank !== newRank) {
+                const alertRef = collection(
+                  db,
+                  "Characters",
+                  newCharacter.id,
+                  "alerts"
+                );
+                await addDoc(alertRef, {
+                  type: "xp",
+                  timestamp: new Date().toISOString(),
+                  newRank: newRank,
+                  read: false,
+                });
+              }
+            }
+
+            setPrevXP(currentXP);
             setCharacter(newCharacter);
           } else {
             console.error("Character data is incomplete or missing stats");
@@ -106,7 +143,7 @@ export const CharacterProvider = ({
   }, [userData]);
 
   if (loading) {
-    return <div>Loading character data...</div>;
+    return <div>Laster spillerdata...</div>;
   }
 
   return (

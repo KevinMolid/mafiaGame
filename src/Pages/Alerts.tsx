@@ -25,6 +25,7 @@ const db = getFirestore(app);
 interface Alert {
   id: string;
   type: string;
+  newRank?: string;
   amountLost?: number;
   amountSent?: number;
   robberId?: string;
@@ -54,6 +55,7 @@ const Alerts = () => {
           id: doc.id,
           type: doc.data().type || "",
           timestamp: doc.data().timestamp || "",
+          newRank: doc.data().newRank || "",
           amountLost: doc.data().amountLost || 0,
           amountSent: doc.data().amountSent || 0,
           robberId: doc.data().robberId || "",
@@ -103,7 +105,7 @@ const Alerts = () => {
     return (
       <Main>
         <H1>Alerts</H1>
-        <p>Loading alerts...</p>
+        <p>Laster varsler...</p>
       </Main>
     );
   }
@@ -118,6 +120,11 @@ const Alerts = () => {
         <div className="flex gap-2 flex-col">
           {alerts.map((alert) => (
             <Alert key={alert.id} read={alert.read}>
+              {/* Rank alert */}
+              {alert.type === "xp" && (
+                <small>Du nådde ranken {alert.newRank}.</small>
+              )}
+
               {/* Robbery alert */}
               {alert.type === "robbery" && alert.amountLost && (
                 <small>
