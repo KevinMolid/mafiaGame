@@ -89,18 +89,10 @@ export const CharacterProvider = ({
             };
 
             const currentXP = newCharacter.stats.xp;
-            console.log("1: prevXP:", prevXP.current, "currentXP:", currentXP);
-
             // Handle XP rank change logic
             if (prevXP.current !== null && prevXP.current !== currentXP) {
               const prevRank = getCurrentRank(prevXP.current);
               const newRank = getCurrentRank(currentXP);
-              console.log(
-                "2: prevXP:",
-                prevXP.current,
-                "currentXP:",
-                currentXP
-              );
 
               if (prevRank !== newRank) {
                 const alertRef = collection(
@@ -122,11 +114,11 @@ export const CharacterProvider = ({
             setCharacter(newCharacter);
             prevXP.current = currentXP; // Set prevXP using useRef
           } else {
-            console.error("Character data is incomplete or missing stats");
+            console.error("Spillerdata er ufullstendig eller mangler stats.");
             setCharacter(null);
           }
         } else {
-          console.error("No character document found!");
+          console.error("Ingen spillerdokumenter funnet!");
           setCharacter(null);
         }
 
