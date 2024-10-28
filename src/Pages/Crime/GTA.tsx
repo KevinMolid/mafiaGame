@@ -59,6 +59,7 @@ const GTA = () => {
   const { userData } = useAuth();
   const { cooldowns, startCooldown, fetchCooldown } = useCooldown();
   const navigate = useNavigate();
+  const cooldownTime = 130;
 
   useEffect(() => {
     if (!userData) {
@@ -68,7 +69,7 @@ const GTA = () => {
 
     if (userData.activeCharacter && cooldowns["gta"] === undefined) {
       // Fetch cooldown only if it hasn't been fetched yet
-      fetchCooldown("gta", 240, userData.activeCharacter);
+      fetchCooldown("gta", cooldownTime, userData.activeCharacter);
     }
   }, [userData, navigate, cooldowns, fetchCooldown]);
 
@@ -136,8 +137,8 @@ const GTA = () => {
         return;
       }
 
-      // Try to steal a car
-      if (Math.random() <= 0.5) {
+      // Try to steal a car (75% chance)
+      if (Math.random() <= 0.75) {
         // Success: Update characters car list
         const updatedCars = [
           ...(character.cars?.[character.location] || []),
@@ -155,7 +156,7 @@ const GTA = () => {
         setMessage(`Du stjal en ${randomCar.name}!`);
 
         // Start the cooldown after a GTA
-        startCooldown(240, "gta", character.id);
+        startCooldown(cooldownTime, "gta", character.id);
       } else {
         // GTA attempt failed
         setMessage(
@@ -164,7 +165,7 @@ const GTA = () => {
         setMessageType("failure");
 
         // Start the cooldown after a GTA
-        startCooldown(240, "gta", character.id);
+        startCooldown(cooldownTime, "gta", character.id);
 
         // Step 4: Jail chance check based on heat level
         const jailChance = character.stats.heat;

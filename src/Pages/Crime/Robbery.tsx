@@ -54,6 +54,7 @@ const Robbery = () => {
   const { userData } = useAuth();
   const { character } = useCharacter();
   const { cooldowns, startCooldown, fetchCooldown } = useCooldown();
+  const cooldownTime = 150;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -64,7 +65,7 @@ const Robbery = () => {
 
     if (userData.activeCharacter && cooldowns["gta"] === undefined) {
       // Fetch cooldown only if it hasn't been fetched yet
-      fetchCooldown("robbery", 300, userData.activeCharacter);
+      fetchCooldown("robbery", cooldownTime, userData.activeCharacter);
     }
   }, [userData, navigate, cooldowns, fetchCooldown]);
 
@@ -109,8 +110,8 @@ const Robbery = () => {
         return;
       }
 
-      // Step 2: Determine if we find a player to rob (50% chance)
-      if (Math.random() <= 0.5) {
+      // Step 2: Determine if we find a player to rob (75% chance)
+      if (Math.random() <= 0.75) {
         setMessage("Du fant ingen spillere å rane denne gangen.");
         setMessageType("info");
         return;
@@ -120,8 +121,8 @@ const Robbery = () => {
       const randomTarget =
         potentialTargets[Math.floor(Math.random() * potentialTargets.length)];
 
-      // Step 3: Attempt the robbery (50% chance of success)
-      if (Math.random() <= 0.5) {
+      // Step 3: Attempt the robbery (75% chance of success)
+      if (Math.random() <= 0.75) {
         // Check if the target has at least $100
         if (randomTarget.stats.money < 100) {
           setMessage(
@@ -195,7 +196,7 @@ const Robbery = () => {
       setMessageType("failure");
     } finally {
       increaseHeat(character, character.id, 1);
-      startCooldown(300, "robbery", character.id);
+      startCooldown(cooldownTime, "robbery", character.id);
     }
   };
 
