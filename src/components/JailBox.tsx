@@ -36,6 +36,7 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState<string>("");
+  const [remainingTime, setRemainingTime] = useState<number>(0);
   const channelId = "EivoYnQQVwVQvnMctcXN";
 
   useEffect(() => {
@@ -59,6 +60,28 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!character?.jailReleaseTime) return;
+
+    const calculateRemainingTime = () => {
+      const currentTime = new Date().getTime();
+      const releaseTime = character.jailReleaseTime;
+      const timeRemaining = Math.max(
+        0,
+        Math.floor((releaseTime - currentTime) / 1000)
+      );
+      setRemainingTime(timeRemaining);
+    };
+
+    calculateRemainingTime(); // Calculate initially
+
+    const interval = setInterval(() => {
+      calculateRemainingTime();
+    }, 1000); // Update every second
+
+    return () => clearInterval(interval); // Clean up on unmount
+  }, [character?.jailReleaseTime]);
 
   const handleInputChange = (e: any) => {
     setNewMessage(e.target.value);
@@ -93,7 +116,7 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
       <p>Du kan ikke gjøre noen handlinger mens du sitter i fengsel.</p>
       <p className="mb-4">
         Tid som gjenstår:{" "}
-        <strong className="text-neutral-200">120 sekunder</strong>
+        <strong className="text-neutral-200">{remainingTime} sekunder</strong>
       </p>
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
