@@ -1,6 +1,5 @@
 // React
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
 
 // Context
 import { useCharacter } from "../CharacterContext";
@@ -15,15 +14,7 @@ import { getCurrentRank } from "../Functions/RankFunctions";
 
 const Sidebar = () => {
   const { character } = useCharacter();
-  const { cooldowns, fetchCooldown } = useCooldown();
-
-  useEffect(() => {
-    if (character) {
-      fetchCooldown("crime", 90, character.id);
-      fetchCooldown("gta", 240, character.id);
-      fetchCooldown("robbery", 300, character.id);
-    }
-  }, [character?.id]);
+  const { cooldowns } = useCooldown();
 
   if (!character) return;
 
