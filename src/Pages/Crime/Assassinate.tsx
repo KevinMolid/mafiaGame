@@ -4,6 +4,7 @@ import H2 from "../../components/Typography/H2";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
+import Box from "../../components/Box";
 
 // React
 import { useState } from "react";
@@ -99,20 +100,36 @@ const Assassinate = () => {
   return (
     <Main>
       <H1>Drep spiller</H1>
-      <p className="mb-4">Her kan du forsøke å drepe en annen spiller.</p>
+      <p className="mb-4">
+        Her kan du forsøke å drepe en annen spiller. Dersom du dreper en spiller
+        på listen over spillere som er ønsket drept vil du automatisk motta
+        pengebeløpet.
+      </p>
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
-      <H2>Hvem vil du drepe?</H2>
-      <div className="flex flex-col gap-2 ">
-        <input
-          type="text"
-          placeholder="Brukernavn"
-          value={targetPlayer}
-          onChange={handleTargetInput}
-          className="bg-neutral-700 px-4 py-2 text-white placeholder-neutral-400"
-        />
-        <div>
-          <Button onClick={killPlayer}>Angrip spiller</Button>
-        </div>
+
+      <div className="flex  flex-col gap-4">
+        <Box>
+          <H2>Ønsket drept</H2>
+          <p className="mb-4">
+            Det er for øyeblikket ikke utlovet dusør for noen spillere.
+          </p>
+        </Box>
+
+        <Box>
+          <H2>Hvem vil du drepe?</H2>
+          <div className="flex flex-col gap-2 ">
+            <input
+              type="text"
+              placeholder="Brukernavn"
+              value={targetPlayer}
+              onChange={handleTargetInput}
+              className="bg-neutral-700 px-4 py-2 text-white placeholder-neutral-400"
+            />
+            <div>
+              <Button onClick={killPlayer}>Angrip spiller</Button>
+            </div>
+          </div>
+        </Box>
       </div>
     </Main>
   );
