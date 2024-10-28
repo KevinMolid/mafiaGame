@@ -80,7 +80,7 @@ const StreetCrime = () => {
         const jailChance = character.stats.heat;
         if (character.stats.heat >= 50 || Math.random() * 100 < jailChance) {
           // Player failed jail check, arrest them
-          arrest(character.id);
+          arrest(character);
           setMessage("Ranforsøket feilet, og du ble arrestert!");
           setMessageType("failure");
           return;

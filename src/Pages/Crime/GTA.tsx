@@ -171,7 +171,7 @@ const GTA = () => {
         const jailChance = character.stats.heat;
         if (character.stats.heat >= 50 || Math.random() * 100 < jailChance) {
           // Player failed jail check, arrest them
-          arrest(character.id);
+          arrest(character);
           setMessage("Du prøvde å stjele en bil, men ble arrestert!");
           setMessageType("failure");
           return;

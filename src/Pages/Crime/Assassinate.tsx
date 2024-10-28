@@ -34,7 +34,7 @@ const Assassinate = () => {
   // Function to handle assassination
   const killPlayer = async () => {
     if (!targetPlayer) {
-      setMessage("Please enter a player name.");
+      setMessage("Du må skrive inn et brukernavn.");
       setMessageType("warning");
       return;
     }
@@ -43,13 +43,13 @@ const Assassinate = () => {
       // Query the "Characters" collection for a player with the matching username
       const q = query(
         collection(db, "Characters"),
-        where("username", "==", targetPlayer)
+        where("username_lowercase", "==", targetPlayer.toLowerCase())
       );
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
         // No player found
-        setMessage(`Player ${targetPlayer} does not exist.`);
+        setMessage(`Spilleren ${targetPlayer} finnes ikke.`);
         setMessageType("warning");
       } else {
         const playerData = querySnapshot.docs[0].data();
@@ -57,21 +57,21 @@ const Assassinate = () => {
 
         if (character?.username === playerData.username) {
           // Suicide
-          setMessage(`You can't kill yourself!`);
+          setMessage(`Du kan ikke drepe deg selv!`);
           setMessageType("warning");
         } else if (playerData.status === "dead") {
           // Player is already dead
-          setMessage(`${targetPlayer} is already dead!`);
+          setMessage(`${playerData.username} er allerede død!`);
           setMessageType("warning");
         } else if (character?.location !== playerData.location) {
           // Player is not in same city
           setMessage(
-            `You could not find ${targetPlayer} in ${character?.location}!`
+            `Du kunne ikke finne ${playerData.username} i ${character?.location}!`
           );
           setMessageType("failure");
         } else {
           // Proceed with assassination
-          setMessage(`${targetPlayer} was successfully assassinated!`);
+          setMessage(`${playerData.username} ble drept!`);
           setMessageType("success");
 
           // Update player status to 'dead'
@@ -83,7 +83,7 @@ const Assassinate = () => {
     } catch (error) {
       // Handle any errors during the query
       console.error("Error checking target player:", error);
-      setMessage("An error occurred while trying to assassinate the player.");
+      setMessage("En ukjent feil oppstod når du prøvde å drepe en spiller.");
       setMessageType("failure");
     }
   };

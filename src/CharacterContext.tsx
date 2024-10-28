@@ -81,6 +81,7 @@ export const CharacterProvider = ({
               familyId: characterData.familyId as string,
               familyName: characterData.familyName as string,
               inJail: characterData.inJail as boolean,
+              jailReleaseTime: characterData.jailReleaseTime as any,
             };
 
             setCharacter(newCharacter);
