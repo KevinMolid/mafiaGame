@@ -29,7 +29,7 @@ const CharacterList = ({
   onClick,
 }: CharacterListProps) => {
   const [characters, setCharacters] = useState<Array<any>>([]);
-  const [newMoneyValue, setNewMoneyValue] = useState<number | null>(null);
+  const [newValue, setNewValue] = useState<number | null>(null);
   const [message, setMessage] = useState<string>("");
   const [messageType, setMessageType] = useState<
     "success" | "warning" | "info"
@@ -58,7 +58,7 @@ const CharacterList = ({
       setCharacters(characterData);
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching characters:", error);
+      console.error("Feil ved lasting av spillere:", error);
       setLoading(false);
     }
   };
@@ -104,47 +104,82 @@ const CharacterList = ({
     );
   };
 
-  const setMoney = async (character: any, newMoneyValue: number) => {
+  const setMoney = async (character: any, newValue: number) => {
     try {
       const characterRef = doc(db, "Characters", character.id);
 
       // Update the money in Firebase
       await updateDoc(characterRef, {
-        "stats.money": newMoneyValue,
+        "stats.money": newValue,
       });
 
       // Update the local state
       setCharacters((prevCharacters) =>
         prevCharacters.map((char) =>
-          char.id === character.id ? { ...char, money: newMoneyValue } : char
+          char.id === character.id ? { ...char, money: newValue } : char
         )
       );
 
       setMessageType("success");
       setMessage(
-        `Money updated for ${
+        `Penger oppdatert for ${
           character.username
-        } to $${newMoneyValue.toLocaleString()}`
+        } til $${newValue.toLocaleString()}.`
       );
     } catch (error) {
-      console.error("Error updating money:", error);
+      console.error("Feil ved oppdatering av penger:", error);
+    }
+  };
+
+  const setXp = async (character: any, newValue: number) => {
+    try {
+      const characterRef = doc(db, "Characters", character.id);
+
+      // Update the money in Firebase
+      await updateDoc(characterRef, {
+        "stats.xp": newValue,
+      });
+
+      // Update the local state
+      setCharacters((prevCharacters) =>
+        prevCharacters.map((char) =>
+          char.id === character.id ? { ...char, xp: newValue } : char
+        )
+      );
+
+      setMessageType("success");
+      setMessage(
+        `Xp oppdatert for ${
+          character.username
+        } til ${newValue.toLocaleString()}.`
+      );
+    } catch (error) {
+      console.error("Feil ved oppdatering av Xp:", error);
     }
   };
 
   const handleSetMoney = (character: any) => {
-    if (!newMoneyValue) {
-      setMessage("Please enter a value.");
+    if (!newValue) {
+      setMessage("Du må skrive inn en verdi.");
     } else {
-      setMoney(character, newMoneyValue);
+      setMoney(character, newValue);
+    }
+  };
+
+  const handleSetXp = (character: any) => {
+    if (!newValue) {
+      setMessage("Du må skrive inn en verdi.");
+    } else {
+      setXp(character, newValue);
     }
   };
 
   if (loading) {
-    return <p>Loading characters...</p>;
+    return <p>Laster spillere...</p>;
   }
 
   if (characters.length === 0) {
-    return <p>No characters found.</p>;
+    return <p>Ingen spillere funnet.</p>;
   }
 
   // Type == Rank
@@ -211,17 +246,18 @@ const CharacterList = ({
                     </button>
                   )}
                   {/* Set money */}
-                  <div className="flex gap-1">
+                  <div className="flex gap-2">
                     <input
                       type="number"
-                      placeholder="Value"
-                      onChange={(e) =>
-                        setNewMoneyValue(parseInt(e.target.value))
-                      }
+                      placeholder="Verdi"
+                      onChange={(e) => setNewValue(parseInt(e.target.value))}
                       className="bg-slate-700 border border-slate-500 px-2 w-24"
                     />
                     <button onClick={() => handleSetMoney(character)}>
-                      <i className="fa-solid fa-dollar-sign"></i> Sett penger
+                      Sett <i className="fa-solid fa-dollar-sign"></i>
+                    </button>
+                    <button onClick={() => handleSetXp(character)}>
+                      Sett <strong>XP</strong>
                     </button>
                   </div>
                 </div>
@@ -254,9 +290,9 @@ const CharacterList = ({
                     )}
                   </p>
                   <p>Xp: {character.xp}</p>
-                  <p>Money: ${character.money.toLocaleString()}</p>
+                  <p>Penger: ${character.money.toLocaleString()}</p>
                   <p>Bank: ${character.bank.toLocaleString()}</p>
-                  <p>Location: {character.location}</p>
+                  <p>Lokasjon: {character.location}</p>
                 </div>
               </div>
             </li>
