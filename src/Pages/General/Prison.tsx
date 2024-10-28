@@ -1,12 +1,35 @@
 // Components
 import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
-import H2 from "../../components/Typography/H2";
+import InfoBox from "../../components/InfoBox";
+import JailBox from "../../components/JailBox";
+import Button from "../../components/Button";
+
+import { useState } from "react";
 
 import { useCharacter } from "../../CharacterContext";
 
 const Prison = () => {
   const { character } = useCharacter();
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<
+    "success" | "failure" | "info" | "warning"
+  >("info");
+
+  const handleButtonClick = () => {
+    setMessageType("info");
+    setMessage(
+      "Denne funksjonen er enda ikke utviklet, men kommer etter hvert."
+    );
+  };
+
+  if (character?.inJail) {
+    return (
+      <Main>
+        <JailBox message={message} messageType={messageType} />
+      </Main>
+    );
+  }
 
   return (
     <Main img="PrisonBg">
@@ -16,10 +39,11 @@ const Prison = () => {
         {character?.location}.
       </p>
 
-      <H2>Du er i fengsel</H2>
-      <p>
-        Du må vente <strong>482</strong> sekunder før du slipper ut.
-      </p>
+      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
+      <p className="mb-4">Du er for øyeblikket ikke i fengsel.</p>
+
+      <Button onClick={handleButtonClick}>Besøk fengsel</Button>
     </Main>
   );
 };
