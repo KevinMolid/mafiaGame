@@ -1,11 +1,6 @@
-// React
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { Character, Stats, Reputation } from "./Interfaces/CharacterTypes";
-
-// Import necessary functions
 import { getCurrentRank } from "./Functions/RankFunctions.tsx";
-
-// Firebase
 import {
   getFirestore,
   doc,
@@ -15,8 +10,6 @@ import {
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./firebaseConfig";
-
-// Context
 import { useAuth } from "./AuthContext";
 
 const app = initializeApp(firebaseConfig);
@@ -49,15 +42,14 @@ export const CharacterProvider = ({
   const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // State to track previous XP and money for rank changes
-  const [prevXP, setPrevXP] = useState<number | undefined>(undefined);
+  // Use useRef to keep prevXP across renders
+  const prevXP = useRef<number | null>(null);
 
   useEffect(() => {
     if (userData && userData.activeCharacter) {
       setLoading(true);
       const charDocRef = doc(db, "Characters", userData.activeCharacter);
 
-      // Set up the real-time listener
       const unsubscribe = onSnapshot(charDocRef, async (docSnapshot) => {
         if (docSnapshot.exists()) {
           const characterData = docSnapshot.data();
@@ -97,13 +89,19 @@ export const CharacterProvider = ({
             };
 
             const currentXP = newCharacter.stats.xp;
-            console.log("1: prevXP:", prevXP, "currentXP:", currentXP);
+            console.log("1: prevXP:", prevXP.current, "currentXP:", currentXP);
 
-            // Check for XP rank change
-            if (prevXP !== undefined && prevXP !== currentXP) {
-              const prevRank = getCurrentRank(prevXP);
+            // Handle XP rank change logic
+            if (prevXP.current !== null && prevXP.current !== currentXP) {
+              const prevRank = getCurrentRank(prevXP.current);
               const newRank = getCurrentRank(currentXP);
-              console.log("2: prevXP:", prevXP, "currentXP:", currentXP);
+              console.log(
+                "2: prevXP:",
+                prevXP.current,
+                "currentXP:",
+                currentXP
+              );
+
               if (prevRank !== newRank) {
                 const alertRef = collection(
                   db,
@@ -120,8 +118,9 @@ export const CharacterProvider = ({
               }
             }
 
-            setPrevXP(currentXP);
+            // Update character and prevXP to current XP
             setCharacter(newCharacter);
+            prevXP.current = currentXP; // Set prevXP using useRef
           } else {
             console.error("Character data is incomplete or missing stats");
             setCharacter(null);
@@ -134,7 +133,6 @@ export const CharacterProvider = ({
         setLoading(false);
       });
 
-      // Clean up the listener when the component unmounts or user changes
       return () => unsubscribe();
     } else {
       setCharacter(null);
