@@ -7,15 +7,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { userData } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>Laster...</div>;
   }
 
   if (!userData) {
     return <Navigate to="/logginn" />;
   }
 
-  if (!character || character.status === "dead") {
+  if (!character) {
     return <Navigate to="/nyspiller" />;
+  }
+
+  if (character.status === "dead") {
+    return <Navigate to="/drept" />;
   }
 
   return <>{children}</>;

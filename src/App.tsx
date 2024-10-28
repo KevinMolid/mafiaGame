@@ -31,6 +31,7 @@ import Login from "./Pages/Login.tsx";
 import CreateCharacter from "./Pages/CreateCharacter.tsx";
 import SelectCharacter from "./Pages/SelectCharacter.tsx";
 import Influence from "./Pages/Reputation/Influence";
+import Dead from "./Pages/Dead.tsx";
 
 // Crimes
 import StreetCrime from "./Pages/Crime/StreetCrime.tsx";
@@ -97,6 +98,7 @@ function App() {
                           <Route path="/toppliste" element={<Leaderboard />} />
                           <Route path="/registrer" element={<Signup />} />
                           <Route path="/logginn" element={<Login />} />
+                          <Route path="/drept" element={<Dead />} />
 
                           {/* Protected Routes */}
                           <Route

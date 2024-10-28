@@ -22,6 +22,8 @@ export interface Character {
   diedAt?: Date | null;
   img: string;
   lastCrimeTimestamp?: Date | null;
+  lastRobberyTimestamp?: Date | null;
+  lastGTATimestamp?: Date | null;
   profileText: string;
   reputation: Reputation;
   status: string;
@@ -43,6 +45,8 @@ export interface Target {
   diedAt?: Date | null;
   img: string;
   lastCrimeTimestamp?: Date | null;
+  lastRobberyTimestamp?: Date | null;
+  lastGTATimestamp?: Date | null;
   profileText: string;
   reputation: Reputation;
   status: string;
