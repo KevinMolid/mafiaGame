@@ -3,6 +3,7 @@ import H2 from "./Typography/H2";
 import InfoBox from "./InfoBox";
 import Username from "./Typography/Username";
 import Button from "./Button";
+import Box from "./Box";
 
 import { useCharacter } from "../CharacterContext";
 
@@ -54,8 +55,8 @@ const NoFamily = ({
 }: NoFamilyInterface) => {
   const [familyName, setFamilyName] = useState("");
   const { character } = useCharacter();
-
   const [families, setFamilies] = useState<FamilyData[]>([]);
+  const [applyingTo, setApplyingTo] = useState<string | null>(null);
 
   // Fetch all families from Firestore
   useEffect(() => {
@@ -145,6 +146,10 @@ const NoFamily = ({
     }
   };
 
+  const sendApplication = (familyName: string) => {
+    console.log(`Sender søknad til familien ${familyName}`);
+  };
+
   if (family) return;
 
   return (
@@ -153,59 +158,91 @@ const NoFamily = ({
       <p className="mb-2">Du tilhører ingen familie.</p>
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
-      {/* Create family */}
-      <div className="border border-neutral-600 p-4 mb-4">
-        <H2>Opprett ny familie</H2>
-        <p className="mb-2">
-          Kostnad: <strong className="text-yellow-400">$250,000,000</strong>
-        </p>
-        <form action="" onSubmit={createFamily} className="flex flex-col gap-2">
-          <input
-            className="bg-neutral-700 py-2 px-4 placeholder-neutral-400 text-white"
-            type="text"
-            value={familyName}
-            onChange={(e) => setFamilyName(e.target.value)}
-            placeholder="Ønsket familienavn"
-          />
-          <Button type="submit">Opprett familie</Button>
-        </form>
-      </div>
+      <div className="flex flex-col gap-4">
+        {/* Create family */}
+        {!applyingTo && (
+          <Box>
+            <H2>Opprett ny familie</H2>
+            <p className="mb-2">
+              Kostnad: <strong className="text-yellow-400">$250,000,000</strong>
+            </p>
+            <form
+              action=""
+              onSubmit={createFamily}
+              className="flex flex-col gap-2"
+            >
+              <input
+                className="bg-neutral-700 py-2 px-4 placeholder-neutral-400 text-white"
+                type="text"
+                value={familyName}
+                onChange={(e) => setFamilyName(e.target.value)}
+                placeholder="Ønsket familienavn"
+              />
+              <Button type="submit">Opprett familie</Button>
+            </form>
+          </Box>
+        )}
 
-      {/* Apply to family */}
-      <div className="border border-neutral-600 p-4">
-        <H2>Bli med i en familie</H2>
-        {families.length > 0 ? (
-          <ul>
-            {families.map((family) => (
-              <li
-                key={family.name}
-                className="mb-4 flex justify-between items-center"
+        {/* Apply to family */}
+        {!applyingTo && (
+          <Box>
+            <H2>Bli med i en familie</H2>
+            {families.length > 0 ? (
+              <ul>
+                {families.map((family) => (
+                  <li
+                    key={family.name}
+                    className="mb-4 flex justify-between items-center"
+                  >
+                    <div>
+                      <p>
+                        <strong className="text-neutral-200">
+                          {family.name}
+                        </strong>
+                      </p>
+                      <small>
+                        Leder:{" "}
+                        <Username
+                          character={{
+                            id: family.leaderId,
+                            username: family.leaderName,
+                          }}
+                        />
+                      </small>
+                    </div>
+
+                    <div>
+                      <Button onClick={() => setApplyingTo(family.name)}>
+                        Skriv søknad
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No families available to join.</p>
+            )}
+          </Box>
+        )}
+
+        {/* Application */}
+        {applyingTo && (
+          <Box>
+            <div className="flex justify-between items-start">
+              <H2>Søknad til {applyingTo}</H2>
+              <button
+                className="size-10 bg-neutral-700 rounded-lg text-xl hover:bg-neutral-600 hover:text-neutral-200"
+                onClick={() => setApplyingTo(null)}
               >
-                <div>
-                  <p>
-                    <strong className="text-neutral-200">{family.name}</strong>
-                  </p>
-                  <small>
-                    Leder:{" "}
-                    <Username
-                      character={{
-                        id: family.leaderId,
-                        username: family.leaderName,
-                      }}
-                    />
-                  </small>
-                </div>
-
-                <div>
-                  <Button onClick={() => console.log("Joining family")}>
-                    Skriv søknad
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No families available to join.</p>
+                <i className="fa-solid fa-x"></i>
+              </button>
+            </div>
+            <form action="">
+              <Button onClick={() => sendApplication(applyingTo)}>
+                Send søknad
+              </Button>
+            </form>
+          </Box>
         )}
       </div>
     </>
