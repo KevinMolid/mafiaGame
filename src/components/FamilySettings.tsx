@@ -9,21 +9,8 @@ import { getFirestore, doc, updateDoc, deleteDoc } from "firebase/firestore";
 
 const db = getFirestore();
 
-type FamilyMember = {
-  id: string;
-  name: string;
-  rank: string;
-};
-
-type FamilyData = {
-  name: string;
-  leaderName: string;
-  leaderId: string;
-  members: FamilyMember[];
-  createdAt: Date;
-  rules: string;
-  wealth: number;
-};
+// Interfaces
+import { FamilyData } from "../Interfaces/Types";
 
 interface FamilySettingsInterface {
   setError: React.Dispatch<React.SetStateAction<string | null>>;

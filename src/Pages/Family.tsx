@@ -8,6 +8,7 @@ import Username from "../components/Typography/Username";
 import Button from "../components/Button";
 import FamilySettings from "../components/FamilySettings";
 import FamilyMembers from "../components/FamilyMembers";
+import FamilyApplications from "../components/FamilyApplications";
 
 import NoFamily from "../components/NoFamily";
 import { useState, useEffect } from "react";
@@ -15,23 +16,10 @@ import { useCharacter } from "../CharacterContext";
 
 import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 
+// Interfaces
+import { FamilyData } from "../Interfaces/Types";
+
 const db = getFirestore();
-
-type FamilyMember = {
-  id: string;
-  name: string;
-  rank: string;
-};
-
-type FamilyData = {
-  name: string;
-  leaderName: string;
-  leaderId: string;
-  members: FamilyMember[];
-  createdAt: Date;
-  rules: string;
-  wealth: number;
-};
 
 const Family = () => {
   const { character } = useCharacter();
@@ -39,7 +27,7 @@ const Family = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<
-    "members" | "safehouse" | "chat" | "profile" | "settings"
+    "members" | "safehouse" | "chat" | "profile" | "settings" | "applications"
   >("members");
   const [message, setMessage] = useState<string>("");
   const [messageType, setMessageType] = useState<
@@ -289,6 +277,17 @@ const Family = () => {
             <li
               className={
                 " hover:bg-neutral-800 px-4 py-2 max-w-44 border-b-2 border-neutral-700 cursor-pointer " +
+                (activePanel === "applications" &&
+                  "bg-neutral-800 border-white")
+              }
+              onClick={() => setActivePanel("applications")}
+            >
+              <p className="text-neutral-200 font-medium">Søknader</p>
+            </li>
+
+            <li
+              className={
+                " hover:bg-neutral-800 px-4 py-2 max-w-44 border-b-2 border-neutral-700 cursor-pointer " +
                 (activePanel === "settings" && "bg-neutral-800 border-white")
               }
               onClick={() => setActivePanel("settings")}
@@ -347,6 +346,9 @@ const Family = () => {
               <p>Dette er familiens profil.</p>
             </div>
           )}
+
+          {/* Applications panel */}
+          {activePanel === "applications" && <FamilyApplications />}
 
           {/* Settings panel */}
           {activePanel === "settings" && (

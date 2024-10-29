@@ -22,22 +22,8 @@ import {
 
 const db = getFirestore();
 
-type FamilyMember = {
-  id: string;
-  name: string;
-  rank: string;
-};
-
-type FamilyData = {
-  id: string;
-  name: string;
-  leaderName: string;
-  leaderId: string;
-  members: FamilyMember[];
-  createdAt: Date;
-  rules: string;
-  wealth: number;
-};
+// Interfaces
+import { FamilyData } from "../Interfaces/Types";
 
 interface NoFamilyInterface {
   family: FamilyData | null;
