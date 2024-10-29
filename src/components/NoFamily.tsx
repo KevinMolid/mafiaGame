@@ -53,7 +53,7 @@ const NoFamily = ({
   setMessageType,
 }: NoFamilyInterface) => {
   const [familyName, setFamilyName] = useState("");
-  const { character, setCharacter } = useCharacter();
+  const { character } = useCharacter();
 
   const [families, setFamilies] = useState<FamilyData[]>([]);
 
@@ -133,29 +133,12 @@ const NoFamily = ({
         { merge: true }
       );
 
-      // Update character in local state
-      setCharacter((prevCharacter) => {
-        if (!prevCharacter) return prevCharacter; // If null, return without changes
-
-        return {
-          ...prevCharacter,
-          familyId: familyId as string,
-          familyName: familyName as string,
-          stats: {
-            ...prevCharacter.stats,
-            money: newMoneyValue,
-          },
-        };
-      });
-
       // set Family in local state
       setFamily(newFamily);
       setFamilyName("");
 
       setMessageType("success");
-      setMessage(
-        `Du opprettet ${familyName} og betalte $${cost.toLocaleString()}.`
-      );
+      setMessage(`Du opprettet ${familyName} for $${cost.toLocaleString()}.`);
     } catch (error) {
       setMessageType("failure");
       setMessage("Feil ved opprettelse av familie.");
