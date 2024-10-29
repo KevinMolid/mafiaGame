@@ -2,6 +2,7 @@ import H1 from "./Typography/H1";
 import H2 from "./Typography/H2";
 import InfoBox from "./InfoBox";
 import Username from "./Typography/Username";
+import Familyname from "./Typography/Familyname";
 import Button from "./Button";
 import Box from "./Box";
 
@@ -28,6 +29,7 @@ type FamilyMember = {
 };
 
 type FamilyData = {
+  id: string;
   name: string;
   leaderName: string;
   leaderId: string;
@@ -69,7 +71,8 @@ const NoFamily = ({
       try {
         const familiesSnapshot = await getDocs(collection(db, "Families"));
         const familiesData: FamilyData[] = familiesSnapshot.docs.map((doc) => ({
-          ...(doc.data() as FamilyData),
+          id: doc.id,
+          ...(doc.data() as Omit<FamilyData, "id">),
         }));
         setFamilies(familiesData);
       } catch (error) {
@@ -101,8 +104,7 @@ const NoFamily = ({
     }
 
     try {
-      const familyId = `family_${Date.now()}`;
-      const newFamily = {
+      const newFamilyData = {
         name: familyName,
         leaderName: character.username,
         leaderId: character.id,
@@ -118,8 +120,12 @@ const NoFamily = ({
         wealth: 0,
       };
 
-      // Create new family document
-      await setDoc(doc(db, "Families", familyId), newFamily);
+      // Create new family document and get the familyId from doc reference
+      const familyDocRef = await addDoc(
+        collection(db, "Families"),
+        newFamilyData
+      );
+      const familyId = familyDocRef.id;
 
       const newMoneyValue = character.stats.money - cost;
 
@@ -138,7 +144,7 @@ const NoFamily = ({
       );
 
       // set Family in local state
-      setFamily(newFamily);
+      setFamily({ id: familyId, ...newFamilyData });
       setFamilyName("");
 
       setMessageType("success");
@@ -232,9 +238,7 @@ const NoFamily = ({
                   >
                     <div>
                       <p>
-                        <strong className="text-neutral-200">
-                          {family.name}
-                        </strong>
+                        <Familyname family={family}></Familyname>
                       </p>
                       <small>
                         Leder:{" "}
