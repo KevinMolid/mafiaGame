@@ -15,6 +15,8 @@ import Sidebar from "./components/Sidebar";
 import Layout from "./components/Layout";
 import Infobar from "./components/Infobar";
 import Footer from "./components/Footer";
+import DropdownLeft from "./components/DropdownLeft.tsx";
+import DropdownRight from "./components/DropdownRight.tsx";
 
 /***** PAGES *****/
 import Home from "./Pages/Home.tsx";
@@ -55,9 +57,9 @@ import ForumThread from "./Pages/ForumThread.tsx";
 // Gambling
 import Jackpot from "./Pages/Gambling/Jackpot.tsx";
 
+// Protected routes
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
-import DropdownLeft from "./components/DropdownLeft.tsx";
-import DropdownRight from "./components/DropdownRight.tsx";
+import ProtectedAdminRoute from "./Routes/ProtectedAdminRoute.tsx";
 
 function App() {
   return (
@@ -100,21 +102,22 @@ function App() {
                           <Route path="/logginn" element={<Login />} />
                           <Route path="/drept" element={<Dead />} />
 
+                          {/* Protected Admin Routes */}
+                          <Route
+                            path="/admin"
+                            element={
+                              <ProtectedAdminRoute>
+                                <Admin />
+                              </ProtectedAdminRoute>
+                            }
+                          />
+
                           {/* Protected Routes */}
                           <Route
                             path="/"
                             element={
                               <ProtectedRoute>
                                 <Home />
-                              </ProtectedRoute>
-                            }
-                          />
-
-                          <Route
-                            path="/admin"
-                            element={
-                              <ProtectedRoute>
-                                <Admin />
                               </ProtectedRoute>
                             }
                           />
