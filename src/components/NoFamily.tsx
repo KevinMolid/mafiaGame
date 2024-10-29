@@ -182,6 +182,20 @@ const NoFamily = ({
         appliedAt: new Date(),
       });
 
+      // Update character document with activeFamilyApplication
+      const characterRef = doc(db, "Characters", character.id);
+      await setDoc(
+        characterRef,
+        {
+          activeFamilyApplication: {
+            familyId: familyDoc.id,
+            familyName: familyName,
+            appliedAt: new Date(),
+          },
+        },
+        { merge: true }
+      );
+
       setMessageType("success");
       setMessage(`Sønad sendt til ${familyName}.`);
       setApplyingTo(null);
@@ -202,7 +216,7 @@ const NoFamily = ({
 
       <div className="flex flex-col gap-4">
         {/* Create family */}
-        {!applyingTo && (
+        {!applyingTo && !character?.activeFamilyApplication && (
           <Box>
             <H2>Opprett ny familie</H2>
             <p className="mb-2">
@@ -226,7 +240,7 @@ const NoFamily = ({
         )}
 
         {/* Apply to family */}
-        {!applyingTo && (
+        {!applyingTo && !character?.activeFamilyApplication && (
           <Box>
             <H2>Bli med i en familie</H2>
             {families.length > 0 ? (
@@ -282,6 +296,40 @@ const NoFamily = ({
                 Send søknad
               </Button>
             </form>
+          </Box>
+        )}
+
+        {character?.activeFamilyApplication && (
+          <Box>
+            <H2>Venter på godkjenning</H2>
+            <p className="mb-4">
+              Du sendte en søknad til{" "}
+              <Familyname
+                family={{
+                  id: character.activeFamilyApplication.familyId,
+                  name: character.activeFamilyApplication.familyName,
+                }}
+              />
+              {" den "}
+              {character.activeFamilyApplication.appliedAt &&
+                `${character.activeFamilyApplication.appliedAt.toLocaleDateString(
+                  "no-NO",
+                  {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  }
+                )} kl. ${character.activeFamilyApplication.appliedAt.toLocaleTimeString(
+                  "no-NO",
+                  {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }
+                )}.`}
+            </p>
+            <Button style="danger">
+              <i className="fa-solid fa-ban"></i> Avbryt søknad
+            </Button>
           </Box>
         )}
       </div>

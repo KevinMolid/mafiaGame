@@ -84,6 +84,15 @@ export const CharacterProvider = ({
               cars: characterData.cars as any,
               familyId: characterData.familyId as string,
               familyName: characterData.familyName as string,
+              activeFamilyApplication: characterData.activeFamilyApplication
+                ? {
+                    familyId: characterData.activeFamilyApplication.familyId,
+                    familyName:
+                      characterData.activeFamilyApplication.familyName,
+                    appliedAt:
+                      characterData.activeFamilyApplication.appliedAt.toDate(),
+                  }
+                : null,
               inJail: characterData.inJail as boolean,
               jailReleaseTime: characterData.jailReleaseTime as any,
             };

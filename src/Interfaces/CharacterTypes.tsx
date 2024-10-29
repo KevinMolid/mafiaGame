@@ -34,6 +34,11 @@ export interface Character {
   cars?: any;
   familyId?: string | null;
   familyName?: string | null;
+  activeFamilyApplication?: {
+    familyId: string;
+    familyName: string;
+    appliedAt: Date;
+  } | null;
   inJail?: boolean | null;
   jailReleaseTime?: any;
 }
@@ -57,6 +62,11 @@ export interface Target {
   cars?: any;
   familyId?: string | null;
   familyName?: string | null;
+  activeFamilyApplication?: {
+    familyId: string;
+    familyName: string;
+    appliedAt: Date;
+  } | null;
   inJail?: boolean | null;
   jailReleaseTime?: any;
 }
