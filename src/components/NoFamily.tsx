@@ -12,8 +12,11 @@ import {
   getFirestore,
   doc,
   setDoc,
+  query,
+  where,
   getDocs,
   collection,
+  addDoc,
 } from "firebase/firestore";
 
 const db = getFirestore();
@@ -146,8 +149,41 @@ const NoFamily = ({
     }
   };
 
-  const sendApplication = (familyName: string) => {
-    console.log(`Sender søknad til familien ${familyName}`);
+  // Function to add application to the family's "Applications" subcollection
+  const sendApplication = async (familyName: string) => {
+    if (!character || !familyName) return;
+
+    try {
+      const familiesQuery = query(
+        collection(db, "Families"),
+        where("name", "==", familyName)
+      );
+      const querySnapshot = await getDocs(familiesQuery);
+
+      if (querySnapshot.empty) {
+        setMessageType("warning");
+        setMessage("Fant ingen familie med dette navnet");
+        return;
+      }
+
+      const familyDoc = querySnapshot.docs[0];
+      const familyRef = doc(db, "Families", familyDoc.id);
+      const applicationsRef = collection(familyRef, "Applications");
+
+      await addDoc(applicationsRef, {
+        applicantId: character.id,
+        applicantUsername: character.username,
+        appliedAt: new Date(),
+      });
+
+      setMessageType("success");
+      setMessage(`Sønad sendt til ${familyName}.`);
+      setApplyingTo(null);
+    } catch (error) {
+      console.error("Error sending application:", error);
+      setMessageType("failure");
+      setMessage("Feil ved sending av søknad.");
+    }
   };
 
   if (family) return;
