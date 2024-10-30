@@ -18,6 +18,7 @@ import {
   getDocs,
   collection,
   addDoc,
+  deleteDoc,
 } from "firebase/firestore";
 
 const db = getFirestore();
@@ -167,7 +168,7 @@ const NoFamily = ({
       const familyRef = doc(db, "Families", familyDoc.id);
       const applicationsRef = collection(familyRef, "Applications");
 
-      await addDoc(applicationsRef, {
+      const applicationDocRef = await addDoc(applicationsRef, {
         applicantId: character.id,
         applicantUsername: character.username,
         applicationText: applicationText,
@@ -182,6 +183,7 @@ const NoFamily = ({
           activeFamilyApplication: {
             familyId: familyDoc.id,
             familyName: familyName,
+            applicationId: applicationDocRef.id,
             appliedAt: new Date(),
           },
         },
@@ -195,6 +197,40 @@ const NoFamily = ({
       console.error("Error sending application:", error);
       setMessageType("failure");
       setMessage("Feil ved sending av søknad.");
+    }
+  };
+
+  // Function to cancel the application
+  const cancelApplication = async () => {
+    if (!character || !character.activeFamilyApplication) return;
+
+    try {
+      const { familyId, applicationId } = character.activeFamilyApplication;
+
+      // Delete the application document using the stored applicationId
+      const applicationDocRef = doc(
+        db,
+        "Families",
+        familyId,
+        "Applications",
+        applicationId
+      );
+      await deleteDoc(applicationDocRef);
+
+      // Set activeFamilyApplication to null in character document
+      const characterRef = doc(db, "Characters", character.id);
+      await setDoc(
+        characterRef,
+        { activeFamilyApplication: null },
+        { merge: true }
+      );
+
+      setMessageType("info");
+      setMessage("Søknaden er avbrutt.");
+    } catch (error) {
+      console.error("Error cancelling application:", error);
+      setMessageType("failure");
+      setMessage("Feil ved avbryting av søknad.");
     }
   };
 
@@ -330,7 +366,8 @@ const NoFamily = ({
                 )}.`}
             </p>
             <Button style="danger">
-              <i className="fa-solid fa-ban"></i> Avbryt søknad
+              <i className="fa-solid fa-ban" onClick={cancelApplication}></i>{" "}
+              Avbryt søknad
             </Button>
           </Box>
         )}
