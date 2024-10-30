@@ -48,6 +48,7 @@ const NoFamily = ({
   const { character } = useCharacter();
   const [families, setFamilies] = useState<FamilyData[]>([]);
   const [applyingTo, setApplyingTo] = useState<string | null>(null);
+  const [applicationText, setApplicationText] = useState<string>("");
 
   // Fetch all families from Firestore
   useEffect(() => {
@@ -141,6 +142,10 @@ const NoFamily = ({
     }
   };
 
+  const handleApplicationTextChange = (e: any) => {
+    setApplicationText(e.target.value);
+  };
+
   // Function to add application to the family's "Applications" subcollection
   const sendApplication = async (familyName: string) => {
     if (!character || !familyName) return;
@@ -165,6 +170,7 @@ const NoFamily = ({
       await addDoc(applicationsRef, {
         applicantId: character.id,
         applicantUsername: character.username,
+        applicationText: applicationText,
         appliedAt: new Date(),
       });
 
@@ -183,7 +189,7 @@ const NoFamily = ({
       );
 
       setMessageType("success");
-      setMessage(`Sønad sendt til ${familyName}.`);
+      setMessage(`Du har sendt en søknad til ${familyName}!`);
       setApplyingTo(null);
     } catch (error) {
       console.error("Error sending application:", error);
@@ -277,10 +283,20 @@ const NoFamily = ({
                 <i className="fa-solid fa-x"></i>
               </button>
             </div>
-            <form action="">
-              <Button onClick={() => sendApplication(applyingTo)}>
-                Send søknad
-              </Button>
+            <form action="" className="flex flex-col gap-2">
+              <textarea
+                rows={8}
+                name=""
+                id="profileTxt"
+                className="bg-neutral-800 px-2 py-1 resize-none"
+                value={applicationText}
+                onChange={handleApplicationTextChange}
+              ></textarea>
+              <div className="flex justify-end">
+                <Button onClick={() => sendApplication(applyingTo)}>
+                  Send søknad
+                </Button>
+              </div>
             </form>
           </Box>
         )}

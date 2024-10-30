@@ -76,7 +76,7 @@ const EditProfile = () => {
             rows={8}
             name=""
             id="profileTxt"
-            className="bg-neutral-800 px-2 py-1"
+            className="bg-neutral-800 px-2 py-1 resize-none"
             value={profileTxt}
             onChange={handleProfileTxtChange}
           ></textarea>
