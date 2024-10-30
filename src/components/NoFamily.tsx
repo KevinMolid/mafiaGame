@@ -311,7 +311,7 @@ const NoFamily = ({
         {/* Application */}
         {applyingTo && (
           <Box>
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-baseline mb-2">
               <H2>Søknad til {applyingTo}</H2>
               <button
                 className="size-10 bg-neutral-700 rounded-lg text-xl hover:bg-neutral-600 hover:text-neutral-200"
