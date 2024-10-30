@@ -24,6 +24,7 @@ interface Application {
   documentId: string;
   applicantId: string;
   applicantUsername: string;
+  applicationText: string;
   appliedAt: Date;
 }
 
@@ -52,10 +53,11 @@ const FamilyApplications = () => {
         const applicationsSnapshot = await getDocs(applicationsRef);
         const applicationsList: Application[] = applicationsSnapshot.docs.map(
           (doc) => ({
-            documentId: doc.id, // Unique document ID
-            applicantId: doc.data().applicantId, // Applicant's ID from the document
+            documentId: doc.id,
+            applicantId: doc.data().applicantId,
             applicantUsername: doc.data().applicantUsername,
-            appliedAt: doc.data().appliedAt?.toDate(), // Application timestamp
+            applicationText: doc.data().applicationText,
+            appliedAt: doc.data().appliedAt?.toDate(),
           })
         );
         setApplications(applicationsList);
@@ -220,6 +222,9 @@ const FamilyApplications = () => {
                     </p>
                     <p>{formatAppliedAt(application.appliedAt)}</p>
                   </div>
+
+                  <p>{application.applicationText}</p>
+
                   <div className="flex gap-2 justify-end">
                     <Button onClick={() => acceptApplication(application)}>
                       <i className="fa-regular fa-circle-check"></i> Godta
