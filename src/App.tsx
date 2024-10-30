@@ -27,6 +27,7 @@ import EditProfile from "./Pages/EditProfile.tsx";
 import Notebook from "./Pages/Notebook.tsx";
 import Blacklist from "./Pages/Blacklist.tsx";
 import About from "./Pages/About.tsx";
+import Support from "./Pages/Support.tsx";
 import Leaderboard from "./Pages/Leaderboard.tsx";
 import Signup from "./Pages/Signup.tsx";
 import Login from "./Pages/Login.tsx";
@@ -87,6 +88,8 @@ function App() {
                         <Routes>
                           {/* Public Routes */}
                           <Route path="/spillguide" element={<About />} />
+                          <Route path="/support" element={<Support />} />
+
                           <Route
                             path="/nyspiller"
                             element={<CreateCharacter />}
