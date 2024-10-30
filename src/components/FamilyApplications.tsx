@@ -91,12 +91,15 @@ const FamilyApplications = () => {
         db,
         "Characters",
         application.applicantId,
-        "Alerts",
+        "alerts",
         `AcceptedToFamily_${character.familyId}`
       );
       await setDoc(alertRef, {
-        message: `Søknaden din ble godtatt og du er nå medlem av familen ${character.familyName}.`,
+        type: "applicationAccepted",
+        familyName: character.familyName,
+        familyId: character.familyId,
         timestamp: new Date(),
+        read: false,
       });
 
       // 2. Update applicant's character document with familyId and familyName

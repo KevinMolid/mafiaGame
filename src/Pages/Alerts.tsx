@@ -2,6 +2,7 @@ import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
 import Alert from "../components/Alert";
 import Username from "../components/Typography/Username";
+import Familyname from "../components/Typography/Familyname";
 
 import { useState, useEffect } from "react";
 import {
@@ -30,8 +31,10 @@ interface Alert {
   amountSent?: number;
   robberId?: string;
   senderId?: string;
+  familyId?: string;
   robberName?: string;
   senderName?: string;
+  familyName?: string;
   timestamp: string; // Timestamp is stored as an ISO 8601 string
   read: boolean;
 }
@@ -157,6 +160,17 @@ const Alerts = () => {
                     ${alert.amountSent.toLocaleString()}
                   </span>{" "}
                   til din bankkonto.
+                </small>
+              )}
+
+              {/* Bank transfer alert */}
+              {alert.type === "applicationAccepted" && (
+                <small>
+                  Søknaden din ble godkjent og du er nå medlem av{" "}
+                  <Familyname
+                    family={{ id: alert.familyId, name: alert.familyName }}
+                  />
+                  !
                 </small>
               )}
 

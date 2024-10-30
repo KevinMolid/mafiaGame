@@ -200,7 +200,7 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
 
       {/* Associates */}
       <div>
-        <p>Tilhørere</p>
+        <p>Medlemmer</p>
         {family.members.map((member) => {
           return (
             <p key={member.id}>
