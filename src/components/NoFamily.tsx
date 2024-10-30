@@ -189,7 +189,7 @@ const NoFamily = ({
       );
 
       setMessageType("success");
-      setMessage(`Du har sendt en søknad til ${familyName}!`);
+      setMessage(`Du har sendt søknad til ${familyName}!`);
       setApplyingTo(null);
     } catch (error) {
       console.error("Error sending application:", error);
