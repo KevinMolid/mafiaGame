@@ -123,7 +123,7 @@ const FamilyApplications = () => {
         }),
       });
 
-      // Optional: Remove the application after acceptance
+      // Remove the application after acceptance
       const applicationRef = doc(
         db,
         "Families",
@@ -138,8 +138,49 @@ const FamilyApplications = () => {
         prev.filter((app) => app.documentId !== application.documentId)
       );
     } catch (error) {
-      console.error("Error accepting application:", error);
-      setError("Error accepting application.");
+      console.error("Feil ved godkjenning av søknad:", error);
+      setError("Feil ved godkjenning av søknad.");
+    }
+  };
+
+  // Function to decline application
+  const declineApplication = async (application: Application) => {
+    if (!character?.familyId || !character?.familyName) return;
+
+    try {
+      // 1. Add an alert to the applicant's Alerts subcollection
+      const alertRef = doc(
+        db,
+        "Characters",
+        application.applicantId,
+        "alerts",
+        `DeclinedFromFamily_${character.familyId}`
+      );
+      await setDoc(alertRef, {
+        type: "applicationDeclined",
+        familyName: character.familyName,
+        familyId: character.familyId,
+        timestamp: new Date(),
+        read: false,
+      });
+
+      // Remove the application after acceptance
+      const applicationRef = doc(
+        db,
+        "Families",
+        character.familyId,
+        "Applications",
+        application.documentId
+      );
+      await deleteDoc(applicationRef);
+
+      // Refresh applications after acceptance
+      setApplications((prev) =>
+        prev.filter((app) => app.documentId !== application.documentId)
+      );
+    } catch (error) {
+      console.error("Feil ved avslag av søknad:", error);
+      setError("Feil ved avslag av søknad.");
     }
   };
 
@@ -170,9 +211,14 @@ const FamilyApplications = () => {
                   </div>
                   <div className="flex gap-2 justify-end">
                     <Button onClick={() => acceptApplication(application)}>
-                      Godta
+                      <i className="fa-regular fa-circle-check"></i> Godta
                     </Button>
-                    <Button style="danger">Avslå</Button>
+                    <Button
+                      style="danger"
+                      onClick={() => declineApplication(application)}
+                    >
+                      <i className="fa-solid fa-ban"></i> Avslå
+                    </Button>
                   </div>
                 </Box>
               </li>
