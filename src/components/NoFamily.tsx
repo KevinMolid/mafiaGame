@@ -19,6 +19,8 @@ import {
   collection,
   addDoc,
   deleteDoc,
+  updateDoc,
+  deleteField,
 } from "firebase/firestore";
 
 const db = getFirestore();
@@ -202,7 +204,8 @@ const NoFamily = ({
 
   // Function to cancel the application
   const cancelApplication = async () => {
-    if (!character || !character.activeFamilyApplication) return;
+    if (!character) return;
+    if (!character.activeFamilyApplication) return;
 
     try {
       const { familyId, applicationId } = character.activeFamilyApplication;
@@ -217,16 +220,14 @@ const NoFamily = ({
       );
       await deleteDoc(applicationDocRef);
 
-      // Set activeFamilyApplication to null in character document
+      // Delete activeFamilyApplication from character document
       const characterRef = doc(db, "Characters", character.id);
-      await setDoc(
-        characterRef,
-        { activeFamilyApplication: null },
-        { merge: true }
-      );
+      await updateDoc(characterRef, {
+        activeFamilyApplication: deleteField(),
+      });
 
       setMessageType("info");
-      setMessage("Søknaden er avbrutt.");
+      setMessage("Søknaden ble avbrutt.");
     } catch (error) {
       console.error("Error cancelling application:", error);
       setMessageType("failure");
@@ -365,9 +366,8 @@ const NoFamily = ({
                   }
                 )}.`}
             </p>
-            <Button style="danger">
-              <i className="fa-solid fa-ban" onClick={cancelApplication}></i>{" "}
-              Avbryt søknad
+            <Button style="danger" onClick={cancelApplication}>
+              <i className="fa-solid fa-ban"></i> Avbryt søknad
             </Button>
           </Box>
         )}

@@ -111,6 +111,7 @@ const FamilyApplications = () => {
       await updateDoc(applicantCharacterRef, {
         familyId: character.familyId,
         familyName: character.familyName,
+        activeFamilyApplication: null,
       });
 
       // 3. Add applicant to the family's members array
@@ -162,6 +163,16 @@ const FamilyApplications = () => {
         familyId: character.familyId,
         timestamp: new Date(),
         read: false,
+      });
+
+      // 2. Update applicant's character document with familyId and familyName
+      const applicantCharacterRef = doc(
+        db,
+        "Characters",
+        application.applicantId
+      );
+      await updateDoc(applicantCharacterRef, {
+        activeFamilyApplication: null,
       });
 
       // Remove the application after acceptance

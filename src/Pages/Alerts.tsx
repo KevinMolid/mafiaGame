@@ -41,7 +41,7 @@ interface Alert {
 
 const Alerts = () => {
   const { character } = useCharacter();
-  const [alerts, setAlerts] = useState<Alert[]>([]); // Use the Alert type for your state
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -65,6 +65,8 @@ const Alerts = () => {
           robberName: doc.data().robberName || "",
           senderId: doc.data().senderId || "",
           senderName: doc.data().senderName || "",
+          familyId: doc.data().familyId || "",
+          familyName: doc.data().familyName || "",
           read: doc.data().read || false,
         }));
 
@@ -163,14 +165,30 @@ const Alerts = () => {
                 </small>
               )}
 
-              {/* Bank transfer alert */}
+              {/* Family Application alert */}
               {alert.type === "applicationAccepted" && (
                 <small>
-                  Søknaden din ble godkjent og du er nå medlem av{" "}
+                  Søknaden din ble godkjent. Du er nå medlem av{" "}
                   <Familyname
-                    family={{ id: alert.familyId, name: alert.familyName }}
+                    family={{
+                      id: alert.familyId,
+                      name: alert.familyName,
+                    }}
                   />
                   !
+                </small>
+              )}
+
+              {alert.type === "applicationDeclined" && (
+                <small>
+                  Din søknad til{" "}
+                  <Familyname
+                    family={{
+                      id: alert.familyId,
+                      name: alert.familyName,
+                    }}
+                  />{" "}
+                  ble avslått!
                 </small>
               )}
 
