@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  arrayUnion,
+  setDoc,
+  deleteDoc,
+} from "firebase/firestore";
 
 // Components
 import H2 from "./Typography/H2";
@@ -61,9 +70,6 @@ const FamilyApplications = () => {
     fetchApplications();
   }, [character?.familyId, db]);
 
-  if (loading) return <p>Laster søknader...</p>;
-  if (error) return <InfoBox type="failure">{error}</InfoBox>;
-
   const formatAppliedAt = (appliedAt: Date) => {
     return new Intl.DateTimeFormat("no-NO", {
       day: "numeric",
@@ -76,11 +82,72 @@ const FamilyApplications = () => {
       .replace(" kl.", " kl.");
   };
 
+  const acceptApplication = async (application: Application) => {
+    if (!character?.familyId || !character?.familyName) return;
+
+    try {
+      // 1. Add an alert to the applicant's Alerts subcollection
+      const alertRef = doc(
+        db,
+        "Characters",
+        application.applicantId,
+        "Alerts",
+        `AcceptedToFamily_${character.familyId}`
+      );
+      await setDoc(alertRef, {
+        message: `Søknaden din ble godtatt og du er nå medlem av familen ${character.familyName}.`,
+        timestamp: new Date(),
+      });
+
+      // 2. Update applicant's character document with familyId and familyName
+      const applicantCharacterRef = doc(
+        db,
+        "Characters",
+        application.applicantId
+      );
+      await updateDoc(applicantCharacterRef, {
+        familyId: character.familyId,
+        familyName: character.familyName,
+      });
+
+      // 3. Add applicant to the family's members array
+      const familyRef = doc(db, "Families", character.familyId);
+      await updateDoc(familyRef, {
+        members: arrayUnion({
+          id: application.applicantId,
+          name: application.applicantUsername,
+          rank: "Member", // Set an appropriate rank for the new member
+        }),
+      });
+
+      // Optional: Remove the application after acceptance
+      const applicationRef = doc(
+        db,
+        "Families",
+        character.familyId,
+        "Applications",
+        application.documentId
+      );
+      await deleteDoc(applicationRef);
+
+      // Refresh applications after acceptance
+      setApplications((prev) =>
+        prev.filter((app) => app.documentId !== application.documentId)
+      );
+    } catch (error) {
+      console.error("Error accepting application:", error);
+      setError("Error accepting application.");
+    }
+  };
+
+  if (loading) return <p>Laster søknader...</p>;
+  if (error) return <InfoBox type="failure">{error}</InfoBox>;
+
   return (
     <div>
       <H2>Søknader</H2>
       {applications.length === 0 ? (
-        <p>No applications available.</p>
+        <p>Familien har ingen søknader.</p>
       ) : (
         <ul>
           {applications.map((application) => {
@@ -99,7 +166,9 @@ const FamilyApplications = () => {
                     <p>{formatAppliedAt(application.appliedAt)}</p>
                   </div>
                   <div className="flex gap-2 justify-end">
-                    <Button>Godta</Button>
+                    <Button onClick={() => acceptApplication(application)}>
+                      Godta
+                    </Button>
                     <Button style="danger">Avslå</Button>
                   </div>
                 </Box>
