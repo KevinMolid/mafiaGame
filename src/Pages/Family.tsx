@@ -82,7 +82,7 @@ const Family = () => {
 
       if (amount === "") {
         setMessageType("warning");
-        setMessage("Please enter amount.");
+        setMessage("Du må skrive inn beløp.");
         return;
       }
 
@@ -94,7 +94,7 @@ const Family = () => {
         // Check if there is enough money to deposit
         if (newMoney < 0) {
           setMessageType("warning");
-          setMessage("You don't have enough money to donate.");
+          setMessage("Du har ikke så mye penger.");
           return;
         }
 
@@ -117,13 +117,13 @@ const Family = () => {
 
         setMessageType("success");
         setMessage(
-          `You donated $${amount.toLocaleString()} to ${family.name}.`
+          `Du donerte $${amount.toLocaleString()} til ${family.name}.`
         );
 
         setAmount("");
       }
     } catch (error) {
-      console.error("Error depositing funds:", error);
+      console.error("Feil ved innskudd:", error);
     }
   };
 
@@ -135,7 +135,7 @@ const Family = () => {
 
       if (amount === "") {
         setMessageType("warning");
-        setMessage("Please enter amount.");
+        setMessage("Du må skrive inn verdi.");
         return;
       }
 
@@ -147,7 +147,7 @@ const Family = () => {
         // Check if there is enough money to withdraw
         if (newBank < 0) {
           setMessageType("warning");
-          setMessage("There is not enough money to withdraw.");
+          setMessage("Familien har ikke så mye penger.");
           return;
         }
 
@@ -169,14 +169,12 @@ const Family = () => {
         });
 
         setMessageType("success");
-        setMessage(
-          `You withdrew $${amount.toLocaleString()} from ${family.name}.`
-        );
+        setMessage(`Du tok ut $${amount.toLocaleString()} fra ${family.name}.`);
 
         setAmount("");
       }
     } catch (error) {
-      console.error("Error withdrawing funds:", error);
+      console.error("Feil ved uttak:", error);
     }
   };
 
