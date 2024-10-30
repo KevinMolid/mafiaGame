@@ -186,6 +186,7 @@ const NoFamily = ({
             familyId: familyDoc.id,
             familyName: familyName,
             applicationId: applicationDocRef.id,
+            applicationText: applicationText,
             appliedAt: new Date(),
           },
         },
@@ -366,6 +367,11 @@ const NoFamily = ({
                   }
                 )}.`}
             </p>
+            {character.activeFamilyApplication.applicationText && (
+              <p className="mb-4 text-neutral-200">
+                {character.activeFamilyApplication.applicationText}
+              </p>
+            )}
             <Button style="danger" onClick={cancelApplication}>
               <i className="fa-solid fa-ban"></i> Avbryt søknad
             </Button>

@@ -88,6 +88,8 @@ export const CharacterProvider = ({
                 ? {
                     applicationId:
                       characterData.activeFamilyApplication.applicationId,
+                    applicationText:
+                      characterData.activeFamilyApplication.applicationText,
                     familyId: characterData.activeFamilyApplication.familyId,
                     familyName:
                       characterData.activeFamilyApplication.familyName,

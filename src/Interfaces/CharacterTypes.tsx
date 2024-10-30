@@ -38,6 +38,7 @@ export interface Character {
     familyId: string;
     familyName: string;
     applicationId: string;
+    applicationText: string;
     appliedAt: Date;
   } | null;
   inJail?: boolean | null;
@@ -67,6 +68,7 @@ export interface Target {
     familyId: string;
     familyName: string;
     applicationId: string;
+    applicationText: string;
     appliedAt: Date;
   } | null;
   inJail?: boolean | null;
