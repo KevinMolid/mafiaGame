@@ -286,7 +286,7 @@ const CharacterList = ({
                         }}
                       />
                     ) : (
-                      "No family"
+                      "Ingen familie"
                     )}
                   </p>
                   <p>Xp: {character.xp}</p>
