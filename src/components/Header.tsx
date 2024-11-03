@@ -55,7 +55,7 @@ const Header = () => {
       {/* Logo */}
       <Link to="/">
         <img
-          className="h-10 sm:h-12"
+          className="h-14 sm:h-16"
           src={logo}
           alt="MafiaReign Logo: Fight for Dominance"
         />
