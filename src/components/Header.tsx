@@ -1,4 +1,4 @@
-import logo from "../assets/LogoV4.png";
+import logo from "../assets/DsD3.png";
 
 import { useMenuContext } from "../MenuContext";
 
@@ -55,7 +55,7 @@ const Header = () => {
       {/* Logo */}
       <Link to="/">
         <img
-          className="h-12 sm:h-20"
+          className="h-10 sm:h-12"
           src={logo}
           alt="MafiaReign Logo: Fight for Dominance"
         />
