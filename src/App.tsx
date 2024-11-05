@@ -22,6 +22,7 @@ import DropdownRight from "./components/DropdownRight.tsx";
 import Home from "./Pages/Home.tsx";
 import Admin from "./Pages/Admin.tsx";
 import Alerts from "./Pages/Alerts.tsx";
+import Shop from "./Pages/Shop.tsx";
 import Profile from "./Pages/Profile.tsx";
 import EditProfile from "./Pages/EditProfile.tsx";
 import Notebook from "./Pages/Notebook.tsx";
@@ -130,6 +131,15 @@ function App() {
                             element={
                               <ProtectedRoute>
                                 <Alerts />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="/butikk"
+                            element={
+                              <ProtectedRoute>
+                                <Shop />
                               </ProtectedRoute>
                             }
                           />

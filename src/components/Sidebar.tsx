@@ -49,6 +49,10 @@ const Sidebar = () => {
           Hovedkvarter
         </SidebarLink>
 
+        <SidebarLink to="butikk" icon="shop">
+          Butikk
+        </SidebarLink>
+
         <SidebarLink to="bank" icon="landmark">
           Bank
         </SidebarLink>

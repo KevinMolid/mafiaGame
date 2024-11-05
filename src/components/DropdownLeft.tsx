@@ -17,6 +17,10 @@ const DropdownLeft = () => {
           Hovedkvarter
         </SidebarLink>
 
+        <SidebarLink to="butikk" icon="shop" onClick={toggleActions}>
+          Butikk
+        </SidebarLink>
+
         <SidebarLink to="/bank" icon="landmark" onClick={toggleActions}>
           Bank
         </SidebarLink>
