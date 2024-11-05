@@ -7,12 +7,12 @@ import b3 from "/images/boxes/Briefcase3.png";
 import { useState } from "react";
 
 const Shop = () => {
-  const [selected, setSelected] = useState<0 | 1 | 2 | 3>(0);
+  const [selected, setSelected] = useState<0 | 1 | 2 | 3>(1);
 
   return (
     <Main>
       <H1>Butikk</H1>
-      <ul className="flex gap-0">
+      <ul className="flex gap-2">
         <li
           key="1"
           onClick={() => setSelected(1)}
@@ -82,7 +82,7 @@ const Shop = () => {
           </p>
           <img src={b3} className="mb-4" alt="Koffert krystall" />
           <p className="text-center">
-            <strong>Krystal</strong>
+            <strong>Krystall</strong>
           </p>
         </li>
       </ul>
