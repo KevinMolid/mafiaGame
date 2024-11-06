@@ -1,76 +1,77 @@
 import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
+import ShopBox from "../components/ShopBox";
+import { useState } from "react";
 import b1 from "/images/boxes/Briefcase1.png";
 import b2 from "/images/boxes/Briefcase2.png";
 import b3 from "/images/boxes/Briefcase3.png";
 
-import { useState } from "react";
+const boxes = [
+  {
+    id: 1,
+    title: "Sølv-koffert",
+    image: b1,
+    price: 100000,
+    currencyIcon: "fa-solid fa-dollar",
+  },
+  {
+    id: 2,
+    title: "Gull-koffert",
+    image: b2,
+    price: 1000000,
+    currencyIcon: "fa-solid fa-dollar",
+  },
+  {
+    id: 3,
+    title: "Krystall-koffert",
+    image: b3,
+    price: 25,
+    currencyIcon: "fa-solid fa-gem",
+  },
+];
 
 const Shop = () => {
-  const [selected, setSelected] = useState<0 | 1 | 2 | 3>(1);
+  const [wheelIndex, setWheelIndex] = useState(0);
+
+  const getPositionClass = (index: number) => {
+    if (index === wheelIndex) return "scale-110 z-20 translate-x-0"; // Center item
+    if (index === (wheelIndex + 1) % boxes.length)
+      return "scale-90 z-10 translate-x-28 md:translate-x-32"; // Right item
+    if (index === (wheelIndex - 1 + boxes.length) % boxes.length)
+      return "scale-90 z-10 -translate-x-28 md:-translate-x-32"; // Left item
+    return "opacity-0 pointer-events-none"; // Make invisible without hiding
+  };
 
   return (
     <Main>
       <H1>Butikk</H1>
-      <ul className="grid grid-cols-2 md:flex gap-2">
-        <li
-          key="1"
-          onClick={() => setSelected(1)}
-          className={
-            "border p-4 flex-1 flex-grow text-center cursor-pointer flex flex-col justify-center " +
-            (selected === 1
-              ? "col-span-2 row-start-2 bg-neutral-900 border-neutral-600 text-neutral-200"
-              : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
-          }
-        >
-          <img src={b1} className="mb-4" alt="Koffert sølv" />
-          <p className="text-center">
-            Sølv-koffert
-            <p className="text-yellow-400">
-              <i className="fa-solid fa-dollar"></i> <strong>100,000</strong>
-            </p>
-          </p>
-        </li>
-
-        {/* Box 2 */}
-        <li
-          key="2"
-          onClick={() => setSelected(2)}
-          className={
-            "border p-4 flex-1 flex-grow text-center cursor-pointer flex flex-col justify-center " +
-            (selected === 2
-              ? "col-span-2 row-start-2 bg-neutral-900 border-neutral-600 text-neutral-200"
-              : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
-          }
-        >
-          <img src={b2} className="mb-4" alt="Koffert gull" />
-          <p className="text-center">
-            Gull-koffert
-            <p className="text-yellow-400">
-              <i className="fa-solid fa-dollar"></i> <strong>500,000</strong>
-            </p>
-          </p>
-        </li>
-
-        <li
-          key="3"
-          onClick={() => setSelected(3)}
-          className={
-            "border p-4 flex-1 flex-grow text-center cursor-pointer flex flex-col justify-center " +
-            (selected === 3
-              ? "col-span-2 row-start-2 bg-neutral-900 border-neutral-600 text-neutral-200"
-              : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
-          }
-        >
-          <img src={b3} className="mb-4" alt="Koffert krystall" />
-          <p className="text-center">
-            Krystall-koffert
-            <p className="text-cyan-400">
-              <i className="fa-solid fa-gem"></i> <strong>25</strong>
-            </p>
-          </p>
-        </li>
-      </ul>
+      <div className="h-[240px] mt-8 overflow-visible flex">
+        <div className="relative flex items-center justify-center w-full">
+          {boxes.map((box, index) => (
+            <div
+              key={box.id}
+              className={`absolute transition-all duration-500 ease-in-out ${getPositionClass(
+                index
+              )} 
+                ${index === wheelIndex ? "w-40 sm:w-48" : "w-36 sm:w-36"}`}
+            >
+              <ShopBox
+                title={box.title}
+                image={box.image}
+                price={box.price}
+                currencyIcon={box.currencyIcon}
+                selected={wheelIndex === index}
+                onSelect={() => setWheelIndex(index)}
+                priceColor={
+                  box.currencyIcon === "fa-solid fa-gem"
+                    ? "text-sky-400"
+                    : "text-yellow-400"
+                }
+              />
+            </div>
+          ))}
+        </div>
+      </div>
     </Main>
   );
 };
