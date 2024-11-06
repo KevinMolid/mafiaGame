@@ -12,28 +12,23 @@ const Shop = () => {
   return (
     <Main>
       <H1>Butikk</H1>
-      <ul className="flex gap-2">
+      <ul className="grid grid-cols-2 md:flex gap-2">
         <li
           key="1"
           onClick={() => setSelected(1)}
           className={
-            "border px-4 py-2 flex-1 flex-grow text-center cursor-pointer " +
+            "border p-4 flex-1 flex-grow text-center cursor-pointer flex flex-col justify-center " +
             (selected === 1
-              ? "bg-neutral-900 border-neutral-600 text-neutral-200"
+              ? "col-span-2 row-start-2 bg-neutral-900 border-neutral-600 text-neutral-200"
               : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
           }
         >
-          <p className="text-center text-4xl mb-4">
-            {selected === 1 && (
-              <i className="fa-solid fa-arrow-down fa-bounce"></i>
-            )}
-            {selected !== 1 && (
-              <i className="fa-solid fa-arrow-down text-neutral-600"></i>
-            )}
-          </p>
           <img src={b1} className="mb-4" alt="Koffert sølv" />
           <p className="text-center">
-            <strong>Sølv</strong>
+            Sølv-koffert
+            <p className="text-yellow-400">
+              <i className="fa-solid fa-dollar"></i> <strong>100,000</strong>
+            </p>
           </p>
         </li>
 
@@ -42,23 +37,18 @@ const Shop = () => {
           key="2"
           onClick={() => setSelected(2)}
           className={
-            "border px-4 py-2 flex-1 flex-grow text-center cursor-pointer " +
+            "border p-4 flex-1 flex-grow text-center cursor-pointer flex flex-col justify-center " +
             (selected === 2
-              ? "bg-neutral-900 border-neutral-600 text-neutral-200"
+              ? "col-span-2 row-start-2 bg-neutral-900 border-neutral-600 text-neutral-200"
               : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
           }
         >
-          <p className="text-center text-4xl mb-4">
-            {selected === 2 && (
-              <i className="fa-solid fa-arrow-down fa-bounce"></i>
-            )}
-            {selected !== 2 && (
-              <i className="fa-solid fa-arrow-down text-neutral-600"></i>
-            )}
-          </p>
           <img src={b2} className="mb-4" alt="Koffert gull" />
           <p className="text-center">
-            <strong>Gull</strong>
+            Gull-koffert
+            <p className="text-yellow-400">
+              <i className="fa-solid fa-dollar"></i> <strong>500,000</strong>
+            </p>
           </p>
         </li>
 
@@ -66,23 +56,18 @@ const Shop = () => {
           key="3"
           onClick={() => setSelected(3)}
           className={
-            "border px-4 py-2 flex-1 flex-grow text-center cursor-pointer " +
+            "border p-4 flex-1 flex-grow text-center cursor-pointer flex flex-col justify-center " +
             (selected === 3
-              ? "bg-neutral-900 border-neutral-600 text-neutral-200"
+              ? "col-span-2 row-start-2 bg-neutral-900 border-neutral-600 text-neutral-200"
               : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
           }
         >
-          <p className="text-center text-4xl mb-4">
-            {selected === 3 && (
-              <i className="fa-solid fa-arrow-down fa-bounce"></i>
-            )}
-            {selected !== 3 && (
-              <i className="fa-solid fa-arrow-down text-neutral-600"></i>
-            )}
-          </p>
           <img src={b3} className="mb-4" alt="Koffert krystall" />
           <p className="text-center">
-            <strong>Krystall</strong>
+            Krystall-koffert
+            <p className="text-cyan-400">
+              <i className="fa-solid fa-gem"></i> <strong>25</strong>
+            </p>
           </p>
         </li>
       </ul>
