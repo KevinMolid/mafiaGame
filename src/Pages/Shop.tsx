@@ -36,16 +36,16 @@ const Shop = () => {
   const getPositionClass = (index: number) => {
     if (index === wheelIndex) return "scale-110 z-20 translate-x-0"; // Center item
     if (index === (wheelIndex + 1) % boxes.length)
-      return "scale-90 z-10 translate-x-28 md:translate-x-32"; // Right item
+      return "scale-90 z-10 translate-x-28 md:translate-x-32 lg:translate-x-40"; // Right item
     if (index === (wheelIndex - 1 + boxes.length) % boxes.length)
-      return "scale-90 z-10 -translate-x-28 md:-translate-x-32"; // Left item
+      return "scale-90 z-10 -translate-x-28 md:-translate-x-32 lg:-translate-x-40"; // Left item
     return "opacity-0 pointer-events-none"; // Make invisible without hiding
   };
 
   return (
     <Main>
       <H1>Butikk</H1>
-      <div className="h-[240px] mt-8 overflow-visible flex">
+      <div className="h-[240px] mt-8 overflow-visible flex max-w-[800px]">
         <div className="relative flex items-center justify-center w-full">
           {boxes.map((box, index) => (
             <div
@@ -53,7 +53,7 @@ const Shop = () => {
               className={`absolute transition-all duration-500 ease-in-out ${getPositionClass(
                 index
               )} 
-                ${index === wheelIndex ? "w-40 sm:w-48" : "w-36 sm:w-36"}`}
+                ${index === wheelIndex ? "w-40 md:w-48" : "w-36"}`}
             >
               <ShopBox
                 title={box.title}
