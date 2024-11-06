@@ -6,6 +6,8 @@ import b1 from "/images/boxes/Briefcase1.png";
 import b2 from "/images/boxes/Briefcase2.png";
 import b3 from "/images/boxes/Briefcase3.png";
 
+import Items from "../Data/Items";
+
 const boxes = [
   {
     id: 1,
@@ -45,7 +47,38 @@ const Shop = () => {
   return (
     <Main>
       <H1>Butikk</H1>
-      <div className="h-[240px] mt-8 overflow-visible flex max-w-[800px]">
+      <div className="border border-neutral-700 bg-neutral-950 rounded-full p-4">
+        <ul className="h-20 flex items-center justify-center gap-2 max-w-[800px]">
+          {Items.map((item) => {
+            return (
+              <li
+                key={item.name}
+                className={
+                  "flex h-max border-2 rounded-xl " +
+                  (item.rarity === "common"
+                    ? "border-neutral-300 shadow-lg shadow-neutral-500/25"
+                    : item.rarity === "uncommon"
+                    ? "border-sky-400 shadow-lg shadow-sky-500/25"
+                    : item.rarity === "rare"
+                    ? "border-purple-400 shadow-lg shadow-purple-500/25"
+                    : item.rarity === "epic"
+                    ? "border-yellow-400 shadow-lg shadow-yellow-500/25"
+                    : "")
+                }
+              >
+                <img
+                  src={item.img}
+                  alt=""
+                  className="size-16 hover:size-20 object-cover rounded-xl transition-all"
+                />
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {/* Selection wheel */}
+      <div className="h-[240px] mt-4 overflow-visible flex max-w-[800px]">
         <div className="relative flex items-center justify-center w-full">
           {boxes.map((box, index) => (
             <div
