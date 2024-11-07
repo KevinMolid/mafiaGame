@@ -1,7 +1,7 @@
 import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
 import ShopBox from "../components/ShopBox";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import b1 from "/images/boxes/Briefcase1.png";
 import b2 from "/images/boxes/Briefcase2.png";
 import b3 from "/images/boxes/Briefcase3.png";
@@ -34,6 +34,13 @@ const boxes = [
 
 const Shop = () => {
   const [wheelIndex, setWheelIndex] = useState(0);
+  const [scrollIndex, setScrollIndex] = useState(0);
+  const [maxVisibleItems, setMaxVisibleItems] = useState(5);
+  const scrollContainerRef = useRef<HTMLUListElement | null>(null);
+  const itemList = [];
+  for (let i = 0; i < maxVisibleItems; i++) {
+    itemList.push(Items[(scrollIndex + i) % Items.length]);
+  }
 
   const getPositionClass = (index: number) => {
     if (index === wheelIndex) return "scale-110 z-20 translate-x-0"; // Center item
@@ -44,37 +51,82 @@ const Shop = () => {
     return "opacity-0 pointer-events-none"; // Make invisible without hiding
   };
 
+  // Function to adjust maxVisibleItems based on container width
+  useEffect(() => {
+    const handleResize = () => {
+      if (scrollContainerRef.current) {
+        const containerWidth = scrollContainerRef.current.clientWidth;
+        const itemWidth = 80; // Adjust based on your item size
+        const visibleItems = Math.floor(containerWidth / itemWidth);
+        setMaxVisibleItems(visibleItems);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const getCircularIndex = (index: number, length: number) => {
+    return (index + length) % length; // Ensures proper wrapping even with negative indices
+  };
+
+  const handleScrollLeft = () => {
+    setScrollIndex((prevIndex) =>
+      getCircularIndex(prevIndex - 1, Items.length)
+    );
+  };
+
+  const handleScrollRight = () => {
+    setScrollIndex((prevIndex) =>
+      getCircularIndex(prevIndex + 1, Items.length)
+    );
+  };
+
   return (
     <Main>
       <H1>Butikk</H1>
-      <div className="border border-neutral-700 bg-neutral-950 rounded-full p-4">
-        <ul className="h-20 flex items-center justify-center gap-2 max-w-[800px]">
-          {Items.map((item) => {
-            return (
-              <li
-                key={item.name}
-                className={
-                  "flex h-max border-2 rounded-xl " +
-                  (item.rarity === "common"
-                    ? "border-neutral-300 shadow-lg shadow-neutral-500/25"
-                    : item.rarity === "uncommon"
-                    ? "border-sky-400 shadow-lg shadow-sky-500/25"
-                    : item.rarity === "rare"
-                    ? "border-purple-400 shadow-lg shadow-purple-500/25"
-                    : item.rarity === "epic"
-                    ? "border-yellow-400 shadow-lg shadow-yellow-500/25"
-                    : "")
-                }
-              >
-                <img
-                  src={item.img}
-                  alt=""
-                  className="size-16 hover:size-20 object-cover rounded-xl transition-all"
-                />
-              </li>
-            );
-          })}
+      {/* Display wheel */}
+      <div className="border border-neutral-700 bg-neutral-950 rounded-full p-4 relative overflow-hidden">
+        <button
+          className="absolute flex justify-center items-center w-10 h-10 left-1 top-1/2 -translate-y-1/2 z-10 px-2 py-1 bg-gray-700 text-white rounded-full"
+          onClick={handleScrollLeft}
+        >
+          <i className="fa-solid fa-angle-left"></i>{" "}
+        </button>
+        <ul
+          ref={scrollContainerRef}
+          className="h-20 flex items-center justify-center gap-1 max-w-full"
+        >
+          {itemList.map((item) => (
+            <li
+              key={item.name}
+              className={`flex h-max border-2 rounded-xl ${
+                item.rarity === "common"
+                  ? "border-neutral-300 shadow-lg shadow-neutral-500/25"
+                  : item.rarity === "uncommon"
+                  ? "border-sky-400 shadow-lg shadow-sky-500/25"
+                  : item.rarity === "rare"
+                  ? "border-purple-400 shadow-lg shadow-purple-500/25"
+                  : item.rarity === "epic"
+                  ? "border-yellow-400 shadow-lg shadow-yellow-500/25"
+                  : ""
+              }`}
+            >
+              <img
+                src={item.img}
+                alt={item.name}
+                className="min-w-16 max-w-16 h-16 hover:min-w-20 hover:max-w-20 hover:h-20 object-cover rounded-xl transition-all"
+              />
+            </li>
+          ))}
         </ul>
+        <button
+          className="absolute flex justify-center items-center w-10 h-10 right-1 top-1/2 -translate-y-1/2 z-10 px-2 py-1 bg-gray-700 text-white rounded-full"
+          onClick={handleScrollRight}
+        >
+          <i className="fa-solid fa-angle-right"></i>{" "}
+        </button>
       </div>
 
       {/* Selection wheel */}
