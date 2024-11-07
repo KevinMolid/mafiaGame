@@ -56,9 +56,9 @@ const Shop = () => {
     const handleResize = () => {
       if (scrollContainerRef.current) {
         const containerWidth = scrollContainerRef.current.clientWidth;
-        const itemWidth = 80; // Adjust based on your item size
+        const itemWidth = 80;
         const visibleItems = Math.floor(containerWidth / itemWidth);
-        setMaxVisibleItems(visibleItems);
+        setMaxVisibleItems(Math.min(visibleItems, Items.length));
       }
     };
 
@@ -87,9 +87,9 @@ const Shop = () => {
     <Main>
       <H1>Butikk</H1>
       {/* Display wheel */}
-      <div className="border border-neutral-700 bg-neutral-950 rounded-full p-4 relative overflow-hidden">
+      <div className="border border-neutral-700 bg-neutral-950 rounded-full p-4 relative overflow-hidden max-w-[800px]">
         <button
-          className="absolute flex justify-center items-center w-10 h-10 left-1 top-1/2 -translate-y-1/2 z-10 px-2 py-1 bg-gray-700 text-white rounded-full"
+          className="absolute flex justify-center items-center w-12 h-12 left-1 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded-full"
           onClick={handleScrollLeft}
         >
           <i className="fa-solid fa-angle-left"></i>{" "}
@@ -122,7 +122,7 @@ const Shop = () => {
           ))}
         </ul>
         <button
-          className="absolute flex justify-center items-center w-10 h-10 right-1 top-1/2 -translate-y-1/2 z-10 px-2 py-1 bg-gray-700 text-white rounded-full"
+          className="absolute flex justify-center items-center w-10 h-10 right-1 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded-full"
           onClick={handleScrollRight}
         >
           <i className="fa-solid fa-angle-right"></i>{" "}
