@@ -39,14 +39,33 @@ interface Alert {
   read: boolean;
 }
 
-const formatDate = (timestamp: string) => {
-  const date = new Date(timestamp);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
-  const year = date.getFullYear();
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${day}.${month}.${year} - ${hours}:${minutes}`;
+// Helper function to format the time difference
+const formatTimeAgo = (timestamp: string): string => {
+  const currentTime = new Date();
+  const alertTime = new Date(timestamp);
+  const differenceInSeconds = Math.floor(
+    (currentTime.getTime() - alertTime.getTime()) / 1000
+  );
+
+  if (differenceInSeconds < 60) {
+    return `${differenceInSeconds} sek`;
+  }
+  const differenceInMinutes = Math.floor(differenceInSeconds / 60);
+  if (differenceInMinutes < 60) {
+    return `${differenceInMinutes} min`;
+  }
+  const differenceInHours = Math.floor(differenceInMinutes / 60);
+  if (differenceInHours < 24) {
+    if (differenceInHours === 1) {
+      return `${differenceInHours} time`;
+    }
+    return `${differenceInHours} timer`;
+  }
+  const differenceInDays = Math.floor(differenceInHours / 24);
+  if (differenceInDays === 1) {
+    return `${differenceInDays} dag`;
+  }
+  return `${differenceInDays} dager`;
 };
 
 const Alerts = () => {
@@ -202,7 +221,7 @@ const Alerts = () => {
                 </small>
               )}
 
-              <small>{formatDate(alert.timestamp)}</small>
+              <small>{formatTimeAgo(alert.timestamp)}</small>
             </Alert>
           ))}
         </div>
