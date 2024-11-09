@@ -227,9 +227,11 @@ const Family = () => {
             </p>
           </div>
 
-          <InfoBox type="info">
-            <strong>Regler:</strong> {family.rules}
-          </InfoBox>
+          {family.rules && (
+            <InfoBox type="info">
+              <strong>Regler:</strong> {family.rules}
+            </InfoBox>
+          )}
 
           {error && <p style={{ color: "red" }}>{error}</p>}
 

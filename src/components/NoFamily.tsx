@@ -107,6 +107,8 @@ const NoFamily = ({
         ],
         createdAt: new Date(),
         rules: "",
+        img: "",
+        profileText: "",
         wealth: 0,
       };
 
