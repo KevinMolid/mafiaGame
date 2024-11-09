@@ -31,7 +31,9 @@ const StreetCrime = () => {
 
   const { cooldowns, startCooldown, fetchCooldown } = useCooldown();
 
-  const [selectedCrime, setSelectedCrime] = useState<string>("Lommetyveri");
+  const [selectedCrime, setSelectedCrime] = useState<string>(
+    localStorage.getItem("selectedCrime") || "Lommetyveri"
+  );
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "important" | "warning" | "info"
@@ -48,6 +50,11 @@ const StreetCrime = () => {
       fetchCooldown("crime", 90, userData.activeCharacter);
     }
   }, [userData, navigate, cooldowns, fetchCooldown]);
+
+  // Save selectedCrime to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("selectedCrime", selectedCrime);
+  }, [selectedCrime]);
 
   // Function for comitting a crime
   const handleClick = async () => {
