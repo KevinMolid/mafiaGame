@@ -1,8 +1,15 @@
+// Components
 import SidebarLink from "./SidebarLink";
+import Username from "./Typography/Username";
 
+// React
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
+// Functions
+import { getCurrentRank } from "../Functions/RankFunctions";
+
+// Context
 import AudioPlay from "./Audio";
 import { useCharacter } from "../CharacterContext";
 import { useMenuContext } from "../MenuContext";
@@ -72,6 +79,22 @@ const DropdownRight = () => {
   return (
     menuOpen && (
       <nav className="absolute z-30 top-0 right-0 flex flex-col gap-2 bg-neutral-950 p-4 min-w-56 select-none border-l border-neutral-500 h-full">
+        {character && (
+          <div className="mb-2 flex sm:hidden gap-2 items-center">
+            <Link to={`/profil/${character.id}`}>
+              <img
+                className="border border-neutral-500 w-[60px] h-[60px] object-cover hover:cursor-pointer"
+                src={character.img || "/default.jpg"}
+                alt="Profile picture"
+              />
+            </Link>
+            <div className="text-stone-400">
+              <Username character={character} />
+              <p>{getCurrentRank(character.stats.xp)}</p>
+            </div>
+          </div>
+        )}
+
         <p>Meny</p>
         <hr className="border-neutral-500" />
 
