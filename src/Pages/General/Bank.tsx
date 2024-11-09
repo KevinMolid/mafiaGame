@@ -337,10 +337,10 @@ const Bank = () => {
           <div className="flex gap-2 flex-wrap">
             <div className="flex gap-2">
               <Button style="secondary" onClick={withdraw}>
-                Ta ut beløp
+                Ta ut
               </Button>
               <Button style="secondary" onClick={deposit}>
-                Sett inn beløp
+                Sett inn
               </Button>
             </div>
 
@@ -374,7 +374,7 @@ const Bank = () => {
           />
           <div>
             {" "}
-            <Button onClick={transfer}>Overfør penger</Button>
+            <Button onClick={transfer}>Overfør</Button>
           </div>
         </form>
       </div>

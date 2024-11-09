@@ -2,6 +2,7 @@
 import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
+import H3 from "../../components/Typography/H3";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import Box from "../../components/Box";
@@ -206,31 +207,44 @@ const Robbery = () => {
 
   return (
     <Main>
-      <div className="flex items-baseline gap-4">
+      <div className="flex items-baseline justify-between gap-4">
         <H1>Ran spiller</H1>
         {helpActive ? (
-          <i
-            className="text-yellow-400 text-2xl fa-solid fa-question cursor-pointer"
+          <Button
+            size="small"
+            style="helpActive"
             onClick={() => setHelpActive(!helpActive)}
-          ></i>
+          >
+            <i className="fa-solid fa-question"></i>
+          </Button>
         ) : (
-          <i
-            className="hover:text-neutral-200 text-2xl fa-solid fa-question cursor-pointer"
+          <Button
+            size="small"
+            style="help"
             onClick={() => setHelpActive(!helpActive)}
-          ></i>
+          >
+            <i className="fa-solid fa-question"></i>
+          </Button>
         )}
       </div>
 
       <p className="mb-4">Her kan du rane andre spillere for penger.</p>
 
-      {/* Help box */}
+      {/* Info box */}
       {helpActive && (
         <div className="mb-4">
-          <Box>
+          <Box type="help">
+            <H3>Rane en tilfeldig spiller</H3>
+            <p>90% sjanse for å finne en tilfeldig spiller</p>
+            <p className="mb-4">
+              75% sjanse for å stjele 10-50% av spillerens utsetående penger
+            </p>
+            <H3>Rane en bestemt spiller</H3>
             <p>
-              Du har 50% sjanse for å finne en annen spiller. Dersom spilleren
-              har $100 eller mer, har du 50% sjanse til å stjele en del av
-              spillerens penger.
+              50% sjanse for å finne spilleren dersom vedkommende er i samme by
+            </p>
+            <p>
+              75% sjanse for å stjele 10-50% av spillerens utsetående penger
             </p>
           </Box>
         </div>
@@ -283,7 +297,7 @@ const Robbery = () => {
           <input
             className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
             type="text"
-            placeholder="Skriv inn brukernavn"
+            placeholder="Brukernavn"
             value={targetCharacter}
             onChange={handleTargetCharacterInputChange}
           />
