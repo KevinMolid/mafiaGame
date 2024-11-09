@@ -24,6 +24,7 @@ import { useState, useEffect } from "react";
 
 // Context
 import { useCharacter } from "../CharacterContext";
+import { useAuth } from "../AuthContext";
 import InfoBox from "./InfoBox";
 
 interface JailBoxInterface {
@@ -33,6 +34,7 @@ interface JailBoxInterface {
 
 const JailBox = ({ message, messageType }: JailBoxInterface) => {
   const { character } = useCharacter();
+  const { userData } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -200,7 +202,7 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
           </div>
         )}
 
-        {character && (
+        {character && userData.type === "admin" && (
           <Button onClick={() => breakOut(character.id)}>Stikk av</Button>
         )}
       </div>
