@@ -1,15 +1,15 @@
 // Define rank thresholds
 export const ranks = [
-  { name: "Nybegynner", minXP: 0, maxXP: 500 },
-  { name: "Pøbel", minXP: 500, maxXP: 1500 },
-  { name: "Svindler", minXP: 1500, maxXP: 4000 },
-  { name: "Gangster", minXP: 4000, maxXP: 10000 },
-  { name: "Torpedo", minXP: 10000, maxXP: 25000 },
-  { name: "Leiemorder", minXP: 25000, maxXP: 50000 },
-  { name: "Løytnant", minXP: 50000, maxXP: 100000 },
-  { name: "Kaptein", minXP: 100000, maxXP: 200000 },
-  { name: "Don", minXP: 200000, maxXP: 400000 },
-  { name: "Gudfar", minXP: 400000, maxXP: Infinity },
+  { name: "Nybegynner", minXP: 0, maxXP: 50 },
+  { name: "Pøbel", minXP: 50, maxXP: 150 },
+  { name: "Svindler", minXP: 150, maxXP: 400 },
+  { name: "Gangster", minXP: 400, maxXP: 1000 },
+  { name: "Torpedo", minXP: 1000, maxXP: 2500 },
+  { name: "Leiemorder", minXP: 2500, maxXP: 5000 },
+  { name: "Løytnant", minXP: 5000, maxXP: 10000 },
+  { name: "Kaptein", minXP: 10000, maxXP: 20000 },
+  { name: "Don", minXP: 20000, maxXP: 40000 },
+  { name: "Gudfar", minXP: 40000, maxXP: Infinity },
 ];
 
 // Define rank thresholds
