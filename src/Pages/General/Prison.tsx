@@ -8,8 +8,10 @@ import Button from "../../components/Button";
 import { useState } from "react";
 
 import { useCharacter } from "../../CharacterContext";
+import { useAuth } from "../../AuthContext";
 
 const Prison = () => {
+  const { userData } = useAuth();
   const { character } = useCharacter();
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<
@@ -39,7 +41,9 @@ const Prison = () => {
 
       <p className="mb-4">Du er for øyeblikket ikke i fengsel.</p>
 
-      <Button onClick={handleButtonClick}>Besøk fengsel</Button>
+      {userData?.type === "admin" && (
+        <Button onClick={handleButtonClick}>Besøk fengsel</Button>
+      )}
     </Main>
   );
 };
