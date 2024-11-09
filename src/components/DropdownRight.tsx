@@ -99,8 +99,13 @@ const DropdownRight = () => {
         <hr className="border-neutral-500" />
 
         {userData?.type === "admin" && (
-          <SidebarLink to="/admin" icon="gear" onClick={toggleMenu}>
-            <p className="text-yellow-400 hover:text-yellow-200">Admin</p>
+          <SidebarLink
+            to="/admin"
+            icon="gear"
+            onClick={toggleMenu}
+            color="yellow"
+          >
+            <p>Admin</p>
           </SidebarLink>
         )}
 
@@ -115,8 +120,9 @@ const DropdownRight = () => {
             to="/varsler"
             icon="bell fa-shake text-yellow-400"
             onClick={toggleMenu}
+            color="yellow"
           >
-            <p className="text-yellow-400">Varsler</p>
+            <p>Varsler</p>
             <p>{unreadAlertCount}</p>
           </SidebarLink>
         )}

@@ -63,13 +63,15 @@ const Header = () => {
 
       {/* Menu icon for small screens */}
       <div
-        className="flex justify-center items-center rounded-md w-12 h-12 bg-neutral-700 cursor-pointer"
+        className="relative flex justify-center items-center rounded-md w-12 h-12 bg-neutral-700 cursor-pointer"
         onClick={toggleMenu}
       >
+        <i className="text-3xl fa-solid fa-bars"></i>
         {unreadAlertCount > 0 && (
-          <i className="text-3xl text-yellow-400 fa-regular fa-bell fa-shake"></i>
+          <span className="absolute top-0 right-0 bg-yellow-400 -translate-y-1 translate-x-1 text-neutral-900 text-xs font-bold rounded-full w-4 h-4 flex justify-center items-center">
+            {unreadAlertCount}
+          </span>
         )}
-        {unreadAlertCount <= 0 && <i className="text-3xl fa-solid fa-bars"></i>}
       </div>
     </header>
   );
