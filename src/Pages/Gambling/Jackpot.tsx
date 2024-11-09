@@ -76,7 +76,7 @@ const Jackpot = () => {
     } else {
       newMoney -= betAmount; // Deduct bet amount if no match
       setMessageType("failure");
-      setMessage(`Du tapte $${betAmount}. Prøv igjen!`);
+      setMessage(`Du tapte $${betAmount.toLocaleString()}. Prøv igjen!`);
     }
 
     try {
