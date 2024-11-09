@@ -1,5 +1,7 @@
 import SidebarLink from "./SidebarLink";
 
+import { useRef, useEffect } from "react";
+
 import { useCooldown } from "../CooldownContext";
 import { useMenuContext } from "../MenuContext";
 
@@ -7,9 +9,31 @@ const DropdownLeft = () => {
   const { actionsOpen, toggleActions } = useMenuContext();
   const { cooldowns } = useCooldown();
 
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        toggleActions();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [toggleActions]);
+
   return (
     actionsOpen && (
-      <nav className="absolute z-30 top-0 left-0 flex flex-col gap-2 bg-neutral-950 p-4 sm:hidden min-w-56 select-none border-r border-neutral-500 h-full">
+      <nav
+        ref={dropdownRef}
+        className="absolute z-30 top-0 left-0 flex flex-col gap-2 bg-neutral-950 p-4 sm:hidden min-w-56 select-none border-r border-neutral-500 h-full"
+      >
         <p>Handlinger</p>
         <hr className="border-neutral-500" />
 

@@ -4,7 +4,7 @@ import Username from "./Typography/Username";
 
 // React
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 
 // Functions
 import { getCurrentRank } from "../Functions/RankFunctions";
@@ -38,6 +38,26 @@ const DropdownRight = () => {
   const [hasUnreadAlerts, setHasUnreadAlerts] = useState(false);
   const auth = getAuth();
   const navigate = useNavigate();
+
+  // Create a ref for the dropdown container
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        toggleMenu();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [toggleMenu]);
 
   useEffect(() => {
     if (!character || !character.id) return;
@@ -78,7 +98,10 @@ const DropdownRight = () => {
 
   return (
     menuOpen && (
-      <nav className="absolute z-30 top-0 right-0 flex flex-col gap-2 bg-neutral-950 p-4 min-w-56 select-none border-l border-neutral-500 h-full">
+      <nav
+        ref={dropdownRef}
+        className="absolute z-30 top-0 right-0 flex flex-col gap-2 bg-neutral-950 p-4 min-w-56 select-none border-l border-neutral-500 h-full"
+      >
         {character && (
           <div className="mb-2 flex sm:hidden gap-2 items-center">
             <Link to={`/profil/${character.id}`}>
@@ -139,7 +162,7 @@ const DropdownRight = () => {
           Forum
         </SidebarLink>
 
-        <SidebarLink to="/toppliste" icon="medal" onClick={toggleMenu}>
+        <SidebarLink to="/toppliste" icon="trophy" onClick={toggleMenu}>
           Toppliste
         </SidebarLink>
 
