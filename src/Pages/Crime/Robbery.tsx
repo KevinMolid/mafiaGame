@@ -65,136 +65,183 @@ const Robbery = () => {
     }
 
     if (userData.activeCharacter && cooldowns["gta"] === undefined) {
-      // Fetch cooldown only if it hasn't been fetched yet
       fetchCooldown("robbery", cooldownTime, userData.activeCharacter);
     }
   }, [userData, navigate, cooldowns, fetchCooldown]);
 
-  // Updaate target state
+  if (!character) {
+    return;
+  }
+
+  // Update target from input
   const handleTargetCharacterInputChange = (e: any) => {
     setTargetCharacter(e.target.value);
   };
 
+  // Helper functions
+  const displayMessage = (
+    text: string,
+    type: "success" | "failure" | "warning" | "info"
+  ) => {
+    setMessageType(type);
+    setMessage(text);
+  };
+
+  const findRandomTarget = async (): Promise<
+    (Target & { id: string }) | null
+  > => {
+    const charactersSnapshot = await getDocs(
+      query(
+        collection(db, "Characters"),
+        where("location", "==", character.location)
+      )
+    );
+
+    const potentialTargets = charactersSnapshot.docs
+      .map((doc) => ({ id: doc.id, ...(doc.data() as Target) }))
+      .filter((char) => char.id !== character.id);
+
+    if (potentialTargets.length === 0) {
+      displayMessage("Det er ingen å rane i denne byen.", "failure");
+      return null;
+    }
+
+    if (Math.random() > 0.1) {
+      return potentialTargets[
+        Math.floor(Math.random() * potentialTargets.length)
+      ];
+    }
+
+    displayMessage("Du fant ingen å rane.", "failure");
+    return null;
+  };
+
+  const findSpecificTarget = async (
+    username: string
+  ): Promise<(Target & { id: string }) | null> => {
+    const targetSnapshot = await getDocs(
+      query(
+        collection(db, "Characters"),
+        where("username_lowercase", "==", username.toLowerCase())
+      )
+    );
+
+    if (targetSnapshot.empty) {
+      displayMessage(
+        "Ingen spiller med dette brukernavnet ble funnet.",
+        "failure"
+      );
+      return null;
+    }
+
+    const target = {
+      id: targetSnapshot.docs[0].id,
+      ...(targetSnapshot.docs[0].data() as Target),
+    };
+    if (target.id === character.id) {
+      displayMessage("Du kan ikke rane deg selv.", "failure");
+      return null;
+    }
+
+    if (Math.random() > 0.5) {
+      displayMessage(`Du fant ikke spilleren ${username}.`, "failure");
+      return null;
+    }
+
+    return target;
+  };
+
+  const handleRobberySuccess = async (target: Target & { id: string }) => {
+    if (target.stats.money < 100) {
+      displayMessage(
+        `Du prøvde å rane ${target.username}, men fant ingen ting å stjele.`,
+        "failure"
+      );
+      return;
+    }
+
+    const stealPercentage = Math.random() * (0.5 - 0.1) + 0.1;
+    const stolenAmount = Math.floor(target.stats.money * stealPercentage);
+
+    await updateDoc(doc(db, "Characters", target.id), {
+      "stats.money": target.stats.money - stolenAmount,
+    });
+    await updateDoc(doc(db, "Characters", character.id), {
+      "stats.money": character.stats.money + stolenAmount,
+    });
+
+    await addDoc(collection(db, "Characters", target.id, "alerts"), {
+      type: "robbery",
+      timestamp: new Date().toISOString(),
+      amountLost: stolenAmount,
+      robberName: character.username,
+      robberId: character.id,
+      read: false,
+    });
+
+    rewardXp(character, 10);
+    displayMessage(
+      `Du ranet ${target.username} for $${stolenAmount.toLocaleString()}.`,
+      "success"
+    );
+  };
+
+  const handleRobberyFailure = async (target: Target) => {
+    displayMessage(
+      `Du prøvde å rane ${target.username}, men feilet. Bedre lykke neste gang!`,
+      "failure"
+    );
+
+    if (
+      character.stats.heat >= 50 ||
+      Math.random() * 100 < character.stats.heat
+    ) {
+      arrest(character);
+      displayMessage("Ranforsøket feilet, og du ble arrestert!", "failure");
+    }
+  };
+
+  // Rob player
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     if (!character || !character.id) {
-      setMessageType("failure");
-      setMessage("Spilleren ble ikke lastet.");
+      displayMessage("Spilleren ble ikke lastet.", "failure");
       return;
     }
 
     if (cooldowns["robbery"] > 0) {
-      setMessageType("warning");
-      setMessage("Du må vente før du kan utføre et nytt ran.");
+      displayMessage("Du må vente før du kan utføre et nytt ran.", "warning");
+      return;
+    }
+
+    if (!isTargetRandom && !targetCharacter) {
+      displayMessage(
+        "Du må angi et mål for å rane en bestemt spiller.",
+        "warning"
+      );
       return;
     }
 
     try {
-      // Step 1: Find players in the same location
-      const charactersRef = query(
-        collection(db, "Characters"),
-        where("location", "==", character.location)
-      );
+      const target = isTargetRandom
+        ? await findRandomTarget()
+        : await findSpecificTarget(targetCharacter);
 
-      const charactersSnapshot = await getDocs(charactersRef);
+      if (!target) return;
 
-      // Filter out the current player
-      const potentialTargets = charactersSnapshot.docs
-        .map((doc) => ({ id: doc.id, ...(doc.data() as Target) }))
-        .filter((char) => char.id !== character.id);
-
-      // Check if there are any players to rob
-      if (potentialTargets.length === 0) {
-        setMessage("Det er ingen å rane i denne byen.");
-        setMessageType("failure");
-        return;
-      }
-
-      // Step 2: Determine if we find a player to rob (90% chance)
-      if (Math.random() <= 0.1) {
-        setMessage("Du fant ingen å rane.");
-        setMessageType("failure");
-        return;
-      }
-
-      // Randomly select a target from the available players
-      const randomTarget =
-        potentialTargets[Math.floor(Math.random() * potentialTargets.length)];
-
-      // Step 3: Attempt the robbery (75% chance of success)
-      if (Math.random() <= 0.75) {
-        // Check if the target has at least $100
-        if (randomTarget.stats.money < 100) {
-          setMessage(
-            `Du prøvde å rane ${randomTarget.username}, men fant ingen ting å stjele.`
-          );
-          setMessageType("failure");
-          return;
-        }
-
-        // Calculate the amount to steal (between 10% and 50% of the target's money)
-        const stealPercentage = Math.random() * (0.5 - 0.1) + 0.1;
-        const stolenAmount = Math.floor(
-          randomTarget.stats.money * stealPercentage
-        );
-
-        // Update target's and player's money
-        const targetDocRef = doc(db, "Characters", randomTarget.id);
-        await updateDoc(targetDocRef, {
-          "stats.money": randomTarget.stats.money - stolenAmount,
-        });
-
-        const playerDocRef = doc(db, "Characters", character.id);
-        await updateDoc(playerDocRef, {
-          "stats.money": character.stats.money + stolenAmount,
-        });
-
-        // Add an alert to the target player's alerts
-        const alertRef = collection(
-          db,
-          "Characters",
-          randomTarget.id,
-          "alerts"
-        );
-        await addDoc(alertRef, {
-          type: "robbery",
-          timestamp: new Date().toISOString(),
-          amountLost: stolenAmount,
-          robberName: character.username,
-          robberId: character.id,
-          read: false,
-        });
-
-        rewardXp(character, 10);
-
-        setMessage(
-          `Du ranet ${
-            randomTarget.username
-          } for $${stolenAmount.toLocaleString()}.`
-        );
-        setMessageType("success");
+      const success = Math.random() <= 0.75;
+      if (success) {
+        await handleRobberySuccess(target);
       } else {
-        // Robbery attempt failed
-        setMessage(
-          `Du prøvde å rane ${randomTarget.username}, men feilet. Bedre lykke neste gang!`
-        );
-        setMessageType("failure");
-
-        // Step 4: Jail chance check based on heat level
-        const jailChance = character.stats.heat;
-        if (character.stats.heat >= 50 || Math.random() * 100 < jailChance) {
-          // Player failed jail check, arrest them
-          arrest(character);
-          setMessage("Ranforsøket feilet, og du ble arrestert!");
-          setMessageType("failure");
-          return;
-        }
+        await handleRobberyFailure(target);
       }
     } catch (error) {
       console.error(error);
-      setMessage("Det oppstod en feil under ranet. Prøv igjen senere.");
-      setMessageType("failure");
+      displayMessage(
+        "Det oppstod en feil under ranet. Prøv igjen senere.",
+        "failure"
+      );
     } finally {
       increaseHeat(character, character.id, 1);
       startCooldown(cooldownTime, "robbery", character.id);
