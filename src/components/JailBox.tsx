@@ -73,6 +73,11 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
         Math.floor((releaseTime - currentTime) / 1000)
       );
       setRemainingTime(timeRemaining);
+
+      // Automatically call breakOut when the timer reaches 0
+      if (timeRemaining === 0) {
+        breakOut(character.id);
+      }
     };
 
     calculateRemainingTime(); // Calculate initially
