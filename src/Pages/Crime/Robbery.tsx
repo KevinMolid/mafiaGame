@@ -127,10 +127,7 @@ const Robbery = () => {
     );
 
     if (targetSnapshot.empty) {
-      displayMessage(
-        "Ingen spiller med dette brukernavnet ble funnet.",
-        "failure"
-      );
+      displayMessage("Spilleren finnes ikke.", "warning");
       return null;
     }
 
@@ -236,15 +233,15 @@ const Robbery = () => {
       } else {
         await handleRobberyFailure(target);
       }
+
+      increaseHeat(character, character.id, 1);
+      startCooldown(cooldownTime, "robbery", character.id);
     } catch (error) {
       console.error(error);
       displayMessage(
         "Det oppstod en feil under ranet. Prøv igjen senere.",
         "failure"
       );
-    } finally {
-      increaseHeat(character, character.id, 1);
-      startCooldown(cooldownTime, "robbery", character.id);
     }
   };
 

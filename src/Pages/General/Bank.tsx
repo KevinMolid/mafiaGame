@@ -90,7 +90,7 @@ const Bank = () => {
         // Check if there is enough money to deposit
         if (newMoney < 0) {
           setMessageType("warning");
-          setMessage("You don't have enough money to deposit.");
+          setMessage("Du har ikke så mye penger.");
           return;
         }
 
