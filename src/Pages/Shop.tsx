@@ -56,7 +56,7 @@ const Shop = () => {
     const handleResize = () => {
       if (scrollContainerRef.current) {
         const containerWidth = scrollContainerRef.current.clientWidth;
-        const itemWidth = 80;
+        const itemWidth = 72;
         const visibleItems = Math.floor(containerWidth / itemWidth);
         setMaxVisibleItems(Math.min(visibleItems, Items.length));
       }
@@ -87,7 +87,7 @@ const Shop = () => {
     <Main>
       <H1>Butikk</H1>
       {/* Display wheel */}
-      <div className="border border-neutral-700 bg-neutral-950 rounded-full p-4 relative overflow-hidden max-w-[800px]">
+      <div className="border border-neutral-700 bg-neutral-950 rounded-full p-2 relative overflow-hidden max-w-[800px]">
         <button
           className="absolute flex justify-center items-center w-12 h-12 left-1 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded-full"
           onClick={handleScrollLeft}
@@ -116,7 +116,7 @@ const Shop = () => {
               <img
                 src={item.img}
                 alt={item.name}
-                className="min-w-16 max-w-16 h-16 hover:min-w-20 hover:max-w-20 hover:h-20 object-cover rounded-xl transition-all"
+                className="min-w-14 max-w-14 h-14 hover:min-w-16 hover:max-w-16 hover:h-16 object-cover rounded-xl transition-all"
               />
             </li>
           ))}
