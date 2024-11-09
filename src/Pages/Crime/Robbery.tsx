@@ -106,14 +106,9 @@ const Robbery = () => {
       return null;
     }
 
-    if (Math.random() > 0.1) {
-      return potentialTargets[
-        Math.floor(Math.random() * potentialTargets.length)
-      ];
-    }
-
-    displayMessage("Du fant ingen å rane.", "failure");
-    return null;
+    return potentialTargets[
+      Math.floor(Math.random() * potentialTargets.length)
+    ];
   };
 
   const findSpecificTarget = async (
@@ -143,11 +138,6 @@ const Robbery = () => {
   };
 
   const handleRobberySuccess = async (target: Target & { id: string }) => {
-    if (Math.random() > 0.9) {
-      displayMessage(`Du fant ikke spilleren ${target.username}.`, "failure");
-      return;
-    }
-
     if (target.stats.money < 100) {
       displayMessage(
         `Du prøvde å rane ${target.username}, men fant ingen ting å stjele.`,
@@ -225,6 +215,21 @@ const Robbery = () => {
         : await findSpecificTarget(targetCharacter);
 
       if (!target) return;
+
+      const foundPlayer = !isTargetRandom
+        ? Math.random() <= 0.5 // 50% to find player
+        : Math.random() <= 0.9; // 90% to find random
+      if (!foundPlayer) {
+        displayMessage(
+          !isTargetRandom
+            ? `Du fant ikke ${target.username}.`
+            : "Du fant ingen å rane.",
+          "failure"
+        );
+        increaseHeat(character, character.id, 1);
+        startCooldown(cooldownTime, "robbery", character.id);
+        return;
+      }
 
       const success = Math.random() <= 0.75;
       if (success) {
