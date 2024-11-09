@@ -103,7 +103,7 @@ const Shop = () => {
               key={item.name}
               className={`flex h-max border-2 rounded-xl ${
                 item.rarity === "common"
-                  ? "border-neutral-300 shadow-lg shadow-neutral-500/25"
+                  ? "border-neutral-400 shadow-lg shadow-neutral-500/25"
                   : item.rarity === "uncommon"
                   ? "border-green-400 shadow-lg shadow-neutral-500/25"
                   : item.rarity === "rare"
