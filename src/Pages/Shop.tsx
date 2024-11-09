@@ -11,21 +11,21 @@ import Items from "../Data/Items";
 const suitcaseBoxes = [
   {
     id: 1,
-    title: "Sølv-koffert",
+    title: "Sølvkoffert",
     image: b1,
     price: 100000,
     currencyIcon: "fa-solid fa-dollar",
   },
   {
     id: 2,
-    title: "Gull-koffert",
+    title: "Gullkoffert",
     image: b2,
     price: 1000000,
     currencyIcon: "fa-solid fa-dollar",
   },
   {
     id: 3,
-    title: "Krystall-koffert",
+    title: "Krystallkoffert",
     image: b3,
     price: 25,
     currencyIcon: "fa-solid fa-gem",
