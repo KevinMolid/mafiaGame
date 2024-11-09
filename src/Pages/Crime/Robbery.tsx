@@ -139,16 +139,15 @@ const Robbery = () => {
       displayMessage("Du kan ikke rane deg selv.", "failure");
       return null;
     }
-
-    if (Math.random() > 0.5) {
-      displayMessage(`Du fant ikke spilleren ${username}.`, "failure");
-      return null;
-    }
-
     return target;
   };
 
   const handleRobberySuccess = async (target: Target & { id: string }) => {
+    if (Math.random() > 0.9) {
+      displayMessage(`Du fant ikke spilleren ${target.username}.`, "failure");
+      return;
+    }
+
     if (target.stats.money < 100) {
       displayMessage(
         `Du prøvde å rane ${target.username}, men fant ingen ting å stjele.`,
