@@ -59,7 +59,7 @@ const Items = [
   },
   // Tier 3
   {
-    name: "Christys’ London Fedora",
+    name: "Christys Fedora",
     slot: "hat",
     rarity: "rare",
     value: 600,
