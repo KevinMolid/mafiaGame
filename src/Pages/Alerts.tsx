@@ -39,6 +39,16 @@ interface Alert {
   read: boolean;
 }
 
+const formatDate = (timestamp: string) => {
+  const date = new Date(timestamp);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${day}.${month}.${year} - ${hours}:${minutes}`;
+};
+
 const Alerts = () => {
   const { character } = useCharacter();
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -192,7 +202,7 @@ const Alerts = () => {
                 </small>
               )}
 
-              <small>{new Date(alert.timestamp).toLocaleString()}</small>
+              <small>{formatDate(alert.timestamp)}</small>
             </Alert>
           ))}
         </div>
