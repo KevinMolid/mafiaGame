@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export interface Stats {
   hp: number;
   xp: number;
@@ -18,12 +20,13 @@ export interface Character {
   id: string;
   location: string;
   stats: Stats;
-  createdAt: Date;
-  diedAt?: Date | null;
+  createdAt: Timestamp;
+  diedAt?: Timestamp | null;
   img: string;
-  lastCrimeTimestamp?: Date | null;
-  lastRobberyTimestamp?: Date | null;
-  lastGtaTimestamp?: Date | null;
+  lastCrimeTimestamp?: Timestamp | null;
+  lastRobberyTimestamp?: Timestamp | null;
+  lastGtaTimestamp?: Timestamp | null;
+  lastActive?: Timestamp | null;
   profileText: string;
   reputation: Reputation;
   status: string;
@@ -39,7 +42,7 @@ export interface Character {
     familyName: string;
     applicationId: string;
     applicationText: string;
-    appliedAt: Date;
+    appliedAt: Timestamp;
   } | null;
   inJail?: boolean | null;
   jailReleaseTime?: any;
@@ -48,12 +51,13 @@ export interface Character {
 export interface Target {
   location: string;
   stats: Stats;
-  createdAt: Date;
-  diedAt?: Date | null;
+  createdAt: Timestamp;
+  diedAt?: Timestamp | null;
   img: string;
-  lastCrimeTimestamp?: Date | null;
-  lastRobberyTimestamp?: Date | null;
-  lastGtaTimestamp?: Date | null;
+  lastCrimeTimestamp?: Timestamp | null;
+  lastRobberyTimestamp?: Timestamp | null;
+  lastGtaTimestamp?: Timestamp | null;
+  lastActive?: Timestamp | null;
   profileText: string;
   reputation: Reputation;
   status: string;
@@ -69,7 +73,7 @@ export interface Target {
     familyName: string;
     applicationId: string;
     applicationText: string;
-    appliedAt: Date;
+    appliedAt: Timestamp;
   } | null;
   inJail?: boolean | null;
   jailReleaseTime?: any;
