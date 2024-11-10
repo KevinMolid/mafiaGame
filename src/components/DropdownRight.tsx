@@ -166,6 +166,10 @@ const DropdownRight = () => {
           Toppliste
         </SidebarLink>
 
+        <SidebarLink to="/statistikk" icon="chart-simple" onClick={toggleMenu}>
+          Statistikk
+        </SidebarLink>
+
         {/* Music */}
         <AudioPlay
           playing={playing}
