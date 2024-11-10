@@ -19,45 +19,47 @@ import DropdownLeft from "./components/DropdownLeft.tsx";
 import DropdownRight from "./components/DropdownRight.tsx";
 
 /***** PAGES *****/
-import Home from "./Pages/Home.tsx";
+// Right dropdown menu
 import Admin from "./Pages/Admin.tsx";
 import Alerts from "./Pages/Alerts.tsx";
-import Shop from "./Pages/Shop.tsx";
+import GameGuide from "./Pages/GameGuide.tsx";
+import Chat from "./Pages/Chat.tsx";
+import Forum from "./Pages/Forum.tsx";
+import ForumThread from "./Pages/ForumThread.tsx";
+import Leaderboard from "./Pages/Leaderboard.tsx";
+
+// Left dropdown menu
 import Profile from "./Pages/Profile.tsx";
 import EditProfile from "./Pages/EditProfile.tsx";
 import Notebook from "./Pages/Notebook.tsx";
 import Blacklist from "./Pages/Blacklist.tsx";
-import About from "./Pages/About.tsx";
-import Support from "./Pages/Support.tsx";
-import Leaderboard from "./Pages/Leaderboard.tsx";
-import Signup from "./Pages/Signup.tsx";
-import Login from "./Pages/Login.tsx";
-import CreateCharacter from "./Pages/CreateCharacter.tsx";
-import SelectCharacter from "./Pages/SelectCharacter.tsx";
+// _____________________________________________
+import Home from "./Pages/Home.tsx";
+import Shop from "./Pages/Shop.tsx";
+import Bank from "./Pages/General/Bank.tsx";
+// _____________________________________________
+import Family from "./Pages/Family.tsx";
+import FamilyProfile from "./Pages/FamilyProfile.tsx";
+// _____________________________________________
 import Influence from "./Pages/Reputation/Influence";
-import Dead from "./Pages/Dead.tsx";
-
-// Crimes
+// Crimes ______________________________________
 import StreetCrime from "./Pages/Crime/StreetCrime.tsx";
 import Robbery from "./Pages/Crime/Robbery.tsx";
 import GTA from "./Pages/Crime/GTA.tsx";
 import Assassinate from "./Pages/Crime/Assassinate.tsx";
-
-// General
-import Bank from "./Pages/General/Bank.tsx";
+// General ______________________________________
 import Travel from "./Pages/General/Travel.tsx";
 import Prison from "./Pages/General/Prison.tsx";
 import Parking from "./Pages/General/Parking.tsx";
-
-// Social
-import Family from "./Pages/Family.tsx";
-import FamilyProfile from "./Pages/FamilyProfile.tsx";
-import Chat from "./Pages/Chat.tsx";
-import Forum from "./Pages/Forum.tsx";
-import ForumThread from "./Pages/ForumThread.tsx";
-
-// Gambling
+// Gambling ______________________________________
 import Jackpot from "./Pages/Gambling/Jackpot.tsx";
+
+import Support from "./Pages/Support.tsx";
+import Signup from "./Pages/Signup.tsx";
+import Login from "./Pages/Login.tsx";
+import CreateCharacter from "./Pages/CreateCharacter.tsx";
+import SelectCharacter from "./Pages/SelectCharacter.tsx";
+import Dead from "./Pages/Dead.tsx";
 
 // Protected routes
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
@@ -88,7 +90,7 @@ function App() {
 
                         <Routes>
                           {/* Public Routes */}
-                          <Route path="/spillguide" element={<About />} />
+                          <Route path="/spillguide" element={<GameGuide />} />
                           <Route path="/support" element={<Support />} />
 
                           <Route

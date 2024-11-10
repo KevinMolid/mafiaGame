@@ -6,7 +6,7 @@ import H3 from "../components/Typography/H3";
 
 import { ranks } from "../Functions/RankFunctions";
 
-const About = () => {
+const GameGuide = () => {
   return (
     <Main img="MafiaBg">
       <H1>Spillguiden</H1>
@@ -46,4 +46,4 @@ const About = () => {
   );
 };
 
-export default About;
+export default GameGuide;
