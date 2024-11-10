@@ -63,6 +63,7 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
 
     await updateDoc(doc(db, "Characters", activeCharacter), {
       [field]: serverTimestamp(),
+      lastActive: serverTimestamp(),
     });
   };
 

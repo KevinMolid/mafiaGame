@@ -71,6 +71,10 @@ const Profile = () => {
     return <div>No character data available.</div>;
   }
 
+  const isRecentlyActive = characterData.lastActive
+    ? Date.now() - characterData.lastActive.seconds * 1000 <= 5 * 60 * 1000
+    : false;
+
   return (
     <Main>
       <div className="flex flex-col items-center md:grid md:grid-cols-[max-content_max-content] gap-4 lg:gap-8 pb-4 border-b border-neutral-700">
@@ -167,9 +171,21 @@ const Profile = () => {
               )}
             </li>
             <li className="text-stone-400">Sist aktiv</li>
-            <li className="text-stone-400">
-              {characterData.lastActive
+            <li
+              className={isRecentlyActive ? "text-green-400" : "text-stone-400"}
+            >
+              {isRecentlyActive
+                ? "Pålogget"
+                : characterData.lastActive
                 ? timeAgo(characterData.lastActive.seconds * 1000)
+                : characterData.createdAt
+                ? new Date(
+                    characterData.createdAt.seconds * 1000
+                  ).toLocaleDateString("no-NO", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })
                 : "N/A"}
             </li>
             <li className="text-stone-400">Registrert</li>
