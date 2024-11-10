@@ -19,6 +19,7 @@ const db = getFirestore(app);
 
 // Functions
 import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
+import timeAgo from "../Functions/TimeFunctions";
 
 const Profile = () => {
   const { spillerID } = useParams<{ spillerID: string }>();
@@ -131,6 +132,18 @@ const Profile = () => {
               <p className="text-white font-bold">{characterData.username}</p>
             </li>
 
+            <li className="text-stone-400">Status</li>
+            <li
+              className={
+                "capitalize " +
+                (characterData.status === "alive"
+                  ? "text-green-400"
+                  : "text-red-400")
+              }
+            >
+              {characterData.status == "alive" ? "Levende" : "Død"}
+            </li>
+
             <li className="text-stone-400">Rank</li>
             <li>{getCurrentRank(characterData.stats.xp)}</li>
 
@@ -153,17 +166,23 @@ const Profile = () => {
                 "Ingen familie"
               )}
             </li>
-
-            <li className="text-stone-400">Status</li>
-            <li
-              className={
-                "capitalize " +
-                (characterData.status === "alive"
-                  ? "text-green-400"
-                  : "text-red-400")
-              }
-            >
-              {characterData.status == "alive" ? "Levende" : "Død"}
+            <li className="text-stone-400">Sist aktiv</li>
+            <li className="text-stone-400">
+              {characterData.lastActive
+                ? timeAgo(characterData.lastActive.seconds * 1000)
+                : "N/A"}
+            </li>
+            <li className="text-stone-400">Registrert</li>
+            <li className="text-stone-400">
+              {characterData.createdAt
+                ? new Date(
+                    characterData.createdAt.seconds * 1000
+                  ).toLocaleDateString("no-NO", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })
+                : "N/A"}
             </li>
           </ul>
         </div>
