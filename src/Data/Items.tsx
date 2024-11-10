@@ -14,9 +14,9 @@ import j2 from "/images/items/j2.jpg";
 import j6 from "/images/items/j6.jpg";
 import j8 from "/images/items/j8.jpg";
 
-const Items = [
-  // Tier 1
+const Hats = [
   {
+    id: "ih0001",
     name: "Bailey of Hollywood Fedora",
     slot: "hat",
     rarity: "common",
@@ -25,14 +25,7 @@ const Items = [
     img: h1,
   },
   {
-    name: "Skrukket jakke",
-    slot: "jacket",
-    rarity: "common",
-    value: 250,
-    hp: 10,
-    img: j2,
-  },
-  {
+    id: "ih0002",
     name: "Biltmore Fedora",
     slot: "hat",
     rarity: "common",
@@ -40,8 +33,8 @@ const Items = [
     hp: 10,
     img: h2,
   },
-  // Tier 2
   {
+    id: "ih0003",
     name: "Stetson Fedora",
     slot: "hat",
     rarity: "uncommon",
@@ -50,6 +43,7 @@ const Items = [
     img: h3,
   },
   {
+    id: "ih0004",
     name: "Resistol Fedora",
     slot: "hat",
     rarity: "uncommon",
@@ -57,8 +51,8 @@ const Items = [
     hp: 25,
     img: h4,
   },
-  // Tier 3
   {
+    id: "ih0005",
     name: "Christys Fedora",
     slot: "hat",
     rarity: "rare",
@@ -67,14 +61,7 @@ const Items = [
     img: h5,
   },
   {
-    name: "Tykk frakk",
-    slot: "jacket",
-    rarity: "rare",
-    value: 1000,
-    hp: 50,
-    img: j6,
-  },
-  {
+    id: "ih0006",
     name: "Lock & Co Fedora",
     slot: "hat",
     rarity: "rare",
@@ -82,8 +69,8 @@ const Items = [
     hp: 50,
     img: h6,
   },
-  // Tier 4
   {
+    id: "ih0007",
     name: "Rosa Fedora",
     slot: "hat",
     rarity: "epic",
@@ -92,14 +79,7 @@ const Items = [
     img: h7,
   },
   {
-    name: "Pimp Jakke",
-    slot: "jacket",
-    rarity: "epic",
-    value: 1000,
-    hp: 50,
-    img: j8,
-  },
-  {
+    id: "ih0008",
     name: "Pimp Fedora",
     slot: "hat",
     rarity: "epic",
@@ -107,8 +87,8 @@ const Items = [
     hp: 50,
     img: h8,
   },
-  // Tier 5
   {
+    id: "ih0009",
     name: "Bling Fedora",
     slot: "hat",
     rarity: "legendary",
@@ -118,4 +98,42 @@ const Items = [
   },
 ];
 
+const Jackets = [
+  {
+    id: "ij0001",
+    name: "Skrukket jakke",
+    slot: "jacket",
+    rarity: "common",
+    value: 250,
+    hp: 10,
+    img: j2,
+  },
+  {
+    id: "ij0002",
+    name: "Tykk frakk",
+    slot: "jacket",
+    rarity: "rare",
+    value: 1000,
+    hp: 50,
+    img: j6,
+  },
+  {
+    id: "ij0003",
+    name: "Pimp Jakke",
+    slot: "jacket",
+    rarity: "epic",
+    value: 1000,
+    hp: 50,
+    img: j8,
+  },
+];
+
+// Combine Hats and Jackets into a single Items array
+const Items = [...Hats, ...Jackets];
+
 export default Items;
+
+// Function to fetch an item by its ID
+export const getItemById = (id: string) => {
+  return Items.find((item) => item.id === id) || null;
+};
