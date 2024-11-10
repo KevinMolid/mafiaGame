@@ -29,6 +29,8 @@ const Home = () => {
   // Local state for XP, initialized with the character's current XP
   const [xp, setXP] = useState<number>(character?.stats.xp || 0);
 
+  const bags = ["", "", "", "", "", "", "", "", "", "", "", ""];
+
   // Sync the local XP state with character stats if character changes
   useEffect(() => {
     if (character) {
@@ -205,6 +207,7 @@ const Home = () => {
             </div>
           </Box>
 
+          {/* Equipment */}
           <div className="border border-neutral-500 mb-4 grid grid-cols-1 w-fit">
             <div className="col-start-1 row-start-1 z-10 p-4">
               <H2>Utstyr</H2>
@@ -213,6 +216,20 @@ const Home = () => {
               <Equipment />
             </div>
           </div>
+
+          {/* Bags */}
+          <Box>
+            <H2>Eiendeler</H2>
+            <ul className="flex gap-1 flex-wrap">
+              {bags.map((bag, index) => {
+                return (
+                  <li key={bag + index}>
+                    <div className="w-14 h-14 border-2 border-neutral-600 rounded-xl"></div>
+                  </li>
+                );
+              })}
+            </ul>
+          </Box>
         </div>
       ) : (
         <p>Ingen spiller funnet.</p>

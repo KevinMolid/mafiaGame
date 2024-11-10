@@ -89,7 +89,7 @@ const Shop = () => {
       (wheelIndex - 1 + suitcaseBoxes.length) % suitcaseBoxes.length
     )
       return "scale-90 z-10 -translate-x-28 md:-translate-x-32 lg:-translate-x-40"; // Left item
-    return "opacity-0 pointer-events-none"; // Make invisible without hiding
+    return "opacity-0 pointer-events-none";
   };
 
   const getCircularIndex = (index: number, length: number) => {
