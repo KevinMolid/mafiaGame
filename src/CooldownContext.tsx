@@ -1,5 +1,12 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  serverTimestamp,
+  Timestamp,
+} from "firebase/firestore";
 
 type CooldownContextType = {
   cooldowns: { [key: string]: number };
@@ -50,13 +57,12 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
   ) => {
     setCooldowns((prev) => ({ ...prev, [cooldownType]: duration }));
 
-    const timestamp = new Date().getTime();
     const field = `last${
       cooldownType.charAt(0).toUpperCase() + cooldownType.slice(1)
     }Timestamp`;
 
     await updateDoc(doc(db, "Characters", activeCharacter), {
-      [field]: timestamp,
+      [field]: serverTimestamp(),
     });
   };
 
@@ -77,8 +83,15 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
       const lastTimestamp = characterData[field];
 
       if (lastTimestamp) {
+        const lastTimestampDate =
+          lastTimestamp instanceof Timestamp
+            ? lastTimestamp.toDate()
+            : new Date(lastTimestamp);
+
         const currentTime = new Date().getTime();
-        const elapsedTime = Math.floor((currentTime - lastTimestamp) / 1000); // in seconds
+        const elapsedTime = Math.floor(
+          (currentTime - lastTimestampDate.getTime()) / 1000
+        ); // in seconds
         const remainingCooldown = duration - elapsedTime;
 
         setCooldowns((prevCooldowns) => ({

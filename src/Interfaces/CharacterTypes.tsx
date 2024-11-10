@@ -23,7 +23,7 @@ export interface Character {
   img: string;
   lastCrimeTimestamp?: Date | null;
   lastRobberyTimestamp?: Date | null;
-  lastGTATimestamp?: Date | null;
+  lastGtaTimestamp?: Date | null;
   profileText: string;
   reputation: Reputation;
   status: string;
@@ -53,7 +53,7 @@ export interface Target {
   img: string;
   lastCrimeTimestamp?: Date | null;
   lastRobberyTimestamp?: Date | null;
-  lastGTATimestamp?: Date | null;
+  lastGtaTimestamp?: Date | null;
   profileText: string;
   reputation: Reputation;
   status: string;

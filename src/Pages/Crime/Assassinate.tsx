@@ -18,6 +18,7 @@ import {
   getDocs,
   doc,
   updateDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 
 const db = getFirestore();
@@ -31,6 +32,10 @@ const Assassinate = () => {
     "success" | "failure" | "warning" | "info"
   >("info");
   const { character } = useCharacter();
+
+  if (!character) {
+    return;
+  }
 
   // Function to handle assassination
   const killPlayer = async () => {
@@ -75,16 +80,21 @@ const Assassinate = () => {
           setMessage(`${playerData.username} ble drept!`);
           setMessageType("success");
 
-          // Update player status to 'dead'
+          // Update target player status to 'dead'
           await updateDoc(doc(db, "Characters", targetDocId), {
             status: "dead",
+          });
+
+          // update lastActive
+          await updateDoc(doc(db, "Characters", character.id), {
+            lastActive: serverTimestamp(),
           });
         }
       }
     } catch (error) {
       // Handle any errors during the query
       console.error("Error checking target player:", error);
-      setMessage("En ukjent feil oppstod når du prøvde å drepe en spiller.");
+      setMessage("En ukjent feil oppstod da du prøvde å drepe en spiller.");
       setMessageType("failure");
     }
   };

@@ -76,6 +76,11 @@ export const CharacterProvider = ({
                 characterData.lastCrimeTimestamp.toDate
                   ? characterData.lastCrimeTimestamp.toDate()
                   : undefined,
+              lastGtaTimestamp:
+                characterData.lastGtaTimestamp &&
+                characterData.lastGtaTimestamp.toDate
+                  ? characterData.lastGtaTimestamp.toDate()
+                  : undefined,
               profileText: characterData.profileText as string,
               reputation: characterData.reputation as Reputation,
               status: characterData.status as string,

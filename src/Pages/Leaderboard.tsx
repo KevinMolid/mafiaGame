@@ -28,7 +28,7 @@ const Leaderboard = () => {
         </div>
       </div>
 
-      <H1>Familier</H1>
+      <H2>Familier</H2>
       <div className="flex gap-4 mb-8 flex-wrap">
         <div className="flex-grow">
           <Box>
