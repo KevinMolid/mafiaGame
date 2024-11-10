@@ -1,7 +1,7 @@
 // Components
 import Main from "../components/Main";
-import H1 from "../components/Typography/H1";
 import Username from "../components/Typography/Username";
+import H3 from "../components/Typography/H3";
 
 import { useState, useEffect } from "react";
 
@@ -65,16 +65,55 @@ const FamilyProfile = () => {
 
   return (
     <Main>
-      <H1>{familyData.name}</H1>
-      <p>
-        Leder:{" "}
-        <Username
-          character={{
-            id: familyData.leaderId,
-            username: familyData.leaderName,
-          }}
+      <div className="flex flex-col items-center lg:grid lg:grid-cols-[max-content_max-content] gap-4 lg:gap-8 pb-4 border-b border-neutral-700">
+        <img
+          className="w-[300px] h-[300px] object-cover"
+          src={familyData.img || "/FamilyDefault.jpg"}
+          alt={`${familyData.name} profilbilde`}
         />
-      </p>
+
+        <div className="flex flex-col h-full justify-between gap-4">
+          {/* Info */}
+          <H3>{familyData.name}</H3>
+          <ul className="grid grid-cols-[min-content_max-content] gap-x-4">
+            <li>Leder:</li>
+            <li>
+              <Username
+                character={{
+                  id: familyData.leaderId,
+                  username: familyData.leaderName,
+                }}
+              />
+            </li>
+            <li>
+              <p>Medlemmer:</p>
+            </li>
+            <li>
+              {" "}
+              <ul>
+                {familyData.members.map(
+                  (member: { id: string; name: string; rank: string }) => {
+                    if (member.rank != "Boss") {
+                      return (
+                        <li key={member.id}>
+                          <Username
+                            character={{
+                              id: member.id,
+                              username: member.name,
+                            }}
+                          />
+                        </li>
+                      );
+                    }
+                  }
+                )}
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+      {/* Profiltekst */}
+      <div className="py-6">{familyData.profileText}</div>
     </Main>
   );
 };

@@ -74,7 +74,7 @@ const Profile = () => {
     <Main>
       <div className="flex flex-col items-center md:grid md:grid-cols-[max-content_max-content] gap-4 lg:gap-8 pb-4 border-b border-neutral-700">
         <img
-          className="w-[320px] h-[320px] object-cover"
+          className="w-[300px] h-[300px] object-cover"
           src={characterData.img || "/default.jpg"}
           alt=""
         />
