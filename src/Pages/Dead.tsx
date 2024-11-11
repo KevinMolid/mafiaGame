@@ -6,13 +6,9 @@ import { useCharacter } from "../CharacterContext";
 const Dead = () => {
   const { character } = useCharacter();
 
-  const formattedDate = character?.diedAt
-    ? character.diedAt.toLocaleDateString("nb-NO", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : "";
+  console.log(character?.diedAt);
+
+  const formattedDate = character?.diedAt ? character.diedAt.toMillis() : "";
 
   return (
     <Main img="dead2">
