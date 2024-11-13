@@ -145,17 +145,6 @@ const CreateCharacter = () => {
 
   return (
     <Main img="MafiaBg">
-      {/* Current character dead */}
-      {character?.status === "dead" && (
-        <div>
-          <h2>
-            Your character <strong>{character?.username}</strong> have been
-            assassinated and is{" "}
-            <span className="text-red-500">{character?.status}</span>.
-          </h2>
-        </div>
-      )}
-
       <H1>Opprett ny spillkarakter</H1>
       <form action="" className="flex flex-col mb-4 gap-2">
         <label htmlFor="username">
