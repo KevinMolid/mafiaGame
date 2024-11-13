@@ -354,20 +354,18 @@ const NoFamily = ({
               />
               {" den "}
               {character.activeFamilyApplication.appliedAt &&
-                `${character.activeFamilyApplication.appliedAt.toLocaleDateString(
-                  "no-NO",
-                  {
+                `${character.activeFamilyApplication.appliedAt
+                  .toDate()
+                  .toLocaleDateString("no-NO", {
                     day: "numeric",
                     month: "long",
                     year: "numeric",
-                  }
-                )} kl. ${character.activeFamilyApplication.appliedAt.toLocaleTimeString(
-                  "no-NO",
-                  {
+                  })} kl. ${character.activeFamilyApplication.appliedAt
+                  .toDate()
+                  .toLocaleTimeString("no-NO", {
                     hour: "2-digit",
                     minute: "2-digit",
-                  }
-                )}.`}
+                  })}.`}
             </p>
             {character.activeFamilyApplication.applicationText && (
               <p className="mb-4 text-neutral-200">
