@@ -6,9 +6,28 @@ import { useCharacter } from "../CharacterContext";
 const Dead = () => {
   const { character } = useCharacter();
 
-  console.log(character?.diedAt);
+  let formattedDate = "";
 
-  const formattedDate = character?.diedAt ? character.diedAt.toMillis() : "";
+  if (character?.diedAt) {
+    let diedAtDate;
+
+    // Check if diedAt is a Timestamp or already a Date
+    if (typeof character.diedAt.toDate === "function") {
+      diedAtDate = character.diedAt.toDate(); // Firebase Timestamp
+    } else if (character.diedAt instanceof Date) {
+      diedAtDate = character.diedAt; // Already a Date
+    } else if (typeof character.diedAt === "number") {
+      diedAtDate = new Date(character.diedAt); // Milliseconds
+    }
+
+    if (diedAtDate) {
+      formattedDate = new Intl.DateTimeFormat("no-NO", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      }).format(diedAtDate);
+    }
+  }
 
   return (
     <Main img="dead2">
