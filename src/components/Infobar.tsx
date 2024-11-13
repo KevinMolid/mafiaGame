@@ -12,7 +12,7 @@ const Infobar = () => {
   const { character } = useCharacter();
 
   // Ensure that characterContext is defined before accessing its values
-  if (!character || !character.stats) {
+  if (!character || !character.stats || character.status === "dead") {
     return null;
   }
 

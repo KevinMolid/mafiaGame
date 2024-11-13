@@ -16,7 +16,7 @@ const Sidebar = () => {
   const { character } = useCharacter();
   const { cooldowns } = useCooldown();
 
-  if (!character) return;
+  if (!character || character.status === "dead") return;
 
   return (
     <div className="hidden sm:block bg-neutral-800 px-4 py-8 text-sm leading-relaxed h-full pb-24">

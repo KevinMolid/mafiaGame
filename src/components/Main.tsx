@@ -14,7 +14,7 @@ const Main = ({ children, img }: MainInterface) => {
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
-        backgroundPositionY: "top",
+        backgroundPositionY: img === "dead" ? "center" : "top",
       }}
     >
       {children}
