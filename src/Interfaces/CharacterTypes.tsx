@@ -20,7 +20,7 @@ export interface Character {
   id: string;
   location: string;
   stats: Stats;
-  createdAt: Timestamp;
+  createdAt: Timestamp | Date;
   diedAt?: Timestamp | null;
   img: string;
   lastCrimeTimestamp?: Timestamp | null;

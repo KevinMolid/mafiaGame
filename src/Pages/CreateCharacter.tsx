@@ -23,6 +23,7 @@ import {
   query,
   where,
   getDocs,
+  serverTimestamp,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
@@ -103,7 +104,7 @@ const CreateCharacter = () => {
         stats: { xp: 0, hp: 100, heat: 0, bank: 0, money: 1000, protection: 0 },
         reputation: { police: 0, politics: 0, gangs: 0, community: 0 },
         location: location,
-        createdAt: new Date(),
+        createdAt: serverTimestamp(),
         diedAt: null,
         lastCrimeTimestamp: null,
         profileText: "",
@@ -125,6 +126,7 @@ const CreateCharacter = () => {
       setCharacter({
         id: docRef.id,
         ...newCharacterData,
+        createdAt: new Date(),
       });
 
       // Update user data in local state
