@@ -5,6 +5,7 @@ import {
   getDocs,
   doc,
   updateDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 
@@ -82,6 +83,7 @@ const CharacterList = ({
     const characterRef = doc(db, "Characters", character.id);
     await updateDoc(characterRef, {
       status: "dead",
+      diedAt: serverTimestamp(),
     });
 
     setCharacters((prevCharacters) =>
