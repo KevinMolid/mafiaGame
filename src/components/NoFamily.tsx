@@ -74,6 +74,14 @@ const NoFamily = ({
     fetchFamilies();
   }, []);
 
+  const isValidFamilyName = (name: string): boolean => {
+    // Check if the name is between 3 and 16 characters and matches the required format:
+    // - No leading or trailing spaces
+    // - No multiple consecutive spaces
+    const regex = /^(?! )[A-Za-z0-9 ]{3,16}(?<! )$/;
+    return regex.test(name) && !/ {2,}/.test(name);
+  };
+
   // Create new family
   const createFamily = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -82,6 +90,15 @@ const NoFamily = ({
     if (!familyName.trim()) {
       setMessageType("warning");
       setMessage("Du må skrive inn ønsket familienavn.");
+      return;
+    }
+
+    // Validate the family name
+    if (!isValidFamilyName(familyName)) {
+      setMessageType("warning");
+      setMessage(
+        "Familienavn må være mellom 3 og 16 tegn, kan ikke starte eller slutte med mellomrom, og kan ikke ha flere mellomrom etter hverandre."
+      );
       return;
     }
 
@@ -94,6 +111,18 @@ const NoFamily = ({
     }
 
     try {
+      // Check if a family with the same name (case-insensitive) already exists
+      const lowerCaseName = familyName.toLowerCase();
+      const existingFamily = families.find(
+        (fam) => fam.name.toLowerCase() === lowerCaseName
+      );
+
+      if (existingFamily) {
+        setMessageType("warning");
+        setMessage("En familie med dette navnet eksisterer allerede.");
+        return;
+      }
+
       const newFamilyData = {
         name: familyName,
         leaderName: character.username,
@@ -137,7 +166,7 @@ const NoFamily = ({
 
       // set Family in local state
       setFamily({ id: familyId, ...newFamilyData });
-      setFamilyName("");
+      setFamilyName(familyName);
 
       setMessageType("success");
       setMessage(`Du opprettet ${familyName} for $${cost.toLocaleString()}.`);
@@ -263,7 +292,16 @@ const NoFamily = ({
                 className="bg-neutral-700 py-2 px-4 placeholder-neutral-400 text-white"
                 type="text"
                 value={familyName}
-                onChange={(e) => setFamilyName(e.target.value)}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  // Limit to 16 characters and match regex
+                  if (
+                    newValue.length <= 16 &&
+                    /^[A-Za-z0-9 ]*$/.test(newValue)
+                  ) {
+                    setFamilyName(newValue);
+                  }
+                }}
                 placeholder="Ønsket familienavn"
               />
               <Button type="submit">Opprett familie</Button>

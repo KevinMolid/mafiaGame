@@ -50,7 +50,7 @@ const FamilySettings = ({
         await updateDoc(characterRef, { familyId: null, familyName: null });
 
         setMessageType("success");
-        setMessage(`You disbanded ${family.name}`);
+        setMessage(`Du la ned familien ${family.name}.`);
 
         // Update the local character context
         setCharacter((prev) =>
@@ -60,10 +60,10 @@ const FamilySettings = ({
         // Clear family state
         setFamily(null);
       } catch (error) {
-        setError("Error disbanding the family.");
+        setError("Feil ved nedleggelse av familie.");
       }
     } else {
-      setError("Only the family leader can disband the family.");
+      setError("Bare lederen av familien kan legge ned familien.");
     }
   };
 
