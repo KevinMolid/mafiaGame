@@ -55,15 +55,15 @@ const CreateCharacter = () => {
   /* Handle username input field */
   function handleUsernameChange(e: any) {
     const value = e.target.value;
-    const regex = /^[A-Za-z]*$/;
+    const regex = /^[A-Za-zæÆøØåÅ0-9]*$/;
 
     if (regex.test(value) && value.length <= 16) {
       setUsername(value);
       setError("");
     } else if (!regex.test(value)) {
-      setError("Username can only contain letters.");
+      setError("Brukernavnet kan bare inneholde tall og bokstaver.");
     } else if (value.length > 16) {
-      setError("Username must be 16 characters or less.");
+      setError("Brukernavnet kan ikke være lengre enn 16 tegn.");
     }
   }
 
@@ -82,7 +82,7 @@ const CreateCharacter = () => {
   async function handleClick() {
     // Check that username is at least 3 characters
     if (username.length < 3) {
-      setError("Username must be at least 3 characters long.");
+      setError("Brukernavnet må inneholde minst 3 tegn.");
       return;
     }
 
@@ -90,7 +90,7 @@ const CreateCharacter = () => {
       // Check if the username is unique
       const isUnique = await isUsernameUnique(username);
       if (!isUnique) {
-        setError("Username already exists. Please choose another one.");
+        setError("Brukernavnet finnes allerede.");
         return;
       }
 
