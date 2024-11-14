@@ -1,5 +1,6 @@
 import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
+import H2 from "../components/Typography/H2";
 import ShopBox from "../components/ShopBox";
 import { useState, useRef, useEffect } from "react";
 import b1 from "/images/boxes/Briefcase1.png";
@@ -111,6 +112,13 @@ const Shop = () => {
   return (
     <Main>
       <H1>Butikk</H1>
+      <H2>
+        <i className="fa-solid fa-briefcase"></i> Kofferter
+      </H2>
+      <p className="mb-4">
+        Kofferter inneholder utstyr du kan bruke for å forbedre spillkarakteren
+        din.
+      </p>
       {/* Item Display wheel */}
       <div className="border border-neutral-700 bg-neutral-950 rounded-full p-2 relative overflow-hidden max-w-[800px]">
         <button
@@ -184,6 +192,12 @@ const Shop = () => {
           ))}
         </div>
       </div>
+
+      {/* Biler */}
+      <H2>
+        <i className="fa-solid fa-car-side"></i> Biler
+      </H2>
+      <p className="mb-4">Biler kan brukes til Street Racing i Tokyo.</p>
     </Main>
   );
 };
