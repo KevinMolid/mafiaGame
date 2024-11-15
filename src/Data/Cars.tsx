@@ -1,3 +1,6 @@
+import McLaren720s from "/images/cars/McLaren 720S.jpg";
+import RollsRoyceGhost from "/images/cars/Rolls-Royce Ghost.jpg";
+
 const Cars = [
   // Tier 1
   { name: "Toyota Camry", value: 27000, hp: 203 },
@@ -24,8 +27,8 @@ const Cars = [
   // Tier 4
   { name: "Lamborghini Huracán EVO", value: 260000, hp: 630 },
   { name: "Ferrari F8 Tributo", value: 280000, hp: 710 },
-  { name: "McLaren 720S", value: 300000, hp: 710 },
-  { name: "Rolls-Royce Ghost", value: 340000, hp: 563 },
+  { name: "McLaren 720S", img: McLaren720s, value: 300000, hp: 710 },
+  { name: "Rolls-Royce Ghost", img: RollsRoyceGhost, value: 340000, hp: 563 },
   { name: "Aston Martin DBS Superleggera", value: 315000, hp: 715 },
 ];
 

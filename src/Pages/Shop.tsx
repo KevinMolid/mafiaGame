@@ -6,8 +6,10 @@ import { useState, useRef, useEffect } from "react";
 import b1 from "/images/boxes/Briefcase1.png";
 import b2 from "/images/boxes/Briefcase2.png";
 import b3 from "/images/boxes/Briefcase3.png";
+import Button from "../components/Button";
 
 import Items from "../Data/Items";
+import Cars from "../Data/Cars";
 
 const suitcaseBoxes = [
   {
@@ -165,7 +167,7 @@ const Shop = () => {
       </div>
 
       {/* Selection wheel */}
-      <div className="h-[240px] mt-4 overflow-visible flex max-w-[800px]">
+      <div className="h-[240px] mt-4 mb-8 overflow-visible flex max-w-[800px]">
         <div className="relative flex items-center justify-center w-full">
           {suitcaseBoxes.map((box, index) => (
             <div
@@ -198,6 +200,37 @@ const Shop = () => {
         <i className="fa-solid fa-car-side"></i> Biler
       </H2>
       <p className="mb-4">Biler kan brukes til Street Racing i Tokyo.</p>
+      <ul className="flex flex-col gap-4">
+        {Cars.map((car) => {
+          return (
+            <li
+              key={car.name}
+              className="flex bg-neutral-900 border border-neutral-600 pr-4 justify-between items-center"
+            >
+              <div className="flex gap-4">
+                {car.img && (
+                  <img
+                    src={car.img}
+                    className="h-20 border-r border-neutral-600"
+                  />
+                )}
+                <div className="flex flex-col justify-center">
+                  <p>
+                    <strong>{car.name}</strong>
+                  </p>
+                  <p>
+                    HP: <span className="text-neutral-200">{car.hp}</span>
+                  </p>
+                  <strong className="text-yellow-400">
+                    ${car.value.toLocaleString()}
+                  </strong>
+                </div>
+              </div>
+              <Button>Kjøp</Button>
+            </li>
+          );
+        })}
+      </ul>
     </Main>
   );
 };
