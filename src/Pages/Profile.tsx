@@ -87,7 +87,11 @@ const Profile = () => {
         <div className="flex flex-col h-full justify-between gap-4">
           {/* Icons */}
           <div className="text-2xl flex gap-4">
-            <Link to="/chat">
+            <Link
+              to={`/meldinger?username=${encodeURIComponent(
+                characterData.username
+              )}`}
+            >
               <div className="hover:text-white">
                 <i className="fa-solid fa-envelope"></i>
               </div>

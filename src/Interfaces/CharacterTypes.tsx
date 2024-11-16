@@ -46,6 +46,7 @@ export interface Character {
   } | null;
   inJail?: boolean | null;
   jailReleaseTime?: any;
+  conversations?: any;
 }
 
 export interface Target {
@@ -77,4 +78,5 @@ export interface Target {
   } | null;
   inJail?: boolean | null;
   jailReleaseTime?: any;
+  conversations?: any;
 }
