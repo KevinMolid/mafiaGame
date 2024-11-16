@@ -62,6 +62,9 @@ import CreateCharacter from "./Pages/CreateCharacter.tsx";
 import SelectCharacter from "./Pages/SelectCharacter.tsx";
 import Dead from "./Pages/Dead.tsx";
 
+// City specific
+import StreetRacing from "./Pages/StreetRacing.tsx";
+
 // Protected routes
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
 import ProtectedAdminRoute from "./Routes/ProtectedAdminRoute.tsx";
@@ -307,6 +310,16 @@ function App() {
                             element={
                               <ProtectedRoute>
                                 <Jackpot />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          {/* City specific */}
+                          <Route
+                            path="/streetracing"
+                            element={
+                              <ProtectedRoute>
+                                <StreetRacing />
                               </ProtectedRoute>
                             }
                           />

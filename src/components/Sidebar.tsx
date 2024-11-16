@@ -115,6 +115,10 @@ const Sidebar = () => {
         </SidebarLink>
 
         <hr className="border-neutral-600" />
+        <SidebarLink to="streetracing" icon="flag-checkered">
+          Streetracing
+        </SidebarLink>
+        <hr className="border-neutral-600" />
 
         <SidebarLink to="fengsel" icon="handcuffs">
           Fengsel
