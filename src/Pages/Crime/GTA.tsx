@@ -48,7 +48,7 @@ const tiers: { [key: number]: Car[] } = {
 };
 
 // Weights for each tier
-const tierWeights = [0.6, 0.25, 0.1, 0.05];
+const tierWeights = [0.5, 0.3, 0.15, 0.04, 0.01];
 
 const GTA = () => {
   const [message, setMessage] = useState("");
