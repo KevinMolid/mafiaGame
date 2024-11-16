@@ -200,7 +200,7 @@ const Shop = () => {
         <i className="fa-solid fa-car-side"></i> Biler
       </H2>
       <p className="mb-4">Biler kan brukes til Street Racing i Tokyo.</p>
-      <ul className="flex flex-col gap-4">
+      <ul className="grid grid-cols-2 gap-2 mb-4">
         {Cars.map((car) => {
           return (
             <li
@@ -226,11 +226,11 @@ const Shop = () => {
                   </strong>
                 </div>
               </div>
-              <Button>Kjøp</Button>
             </li>
           );
         })}
       </ul>
+      <Button>Kjøp</Button>
     </Main>
   );
 };
