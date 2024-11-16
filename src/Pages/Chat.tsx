@@ -21,6 +21,7 @@ import { format } from "date-fns";
 
 // React
 import { useState, useEffect, useRef } from "react";
+import { Fragment } from "react";
 
 // Context
 import { useCharacter } from "../CharacterContext";
@@ -231,7 +232,7 @@ const Chat = () => {
                 {messages.map((message) => (
                   <li key={message.id} className="mb-2">
                     {/* Sender and timestamp */}
-                    <div className="flex gap-2 mb-1 text-stone-400 text-xs sm:text-sm">
+                    <div className="flex gap-2 text-stone-400 text-xs sm:text-sm">
                       <Username
                         character={{
                           id: message.senderId,
@@ -249,7 +250,14 @@ const Chat = () => {
                         </small>
                       </p>
                     </div>
-                    <div className="text-neutral-200">{message.text}</div>
+                    <div className="text-neutral-200 mb-2">
+                      {message.text.split("\n").map((line, index) => (
+                        <Fragment key={index}>
+                          {line}
+                          <br />
+                        </Fragment>
+                      ))}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -269,8 +277,14 @@ const Chat = () => {
                 value={newMessage}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    e.preventDefault();
-                    submitNewMessage(e);
+                    if (e.shiftKey) {
+                      // Allow line break when Shift + Enter is pressed
+                      return;
+                    } else {
+                      // Prevent default behavior and submit the message when Enter is pressed alone
+                      e.preventDefault();
+                      submitNewMessage(e);
+                    }
                   }
                 }}
                 onChange={handleInputChange}
