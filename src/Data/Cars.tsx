@@ -22,54 +22,81 @@ import FerrariF8Tributo from "/images/cars/Ferrari F8 Tributo.jpg";
 import McLaren720s from "/images/cars/McLaren 720S.jpg";
 import RollsRoyceGhost from "/images/cars/Rolls-Royce Ghost.jpg";
 import AstonMartinDBSSuperleggera from "/images/cars/Aston Martin DBS Superleggera.jpg";
+// Tier 5
+import FerrariSF90Stradale from "/images/cars/Ferrari SF90 Stradale.jpg";
+import PaganiZondaRevolucion from "/images/cars/Pagani Zonda Revolucion.jpg";
+import LamborghiniVenenoRoadster from "/images/cars/Lamborghini Veneno Roadster.jpg";
 
 const Cars = [
   // Tier 1
-  { name: "Toyota Camry", value: 27000, hp: 203, img: ToyotaCamry },
-  { name: "Honda Accord", value: 28000, hp: 192, img: HondaAccord },
-  { name: "Nissan Altima", value: 26500, hp: 188, img: NissanAltima },
-  { name: "Subaru Outback", value: 30000, hp: 182, img: SubaruOutback },
-  { name: "Ford Escape", value: 29500, hp: 181, img: FordEscape },
-  { name: "Chevrolet Equinox", value: 28000, hp: 170, img: ChevroletEquinox },
-  { name: "Toyota RAV4", value: 29000, hp: 203, img: ToyotaRAV4 },
-  { name: "Honda CR-V", value: 31000, hp: 190, img: HondaCRV },
-  { name: "Tesla Model 3", value: 42000, hp: 283, img: TeslaModel3 },
+  { name: "Toyota Camry", value: 27000, hp: 203, img: ToyotaCamry, tier: 1 },
+  { name: "Honda Accord", value: 28000, hp: 192, img: HondaAccord, tier: 1 },
+  { name: "Nissan Altima", value: 26500, hp: 188, img: NissanAltima, tier: 1 },
+  {
+    name: "Subaru Outback",
+    value: 30000,
+    hp: 182,
+    img: SubaruOutback,
+    tier: 1,
+  },
+  { name: "Ford Escape", value: 29500, hp: 181, img: FordEscape, tier: 1 },
+  {
+    name: "Chevrolet Equinox",
+    value: 28000,
+    hp: 170,
+    img: ChevroletEquinox,
+    tier: 1,
+  },
+  { name: "Toyota RAV4", value: 29000, hp: 203, img: ToyotaRAV4, tier: 1 },
+  { name: "Honda CR-V", value: 31000, hp: 190, img: HondaCRV, tier: 1 },
+  { name: "Tesla Model 3", value: 42000, hp: 283, img: TeslaModel3, tier: 1 },
   // Tier 2
-  { name: "BMW 5 Series", value: 55000, hp: 248, img: BMW5Series },
+  { name: "BMW 5 Series", value: 55000, hp: 248, img: BMW5Series, tier: 2 },
   {
     name: "Mercedes-Benz E-Class",
     value: 60000,
     hp: 255,
     img: MercedesBenzEClass,
+    tier: 2,
   },
-  { name: "Audi Q7", value: 65000, hp: 261, img: AudiQ7 },
-  { name: "Porsche Macan", value: 63000, hp: 261, img: PorscheMacan },
-  { name: "Tesla Model S", value: 95000, hp: 670, img: TeslaModelS },
+  { name: "Audi Q7", value: 65000, hp: 261, img: AudiQ7, tier: 2 },
+  { name: "Porsche Macan", value: 63000, hp: 261, img: PorscheMacan, tier: 2 },
+  { name: "Tesla Model S", value: 95000, hp: 670, img: TeslaModelS, tier: 2 },
   // Tier 3
   {
     name: "Porsche 911 Carrera",
     value: 115000,
     hp: 379,
     img: Porsche911Carrera,
+    tier: 3,
   },
   {
     name: "Mercedes-Benz S 580",
     value: 120000,
     hp: 496,
     img: MercedesBenzS580,
+    tier: 3,
   },
   {
     name: "Tesla Model X Plaid",
     value: 130000,
     hp: 1020,
     img: TeslaModelXPlaid,
+    tier: 3,
   },
-  { name: "BMW M8 Competition", value: 135000, hp: 617, img: BMWM8Competition },
+  {
+    name: "BMW M8 Competition",
+    value: 135000,
+    hp: 617,
+    img: BMWM8Competition,
+    tier: 3,
+  },
   {
     name: "Audi R8 V10 Performance",
     value: 200000,
     hp: 602,
     img: AudiR8V10Performance,
+    tier: 3,
   },
   // Tier 4
   {
@@ -77,15 +104,51 @@ const Cars = [
     value: 260000,
     hp: 630,
     img: LamborghiniHuracánEVO,
+    tier: 4,
   },
-  { name: "Ferrari F8 Tributo", value: 280000, hp: 710, img: FerrariF8Tributo },
-  { name: "McLaren 720S", img: McLaren720s, value: 300000, hp: 710 },
-  { name: "Rolls-Royce Ghost", img: RollsRoyceGhost, value: 340000, hp: 563 },
+  {
+    name: "Ferrari F8 Tributo",
+    value: 280000,
+    hp: 710,
+    img: FerrariF8Tributo,
+    tier: 4,
+  },
+  { name: "McLaren 720S", value: 300000, hp: 710, img: McLaren720s, tier: 4 },
+  {
+    name: "Rolls-Royce Ghost",
+    value: 340000,
+    hp: 563,
+    img: RollsRoyceGhost,
+    tier: 4,
+  },
   {
     name: "Aston Martin DBS Superleggera",
     value: 315000,
     hp: 715,
     img: AstonMartinDBSSuperleggera,
+    tier: 4,
+  },
+  // Tier 5
+  {
+    name: "Ferrari SF90 Stradale",
+    value: 995000,
+    hp: 769,
+    img: FerrariSF90Stradale,
+    tier: 5,
+  },
+  {
+    name: "Pagani Zonda Revolucion",
+    value: 2800000,
+    hp: 800,
+    img: PaganiZondaRevolucion,
+    tier: 5,
+  },
+  {
+    name: "Lamborghini Veneno Roadster",
+    value: 9500000,
+    hp: 750,
+    img: LamborghiniVenenoRoadster,
+    tier: 5,
   },
 ];
 

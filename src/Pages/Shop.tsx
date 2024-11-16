@@ -218,12 +218,41 @@ const Shop = () => {
                 {car.img && (
                   <img
                     src={car.img}
-                    className="h-20 border-r border-neutral-600"
+                    className={
+                      "h-20 border-2 " +
+                      (car.tier === 1
+                        ? "border-neutral-600"
+                        : car.tier === 2
+                        ? "border-green-400"
+                        : car.tier === 3
+                        ? "border-blue-400"
+                        : car.tier === 4
+                        ? "border-purple-400"
+                        : car.tier === 5
+                        ? "border-yellow-400"
+                        : "")
+                    }
                   />
                 )}
                 <div className="flex flex-col justify-center w-full">
                   <p>
-                    <strong>{car.name}</strong>
+                    <strong
+                      className={
+                        car.tier === 1
+                          ? "text-neutral-400"
+                          : car.tier === 2
+                          ? "text-green-400"
+                          : car.tier === 3
+                          ? "text-blue-400"
+                          : car.tier === 4
+                          ? "text-purple-400"
+                          : car.tier === 5
+                          ? "text-yellow-400"
+                          : ""
+                      }
+                    >
+                      {car.name}
+                    </strong>
                   </p>
                   <div className="flex justify-between">
                     <p className="text-neutral-200">{car.hp} hp</p>
