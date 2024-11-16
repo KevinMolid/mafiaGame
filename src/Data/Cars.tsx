@@ -1,11 +1,13 @@
 import ToyotaCamry from "/images/cars/ToyotaCamry.jpg";
 import HondaAccord from "/images/cars/HondaAccord.jpg";
-
+import NissanAltima from "/images/cars/Nissan Altima.jpg";
+import FordEscape from "/images/cars/Ford Escape.jpg";
+import SubaruOutback from "/images/cars/Subaru Outback.jpg";
+import ChevroletEquinox from "/images/cars/Chevrolet Equinox.jpg";
 import ToyotaRAV4 from "/images/cars/Toyota RAV4.jpg";
 import HondaCRV from "/images/cars/Honda CR-V.jpg";
 import TeslaModel3 from "/images/cars/Tesla Model 3.jpg";
 import BMW5Series from "/images/cars/BMW 5 Series.jpg";
-
 import MercedesBenzS580 from "/images/cars/Mercedes-Benz S 580.jpg";
 import Porsche911Carrera from "/images/cars/Porsche 911 Carrera.jpg";
 import TeslaModelS from "/images/cars/Tesla Model S.jpg";
@@ -25,10 +27,10 @@ const Cars = [
   // Tier 1
   { name: "Toyota Camry", value: 27000, hp: 203, img: ToyotaCamry },
   { name: "Honda Accord", value: 28000, hp: 192, img: HondaAccord },
-  { name: "Nissan Altima", value: 26500, hp: 188 },
-  { name: "Subaru Outback", value: 30000, hp: 182 },
-  { name: "Ford Escape", value: 29500, hp: 181 },
-  { name: "Chevrolet Equinox", value: 28000, hp: 170 },
+  { name: "Nissan Altima", value: 26500, hp: 188, img: NissanAltima },
+  { name: "Subaru Outback", value: 30000, hp: 182, img: SubaruOutback },
+  { name: "Ford Escape", value: 29500, hp: 181, img: FordEscape },
+  { name: "Chevrolet Equinox", value: 28000, hp: 170, img: ChevroletEquinox },
   { name: "Toyota RAV4", value: 29000, hp: 203, img: ToyotaRAV4 },
   { name: "Honda CR-V", value: 31000, hp: 190, img: HondaCRV },
   { name: "Tesla Model 3", value: 42000, hp: 283, img: TeslaModel3 },

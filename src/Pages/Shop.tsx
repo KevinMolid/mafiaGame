@@ -51,6 +51,8 @@ const Shop = () => {
   const [itemList, setItemList] = useState(Items.slice(0, maxVisibleItems));
   const scrollContainerRef = useRef<HTMLUListElement | null>(null);
 
+  const [selectedCar, setSelectedCar] = useState<string | null>(null);
+
   // Update itemList when wheelIndex changes
   useEffect(() => {
     const filteredItems = Items.filter((item) =>
@@ -200,30 +202,38 @@ const Shop = () => {
         <i className="fa-solid fa-car-side"></i> Biler
       </H2>
       <p className="mb-4">Biler kan brukes til Street Racing i Tokyo.</p>
-      <ul className="grid grid-cols-2 gap-2 mb-4">
+      <ul className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-4">
         {Cars.map((car) => {
           return (
             <li
               key={car.name}
-              className="flex bg-neutral-900 border border-neutral-600 pr-4 justify-between items-center"
+              className={`flex border pr-4 justify-between items-center cursor-pointer ${
+                selectedCar === car.name
+                  ? "bg-neutral-900 border-neutral-600"
+                  : "bg-neutral-800 border-neutral-800"
+              }`}
+              onClick={() => setSelectedCar(car.name)}
             >
-              <div className="flex gap-4">
+              <div className="flex gap-4 w-full">
                 {car.img && (
                   <img
                     src={car.img}
                     className="h-20 border-r border-neutral-600"
                   />
                 )}
-                <div className="flex flex-col justify-center">
+                <div className="flex flex-col justify-center w-full">
                   <p>
                     <strong>{car.name}</strong>
                   </p>
-                  <p>
-                    HP: <span className="text-neutral-200">{car.hp}</span>
-                  </p>
-                  <strong className="text-yellow-400">
-                    ${car.value.toLocaleString()}
-                  </strong>
+                  <div className="flex justify-between">
+                    <p className="text-neutral-200">{car.hp} hp</p>
+                    <p>
+                      {" "}
+                      <strong className="text-yellow-400">
+                        ${car.value.toLocaleString()}
+                      </strong>
+                    </p>
+                  </div>
                 </div>
               </div>
             </li>
