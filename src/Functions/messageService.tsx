@@ -14,6 +14,7 @@ export interface Message {
   senderName: string;
   text: string;
   timestamp: any;
+  isRead?: boolean;
 }
 
 export const sendMessage = async (

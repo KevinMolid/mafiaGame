@@ -16,8 +16,10 @@ import {
   getDocs,
   query,
   where,
+  doc,
   addDoc,
   serverTimestamp,
+  updateDoc,
 } from "firebase/firestore";
 
 // Context
@@ -171,6 +173,49 @@ const Chat = () => {
     return () => unsubscribe();
   }, [conversationId]);
 
+  useEffect(() => {
+    if (!conversationId) {
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      query(
+        collection(db, "Conversations", conversationId, "Messages"),
+        orderBy("timestamp")
+      ),
+      async (snapshot) => {
+        const fetchedMessages = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Message[];
+
+        setMessages(fetchedMessages);
+        setLoading(false);
+
+        // Update unread messages to mark them as read
+        fetchedMessages.forEach(async (message) => {
+          if (message.senderId !== character.id && !message.isRead) {
+            const messageRef = doc(
+              db,
+              "Conversations",
+              conversationId,
+              "Messages",
+              message.id
+            );
+            await updateDoc(messageRef, { isRead: true });
+          }
+        });
+      },
+      (error) => {
+        setError(error.message);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [conversationId]);
+
   const submitNewMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -186,6 +231,7 @@ const Chat = () => {
             senderName: character.username,
             text: newMessage,
             timestamp: serverTimestamp(),
+            isRead: false,
           }
         );
       } else {
@@ -320,6 +366,19 @@ const Chat = () => {
                             : "Sending..."}
                         </small>
                       </p>
+                      {!message.isRead ? (
+                        <p>
+                          <span className="text-xs text-red-400">
+                            Ikke lest
+                          </span>
+                        </p>
+                      ) : (
+                        <p>
+                          <span className="text-xs text-green-400">
+                            <i className="fa-solid fa-check"></i>
+                          </span>
+                        </p>
+                      )}
                     </div>
                     <div className="text-neutral-200 mb-2">
                       {message.text.split("\n").map((line, index) => (
