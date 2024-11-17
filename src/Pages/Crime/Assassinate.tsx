@@ -1,6 +1,7 @@
 import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
+import H3 from "../../components/Typography/H3";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
@@ -8,7 +9,7 @@ import Box from "../../components/Box";
 import Username from "../../components/Typography/Username";
 
 // React
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Firebase
 import {
@@ -27,16 +28,39 @@ const db = getFirestore();
 import { useCharacter } from "../../CharacterContext";
 
 const Assassinate = () => {
+  const { character } = useCharacter();
   const [targetPlayer, setTargetPlayer] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "warning" | "info"
   >("info");
-  const { character } = useCharacter();
+  const [bounties, setBounties] = useState<any[]>([]);
+  const [addingBounty, setAddingBounty] = useState<boolean>(false);
+  const [wantedPlayer, setWantedPlayer] = useState("");
+  const [bountyAmount, setBountyAmount] = useState<number | "">("");
 
   if (!character) {
     return;
   }
+
+  useEffect(() => {
+    // Function to fetch bounties from the database
+    const fetchBounties = async () => {
+      try {
+        const bountyQuery = query(collection(db, "Bounty"));
+        const querySnapshot = await getDocs(bountyQuery);
+        const bountiesList = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setBounties(bountiesList);
+      } catch (error) {
+        console.error("Error fetching bounties:", error);
+      }
+    };
+
+    fetchBounties();
+  }, []);
 
   // Function to handle assassination
   const killPlayer = async () => {
@@ -104,6 +128,20 @@ const Assassinate = () => {
     setTargetPlayer(event.target.value);
   };
 
+  const handleWantedInput = (event: any) => {
+    setWantedPlayer(event.target.value);
+  };
+
+  const handleBountyAmountInputChange = (e: any) => {
+    const value = e.target.value;
+    if (value === "") {
+      setBountyAmount("");
+    } else {
+      const intValue = parseInt(value, 10);
+      setBountyAmount(isNaN(intValue) ? "" : intValue);
+    }
+  };
+
   if (character?.inJail) {
     return <JailBox message={message} messageType={messageType} />;
   }
@@ -117,49 +155,98 @@ const Assassinate = () => {
       <div className="flex  flex-col gap-4">
         <Box>
           <div className="flex items-center justify-between mb-2">
-            <H2>Dusørliste</H2>
-            <Button style="black" size="small">
-              Utlov dusør
+            {addingBounty ? <H2>Ny dusør</H2> : <H2>Dusørliste</H2>}
+            <Button
+              style="black"
+              size="small"
+              onClick={() => setAddingBounty(!addingBounty)}
+            >
+              {addingBounty ? (
+                <p>
+                  <i className="fa-solid fa-x"></i>
+                </p>
+              ) : (
+                <p>
+                  <i className="fa-solid fa-plus"></i> Ny dusør
+                </p>
+              )}
             </Button>
           </div>
 
-          <p>
-            Du mottar automatisk dusørbeløpet dersom du dreper en spiller på
-            dusørlisten.
-          </p>
+          {addingBounty ? (
+            <div>
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-col">
+                  <H3>Ønsket drept</H3>
+                  <input
+                    type="text"
+                    placeholder="Brukernavn"
+                    value={wantedPlayer}
+                    onChange={handleWantedInput}
+                    className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+                  />
+                </div>
 
-          <div className="w-full my-4">
-            <div className="grid grid-cols-3 border border-neutral-700 bg-neutral-950 text-stone-200">
-              <p className="font-medium px-2 py-1">Ønsket drept</p>
-              <p className="font-medium px-2 py-1">Dusør</p>
-              <p className="font-medium px-2 py-1">Betalt av</p>
+                <div className="flex flex-col mb-4">
+                  <H3>Dusørbeløp</H3>
+                  <input
+                    className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+                    type="number"
+                    value={bountyAmount}
+                    placeholder="Beløp"
+                    onChange={handleBountyAmountInputChange}
+                  />
+                </div>
+              </div>
+              <div>
+                <Button>Utlov dusør</Button>
+              </div>
             </div>
+          ) : (
+            <>
+              <p>
+                Du mottar automatisk dusørbeløpet dersom du dreper en spiller på
+                dusørlisten.
+              </p>
 
-            <ul>
-              <li className="grid grid-cols-3 border bg-neutral-800 border-neutral-700">
-                <div className="px-2 py-1">
-                  <Username
-                    character={{
-                      id: character.id,
-                      username: character.username,
-                    }}
-                  />
+              <div className="w-full my-4">
+                <div className="grid grid-cols-3 border border-neutral-700 bg-neutral-950 text-stone-200">
+                  <p className="font-medium px-2 py-1">Ønsket drept</p>
+                  <p className="font-medium px-2 py-1">Dusør</p>
+                  <p className="font-medium px-2 py-1">Betalt av</p>
                 </div>
-                <div className="px-2 py-1 text-yellow-400 font-bold">
-                  $500,000
-                </div>
-                <div className="px-2 py-1">
-                  {" "}
-                  <Username
-                    character={{
-                      id: character.id,
-                      username: character.username,
-                    }}
-                  />
-                </div>
-              </li>
-            </ul>
-          </div>
+
+                <ul>
+                  {bounties.map((bounty) => (
+                    <li
+                      key={bounty.id}
+                      className="grid grid-cols-3 border bg-neutral-800 border-neutral-700"
+                    >
+                      <div className="px-2 py-1">
+                        <Username
+                          character={{
+                            id: bounty.WantedId,
+                            username: bounty.WantedName,
+                          }}
+                        />
+                      </div>
+                      <div className="px-2 py-1 text-yellow-400 font-bold">
+                        ${bounty.Bounty.toLocaleString()}
+                      </div>
+                      <div className="px-2 py-1">
+                        <Username
+                          character={{
+                            id: bounty.PaidById,
+                            username: bounty.PaidByName,
+                          }}
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
         </Box>
 
         <Box>
