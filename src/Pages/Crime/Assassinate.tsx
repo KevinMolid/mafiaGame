@@ -5,6 +5,7 @@ import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
 import Box from "../../components/Box";
+import Username from "../../components/Typography/Username";
 
 // React
 import { useState } from "react";
@@ -110,19 +111,55 @@ const Assassinate = () => {
   return (
     <Main>
       <H1>Drep spiller</H1>
-      <p className="mb-4">
-        Her kan du forsøke å drepe en annen spiller. Dersom du dreper en spiller
-        på listen over spillere som er ønsket drept vil du automatisk motta
-        pengebeløpet.
-      </p>
+      <p className="mb-4">Her kan du forsøke å drepe en annen spiller.</p>
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
       <div className="flex  flex-col gap-4">
         <Box>
-          <H2>Ønsket drept</H2>
-          <p className="mb-4">
-            Det er for øyeblikket ikke utlovet dusør for noen spillere.
+          <div className="flex items-center justify-between mb-2">
+            <H2>Dusørliste</H2>
+            <Button style="black" size="small">
+              Utlov dusør
+            </Button>
+          </div>
+
+          <p>
+            Du mottar automatisk dusørbeløpet dersom du dreper en spiller på
+            dusørlisten.
           </p>
+
+          <div className="w-full my-4">
+            <div className="grid grid-cols-3 border border-neutral-700 bg-neutral-950 text-stone-200">
+              <p className="font-medium px-2 py-1">Ønsket drept</p>
+              <p className="font-medium px-2 py-1">Dusør</p>
+              <p className="font-medium px-2 py-1">Betalt av</p>
+            </div>
+
+            <ul>
+              <li className="grid grid-cols-3 border bg-neutral-800 border-neutral-700">
+                <div className="px-2 py-1">
+                  <Username
+                    character={{
+                      id: character.id,
+                      username: character.username,
+                    }}
+                  />
+                </div>
+                <div className="px-2 py-1 text-yellow-400 font-bold">
+                  $500,000
+                </div>
+                <div className="px-2 py-1">
+                  {" "}
+                  <Username
+                    character={{
+                      id: character.id,
+                      username: character.username,
+                    }}
+                  />
+                </div>
+              </li>
+            </ul>
+          </div>
         </Box>
 
         <Box>
