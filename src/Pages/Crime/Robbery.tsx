@@ -312,7 +312,7 @@ const Robbery = () => {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-2" action="">
         <H2>Hvem vil du rane?</H2>
-        <ul className="flex gap-2 flex-wrap">
+        <ul className="flex gap-2 flex-wrap mb-4">
           <li
             className={
               "border px-4 py-2 flex-grow text-center cursor-pointer max-w-64 " +
@@ -343,7 +343,7 @@ const Robbery = () => {
 
         {!isTargetRandom && (
           <input
-            className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
+            className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             type="text"
             placeholder="Brukernavn"
             value={targetCharacter}
