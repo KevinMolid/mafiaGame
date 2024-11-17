@@ -19,6 +19,7 @@ import {
   where,
   getDocs,
   doc,
+  addDoc,
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
@@ -124,6 +125,58 @@ const Assassinate = () => {
     }
   };
 
+  // Handle adding bounties in the db
+  const addBounty = async () => {
+    if (!wantedPlayer || bountyAmount === "" || bountyAmount <= 0) {
+      setMessage(
+        "Du må skrive inn dusørbeløp og brukernavn på den du ønsker drept."
+      );
+      setMessageType("warning");
+      return;
+    }
+
+    try {
+      // Check if the wanted player exists in the database
+      const q = query(
+        collection(db, "Characters"),
+        where("username_lowercase", "==", wantedPlayer.toLowerCase())
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        setMessage(`Spilleren ${wantedPlayer} finnes ikke.`);
+        setMessageType("warning");
+        return;
+      }
+
+      const playerData = querySnapshot.docs[0].data();
+      const wantedPlayerId = querySnapshot.docs[0].id;
+
+      // Add the bounty to the Bounty collection
+      await addDoc(collection(db, "Bounty"), {
+        WantedId: wantedPlayerId,
+        WantedName: playerData.username,
+        Bounty: bountyAmount,
+        PaidById: character.id,
+        PaidByName: character.username,
+        createdAt: serverTimestamp(),
+      });
+
+      setMessage(
+        `Du utlovet en dusør på $${bountyAmount.toLocaleString()} for å drepe ${
+          playerData.username
+        }!`
+      );
+      setMessageType("success");
+      setWantedPlayer("");
+      setBountyAmount("");
+    } catch (error) {
+      console.error("Error adding bounty:", error);
+      setMessage("En feil oppstod under opprettelsen av dusøren.");
+      setMessageType("failure");
+    }
+  };
+
   const handleTargetInput = (event: any) => {
     setTargetPlayer(event.target.value);
   };
@@ -199,7 +252,7 @@ const Assassinate = () => {
                 </div>
               </div>
               <div>
-                <Button>Utlov dusør</Button>
+                <Button onClick={addBounty}>Utlov dusør</Button>
               </div>
             </div>
           ) : (
@@ -249,21 +302,23 @@ const Assassinate = () => {
           )}
         </Box>
 
-        <Box>
-          <H2>Hvem vil du drepe?</H2>
-          <div className="flex flex-col gap-2 ">
-            <input
-              type="text"
-              placeholder="Brukernavn"
-              value={targetPlayer}
-              onChange={handleTargetInput}
-              className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-            />
-            <div>
-              <Button onClick={killPlayer}>Angrip spiller</Button>
+        {!addingBounty && (
+          <Box>
+            <H2>Hvem vil du drepe?</H2>
+            <div className="flex flex-col gap-2 ">
+              <input
+                type="text"
+                placeholder="Brukernavn"
+                value={targetPlayer}
+                onChange={handleTargetInput}
+                className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+              />
+              <div>
+                <Button onClick={killPlayer}>Angrip spiller</Button>
+              </div>
             </div>
-          </div>
-        </Box>
+          </Box>
+        )}
       </div>
     </Main>
   );
