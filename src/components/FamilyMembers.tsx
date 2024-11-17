@@ -1,7 +1,8 @@
 import H2 from "./Typography/H2";
 import Username from "./Typography/Username";
-
 import { useCharacter } from "../CharacterContext";
+import Button from "./Button";
+import { useState } from "react";
 
 type FamilyMember = {
   id: string;
@@ -25,175 +26,118 @@ interface FamilyMembersInterface {
 
 const FamilyMembers = ({ family }: FamilyMembersInterface) => {
   const { character } = useCharacter();
+  const [editing, setEditing] = useState(false);
 
-  if (!character || !family) return;
+  if (!character || !family) return null;
+
+  // Function to render members by rank
+  const renderMembersByRank = (rank: string) => {
+    const membersWithRank = family.members.filter(
+      (member) => member.rank === rank
+    );
+    if (membersWithRank.length === 0) {
+      return <p>Ingen</p>; // Render "Ingen" if no members with this rank
+    }
+    return membersWithRank.map((member) => (
+      <p key={member.id}>
+        <Username character={{ id: member.id, username: member.name }} />
+      </p>
+    ));
+  };
+
+  // Check if the user is the boss
+  const isBoss = character.id === family.leaderId;
 
   return (
     <div>
-      <H2>Medlemmer</H2>
+      <div className="flex items-center justify-between">
+        <H2>Medlemmer</H2>
+        {isBoss && !editing && (
+          <Button
+            size="small"
+            style="black"
+            onClick={() => setEditing(!editing)}
+          >
+            <i className="fa-solid fa-pen-to-square"></i> Endre
+          </Button>
+        )}
+        {isBoss && editing && (
+          <Button
+            size="small"
+            style="black"
+            onClick={() => setEditing(!editing)}
+          >
+            <i className="fa-solid fa-x"></i>
+          </Button>
+        )}
+      </div>
 
       {/* Family structure */}
-      <div className="mb-10 text-center flex flex-col gap-4">
-        {/* 1. row: Boss & Consigliere */}
+      <div className="my-10 text-center flex flex-col gap-4">
+        {/* Render roles based on rank dynamically */}
         <div className="grid grid-cols-3">
           <div></div>
           <div>
-            <p>Leder</p>
-            <p>
-              <Username
-                character={{
-                  id: family.leaderId,
-                  username: family.leaderName,
-                }}
-              />
-            </p>
+            <p>Leder {editing && <i className="fa-solid fa-user-plus"></i>}</p>
+            {renderMembersByRank("Boss")}
           </div>
           <div>
-            <p>Rådgiver</p>
             <p>
-              <Username
-                character={{
-                  id: family.leaderId,
-                  username: family.leaderName,
-                }}
-              />
+              Rådgiver {editing && <i className="fa-solid fa-user-plus"></i>}
             </p>
+            {renderMembersByRank("Consigliere")}
           </div>
         </div>
 
-        {/* 2. row: Underboss */}
+        {/* Underboss */}
         <div>
-          <p>Nestleder</p>
           <p>
-            <Username
-              character={{
-                id: family.leaderId,
-                username: family.leaderName,
-              }}
-            />
+            Nestleder {editing && <i className="fa-solid fa-user-plus"></i>}
           </p>
+          {renderMembersByRank("Underboss")}
         </div>
 
-        {/* 3. row: Caporegimes */}
-
+        {/* Caporegimes */}
         <div className="grid grid-cols-3">
           <div>
-            <p>Kaptein</p>
             <p>
-              <Username
-                character={{
-                  id: family.leaderId,
-                  username: family.leaderName,
-                }}
-              />
+              Kaptein {editing && <i className="fa-solid fa-user-plus"></i>}
             </p>
+            {renderMembersByRank("Capo")}
           </div>
           <div>
-            <p>Kaptein</p>
             <p>
-              <Username
-                character={{
-                  id: family.leaderId,
-                  username: family.leaderName,
-                }}
-              />
+              Kaptein {editing && <i className="fa-solid fa-user-plus"></i>}
             </p>
+            {renderMembersByRank("Capo")}
           </div>
           <div>
-            <p>Kaptein</p>
             <p>
-              <Username
-                character={{
-                  id: family.leaderId,
-                  username: family.leaderName,
-                }}
-              />
+              Kaptein {editing && <i className="fa-solid fa-user-plus"></i>}
             </p>
+            {renderMembersByRank("Capo")}
           </div>
         </div>
 
-        {/* 4. row:: Soldiers */}
+        {/* Soldiers */}
         <div className="grid grid-cols-3">
           <div>
-            <p>Soldater</p>
             <p>
-              <Username
-                character={{
-                  id: family.leaderId,
-                  username: family.leaderName,
-                }}
-              />
+              Soldater {editing && <i className="fa-solid fa-user-plus"></i>}
             </p>
-            <p>
-              <Username
-                character={{
-                  id: family.leaderId,
-                  username: family.leaderName,
-                }}
-              />
-            </p>
-            <p>
-              <Username
-                character={{
-                  id: family.leaderId,
-                  username: family.leaderName,
-                }}
-              />
-            </p>
+            {renderMembersByRank("Soldier")}
           </div>
           <div>
-            <p>Soldater</p>
             <p>
-              <Username
-                character={{
-                  id: family.leaderId,
-                  username: family.leaderName,
-                }}
-              />
+              Soldater {editing && <i className="fa-solid fa-user-plus"></i>}
             </p>
-            <p>
-              <Username
-                character={{
-                  id: family.leaderId,
-                  username: family.leaderName,
-                }}
-              />
-            </p>
-            <p>
-              <Username
-                character={{
-                  id: family.leaderId,
-                  username: family.leaderName,
-                }}
-              />
-            </p>
+            {renderMembersByRank("Soldier")}
           </div>
           <div>
-            <p>Soldater</p>
             <p>
-              <Username
-                character={{
-                  id: family.leaderId,
-                  username: family.leaderName,
-                }}
-              />
+              Soldater {editing && <i className="fa-solid fa-user-plus"></i>}
             </p>
-            <p>
-              <Username
-                character={{
-                  id: family.leaderId,
-                  username: family.leaderName,
-                }}
-              />
-            </p>
-            <p>
-              <Username
-                character={{
-                  id: family.leaderId,
-                  username: family.leaderName,
-                }}
-              />
-            </p>
+            {renderMembersByRank("Soldier")}
           </div>
         </div>
       </div>
@@ -201,18 +145,13 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
       {/* Associates */}
       <div>
         <p>Medlemmer</p>
-        {family.members.map((member) => {
-          return (
+        {family.members
+          .filter((member) => member.rank === "Member")
+          .map((member) => (
             <p key={member.id}>
-              <Username
-                character={{
-                  id: member.id,
-                  username: member.name,
-                }}
-              />
+              <Username character={{ id: member.id, username: member.name }} />
             </p>
-          );
-        })}
+          ))}
       </div>
     </div>
   );
