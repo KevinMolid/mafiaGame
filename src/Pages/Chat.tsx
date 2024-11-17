@@ -3,40 +3,41 @@ import H2 from "../components/Typography/H2";
 import Username from "../components/Typography/Username";
 import Button from "../components/Button";
 
-// Firebase
+import { Message } from "../Functions/messageService";
+import { format } from "date-fns";
+
+import { useState, useEffect, Fragment, useRef } from "react";
+
 import {
   getFirestore,
   collection,
-  doc,
   onSnapshot,
-  query,
   orderBy,
-  getDoc,
+  getDocs,
+  query,
+  where,
+  addDoc,
+  serverTimestamp,
 } from "firebase/firestore";
-const db = getFirestore();
-
-// functions
-import { sendMessage, Message } from "../Functions/messageService";
-import { format } from "date-fns";
-
-// React
-import { useState, useEffect, useRef } from "react";
-import { Fragment } from "react";
 
 // Context
 import { useCharacter } from "../CharacterContext";
 
+const db = getFirestore();
+
 const Chat = () => {
   const { character } = useCharacter();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [players, setPlayers] = useState<any[]>([]);
   const [conversations, setConversations] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string>("");
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
-  const [receiver, setReceiver] = useState<string>("Global");
-  const [channelId, setChannelId] = useState<string>("KZfZCQfE8nCKV5cjeMtj");
   const [isCreatingChat, setIsCreatingChat] = useState<boolean>(false);
-  const [newChatUsername, setNewChatUsername] = useState<string>("");
+  const [receiver, setReceiver] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  if (!character) return;
 
   // Ref for the textarea
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -44,47 +45,113 @@ const Chat = () => {
   // Function to adjust the height of the textarea
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto"; // Reset height
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`; // Set to the new height
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewMessage(e.target.value);
-    adjustTextareaHeight(); // Call the function to adjust height
+    adjustTextareaHeight();
+  };
+
+  // Fetching conversations where the user is a participant
+  useEffect(() => {
+    const fetchUserConversations = async () => {
+      try {
+        const conversationsSnapshot = await getDocs(
+          query(
+            collection(db, "Conversations"),
+            where("participants", "array-contains", character.username)
+          )
+        );
+
+        const conversationsList = conversationsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setConversations(conversationsList);
+      } catch (error) {
+        console.error("Error fetching conversations:", error);
+        setError("Feil ved lasting av samtaler.");
+      }
+    };
+
+    fetchUserConversations();
+  }, [character.username]);
+
+  // Creating list of players
+  useEffect(() => {
+    const fetchAllPlayers = async () => {
+      try {
+        const playersSnapshot = await getDocs(collection(db, "Characters"));
+        const players = playersSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setPlayers(players);
+      } catch (error) {
+        console.error("Error fetching players:", error);
+        setError("Feil ved lasting av spillere.");
+      }
+    };
+
+    if (isCreatingChat) {
+      fetchAllPlayers();
+    }
+  }, [isCreatingChat]);
+
+  const handleNewChatClick = () => {
+    setIsCreatingChat(true);
+  };
+
+  const handlePlayerClick = async (username: string) => {
+    try {
+      // Set receiver's username for display
+      setReceiver(username);
+
+      // Query the Conversations collection for a conversation with the current character's username and the clicked player's username
+      const conversationQuery = query(
+        collection(db, "Conversations"),
+        where("participants", "array-contains", character.username)
+      );
+
+      const conversationSnapshot = await getDocs(conversationQuery);
+
+      let foundConversationId = "";
+
+      conversationSnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.participants.includes(username)) {
+          foundConversationId = doc.id; // Conversation found
+        }
+      });
+
+      if (foundConversationId) {
+        // Set the conversation ID if found
+        setConversationId(foundConversationId);
+      } else {
+        setConversationId("");
+      }
+
+      // Close the player list view
+      setIsCreatingChat(false);
+    } catch (error) {
+      console.error("Error finding conversation:", error);
+      setError("Feil ved henting av samtale.");
+    }
   };
 
   useEffect(() => {
-    adjustTextareaHeight(); // Ensure height is adjusted when the component mounts
-  }, [newMessage]);
-
-  useEffect(() => {
-    if (character && character.conversations) {
-      // Fetch conversation details from character's conversations array
-      const fetchConversations = async () => {
-        try {
-          const fetchedConversations = [];
-          for (const convId of character.conversations) {
-            const docSnap = await getDoc(doc(db, "Conversations", convId));
-            if (docSnap.exists()) {
-              fetchedConversations.push({ id: convId, ...docSnap.data() });
-            }
-          }
-          setConversations(fetchedConversations);
-        } catch (error) {
-          setError("Feil ved lasting av samtaler.");
-        }
-        setLoading(false);
-      };
-      fetchConversations();
+    if (!conversationId) {
+      setMessages([]);
+      setLoading(false);
+      return;
     }
-  }, [character]);
-
-  useEffect(() => {
-    // Fetch messages for the selected channel
+    // Fetch messages for the selected Channel or Conversation
     const unsubscribe = onSnapshot(
       query(
-        collection(db, "Channels", channelId, "Messages"),
+        collection(db, "Conversations", conversationId, "Messages"),
         orderBy("timestamp")
       ),
       (snapshot) => {
@@ -92,6 +159,7 @@ const Chat = () => {
           id: doc.id,
           ...doc.data(),
         })) as Message[];
+
         setMessages(fetchedMessages);
         setLoading(false);
       },
@@ -101,133 +169,136 @@ const Chat = () => {
     );
 
     return () => unsubscribe();
-  }, [channelId]);
+  }, [conversationId]);
 
-  if (loading) {
-    return <p>Loading messages...</p>;
-  }
-
-  if (error) {
-    return <p>Error: {error}</p>;
-  }
-
-  const submitNewMessage = async (e: any) => {
+  const submitNewMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!character) return;
-    if (!newMessage.trim()) return;
+
+    if (!newMessage.trim()) return; // Prevent empty messages
 
     try {
-      await sendMessage(
-        channelId,
-        newMessage,
-        character.id,
-        character.username
-      );
-      setNewMessage("");
-      setError(null);
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
+      if (conversationId) {
+        // Add a new message to the existing conversation's Messages sub-collection
+        await addDoc(
+          collection(db, "Conversations", conversationId, "Messages"),
+          {
+            senderId: character.id,
+            senderName: character.username,
+            text: newMessage,
+            timestamp: serverTimestamp(),
+          }
+        );
       } else {
-        setError("An unknown error occurred.");
+        // Create a new conversation document and add the first message
+        const newConversationRef = await addDoc(
+          collection(db, "Conversations"),
+          {
+            participants: [character.username, receiver],
+            createdAt: serverTimestamp(),
+          }
+        );
+
+        // Update the conversationId and set receiver in state
+        setConversationId(newConversationRef.id);
+        setReceiver(receiver); // Set the receiver when creating a new chat
+
+        // Update conversations state to include the new conversation
+        setConversations((prevConversations) => [
+          ...prevConversations,
+          {
+            id: newConversationRef.id,
+            participants: [character.username, receiver],
+            createdAt: serverTimestamp(), // Placeholder until server returns actual value
+          },
+        ]);
+
+        // Add the initial message to the Messages sub-collection
+        await addDoc(
+          collection(db, "Conversations", newConversationRef.id, "Messages"),
+          {
+            senderId: character.id,
+            senderName: character.username,
+            text: newMessage,
+            timestamp: serverTimestamp(),
+          }
+        );
       }
+
+      // Clear the new message input field
+      setNewMessage("");
+    } catch (error) {
+      console.error("Feil ved sending av melding:", error);
+      setError("Feil ved sending av melding.");
     }
   };
 
-  const handleNewChatClick = () => {
-    setIsCreatingChat(true);
-  };
+  if (loading) {
+    return <p>Laster meldinger...</p>;
+  }
 
-  const handleNewChatInputChange = (e: any) => {
-    setNewChatUsername(e.target.value);
-  };
-
-  const selectReceiver = (name: string, id: string) => {
-    setReceiver(name);
-    setChannelId(id);
-    setIsCreatingChat(false);
-  };
+  if (error) {
+    return <p>Feil: {error}</p>;
+  }
 
   return (
-    <section className="flex-grow">
-      <div className="grid grid-cols-[1fr_4fr] h-full">
+    <section className="flex flex-col flex-grow">
+      <div className="flex-grow grid grid-cols-[1fr_4fr] h-full">
         {/* Left panel */}
-        <div className="h-full px-4 py-8 border-r border-neutral-700">
-          <Button style="secondary" onClick={handleNewChatClick}>
-            Ny chat
-          </Button>
+        <div className="h-full px-4 py-8 bg-neutral-800/50">
+          <div className="mb-4">
+            <Button style="secondary" onClick={handleNewChatClick}>
+              Ny chat
+            </Button>
+          </div>
           <ul>
-            {conversations.map((conv) => (
-              <li key={conv.id}>
-                <button
-                  className={`hover:text-white w-full text-left ${
-                    receiver === conv.name
-                      ? "bg-neutral-700/50 text-neutral-300 border-l-4 border-sky-500 pl-2"
-                      : ""
-                  }`}
-                  onClick={() => selectReceiver(conv.name, conv.id)}
-                >
-                  {conv.name || `Conversation ${conv.id}`}
-                </button>
-              </li>
-            ))}
-          </ul>
+            {conversations.map((conversation) => {
+              const otherParticipant = conversation.participants.find(
+                (participant: string) => participant !== character.username
+              );
 
-          <br />
-
-          <ul className="mb-4">
-            <li>
-              <button
-                className={`hover:text-white w-full text-left ${
-                  receiver === "Global"
-                    ? "bg-neutral-700/50 text-neutral-300 border-l-4 border-sky-500 pl-2"
-                    : ""
-                }`}
-                onClick={() => selectReceiver("Global", "KZfZCQfE8nCKV5cjeMtj")}
-              >
-                Global
-              </button>
-            </li>
-            <li>
-              <button
-                className={`hover:text-white w-full text-left ${
-                  receiver === "Prison"
-                    ? "bg-neutral-700/50 text-neutral-300 border-l-4 border-sky-500 pl-2"
-                    : ""
-                }`}
-                onClick={() => selectReceiver("Prison", "EivoYnQQVwVQvnMctcXN")}
-              >
-                Prison
-              </button>
-            </li>
+              return (
+                <li key={conversation.id}>
+                  <button
+                    className={`min-h-8 font-medium hover:text-white w-full text-left ${
+                      receiver === otherParticipant
+                        ? "bg-neutral-700/50 text-neutral-200 border-l-4 border-sky-500 pl-2"
+                        : "text-neutral-400"
+                    }`}
+                    onClick={() => handlePlayerClick(otherParticipant)}
+                  >
+                    {otherParticipant}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
-        {/* Message panel */}
+        {/* Right panel */}
         <div id="right_panel" className="flex flex-col px-4 pt-8 pb-24">
-          {/* Channel header */}
           <div
             id="right_panel_heading"
             className="border-b border-neutral-600 mb-2"
           >
-            {isCreatingChat ? (
-              <input
-                type="text"
-                placeholder="Brukernavn"
-                value={newChatUsername}
-                onChange={handleNewChatInputChange}
-                className="w-[250px] bg-transparent text-xl sm:text-2xl md:text-3xl mb-1 sm:mb-2 md:mb-4 text-white"
-              />
-            ) : (
-              <H2>{receiver} Chat</H2>
-            )}
+            {isCreatingChat ? <H2>Velg spiller</H2> : <H2>{receiver}</H2>}
           </div>
 
-          {/* Messages */}
-          <div id="messages_div" className="mb-4 pb-2">
-            {isCreatingChat ? (
-              <></>
-            ) : (
+          {/* Render list of all players if creating a chat */}
+          {isCreatingChat ? (
+            <ul>
+              {players.map((player) => (
+                <li key={player.id}>
+                  <button
+                    className="hover:text-white w-full text-left"
+                    onClick={() => handlePlayerClick(player.username)}
+                  >
+                    {player.username}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div id="messages_div" className="mb-4 pb-2">
               <ul>
                 {messages.map((message) => (
                   <li key={message.id} className="mb-2">
@@ -261,45 +332,50 @@ const Chat = () => {
                   </li>
                 ))}
               </ul>
-            )}
-          </div>
+            </div>
+          )}
 
-          <div id="new_message_div">
-            <form
-              action=""
-              onSubmit={submitNewMessage}
-              className="bg-neutral-800 grid grid-cols-[auto_min-content] rounded-lg pr-2"
-            >
-              <textarea
-                ref={textareaRef}
-                name=""
-                id=""
-                value={newMessage}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    if (e.shiftKey) {
-                      // Allow line break when Shift + Enter is pressed
-                      return;
-                    } else {
-                      // Prevent default behavior and submit the message when Enter is pressed alone
-                      e.preventDefault();
-                      submitNewMessage(e);
-                    }
-                  }
-                }}
-                onChange={handleInputChange}
-                className="w-full resize-none bg-inherit rounded-lg px-4 py-2"
-              ></textarea>
-
-              <button
-                type="submit"
-                id="send_icon"
-                className="w-8 flex justify-center items-center hover:text-white hover:cursor-pointer"
+          {/* Textarea */}
+          {isCreatingChat || !receiver ? (
+            <></>
+          ) : (
+            <div id="new_message_div">
+              <form
+                action=""
+                onSubmit={submitNewMessage}
+                className="bg-neutral-800 grid grid-cols-[auto_min-content] rounded-lg pr-2"
               >
-                <i className=" text-xl fa-solid fa-paper-plane"></i>
-              </button>
-            </form>
-          </div>
+                <textarea
+                  ref={textareaRef}
+                  name=""
+                  id=""
+                  value={newMessage}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      if (e.shiftKey) {
+                        // Allow line break when Shift + Enter is pressed
+                        return;
+                      } else {
+                        // Prevent default behavior and submit the message when Enter is pressed alone
+                        e.preventDefault();
+                        submitNewMessage(e);
+                      }
+                    }
+                  }}
+                  onChange={handleInputChange}
+                  className="w-full resize-none bg-inherit rounded-lg px-4 py-2"
+                ></textarea>
+
+                <button
+                  type="submit"
+                  id="send_icon"
+                  className="w-8 flex justify-center items-center hover:text-white hover:cursor-pointer"
+                >
+                  <i className=" text-xl fa-solid fa-paper-plane"></i>
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       </div>
     </section>
