@@ -257,7 +257,7 @@ const Assassinate = () => {
               placeholder="Brukernavn"
               value={targetPlayer}
               onChange={handleTargetInput}
-              className="bg-neutral-700 px-4 py-2 text-white placeholder-neutral-400"
+              className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             />
             <div>
               <Button onClick={killPlayer}>Angrip spiller</Button>
