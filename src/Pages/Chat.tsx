@@ -369,7 +369,7 @@ const Chat = () => {
                 <button
                   type="submit"
                   id="send_icon"
-                  className="w-8 flex justify-center items-center hover:text-white hover:cursor-pointer"
+                  className="w-8 flex justify-center items-center text-neutral-400 hover:text-white hover:cursor-pointer"
                 >
                   <i className=" text-xl fa-solid fa-paper-plane"></i>
                 </button>
