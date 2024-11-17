@@ -68,6 +68,7 @@ import StreetRacing from "./Pages/StreetRacing.tsx";
 // Protected routes
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
 import ProtectedAdminRoute from "./Routes/ProtectedAdminRoute.tsx";
+import NewsBar from "./components/NewsBar.tsx";
 
 function App() {
   return (
@@ -84,6 +85,7 @@ function App() {
                   <div id="content-wrap" className="flex flex-col flex-grow">
                     <Header />
                     <Infobar />
+                    <NewsBar />
                     <div className="relative flex flex-col flex-grow">
                       <Layout>
                         <ErrorBoundary>

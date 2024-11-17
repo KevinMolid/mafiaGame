@@ -1,0 +1,30 @@
+.news-bar {
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 100%;
+  user-select: none;
+
+  --gap: 40px;
+  display: flex;
+  gap: var(--gap);
+}
+
+.news-bar ul {
+  list-style: none;
+  flex-shrink: 0;
+  display: flex;
+  min-width: 100%;
+  gap: var(--gap);
+  animation: scroll 20s linear infinite;
+}
+
+.news-bar:hover ul {
+  animation-play-state: paused;
+}
+
+@keyframes scroll {
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+  }
+}
