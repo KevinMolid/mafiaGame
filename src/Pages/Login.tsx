@@ -15,7 +15,7 @@ import {
   getAuth,
   signInWithEmailAndPassword,
   GoogleAuthProvider,
-  FacebookAuthProvider,
+  //FacebookAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
 
@@ -52,7 +52,8 @@ const Login = () => {
   }
 
   /* Login with Facebook */
-  function logInWithFacebook() {
+  {
+    /* function logInWithFacebook() {
     const provider = new FacebookAuthProvider();
     signInWithPopup(auth, provider)
       .then(() => {
@@ -61,6 +62,7 @@ const Login = () => {
       .catch((error) => {
         setError(error.code);
       });
+  }*/
   }
 
   /* Login with Google */
