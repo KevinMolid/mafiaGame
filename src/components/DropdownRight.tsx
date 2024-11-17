@@ -132,13 +132,13 @@ const DropdownRight = () => {
           </SidebarLink>
         )}
 
-        {!hasUnreadAlerts && (
+        {userData && !hasUnreadAlerts && (
           <SidebarLink to="/varsler" icon="bell" onClick={toggleMenu}>
             Varsler
           </SidebarLink>
         )}
 
-        {hasUnreadAlerts && (
+        {userData && hasUnreadAlerts && (
           <SidebarLink
             to="/varsler"
             icon="bell fa-shake text-yellow-400"
@@ -150,17 +150,17 @@ const DropdownRight = () => {
           </SidebarLink>
         )}
 
-        <SidebarLink to="/spillguide" icon="circle-info" onClick={toggleMenu}>
-          Spillguide
-        </SidebarLink>
+        {userData && (
+          <SidebarLink to="/meldinger" icon="comment-dots" onClick={toggleMenu}>
+            Meldinger
+          </SidebarLink>
+        )}
 
-        <SidebarLink to="/meldinger" icon="comment-dots" onClick={toggleMenu}>
-          Meldinger
-        </SidebarLink>
-
-        <SidebarLink to="/forum" icon="comments" onClick={toggleMenu}>
-          Forum
-        </SidebarLink>
+        {userData && (
+          <SidebarLink to="/forum" icon="comments" onClick={toggleMenu}>
+            Forum
+          </SidebarLink>
+        )}
 
         <SidebarLink to="/toppliste" icon="trophy" onClick={toggleMenu}>
           Toppliste
@@ -168,6 +168,10 @@ const DropdownRight = () => {
 
         <SidebarLink to="/statistikk" icon="chart-simple" onClick={toggleMenu}>
           Statistikk
+        </SidebarLink>
+
+        <SidebarLink to="/spillguide" icon="circle-info" onClick={toggleMenu}>
+          Spillguide
         </SidebarLink>
 
         {/* Music */}
@@ -178,17 +182,19 @@ const DropdownRight = () => {
         ></AudioPlay>
 
         {/* Music panel */}
-        <div
-          className="cursor-pointer text-stone-400 hover:text-stone-200"
-          onClick={toggleMusic}
-        >
-          {playing ? (
-            <i className="fa-solid fa-volume-high"></i>
-          ) : (
-            <i className="fa-solid fa-volume-xmark"></i>
-          )}{" "}
-          {playing ? "Lyd på" : "Lyd av"}
-        </div>
+        {userData && (
+          <div
+            className="cursor-pointer text-stone-400 hover:text-stone-200"
+            onClick={toggleMusic}
+          >
+            {playing ? (
+              <i className="fa-solid fa-volume-high"></i>
+            ) : (
+              <i className="fa-solid fa-volume-xmark"></i>
+            )}{" "}
+            {playing ? "Lyd på" : "Lyd av"}
+          </div>
+        )}
 
         {userData && (
           <div className="text-stone-400 hover:text-stone-200">
@@ -198,17 +204,19 @@ const DropdownRight = () => {
                 closeMenus();
               }}
             >
-              Logg ut
+              <i className="fa-solid fa-right-from-bracket"></i> Logg ut
             </button>
           </div>
         )}
 
         {!userData && (
-          <div className="text-stone-400 hover:text-stone-200">
-            <Link to="/signup" onClick={() => closeMenus()}>
-              Logg inn / Registrer bruker
-            </Link>
-          </div>
+          <SidebarLink
+            to="/logginn"
+            icon="right-to-bracket"
+            onClick={toggleMenu}
+          >
+            Logg inn
+          </SidebarLink>
         )}
       </nav>
     )
