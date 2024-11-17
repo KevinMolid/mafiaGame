@@ -197,15 +197,17 @@ const DropdownRight = () => {
         )}
 
         {userData && (
-          <div className="text-stone-400 hover:text-stone-200">
-            <button
-              onClick={() => {
-                logOut();
-                closeMenus();
-              }}
-            >
-              <i className="fa-solid fa-right-from-bracket"></i> Logg ut
-            </button>
+          <div
+            className="text-stone-400 hover:text-stone-200 grid grid-cols-[24px_auto] cursor-pointer"
+            onClick={() => {
+              logOut();
+              closeMenus();
+            }}
+          >
+            <div>
+              <i className="fa-solid fa-right-from-bracket"></i>
+            </div>
+            <p>Logg ut</p>
           </div>
         )}
 
