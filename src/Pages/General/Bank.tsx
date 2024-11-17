@@ -328,7 +328,7 @@ const Bank = () => {
         </p>
         <form className="flex flex-col gap-2" action="">
           <input
-            className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
+            className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             type="number"
             value={amount}
             placeholder="Skriv inn beløp"
@@ -359,16 +359,16 @@ const Bank = () => {
         </p>
         <form className="flex flex-col gap-2" action="">
           <input
-            className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
+            className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             type="text"
-            placeholder="Skriv inn brukernavn"
+            placeholder="Brukernavn"
             value={targetCharacter}
             onChange={handleTargetCharacterInputChange}
           />
           <input
-            className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400"
+            className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             type="number"
-            placeholder="Skriv inn beløp"
+            placeholder="Beløp"
             value={amountToSend}
             onChange={handleAmountToSendInputChange}
           />
