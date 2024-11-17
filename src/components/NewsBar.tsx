@@ -13,16 +13,17 @@ import "../NewsBar.css";
 
 const db = getFirestore();
 
+// Define the type separately
+type EventType = {
+  id: string;
+  victimId: string;
+  victimName: string;
+  eventType: string;
+  timestamp: any;
+};
+
 const NewsBar = () => {
-  const [events, setEvents] = useState<
-    Array<{
-      id: string;
-      victimId: string;
-      victimName: string;
-      type: string;
-      timestamp: any;
-    }>
-  >([]);
+  const [events, setEvents] = useState<EventType[]>([]);
 
   useEffect(() => {
     const q = query(
@@ -36,7 +37,7 @@ const NewsBar = () => {
         id: string;
         victimId: string;
         victimName: string;
-        type: string;
+        eventType: string;
         timestamp: any;
       }> = [];
       querySnapshot.forEach((doc) => {
@@ -44,7 +45,7 @@ const NewsBar = () => {
           id: string;
           victimId: string;
           victimName: string;
-          type: string;
+          eventType: string;
           timestamp: any;
         });
       });
@@ -54,54 +55,46 @@ const NewsBar = () => {
     return () => unsubscribe();
   }, []);
 
+  // Helper function to render the event list
+  const renderEventList = (events: EventType[], isDuplicate = false) => {
+    return (
+      <ul aria-hidden={isDuplicate}>
+        {events.map((event: any) => {
+          // Handle missing or invalid timestamp cases
+          let formattedTime = "Ukjent tid";
+          if (event.timestamp && typeof event.timestamp.toDate === "function") {
+            formattedTime = new Intl.DateTimeFormat("no-NO", {
+              timeStyle: "short",
+            }).format(new Date(event.timestamp.toDate()));
+          }
+
+          return (
+            <li
+              key={isDuplicate ? `${event.id}-duplicate` : event.id}
+              className="news-item flex gap-1 justify-end"
+            >
+              <p>
+                <Username
+                  character={{ id: event.victimId, username: event.victimName }}
+                />{" "}
+                ble{" "}
+                {event.eventType === "assassination"
+                  ? "drept"
+                  : "involvert i en hendelse"}{" "}
+                kl. {formattedTime}
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
+
   return (
     <div className="news-bar py-1 border-b border-neutral-600 text-stone-400 text-sm">
-      <ul>
-        {events.map((event) => (
-          <li key={event.id} className="news-item flex gap-1 justify-end">
-            <p>
-              Spilleren{" "}
-              <Username
-                character={{ id: event.victimId, username: event.victimName }}
-              />{" "}
-              ble{" "}
-              {event.type === "assassination"
-                ? "drept"
-                : "involvert i en hendelse"}
-            </p>
-            <p className="text-neutral-200">
-              kl.{" "}
-              {new Intl.DateTimeFormat("no-NO", {
-                timeStyle: "short",
-              }).format(new Date(event.timestamp.toDate()))}
-            </p>
-          </li>
-        ))}
-      </ul>
+      {renderEventList(events)}
       {/* Duplicate the list for seamless scrolling */}
-      <ul aria-hidden="true">
-        {events.map((event) => (
-          <li
-            key={`${event.id}-duplicate`}
-            className="news-item flex gap-1 justify-end"
-          >
-            <p>
-              Spilleren{" "}
-              <Username
-                character={{ id: event.victimId, username: event.victimName }}
-              />{" "}
-              ble{" "}
-              {event.type === "assassination"
-                ? "drept"
-                : "involvert i en hendelse"}{" "}
-              kl.{" "}
-              {new Intl.DateTimeFormat("no-NO", {
-                timeStyle: "short",
-              }).format(new Date(event.timestamp.toDate()))}
-            </p>
-          </li>
-        ))}
-      </ul>
+      {renderEventList(events, true)}
     </div>
   );
 };

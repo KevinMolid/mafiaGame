@@ -96,7 +96,7 @@ const Assassinate = () => {
           setMessage(`${playerData.username} er allerede død!`);
           setMessageType("warning");
         } else if (character?.location !== playerData.location) {
-          // Player is not in same city
+          // Player is not in the same city
           setMessage(
             `Du kunne ikke finne ${playerData.username} i ${character?.location}!`
           );
@@ -111,9 +111,20 @@ const Assassinate = () => {
             status: "dead",
           });
 
-          // update lastActive
+          // Update assassin's lastActive timestamp
           await updateDoc(doc(db, "Characters", character.id), {
             lastActive: serverTimestamp(),
+          });
+
+          // Add a document to the GameEvents collection to log the assassination
+          await addDoc(collection(db, "GameEvents"), {
+            eventType: "assassination",
+            assassinId: character.id,
+            assassinName: character.username,
+            victimId: targetDocId,
+            victimName: playerData.username,
+            location: character.location,
+            timestamp: serverTimestamp(),
           });
         }
       }
