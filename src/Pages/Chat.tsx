@@ -366,16 +366,17 @@ const Chat = () => {
                             : "Sending..."}
                         </small>
                       </p>
-                      {!message.isRead ? (
+                      {message.senderId === character.id && !message.isRead && (
                         <p>
-                          <span className="text-xs text-red-400">
-                            Ikke lest
+                          <span className="text-xs text-neutral-400">
+                            <i className="fa-regular fa-envelope"></i>{" "}
                           </span>
                         </p>
-                      ) : (
+                      )}
+                      {message.senderId === character.id && message.isRead && (
                         <p>
                           <span className="text-xs text-green-400">
-                            <i className="fa-solid fa-check"></i>
+                            <i className="fa-regular fa-envelope-open"></i>{" "}
                           </span>
                         </p>
                       )}
