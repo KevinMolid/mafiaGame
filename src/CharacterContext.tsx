@@ -98,8 +98,7 @@ export const CharacterProvider = ({
                     familyId: characterData.activeFamilyApplication.familyId,
                     familyName:
                       characterData.activeFamilyApplication.familyName,
-                    appliedAt:
-                      characterData.activeFamilyApplication.appliedAt.toDate(),
+                    appliedAt: characterData.activeFamilyApplication.appliedAt,
                   }
                 : null,
               inJail: characterData.inJail as boolean,
