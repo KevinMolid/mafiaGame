@@ -43,7 +43,7 @@ const Button = ({
           : style === "exit"
           ? "bg-neutral-800 hover:bg-neutral-700 text-neutral-500 hover:text-neutral-400 "
           : style === "danger"
-          ? "bg-red-700 hover:bg-red-800 text-white"
+          ? "bg-red-400 hover:bg-red-300 text-neutral-950"
           : "bg-sky-600 hover:bg-sky-700 text-white")
       }
       onClick={onClick}
