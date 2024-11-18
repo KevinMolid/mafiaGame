@@ -162,7 +162,7 @@ const ForumThread = () => {
   return (
     <Main>
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
-      <div className="grid grid-cols-[auto_max-content] gap-4 mb-2 lg:mb-4">
+      <div className="grid grid-cols-[auto_max-content] gap-4 mb-2 lg:mb-4 bg-neutral-900 border p-4 border-neutral-600">
         <div>
           <p>
             <small>
@@ -176,13 +176,29 @@ const ForumThread = () => {
                 : "Sending..."}
             </small>
           </p>
-          <div className="border-b border-neutral-600 mb-2">
+          <div>
             <H1>{thread.title}</H1>
           </div>
 
-          {/* Tråd */}
+          {/* Thread */}
           <div className=" pb-4">
             <p>{thread.content}</p>
+          </div>
+
+          {/* Icons */}
+          <div className="flex gap-1 text-neutral-200 font-medium">
+            <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+              👍0
+            </div>
+            <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+              👎0
+            </div>
+            <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+              ❤️0
+            </div>
+            <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+              🔥0
+            </div>
           </div>
         </div>
 
@@ -220,7 +236,7 @@ const ForumThread = () => {
             key={reply.id}
             className="bg-neutral-900 border border-neutral-600 px-4 pt-2 pb-4 mb-2"
           >
-            <div className="text-sm flex gap-1">
+            <div className="text-sm flex gap-1 mb-2">
               <p>
                 <Username
                   character={{ id: reply.authorId, username: reply.authorName }}
@@ -234,7 +250,25 @@ const ForumThread = () => {
                 </small>
               </p>
             </div>
-            <p>{reply.content}</p>
+            <div className=" pb-4">
+              <p>{reply.content}</p>
+            </div>
+
+            {/* Icons */}
+            <div className="flex gap-1 text-neutral-200 font-medium">
+              <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                👍0
+              </div>
+              <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                👎0
+              </div>
+              <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                ❤️0
+              </div>
+              <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                🔥0
+              </div>
+            </div>
           </div>
         ))}
       </div>
