@@ -12,11 +12,6 @@ const Styles = () => {
         <Button style="help">Test</Button>
         <Button style="helpActive">Test</Button>
         <Button style="exit">Test</Button>
-
-        <Button style="realistic">Test</Button>
-        <Button>Test</Button>
-        <Button>Test</Button>
-        <Button>Test</Button>
       </div>
     </Main>
   );
