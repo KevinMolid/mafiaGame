@@ -176,12 +176,12 @@ const Forum = () => {
       setNewThreadContent("");
       setCreatingNew(false);
     } catch (error) {
-      console.error("Error creating thread: ", error);
+      console.error("Feil ved opprettelse av tråd: ", error);
     }
   };
 
   const handleThreadClick = (threadId: string) => {
-    navigate(`/forum/thread/${threadId}`);
+    navigate(`/forum/post/${threadId}`);
   };
 
   if (loading) {
@@ -287,7 +287,6 @@ const Forum = () => {
                               username: lastReplies[thread.id].authorName,
                             }}
                           />{" "}
-                          {" at "}
                           {lastReplies[thread.id]?.createdAt
                             ? format(
                                 lastReplies[thread.id].createdAt.toDate(),
@@ -322,24 +321,23 @@ const Forum = () => {
               </div>
               <input
                 type="text"
-                placeholder="Title"
+                placeholder="Tittel"
                 value={newThreadTitle}
                 onChange={(e) => setNewThreadTitle(e.target.value)}
-                className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full"
+                className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
                 required
               />
               <textarea
-                placeholder="Content"
                 rows={8}
                 value={newThreadContent}
                 onChange={(e) => setNewThreadContent(e.target.value)}
-                className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full resize-none"
+                className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none"
                 required
               />
 
               <div>
                 {" "}
-                <Button type="submit">Create Thread</Button>
+                <Button type="submit">Opprett tråd</Button>
               </div>
             </form>
           )}

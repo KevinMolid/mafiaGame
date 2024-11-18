@@ -1,11 +1,15 @@
 // Components
 import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
+import H2 from "../components/Typography/H2";
 import Username from "../components/Typography/Username";
+import Familyname from "../components/Typography/Familyname";
 import Button from "../components/Button";
+import InfoBox from "../components/InfoBox";
+import defaultImg from "/default.jpg";
 
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import { useCharacter } from "../CharacterContext";
 
@@ -48,19 +52,21 @@ interface Reply {
 }
 
 const ForumThread = () => {
-  const { threadId } = useParams<{ threadId: string }>();
+  const { postId } = useParams<{ postId: string }>();
   const [thread, setThread] = useState<Thread | null>(null);
   const [loading, setLoading] = useState(true);
   const [author, setAuthor] = useState<any | null>(null);
   const [replies, setReplies] = useState<Reply[]>([]);
   const [newReply, setNewReply] = useState<string>("");
+  const [message, setMessage] = useState<string>("");
+  const [messageType, setMessageType] = useState<"info" | "warning">("info");
   const { character } = useCharacter();
 
   useEffect(() => {
     const fetchThread = async () => {
-      if (threadId) {
+      if (postId) {
         try {
-          const threadDoc = await getDoc(doc(db, "ForumThreads", threadId));
+          const threadDoc = await getDoc(doc(db, "ForumThreads", postId));
           if (threadDoc.exists()) {
             const threadData = {
               id: threadDoc.id,
@@ -75,13 +81,13 @@ const ForumThread = () => {
                 doc(db, "Characters", threadData.authorId)
               );
               if (authorDoc.exists()) {
-                setAuthor(authorDoc.data()); // Set the author data, which includes the img
+                setAuthor(authorDoc.data());
               }
             }
 
             // Fetch replies for the thread
             const repliesQuery = query(
-              collection(db, "ForumThreads", threadId, "Replies"),
+              collection(db, "ForumThreads", postId, "Replies"),
               orderBy("createdAt", "asc")
             );
             const unsubscribe = onSnapshot(repliesQuery, (snapshot) => {
@@ -95,18 +101,17 @@ const ForumThread = () => {
             // Cleanup subscription when component unmounts
             return () => unsubscribe();
           } else {
-            console.log("No such thread!");
+            console.log("Finnes ingen slik tråd!");
           }
         } catch (error) {
-          console.error("Error fetching thread: ", error);
+          console.error("Feil ved lasting av tråd: ", error);
         } finally {
-          // Ensure loading is set to false even if an error occurs
           setLoading(false);
         }
       }
     };
     fetchThread();
-  }, [threadId]);
+  }, [postId]);
 
   const handleReplyChange = (e: any) => {
     setNewReply(e.target.value);
@@ -117,12 +122,13 @@ const ForumThread = () => {
     const replyContent = e.target.elements.reply.value.trim();
 
     if (!replyContent) {
-      console.log("Reply cannot be empty");
+      setMessageType("warning");
+      setMessage("Svaret ditt har ikke noe innhold.");
       return;
     }
 
-    if (!threadId) {
-      console.error("No thread ID found.");
+    if (!postId) {
+      console.error("Ingen tråd ID-ble funnet.");
       return;
     }
 
@@ -135,7 +141,7 @@ const ForumThread = () => {
       };
 
       await addDoc(
-        collection(db, "ForumThreads", threadId, "Replies"),
+        collection(db, "ForumThreads", postId, "Replies"),
         replyData
       );
 
@@ -146,79 +152,107 @@ const ForumThread = () => {
   };
 
   if (loading) {
-    return <p>Loading thread...</p>;
+    return <p>Laster tråd...</p>;
   }
 
   if (!thread) {
-    return <p>Thread not found.</p>;
+    return <p>Tråd ikke funnet.</p>;
   }
 
   return (
     <Main>
-      <div className="grid grid-cols-[2fr_1fr] md:grid-cols-[3fr_1fr] gap-2 md:gap-4 mb-2 md:mb-4">
-        <div className="bg-neutral-800 p-2 md:p-4">
-          <H1>{thread.title}</H1>
-          <p>{thread.content}</p>
-        </div>
-        <div className="bg-neutral-950 p-2 md:p-4 text-xs">
-          {author?.img && (
-            <img
-              src={author.img}
-              alt={`${thread.authorName}'s avatar`}
-              className="w-24 h-24 md:w-28 md:h-28 mb-4 border border-neutral-600 object-cover"
-            />
-          )}
+      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      <div className="grid grid-cols-[auto_max-content] gap-4 mb-2 lg:mb-4">
+        <div>
           <p>
-            Posted by:{" "}
+            <small>
+              {thread.createdAt
+                ? format(
+                    typeof thread.createdAt === "string"
+                      ? new Date(thread.createdAt)
+                      : thread.createdAt.toDate(),
+                    "dd.MM.yyyy - HH:mm"
+                  )
+                : "Sending..."}
+            </small>
+          </p>
+          <div className="border-b border-neutral-600 mb-2">
+            <H1>{thread.title}</H1>
+          </div>
+
+          {/* Tråd */}
+          <div className=" pb-4">
+            <p>{thread.content}</p>
+          </div>
+        </div>
+
+        {/* Author data */}
+        <div className="flex flex-col items-center text-center">
+          <Link to={`/profil/${thread.authorId}`}>
+            <img
+              src={author.img || defaultImg}
+              alt={`${thread.authorName}'s avatar`}
+              className="w-24 h-24 md:w-28 md:h-28 mb-2 border border-neutral-600 object-cover"
+            />
+          </Link>
+
+          <p className="text-sm">
             <Username
               character={{ id: thread.authorId, username: thread.authorName }}
             />
           </p>
-
-          <p>
-            {thread.createdAt
-              ? format(
-                  typeof thread.createdAt === "string"
-                    ? new Date(thread.createdAt)
-                    : thread.createdAt.toDate(),
-                  "dd.MM.yyyy - HH:mm"
-                )
-              : "Sending..."}
-          </p>
+          {author.familyId ? (
+            <p className="text-sm">
+              <Familyname
+                family={{ id: author.familyId, name: author.familyName }}
+              />
+            </p>
+          ) : (
+            <p className="text-sm">Ingen familie</p>
+          )}
         </div>
       </div>
 
       {/* Display replies */}
-      <div className="mb-4">
+      <div className="mb-2 lg:mb-4">
         {replies.map((reply) => (
-          <div key={reply.id} className="bg-neutral-800 p-2 mb-2">
-            <p className="text-xs mb-2">
-              By{" "}
-              <Username
-                character={{ id: reply.authorId, username: reply.authorName }}
-              />
-              {" - "}
-              {reply.createdAt
-                ? format(reply.createdAt.toDate(), "dd.MM.yyyy - HH:mm")
-                : "Sending..."}
-            </p>
+          <div
+            key={reply.id}
+            className="bg-neutral-900 border border-neutral-600 px-4 pt-2 pb-4 mb-2"
+          >
+            <div className="text-sm flex gap-1">
+              <p>
+                <Username
+                  character={{ id: reply.authorId, username: reply.authorName }}
+                />
+              </p>
+              <p>
+                <small>
+                  {reply.createdAt
+                    ? format(reply.createdAt.toDate(), "dd.MM.yyyy - HH:mm")
+                    : "Sender..."}
+                </small>
+              </p>
+            </div>
             <p>{reply.content}</p>
           </div>
         ))}
       </div>
 
       {/* Form to reply */}
+      <H2>Skriv svar</H2>
       <form action="" onSubmit={handleSubmit} className="flex flex-col gap-2">
         <textarea
-          className="bg-neutral-700 py-2 px-4 text-white placeholder-neutral-400 w-full resize-none"
+          className="bg-neutral-900 border border-neutral-600 py-2 px-4 text-white placeholder-neutral-400 w-full resize-none"
           name="reply"
           id="reply"
-          placeholder="Write here..."
           rows={6}
           onChange={handleReplyChange}
           value={newReply}
         ></textarea>
-        <Button type="submit">Reply</Button>
+        <div>
+          <Button type="submit">Post</Button>
+        </div>
       </form>
     </Main>
   );

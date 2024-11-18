@@ -44,11 +44,11 @@ const Profile = () => {
         if (charDocSnap.exists()) {
           setCharacterData(charDocSnap.data());
         } else {
-          setError("Character not found!");
+          setError("Fant ikke spilleren!");
         }
       } catch (err) {
-        console.error("Error fetching character data:", err);
-        setError("Error fetching character data.");
+        console.error("Feil ved lasting av spillerdata:", err);
+        setError("Feil ved lasting av spillerdata.");
       } finally {
         setLoading(false);
       }
@@ -60,7 +60,7 @@ const Profile = () => {
   }, [spillerID]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>Laster...</div>;
   }
 
   if (error) {
@@ -68,7 +68,7 @@ const Profile = () => {
   }
 
   if (!characterData) {
-    return <div>No character data available.</div>;
+    return <div>Ingen spillerdata tilgjengelig.</div>;
   }
 
   const isRecentlyActive = characterData.lastActive
