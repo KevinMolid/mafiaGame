@@ -124,11 +124,11 @@ const DropdownRight = () => {
         {userData?.type === "admin" && (
           <SidebarLink
             to="/admin"
-            icon="gear"
+            icon="gears"
             onClick={toggleMenu}
             color="yellow"
           >
-            <p>Admin</p>
+            <p className="text-white font-medium">Kontrollpanel</p>
           </SidebarLink>
         )}
 
