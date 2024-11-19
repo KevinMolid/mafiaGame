@@ -151,7 +151,7 @@ const CreateCharacter = () => {
           <H2>Velg brukernavn</H2>
         </label>
         <input
-          className="bg-neutral-800 px-2 py-1 placeholder-neutral-400"
+          className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
           id="username"
           type="text"
           placeholder="Ønsket brukernavn"
