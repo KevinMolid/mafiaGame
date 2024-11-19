@@ -68,23 +68,42 @@ const NewsBar = () => {
             }).format(new Date(event.timestamp.toDate()));
           }
 
-          return (
-            <li
-              key={isDuplicate ? `${event.id}-duplicate` : event.id}
-              className="news-item flex gap-1 justify-end"
-            >
-              <p>
-                <Username
-                  character={{ id: event.victimId, username: event.victimName }}
-                />{" "}
-                ble{" "}
-                {event.eventType === "assassination"
-                  ? "drept"
-                  : "involvert i en hendelse"}{" "}
-                kl. {formattedTime}
-              </p>
-            </li>
-          );
+          if (event.eventType === "assassination") {
+            return (
+              <li
+                key={isDuplicate ? `${event.id}-duplicate` : event.id}
+                className="news-item flex gap-1 justify-end"
+              >
+                <p>
+                  <Username
+                    character={{
+                      id: event.victimId,
+                      username: event.victimName,
+                    }}
+                  />{" "}
+                  ble drept kl. {formattedTime}
+                </p>
+              </li>
+            );
+          } else if (event.eventType === "GameReset") {
+            return (
+              <li
+                key={isDuplicate ? `${event.id}-duplicate` : event.id}
+                className="news-item flex gap-1 justify-end"
+              >
+                <p>
+                  Spillet ble resatt av{" "}
+                  <Username
+                    character={{
+                      id: event.resetById,
+                      username: event.resetByName,
+                    }}
+                  />{" "}
+                  kl. {formattedTime}
+                </p>
+              </li>
+            );
+          } else return null;
         })}
       </ul>
     );

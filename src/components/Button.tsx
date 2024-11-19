@@ -14,6 +14,7 @@ interface ButtonInterface {
     | "realistic"
     | "exit";
   size?: "small" | "normal" | "square";
+  disabled?: any;
 }
 
 const Button = ({
@@ -22,10 +23,12 @@ const Button = ({
   type = "button",
   style = "primary",
   size = "normal",
+  disabled = false,
 }: ButtonInterface) => {
   return (
     <button
       type={type}
+      disabled={disabled}
       className={
         "font-medium rounded-full " +
         (size === "small"
