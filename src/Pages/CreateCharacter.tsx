@@ -100,6 +100,7 @@ const CreateCharacter = () => {
         username: username,
         username_lowercase: username.toLowerCase(),
         img: "",
+        currentRank: 1,
         status: "alive",
         stats: { xp: 0, hp: 100, heat: 0, bank: 0, money: 1000, protection: 0 },
         reputation: { police: 0, politics: 0, gangs: 0, community: 0 },

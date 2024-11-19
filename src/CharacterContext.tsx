@@ -7,6 +7,10 @@ import {
   onSnapshot,
   collection,
   addDoc,
+  setDoc,
+  query,
+  where,
+  getDocs,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./firebaseConfig";
@@ -41,9 +45,7 @@ export const CharacterProvider = ({
   const { userData } = useAuth();
   const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Use useRef to keep prevXP across renders
-  const prevXP = useRef<number | null>(null);
+  const alertAddedRef = useRef<boolean>(false); // Ref to track alert addition
 
   useEffect(() => {
     if (userData && userData.activeCharacter) {
@@ -65,6 +67,10 @@ export const CharacterProvider = ({
               location: characterData.location as string,
               stats: characterData.stats as Stats,
               img: characterData.img as string,
+              currentRank:
+                typeof characterData.currentRank === "number"
+                  ? characterData.currentRank
+                  : 1,
               username: characterData.username as string,
               username_lowercase: characterData.username_lowercase as string,
               createdAt: characterData.createdAt.toDate(),
@@ -105,13 +111,31 @@ export const CharacterProvider = ({
               jailReleaseTime: characterData.jailReleaseTime as any,
             };
 
-            const currentXP = newCharacter.stats.xp;
-            // Handle XP rank change logic
-            if (prevXP.current !== null && prevXP.current !== currentXP) {
-              const prevRank = getCurrentRank(prevXP.current);
-              const newRank = getCurrentRank(currentXP);
+            // Ensure currentRank is set to 1 in the database if it was not set
+            if (typeof characterData.currentRank !== "number") {
+              const charDocRef = doc(db, "Characters", newCharacter.id);
+              await setDoc(charDocRef, { currentRank: 1 }, { merge: true });
+            }
 
-              if (prevRank !== newRank) {
+            // Handle XP rank change logic
+            const currentXP = newCharacter.stats.xp;
+            const newRank = getCurrentRank(currentXP, "number");
+            const newRankName = getCurrentRank(currentXP);
+            if (
+              typeof newRank === "number" &&
+              newRank > newCharacter.currentRank
+            ) {
+              const alertQuery = query(
+                collection(db, "Characters", newCharacter.id, "alerts"),
+                where("type", "==", "xp"),
+                where("newRank", "==", newRankName)
+              );
+
+              // Wait for the query to complete before proceeding
+              const existingAlerts = await getDocs(alertQuery);
+
+              if (existingAlerts.empty && !alertAddedRef.current) {
+                alertAddedRef.current = true; // Set flag before adding to ensure it's only set once
                 const alertRef = collection(
                   db,
                   "Characters",
@@ -121,15 +145,33 @@ export const CharacterProvider = ({
                 await addDoc(alertRef, {
                   type: "xp",
                   timestamp: new Date().toISOString(),
-                  newRank: newRank,
+                  newRank: newRankName,
                   read: false,
                 });
+
+                // Update the character's current rank in the database
+                const charDocRef = doc(db, "Characters", newCharacter.id);
+                await setDoc(
+                  charDocRef,
+                  { currentRank: newRank },
+                  { merge: true }
+                );
               }
+            } else if (
+              typeof newRank === "number" &&
+              newRank < newCharacter.currentRank
+            ) {
+              // If the new rank is lower, update without adding an alert
+              const charDocRef = doc(db, "Characters", newCharacter.id);
+              await setDoc(
+                charDocRef,
+                { currentRank: newRank },
+                { merge: true }
+              );
             }
 
-            // Update character and prevXP to current XP
+            // Update character
             setCharacter(newCharacter);
-            prevXP.current = currentXP; // Set prevXP using useRef
           } else {
             console.error("Spillerdata er ufullstendig eller mangler stats.");
             setCharacter(null);

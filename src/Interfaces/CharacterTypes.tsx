@@ -23,6 +23,7 @@ export interface Character {
   createdAt: Timestamp | Date;
   diedAt?: Timestamp | null;
   img: string;
+  currentRank: number;
   lastCrimeTimestamp?: Timestamp | null;
   lastRobberyTimestamp?: Timestamp | null;
   lastGtaTimestamp?: Timestamp | null;
@@ -55,6 +56,7 @@ export interface Target {
   createdAt: Timestamp;
   diedAt?: Timestamp | null;
   img: string;
+  currentRank: number;
   lastCrimeTimestamp?: Timestamp | null;
   lastRobberyTimestamp?: Timestamp | null;
   lastGtaTimestamp?: Timestamp | null;
