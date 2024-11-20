@@ -12,6 +12,7 @@ import {
   getDocs,
   doc,
   updateDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { useCharacter } from "../CharacterContext";
 
@@ -35,14 +36,14 @@ interface Alert {
   robberName?: string;
   senderName?: string;
   familyName?: string;
-  timestamp: string; // Timestamp is stored as an ISO 8601 string
+  timestamp: Timestamp;
   read: boolean;
 }
 
 // Helper function to format the time difference
-const formatTimeAgo = (timestamp: string): string => {
+const formatTimeAgo = (timestamp: Timestamp): string => {
   const currentTime = new Date();
-  const alertTime = new Date(timestamp);
+  const alertTime = timestamp.toDate();
   const differenceInSeconds = Math.floor(
     (currentTime.getTime() - alertTime.getTime()) / 1000
   );
@@ -102,7 +103,7 @@ const Alerts = () => {
         // Sort alerts by timestamp in descending order (newest first)
         fetchedAlerts.sort(
           (a, b) =>
-            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+            b.timestamp.toDate().getTime() - a.timestamp.toDate().getTime()
         );
 
         // Mark unread alerts as read

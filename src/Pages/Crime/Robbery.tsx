@@ -36,6 +36,7 @@ import {
   doc,
   updateDoc,
   addDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 
 import firebaseConfig from "../../firebaseConfig";
@@ -158,7 +159,7 @@ const Robbery = () => {
 
     await addDoc(collection(db, "Characters", target.id, "alerts"), {
       type: "robbery",
-      timestamp: new Date().toISOString(),
+      timestamp: serverTimestamp(),
       amountLost: stolenAmount,
       robberName: character.username,
       robberId: character.id,

@@ -11,6 +11,7 @@ import {
   query,
   where,
   getDocs,
+  serverTimestamp,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./firebaseConfig";
@@ -144,7 +145,7 @@ export const CharacterProvider = ({
                 );
                 await addDoc(alertRef, {
                   type: "xp",
-                  timestamp: new Date().toISOString(),
+                  timestamp: serverTimestamp(),
                   newRank: newRankName,
                   read: false,
                 });
