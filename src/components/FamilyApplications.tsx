@@ -8,6 +8,7 @@ import {
   arrayUnion,
   setDoc,
   deleteDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 
 // Components
@@ -100,7 +101,7 @@ const FamilyApplications = () => {
         type: "applicationAccepted",
         familyName: character.familyName,
         familyId: character.familyId,
-        timestamp: new Date(),
+        timestamp: serverTimestamp(),
         read: false,
       });
 
