@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from "react";
 
 interface AudioPlayProps {
-  playing: number; // Assuming playing is a number
-  audio: string; // Assuming audio is a string URL
-  loop?: boolean; // Optional property
+  playing: number;
+  audio: string;
+  loop?: boolean;
 }
 
 const AudioPlay: React.FC<AudioPlayProps> = (props) => {
@@ -15,17 +15,17 @@ const AudioPlay: React.FC<AudioPlayProps> = (props) => {
     } else if (audio.current) {
       audio.current.pause();
     }
-  }, [props.playing, props.audio]); // Added props.audio to the dependency array
+  }, [props.playing, props.audio]);
 
   function play(sound: string) {
     if (audio.current) {
-      audio.current.src = sound; // Update source instead of creating a new Audio instance
-      audio.current.volume = 0.3;
-      audio.current.loop = props.loop ?? false; // Default to false if loop is not provided
+      audio.current.src = sound;
+      audio.current.volume = 0.5;
+      audio.current.loop = props.loop ?? false;
       audio.current.play();
     } else {
       audio.current = new Audio(sound);
-      audio.current.volume = 0.3;
+      audio.current.volume = 0.5;
       audio.current.loop = props.loop ?? false;
       audio.current.play();
     }
