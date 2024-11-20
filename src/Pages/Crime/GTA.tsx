@@ -41,10 +41,11 @@ type Car = {
 
 // Cars by tier
 const tiers: { [key: number]: Car[] } = {
-  1: Cars.filter((car) => car.value <= 42000), // Tier 1: up to 42,000
-  2: Cars.filter((car) => car.value > 42000 && car.value <= 95000), // Tier 2: 42,001 - 95,000
-  3: Cars.filter((car) => car.value > 95000 && car.value <= 200000), // Tier 3: 95,001 - 200,000
-  4: Cars.filter((car) => car.value > 200000), // Tier 4: above 200,000
+  1: Cars.filter((car) => car.tier === 1),
+  2: Cars.filter((car) => car.tier === 2),
+  3: Cars.filter((car) => car.tier === 3),
+  4: Cars.filter((car) => car.tier === 4),
+  5: Cars.filter((car) => car.tier === 5),
 };
 
 // Weights for each tier
