@@ -280,34 +280,40 @@ const Assassinate = () => {
                   <p className="font-medium px-2 py-1">Betalt av</p>
                 </div>
 
-                <ul>
-                  {bounties.map((bounty) => (
-                    <li
-                      key={bounty.id}
-                      className="grid grid-cols-3 border bg-neutral-800 border-neutral-700"
-                    >
-                      <div className="px-2 py-1">
-                        <Username
-                          character={{
-                            id: bounty.WantedId,
-                            username: bounty.WantedName,
-                          }}
-                        />
-                      </div>
-                      <div className="px-2 py-1 text-yellow-400 font-bold">
-                        ${bounty.Bounty.toLocaleString()}
-                      </div>
-                      <div className="px-2 py-1">
-                        <Username
-                          character={{
-                            id: bounty.PaidById,
-                            username: bounty.PaidByName,
-                          }}
-                        />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                {bounties.length > 0 ? (
+                  <ul>
+                    {bounties.map((bounty) => (
+                      <li
+                        key={bounty.id}
+                        className="grid grid-cols-3 border bg-neutral-800 border-neutral-700"
+                      >
+                        <div className="px-2 py-1">
+                          <Username
+                            character={{
+                              id: bounty.WantedId,
+                              username: bounty.WantedName,
+                            }}
+                          />
+                        </div>
+                        <div className="px-2 py-1 text-yellow-400 font-bold">
+                          ${bounty.Bounty.toLocaleString()}
+                        </div>
+                        <div className="px-2 py-1">
+                          <Username
+                            character={{
+                              id: bounty.PaidById,
+                              username: bounty.PaidByName,
+                            }}
+                          />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="px-2 py-1 border bg-neutral-800 border-neutral-700">
+                    Det er ingen utlovede dusører.
+                  </p>
+                )}
               </div>
             </>
           )}
