@@ -40,7 +40,7 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
       (member) => member.rank === rank
     );
     if (membersWithRank.length === 0) {
-      return <p className="text-neutral-200">Ingen</p>; // Render "Ingen" if no members with this rank
+      return <p className="text-neutral-200">-</p>; // Render "Ingen" if no members with this rank
     }
     return membersWithRank.map((member) => (
       <p key={member.id} className="flex justify-center items-center gap-2">
