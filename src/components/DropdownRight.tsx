@@ -10,10 +10,8 @@ import { useState, useRef, useEffect } from "react";
 import { getCurrentRank } from "../Functions/RankFunctions";
 
 // Context
-import AudioPlay from "./Audio";
 import { useCharacter } from "../CharacterContext";
 import { useMenuContext } from "../MenuContext";
-import { useMusicContext } from "../MusicContext";
 import { useAuth } from "../AuthContext";
 
 // Firebase
@@ -32,7 +30,6 @@ const db = getFirestore();
 const DropdownRight = () => {
   const { userData } = useAuth();
   const { character } = useCharacter();
-  const { playing, setPlaying } = useMusicContext();
   const { menuOpen, toggleMenu, closeMenus } = useMenuContext();
   const [unreadAlertCount, setUnreadAlertCount] = useState(0);
   const [hasUnreadAlerts, setHasUnreadAlerts] = useState(false);
@@ -86,15 +83,6 @@ const DropdownRight = () => {
         console.log(error.message);
       });
   }
-
-  // Toggle Music player
-  const toggleMusic = () => {
-    if (playing) {
-      setPlaying(0);
-    } else {
-      setPlaying(1);
-    }
-  };
 
   return (
     menuOpen && (
@@ -173,28 +161,6 @@ const DropdownRight = () => {
         <SidebarLink to="/spillguide" icon="circle-info" onClick={toggleMenu}>
           Spillguide
         </SidebarLink>
-
-        {/* Music */}
-        <AudioPlay
-          playing={playing}
-          loop={true}
-          audio="MafiaReign.wav"
-        ></AudioPlay>
-
-        {/* Music panel */}
-        {userData && (
-          <div
-            className="cursor-pointer text-stone-400 hover:text-stone-200"
-            onClick={toggleMusic}
-          >
-            {playing ? (
-              <i className="fa-solid fa-volume-high"></i>
-            ) : (
-              <i className="fa-solid fa-volume-xmark"></i>
-            )}{" "}
-            {playing ? "Lyd på" : "Lyd av"}
-          </div>
-        )}
 
         {userData && (
           <div
