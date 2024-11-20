@@ -45,11 +45,11 @@ const FamilyList = () => {
   });
 
   if (loading) {
-    return <p>Loading families...</p>;
+    return <p>Laster familier...</p>;
   }
 
   if (families.length === 0) {
-    return <p>No families found.</p>;
+    return <p>Det finnes ingen familier.</p>;
   }
 
   // Type == Rank
@@ -86,8 +86,6 @@ const FamilyList = () => {
       </section>
     );
   }
-
-  return <h1>hehe</h1>;
 };
 
 export default FamilyList;
