@@ -134,8 +134,8 @@ const Sidebar = () => {
 
         <hr className="border-neutral-600" />
 
-        <SidebarLink to="jackpot" icon="7">
-          Jackpot
+        <SidebarLink to="jackpot" icon="coins">
+          Casino{" "}
         </SidebarLink>
       </nav>
     </div>
