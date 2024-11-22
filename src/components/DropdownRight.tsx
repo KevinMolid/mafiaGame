@@ -1,6 +1,5 @@
 // Components
 import DropdownOption from "./DropdownOption";
-import Username from "./Typography/Username";
 
 // React
 import { Link, useNavigate } from "react-router-dom";
@@ -90,19 +89,20 @@ const DropdownRight = () => {
       >
         {character ? (
           <div>
-            <div className="p-4 pb-2 flex sm:hidden gap-2 items-center">
-              <Link to={`/profil/${character.id}`}>
+            <Link to={`/profil/${character.id}`}>
+              <div className="px-4 py-2 mt-2 flex sm:hidden gap-2 items-center hover:bg-neutral-900">
                 <img
                   className="border border-neutral-500 w-[60px] h-[60px] object-cover hover:cursor-pointer"
                   src={character.img || "/default.jpg"}
                   alt="Profile picture"
                 />
-              </Link>
-              <div className="text-stone-400">
-                <Username character={character} />
-                <p>{getCurrentRank(character.stats.xp)}</p>
+                <div className="text-stone-400">
+                  <p className="text-white font-bold">{character.username}</p>
+                  <p>{getCurrentRank(character.stats.xp)}</p>
+                </div>
               </div>
-            </div>
+            </Link>
+
             <hr className="border-neutral-700 my-2 sm:hidden" />
             <div className="hidden sm:flex p-2"></div>
           </div>
