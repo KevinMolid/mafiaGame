@@ -5,7 +5,7 @@
   width: 100%;
   user-select: none;
 
-  --gap: 40px;
+  --gap: 100px;
   display: flex;
   gap: var(--gap);
 }

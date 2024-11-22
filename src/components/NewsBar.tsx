@@ -13,7 +13,6 @@ import "../NewsBar.css";
 
 const db = getFirestore();
 
-// Define the type separately
 type EventType = {
   id: string;
   victimId: string;
@@ -63,9 +62,50 @@ const NewsBar = () => {
           // Handle missing or invalid timestamp cases
           let formattedTime = "Ukjent tid";
           if (event.timestamp && typeof event.timestamp.toDate === "function") {
-            formattedTime = new Intl.DateTimeFormat("no-NO", {
-              timeStyle: "short",
-            }).format(new Date(event.timestamp.toDate()));
+            formattedTime = (() => {
+              const eventDate = new Date(event.timestamp.toDate());
+              const now = new Date();
+              const yesterday = new Date();
+              yesterday.setDate(now.getDate() - 1);
+              const daysAgo = Math.floor(
+                (now.getTime() - eventDate.getTime()) / (1000 * 60 * 60 * 24)
+              );
+
+              if (
+                eventDate.getDate() === now.getDate() &&
+                eventDate.getMonth() === now.getMonth() &&
+                eventDate.getFullYear() === now.getFullYear()
+              ) {
+                // Today
+                return `kl. ${new Intl.DateTimeFormat("no-NO", {
+                  timeStyle: "short",
+                }).format(eventDate)}`;
+              } else if (
+                eventDate.getDate() === yesterday.getDate() &&
+                eventDate.getMonth() === yesterday.getMonth() &&
+                eventDate.getFullYear() === yesterday.getFullYear()
+              ) {
+                // Yesterday
+                return `i går kl. ${new Intl.DateTimeFormat("no-NO", {
+                  timeStyle: "short",
+                }).format(eventDate)}`;
+              } else if (daysAgo < 7) {
+                // Less than a week ago
+                const dayOfWeek = new Intl.DateTimeFormat("no-NO", {
+                  weekday: "long",
+                }).format(eventDate);
+                return `${dayOfWeek} kl. ${new Intl.DateTimeFormat("no-NO", {
+                  timeStyle: "short",
+                }).format(eventDate)}`;
+              } else {
+                // More than a week ago
+                return `${new Intl.DateTimeFormat("no-NO", {
+                  dateStyle: "short",
+                }).format(eventDate)} kl. ${new Intl.DateTimeFormat("no-NO", {
+                  timeStyle: "short",
+                }).format(eventDate)}`;
+              }
+            })();
           }
 
           if (event.eventType === "assassination") {
@@ -81,7 +121,7 @@ const NewsBar = () => {
                       username: event.victimName,
                     }}
                   />{" "}
-                  ble drept kl. {formattedTime}
+                  ble drept {formattedTime}
                 </p>
               </li>
             );
@@ -92,14 +132,14 @@ const NewsBar = () => {
                 className="news-item flex gap-1 justify-end"
               >
                 <p>
-                  Spillet ble resatt av{" "}
+                  Spillet ble restartet av{" "}
                   <Username
                     character={{
                       id: event.resetById,
                       username: event.resetByName,
                     }}
                   />{" "}
-                  kl. {formattedTime}
+                  {formattedTime}
                 </p>
               </li>
             );
