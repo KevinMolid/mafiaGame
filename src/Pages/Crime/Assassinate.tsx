@@ -103,7 +103,7 @@ const Assassinate = () => {
           setMessageType("failure");
         } else {
           // Proceed with assassination
-          setMessage(`${playerData.username} ble drept!`);
+          setMessage(`Du angrep og drepte ${playerData.username}!`);
           setMessageType("success");
 
           // Update target player status to 'dead'

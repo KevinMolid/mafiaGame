@@ -32,7 +32,7 @@ const Parking = () => {
   const [message, setMessage] = useState<string>("");
   const [upgrading, setUpgrading] = useState<boolean>(false);
   const [messageType, setMessageType] = useState<
-    "success" | "failure" | "info"
+    "success" | "failure" | "warning" | "info"
   >("info");
 
   if (!character) {
@@ -59,7 +59,7 @@ const Parking = () => {
 
     // Check if the character has enough money
     if (character.stats.money < upgradePrice) {
-      setMessageType("failure");
+      setMessageType("warning");
       setMessage(`Du har ikke nok penger til å oppgradere parkering.`);
       return;
     }
@@ -125,7 +125,9 @@ const Parking = () => {
   // Function to sell all cars
   const sellAllCars = async () => {
     const carsToSell = character.cars[character.location] || [];
-    if (carsToSell.length === 0) {
+    const numberOfCars = carsToSell.length;
+
+    if (numberOfCars === 0) {
       setMessageType("info");
       setMessage("Du har ingen biler å selge.");
       return;
@@ -147,12 +149,14 @@ const Parking = () => {
 
       setMessageType("success");
       setMessage(
-        `Du solgte alle bilene dine for $${totalSoldValue.toLocaleString()}.`
+        `Du solgte ${numberOfCars} ${
+          numberOfCars === 1 ? "bil" : "biler"
+        } for $${totalSoldValue.toLocaleString()}.`
       );
     } catch (error) {
       console.error("Feil ved salg av biler: ", error);
       setMessageType("failure");
-      setMessage(`En ukjent feil ddkket opp ved salg av biler.`);
+      setMessage(`En ukjent feil dukket opp ved salg av biler.`);
     }
   };
 
@@ -166,7 +170,7 @@ const Parking = () => {
         <div>
           <H1>Parkering</H1>
           <p>
-            Dette er en oversikt over parkering og alle bilene du har i{" "}
+            Dette er en oversikt over parkering og biler du har i{" "}
             <strong className="text-neutral-200">{character?.location}</strong>.
           </p>
         </div>
@@ -175,56 +179,82 @@ const Parking = () => {
         {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
         {/* Parking facility */}
-        <Box>
-          <div className="flex items-baseline gap-4">
-            <H2>
-              {parking !== null ? ParkingTypes[parking].name : "Loading..."}
-            </H2>
-            <button className="hover:text-white" onClick={toggleUpgrading}>
-              <strong>Oppgrader </strong>
-              {upgrading ? (
-                <i className="fa-solid fa-caret-up"></i>
-              ) : (
-                <i className="fa-solid fa-caret-down"></i>
-              )}
-            </button>
-          </div>
+        {!upgrading && (
+          <Box>
+            <div className="flex justify-between flex-wrap-reverse items-baseline gap-x-4">
+              <H2>
+                {parking !== null ? ParkingTypes[parking].name : "Loading..."}
+              </H2>
 
-          <div className="flex gap-4">
-            {/* Show loading if parking is still null */}
-            <p>
-              Plasser:{" "}
-              <strong className="text-white">
-                {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
-              </strong>
-            </p>
-            <p>
-              Sikkerhet:{" "}
-              <strong className="text-white">
-                {parking !== null
-                  ? ParkingTypes[parking].security
-                  : "Loading..."}
-                %
-              </strong>
-            </p>
-          </div>
-        </Box>
+              <div className="flex justify-end flex-grow">
+                <Button style="black" size="small" onClick={toggleUpgrading}>
+                  <p>
+                    Oppgrader <i className="fa-solid fa-arrow-up"></i>
+                  </p>
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              {/* Show loading if parking is still null */}
+              <p>
+                Plasser:{" "}
+                <strong className="text-neutral-200">
+                  {parking !== null
+                    ? ParkingTypes[parking].slots
+                    : "Loading..."}
+                </strong>
+              </p>
+              <p>
+                Sikkerhet:{" "}
+                <strong className="text-neutral-200">
+                  {parking !== null
+                    ? ParkingTypes[parking].security
+                    : "Loading..."}
+                  %
+                </strong>
+              </p>
+            </div>
+          </Box>
+        )}
 
         {canUpgrade && upgrading && (
           <Box>
-            <H2>Oppgrader parkering?</H2>
-            <strong className="text-yellow-400">
-              ${ParkingTypes[parking + 1].price.toLocaleString()}
-            </strong>
-            <div className="flex gap-8 flex-wrap">
+            <div className="flex justify-between items-baseline gap-4">
+              <H2>Oppgrader?</H2>
+              <Button style="black" size="small" onClick={toggleUpgrading}>
+                {upgrading ? (
+                  <p>
+                    <i className="fa-solid fa-x"></i>
+                  </p>
+                ) : (
+                  <p>
+                    Oppgrader <i className="fa-solid fa-caret-down"></i>
+                  </p>
+                )}
+              </Button>
+            </div>
+
+            <p className="mb-2">
+              <strong className="text-neutral-200">
+                {ParkingTypes[parking].name}{" "}
+              </strong>
+              <i className="text-yellow-400 fa-solid fa-arrow-right-long"></i>
+              <strong className="text-neutral-200">
+                {" "}
+                {ParkingTypes[parking + 1].name}
+              </strong>
+            </p>
+
+            <div className="flex gap-x-8 gap-y-2 flex-wrap">
               <div>
                 <H3>Plasser</H3>
                 <p>
-                  <strong className="text-white">
+                  <strong className="text-neutral-200">
                     {ParkingTypes[parking].slots}{" "}
                   </strong>
                   <i className="text-yellow-400 fa-solid fa-arrow-right-long"></i>
-                  <strong className="text-white">
+                  <strong className="text-neutral-200">
                     {" "}
                     {ParkingTypes[parking + 1].slots}
                   </strong>
@@ -234,103 +264,108 @@ const Parking = () => {
               <div>
                 <H3>Sikkerhet</H3>
                 <p>
-                  <strong className="text-white">
+                  <strong className="text-neutral-200">
                     {ParkingTypes[parking].security}%{" "}
                   </strong>
                   <i className="text-yellow-400 fa-solid fa-arrow-right-long"></i>
-                  <strong className="text-white">
+                  <strong className="text-neutral-200">
                     {" "}
                     {ParkingTypes[parking + 1].security}%
                   </strong>
                 </p>
               </div>
 
-              <div className="flex gap-2 justify-end items-end">
-                <Button onClick={toggleUpgrading} style="secondary">
-                  Lukk
-                </Button>
+              <div className="flex flex-grow justify-end items-end">
                 <Button
                   onClick={() =>
                     parking !== null &&
                     updateParking(character.id, character.location, parking + 1)
                   }
                 >
-                  Oppgrader
+                  Oppgrader <i className="fa-solid fa-arrow-up"></i>{" "}
+                  <strong className="text-yellow-400">
+                    ${ParkingTypes[parking + 1].price.toLocaleString()}
+                  </strong>
                 </Button>
               </div>
             </div>
           </Box>
         )}
 
-        <table className="w-full table-auto border border-collapse text-left">
-          <thead>
-            <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
-              <th className="px-2 py-1">Bil</th>
-              <th className="px-2 py-1">Motorkraft</th>
-              <th className="px-2 py-1">Verdi</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {character.cars?.[character.location]?.length ? (
-              character.cars[character.location].map(
-                (car: any, index: number) => {
-                  return (
-                    <tr
-                      className="border bg-neutral-800 border-neutral-700"
-                      key={index}
-                    >
-                      <td className="px-2 py-1">{car.name}</td>
-                      <td className="px-2 py-1">{car.hp} hp</td>
-                      <td className="px-2 py-1">
-                        {"$" + car.value.toLocaleString()}
-                      </td>
-                      <td className="px-2 py-1">
-                        <button
-                          onClick={() => sellCar(index)}
-                          className="font-medium hover:text-neutral-200"
+        {/* Parking table */}
+        {!upgrading && (
+          <div>
+            <table className="w-full table-auto border border-collapse text-left">
+              <thead>
+                <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
+                  <th className="px-2 py-1">Bil</th>
+                  <th className="px-2 py-1">Motorkraft</th>
+                  <th className="px-2 py-1">Verdi</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {character.cars?.[character.location]?.length ? (
+                  character.cars[character.location].map(
+                    (car: any, index: number) => {
+                      return (
+                        <tr
+                          className="border bg-neutral-800 border-neutral-700"
+                          key={index}
                         >
-                          Selg bil
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                }
-              )
-            ) : (
-              <tr className="border bg-neutral-800 border-neutral-700">
-                <td colSpan={4} className="px-2 py-1">
-                  Du har ingen biler.
-                </td>
-              </tr>
-            )}
-          </tbody>
-          <tfoot>
-            <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
-              <td className="px-2 py-1"></td>
-              <td className="px-2 py-1">Total verdi</td>
-              <td className="px-2 py-1">${totalValue.toLocaleString()}</td>
-              <td className="px-2 py-1">
-                <button
-                  onClick={sellAllCars}
-                  className="font-medium hover:text-neutral-200"
-                >
-                  Selg alle
-                </button>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-        <p>
-          <strong className="text-white">
-            {character.cars?.[character.location]?.length || 0}
-          </strong>{" "}
-          av{" "}
-          <strong className="text-white">
-            {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
-          </strong>{" "}
-          plasser brukt.
-        </p>
+                          <td className="px-2 py-1">{car.name}</td>
+                          <td className="px-2 py-1">{car.hp} hp</td>
+                          <td className="px-2 py-1">
+                            {"$" + car.value.toLocaleString()}
+                          </td>
+                          <td className="px-2 py-1">
+                            <button
+                              onClick={() => sellCar(index)}
+                              className="font-medium hover:text-neutral-200"
+                            >
+                              Selg bil
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    }
+                  )
+                ) : (
+                  <tr className="border bg-neutral-800 border-neutral-700">
+                    <td colSpan={4} className="px-2 py-1">
+                      Du har ingen biler.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+              <tfoot>
+                <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
+                  <td className="px-2 py-1"></td>
+                  <td className="px-2 py-1">Total verdi</td>
+                  <td className="px-2 py-1">${totalValue.toLocaleString()}</td>
+                  <td className="px-2 py-1">
+                    <button
+                      onClick={sellAllCars}
+                      className="font-medium hover:text-neutral-200"
+                    >
+                      Selg alle
+                    </button>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+            <p>
+              <strong className="text-neutral-200">
+                {character.cars?.[character.location]?.length || 0}
+              </strong>{" "}
+              av{" "}
+              <strong className="text-neutral-200">
+                {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
+              </strong>{" "}
+              plasser brukt.
+            </p>
+          </div>
+        )}
       </div>
     </Main>
   );
