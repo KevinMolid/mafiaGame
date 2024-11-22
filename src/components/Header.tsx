@@ -88,7 +88,7 @@ const Header = () => {
   }, [volume, audioElement]);
 
   return (
-    <header className="bg-neutral-950 px-2 sm:px-8 py-2 sm:py-4 flex justify-between items-center">
+    <header className="h-16 sm:h-20 bg-neutral-950 px-2 sm:px-8 py-2 sm:py-4 flex justify-between items-center">
       {/* Actions menu icon for small screens */}
       <button
         className="flex justify-center items-center rounded-md sm:hidden w-12 h-12 bg-neutral-800 hover:bg-neutral-700 hover:cursor-pointer"
@@ -98,9 +98,9 @@ const Header = () => {
       </button>
 
       {/* Logo */}
-      <div className="hidden">
+      <div className="hidden sm:flex">
         <Link to="/">
-          <img className="h-14 sm:h-16" src={logo} alt="Den siste Don Logo" />
+          <img className="h-16" src={logo} alt="Den siste Don Logo" />
         </Link>
       </div>
 

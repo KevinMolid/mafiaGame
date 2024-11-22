@@ -87,14 +87,14 @@ function App() {
                 >
                   <div id="content-wrap" className="flex flex-col flex-grow">
                     <Header />
+                    <DropdownLeft />
+                    <DropdownRight />
                     <Infobar />
                     <NewsBar />
                     <div className="relative flex flex-col flex-grow">
                       <Layout>
                         <ErrorBoundary>
                           <Sidebar />
-                          <DropdownLeft />
-                          <DropdownRight />
                         </ErrorBoundary>
 
                         <Routes>
