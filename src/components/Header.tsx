@@ -1,8 +1,12 @@
+// Files
 import logo from "../assets/DsD3.png";
 
+// Context
+import { useAuth } from "../AuthContext";
+import { useCharacter } from "../CharacterContext";
 import { useMenuContext } from "../MenuContext";
 import { useMusicContext } from "../MusicContext";
-
+import { useCooldown } from "../CooldownContext";
 // React
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -19,11 +23,10 @@ import {
 // Initialize Firebase Firestore
 const db = getFirestore();
 
-// Context
-import { useCharacter } from "../CharacterContext";
-
 const Header = () => {
   const { character } = useCharacter();
+  const { userData } = useAuth();
+  const { cooldowns, fetchCooldown } = useCooldown();
   const { toggleActions, toggleMenu } = useMenuContext();
   const { playing, setPlaying, volume, setVolume, audioElement } =
     useMusicContext();
@@ -45,6 +48,21 @@ const Header = () => {
     return () => unsubscribe();
   }, [character]);
 
+  // Fetch cooldowns
+  useEffect(() => {
+    if (userData.activeCharacter && cooldowns["crime"] === undefined) {
+      // Fetch cooldown only if it hasn't been fetched yet
+      fetchCooldown("crime", 90, userData.activeCharacter);
+    }
+    if (userData.activeCharacter && cooldowns["gta"] === undefined) {
+      fetchCooldown("gta", 130, userData.activeCharacter);
+    }
+    if (userData.activeCharacter && cooldowns["robbery"] === undefined) {
+      fetchCooldown("robbery", 150, userData.activeCharacter);
+    }
+  }, [userData, cooldowns, fetchCooldown]);
+
+  // Function to toggle music
   const toggleMusic = () => {
     if (!audioElement.src) {
       console.error("No audio source provided.");

@@ -29,7 +29,7 @@ const StreetCrime = () => {
   const { userData } = useAuth();
   const navigate = useNavigate();
 
-  const { cooldowns, startCooldown, fetchCooldown } = useCooldown();
+  const { cooldowns, startCooldown } = useCooldown();
 
   const [selectedCrime, setSelectedCrime] = useState<string>(
     localStorage.getItem("selectedCrime") || "Lommetyveri"
@@ -44,12 +44,7 @@ const StreetCrime = () => {
       navigate("/login");
       return;
     }
-
-    if (userData.activeCharacter && cooldowns["crime"] === undefined) {
-      // Fetch cooldown only if it hasn't been fetched yet
-      fetchCooldown("crime", 90, userData.activeCharacter);
-    }
-  }, [userData, navigate, cooldowns, fetchCooldown]);
+  }, [userData, navigate]);
 
   // Save selectedCrime to localStorage whenever it changes
   useEffect(() => {

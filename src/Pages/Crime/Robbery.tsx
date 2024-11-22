@@ -55,7 +55,7 @@ const Robbery = () => {
 
   const { userData } = useAuth();
   const { character } = useCharacter();
-  const { cooldowns, startCooldown, fetchCooldown } = useCooldown();
+  const { cooldowns, startCooldown } = useCooldown();
   const cooldownTime = 150;
   const navigate = useNavigate();
 
@@ -64,11 +64,7 @@ const Robbery = () => {
       navigate("/login");
       return;
     }
-
-    if (userData.activeCharacter && cooldowns["gta"] === undefined) {
-      fetchCooldown("robbery", cooldownTime, userData.activeCharacter);
-    }
-  }, [userData, navigate, cooldowns, fetchCooldown]);
+  }, [userData, navigate, cooldowns]);
 
   if (!character) {
     return;
