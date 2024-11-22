@@ -14,7 +14,7 @@ const DropdownOption = ({ to, icon, children, color, onClick }: LinkProps) => {
     <Link to={to || "#"} onClick={onClick}>
       <div
         className={
-          "grid grid-cols-[20px_auto] hover:bg-neutral-900 px-4 py-1 gap-2 " +
+          "grid grid-cols-[20px_auto] hover:bg-neutral-900 px-4 py-2 gap-2 " +
           (color === "yellow"
             ? "text-yellow-400 hover:text-yellow-300"
             : "text-stone-400 hover:text-stone-200")

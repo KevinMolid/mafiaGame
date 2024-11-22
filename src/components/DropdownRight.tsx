@@ -169,6 +169,8 @@ const DropdownRight = () => {
           </DropdownOption>
         )}
 
+        <hr className="border-neutral-700 my-2 sm:hidden" />
+
         <DropdownOption to="/toppliste" icon="trophy" onClick={toggleMenu}>
           Toppliste
         </DropdownOption>
@@ -181,11 +183,7 @@ const DropdownRight = () => {
           Statistikk
         </DropdownOption>
 
-        <DropdownOption
-          to="/spillguide"
-          icon="circle-info"
-          onClick={toggleMenu}
-        >
+        <DropdownOption to="/spillguide" icon="book-open" onClick={toggleMenu}>
           Spillguide
         </DropdownOption>
 

@@ -64,15 +64,16 @@ const DropdownLeft = () => {
 
         <hr className="border-neutral-700 my-2 sm:hidden" />
 
-        <DropdownOption
+        {/*<DropdownOption
           to="/innflytelse"
           icon="handshake-simple"
           onClick={toggleActions}
         >
           Innflytelse
-        </DropdownOption>
 
         <hr className="border-neutral-700 my-2 sm:hidden" />
+
+        </DropdownOption>*/}
 
         <DropdownOption
           to="/kriminalitet"
