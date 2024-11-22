@@ -30,7 +30,7 @@ const DropdownLeft = () => {
     actionsOpen && (
       <nav
         ref={dropdownRef}
-        className="absolute z-30 top-0 left-0 flex flex-col bg-neutral-950 min-w-56 select-none h-full border-r border-neutral-700 shadow-2xl"
+        className="absolute z-30 top-0 left-0 flex flex-col bg-neutral-950 min-w-56 select-none h-full min-h-[max-content] pb-12 border-r border-neutral-700 shadow-2xl"
       >
         <div className="p-2"></div>
 

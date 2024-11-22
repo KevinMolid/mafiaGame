@@ -85,7 +85,7 @@ const DropdownRight = () => {
     menuOpen && (
       <nav
         ref={dropdownRef}
-        className="absolute z-30 top-0 right-0 flex flex-col bg-neutral-950 min-w-56 select-none h-full border-l border-neutral-700 shadow-2xl"
+        className="absolute z-30 top-0 right-0 flex flex-col bg-neutral-950 min-w-56 select-none h-full min-h-[max-content] pb-12 border-l border-neutral-700 shadow-2xl"
       >
         {character ? (
           <div>
