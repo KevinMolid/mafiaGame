@@ -1,4 +1,4 @@
-import SidebarLink from "./SidebarLink";
+import DropdownOption from "./DropdownOption";
 
 import { useRef, useEffect } from "react";
 
@@ -30,42 +30,41 @@ const DropdownLeft = () => {
     actionsOpen && (
       <nav
         ref={dropdownRef}
-        className="absolute z-30 top-0 left-0 flex flex-col gap-2 bg-neutral-950 p-4 sm:hidden min-w-56 select-none border-r border-neutral-500 h-full"
+        className="absolute z-30 top-0 left-0 flex flex-col bg-neutral-950 min-w-56 select-none h-full border-r border-neutral-700 shadow-2xl"
       >
-        <p>Handlinger</p>
-        <hr className="border-neutral-500" />
+        <div className="p-2"></div>
 
-        <SidebarLink to="/" icon="house" onClick={toggleActions}>
+        <DropdownOption to="/" icon="house" onClick={toggleActions}>
           Hovedkvarter
-        </SidebarLink>
+        </DropdownOption>
 
-        <SidebarLink to="butikk" icon="shop" onClick={toggleActions}>
+        <DropdownOption to="butikk" icon="shop" onClick={toggleActions}>
           Butikk
-        </SidebarLink>
+        </DropdownOption>
 
-        <SidebarLink to="/bank" icon="landmark" onClick={toggleActions}>
+        <DropdownOption to="/bank" icon="landmark" onClick={toggleActions}>
           Bank
-        </SidebarLink>
+        </DropdownOption>
 
-        <hr className="border-neutral-600" />
+        <hr className="border-neutral-700 my-2 sm:hidden" />
 
-        <SidebarLink to="/familie" icon="users" onClick={toggleActions}>
+        <DropdownOption to="/familie" icon="users" onClick={toggleActions}>
           Familie
-        </SidebarLink>
+        </DropdownOption>
 
-        <hr className="border-neutral-600" />
+        <hr className="border-neutral-700 my-2 sm:hidden" />
 
-        <SidebarLink
+        <DropdownOption
           to="/innflytelse"
           icon="handshake-simple"
           onClick={toggleActions}
         >
           Innflytelse
-        </SidebarLink>
+        </DropdownOption>
 
-        <hr className="border-neutral-600" />
+        <hr className="border-neutral-700 my-2 sm:hidden" />
 
-        <SidebarLink
+        <DropdownOption
           to="/kriminalitet"
           icon="money-bill"
           onClick={toggleActions}
@@ -80,9 +79,9 @@ const DropdownLeft = () => {
               <i className="fa-solid fa-check"></i>
             </div>
           )}
-        </SidebarLink>
+        </DropdownOption>
 
-        <SidebarLink to="/biltyveri" icon="car" onClick={toggleActions}>
+        <DropdownOption to="/biltyveri" icon="car" onClick={toggleActions}>
           <div>Biltyveri</div>
           {cooldowns["gta"] > 0 ? (
             <div className="text-neutral-200 font-medium">
@@ -93,9 +92,9 @@ const DropdownLeft = () => {
               <i className="fa-solid fa-check"></i>
             </div>
           )}
-        </SidebarLink>
+        </DropdownOption>
 
-        <SidebarLink to="/ran" icon="sack-dollar" onClick={toggleActions}>
+        <DropdownOption to="/ran" icon="sack-dollar" onClick={toggleActions}>
           <div>Ran spiller</div>
           {cooldowns["robbery"] > 0 ? (
             <div className="text-neutral-200 font-medium">
@@ -106,40 +105,41 @@ const DropdownLeft = () => {
               <i className="fa-solid fa-check"></i>
             </div>
           )}
-        </SidebarLink>
+        </DropdownOption>
 
-        <SidebarLink to="/drep" icon="gun" onClick={toggleActions}>
+        <DropdownOption to="/drep" icon="gun" onClick={toggleActions}>
           Drep spiller
-        </SidebarLink>
+        </DropdownOption>
 
-        <hr className="border-neutral-600" />
-        <SidebarLink to="streetracing" icon="flag-checkered">
+        <hr className="border-neutral-700 my-2 sm:hidden" />
+
+        <DropdownOption to="streetracing" icon="flag-checkered">
           Streetracing
-        </SidebarLink>
+        </DropdownOption>
 
-        <hr className="border-neutral-600" />
+        <hr className="border-neutral-700 my-2 sm:hidden" />
 
-        <SidebarLink to="/fengsel" icon="handcuffs" onClick={toggleActions}>
+        <DropdownOption to="/fengsel" icon="handcuffs" onClick={toggleActions}>
           Fengsel
-        </SidebarLink>
+        </DropdownOption>
 
-        <SidebarLink
+        <DropdownOption
           to="/parkering"
           icon="square-parking"
           onClick={toggleActions}
         >
           Parkering
-        </SidebarLink>
+        </DropdownOption>
 
-        <SidebarLink to="/flyplass" icon="plane" onClick={toggleActions}>
+        <DropdownOption to="/flyplass" icon="plane" onClick={toggleActions}>
           Flyplass
-        </SidebarLink>
+        </DropdownOption>
 
-        <hr className="border-neutral-600" />
+        <hr className="border-neutral-700 my-2 sm:hidden" />
 
-        <SidebarLink to="/jackpot" icon="7" onClick={toggleActions}>
+        <DropdownOption to="/jackpot" icon="7" onClick={toggleActions}>
           Jackpot
-        </SidebarLink>
+        </DropdownOption>
       </nav>
     )
   );
