@@ -1,4 +1,3 @@
-// MenuContext.js
 import { createContext, useContext, useState } from "react";
 
 interface MenuContextType {
@@ -26,8 +25,9 @@ export const MenuProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Toggle the menu open/close state
   const toggleMenu = () => {
-    setMenuOpen((prevState) => !prevState);
-    setActionsOpen(false);
+    setMenuOpen((prev) => {
+      return !prev;
+    });
   };
 
   // Toggle the actions open/close state

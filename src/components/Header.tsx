@@ -27,7 +27,7 @@ const Header = () => {
   const { character } = useCharacter();
   const { userData } = useAuth();
   const { cooldowns, fetchCooldown } = useCooldown();
-  const { toggleActions, toggleMenu } = useMenuContext();
+  const { toggleActions, menuOpen, toggleMenu } = useMenuContext();
   const { playing, setPlaying, volume, setVolume, audioElement } =
     useMusicContext();
   const [unreadAlertCount, setUnreadAlertCount] = useState(0);
@@ -91,10 +91,10 @@ const Header = () => {
     <header className="h-16 sm:h-20 bg-neutral-950 px-2 sm:px-8 py-2 sm:py-4 flex justify-between items-center border-b border-neutral-700">
       {/* Actions menu icon for small screens */}
       <button
-        className="flex justify-center items-center rounded-md sm:hidden w-12 h-12 bg-neutral-800 hover:bg-neutral-700 hover:cursor-pointer"
+        className="actions-button flex justify-center items-center rounded-md sm:hidden w-12 h-12 bg-neutral-800 hover:bg-neutral-700 hover:cursor-pointer"
         onClick={toggleActions}
       >
-        <i className="text-3xl fa-solid fa-location-crosshairs"></i>
+        <i className="text-3xl fa-solid fa-location-crosshairs pointer-events-none"></i>
       </button>
 
       {/* Logo */}
@@ -163,10 +163,12 @@ const Header = () => {
 
       {/* Menu button */}
       <button
-        className="relative flex justify-center items-center rounded-md w-12 h-12 bg-neutral-800 hover:bg-neutral-700 cursor-pointer"
+        className={`menu-button relative flex justify-center items-center rounded-md w-12 h-12 bg-neutral-800 hover:bg-neutral-700 cursor-pointer ${
+          menuOpen ? "bg-neutral-700" : "bg-neutral-800"
+        }`}
         onClick={toggleMenu}
       >
-        <i className="text-3xl fa-solid fa-bars"></i>
+        <i className="text-3xl fa-solid fa-bars pointer-events-none"></i>
         {unreadAlertCount > 0 && (
           <span className="absolute top-0 right-0 bg-yellow-400 -translate-y-1 translate-x-1 text-neutral-900 text-xs font-bold rounded-full w-4 h-4 flex justify-center items-center">
             {unreadAlertCount}

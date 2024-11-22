@@ -16,7 +16,8 @@ const DropdownLeft = () => {
       if (
         actionsOpen &&
         dropdownRef.current &&
-        !dropdownRef.current.contains(target)
+        !dropdownRef.current.contains(target) &&
+        !(target as HTMLElement).classList.contains("actions-button")
       ) {
         closeMenus();
       }

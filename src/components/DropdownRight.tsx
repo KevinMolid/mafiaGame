@@ -29,7 +29,7 @@ const db = getFirestore();
 const DropdownRight = () => {
   const { userData } = useAuth();
   const { character } = useCharacter();
-  const { menuOpen, toggleMenu, closeMenus } = useMenuContext();
+  const { menuOpen, toggleMenu } = useMenuContext();
   const [unreadAlertCount, setUnreadAlertCount] = useState(0);
   const [hasUnreadAlerts, setHasUnreadAlerts] = useState(false);
   const auth = getAuth();
@@ -41,12 +41,14 @@ const DropdownRight = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
+
       if (
         menuOpen &&
         dropdownRef.current &&
-        !dropdownRef.current.contains(target)
+        !dropdownRef.current.contains(target) &&
+        !(target as HTMLElement).classList.contains("menu-button")
       ) {
-        closeMenus();
+        toggleMenu();
       }
     };
 
@@ -55,7 +57,7 @@ const DropdownRight = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [toggleMenu]);
+  }, [menuOpen, toggleMenu]);
 
   useEffect(() => {
     if (!character || !character.id) return;
@@ -194,7 +196,7 @@ const DropdownRight = () => {
             icon="right-from-bracket"
             onClick={() => {
               logOut();
-              closeMenus();
+              toggleMenu();
             }}
           >
             <p>Logg ut</p>
