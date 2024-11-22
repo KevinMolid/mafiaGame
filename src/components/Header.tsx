@@ -50,6 +50,7 @@ const Header = () => {
 
   // Fetch cooldowns
   useEffect(() => {
+    if (!userData) return;
     if (userData.activeCharacter && cooldowns["crime"] === undefined) {
       // Fetch cooldown only if it hasn't been fetched yet
       fetchCooldown("crime", 90, userData.activeCharacter);
