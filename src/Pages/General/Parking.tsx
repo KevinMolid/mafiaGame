@@ -189,7 +189,7 @@ const Parking = () => {
               <div className="flex justify-end flex-grow">
                 <Button style="black" size="small" onClick={toggleUpgrading}>
                   <p>
-                    Oppgrader <i className="fa-solid fa-arrow-up"></i>
+                    Oppgrader <i className="fa-solid fa-circle-up"></i>
                   </p>
                 </Button>
               </div>
@@ -223,15 +223,9 @@ const Parking = () => {
             <div className="flex justify-between items-baseline gap-4">
               <H2>Oppgrader?</H2>
               <Button style="black" size="small" onClick={toggleUpgrading}>
-                {upgrading ? (
-                  <p>
-                    <i className="fa-solid fa-x"></i>
-                  </p>
-                ) : (
-                  <p>
-                    Oppgrader <i className="fa-solid fa-caret-down"></i>
-                  </p>
-                )}
+                <p>
+                  <i className="fa-solid fa-x"></i>
+                </p>
               </Button>
             </div>
 
@@ -282,7 +276,7 @@ const Parking = () => {
                     updateParking(character.id, character.location, parking + 1)
                   }
                 >
-                  Oppgrader <i className="fa-solid fa-arrow-up"></i>{" "}
+                  Oppgrader <i className="fa-solid fa-circle-up"></i>{" "}
                   <strong className="text-yellow-400">
                     ${ParkingTypes[parking + 1].price.toLocaleString()}
                   </strong>
