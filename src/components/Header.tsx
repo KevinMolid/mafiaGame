@@ -89,27 +89,25 @@ const Header = () => {
   return (
     <header className="bg-neutral-950 px-2 sm:px-8 py-2 sm:py-4 flex justify-between items-center">
       {/* Actions menu icon for small screens */}
-      <div
-        className="flex justify-center items-center rounded-md sm:hidden w-12 h-12 bg-neutral-700 hover:cursor-pointer"
+      <button
+        className="flex justify-center items-center rounded-md sm:hidden w-12 h-12 bg-neutral-800 hover:bg-neutral-700 hover:cursor-pointer"
         onClick={toggleActions}
       >
         <i className="text-3xl fa-solid fa-location-crosshairs"></i>
-      </div>
+      </button>
 
       {/* Logo */}
-      <Link to="/">
-        <img
-          className="h-14 sm:h-16"
-          src={logo}
-          alt="MafiaReign Logo: Fight for Dominance"
-        />
-      </Link>
+      <div className="hidden">
+        <Link to="/">
+          <img className="h-14 sm:h-16" src={logo} alt="Den siste Don Logo" />
+        </Link>
+      </div>
 
       {/* Music panel */}
       <div className="flex flex-col gap-1 items-center">
         {/* Toggle playing button */}
-        <div
-          className="cursor-pointer text-stone-400 hover:text-stone-200"
+        <button
+          className="cursor-pointer w-10 text-stone-400 hover:text-stone-200"
           onClick={toggleMusic}
         >
           {playing ? (
@@ -117,7 +115,7 @@ const Header = () => {
           ) : (
             <i className="fa-solid fa-play"></i>
           )}
-        </div>
+        </button>
         {/* Volume slider */}
         <div className="flex items-center gap-1 bg-neutral-800 py-1 px-2 rounded-full">
           <i className="fa-solid fa-volume-down text-stone-400"></i>
@@ -162,9 +160,9 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Menu icon */}
-      <div
-        className="relative flex justify-center items-center rounded-md w-12 h-12 bg-neutral-700 cursor-pointer"
+      {/* Menu button */}
+      <button
+        className="relative flex justify-center items-center rounded-md w-12 h-12 bg-neutral-800 hover:bg-neutral-700 cursor-pointer"
         onClick={toggleMenu}
       >
         <i className="text-3xl fa-solid fa-bars"></i>
@@ -173,7 +171,7 @@ const Header = () => {
             {unreadAlertCount}
           </span>
         )}
-      </div>
+      </button>
     </header>
   );
 };

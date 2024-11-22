@@ -19,7 +19,7 @@ export const MusicProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [playing, setPlaying] = useState<boolean>(false);
-  const [audio, setAudio] = useState<string>("MafiaReign.wav");
+  const [audio, setAudio] = useState<string>("/MafiaReign.wav");
   const [volume, setVolume] = useState<number>(0.5); // Default volume at 50%
   const [audioElement] = useState(new Audio());
 
