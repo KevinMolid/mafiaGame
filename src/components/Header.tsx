@@ -144,7 +144,7 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Menu icon for small screens */}
+      {/* Menu icon */}
       <div
         className="relative flex justify-center items-center rounded-md w-12 h-12 bg-neutral-700 cursor-pointer"
         onClick={toggleMenu}
