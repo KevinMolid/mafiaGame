@@ -243,14 +243,14 @@ const Family = () => {
               active={activePanel === "safehouse"}
               onClick={() => setActivePanel("safehouse")}
             >
-              Hovedkvarter
+              Base
             </Tab>
 
             <Tab
               active={activePanel === "chat"}
               onClick={() => setActivePanel("chat")}
             >
-              Meldinger
+              Chat
             </Tab>
 
             <Tab
@@ -295,7 +295,7 @@ const Family = () => {
           {/* Safehouse panel */}
           {activePanel === "safehouse" && (
             <div>
-              <H2>Hovedkvarter</H2>
+              <H2>Base</H2>
               <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
                 <H3>Bunker</H3>
                 <p>Antall plasser: 1/10</p>
