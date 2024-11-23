@@ -6,6 +6,8 @@ import H3 from "../components/Typography/H3";
 import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
 import Button from "../components/Button";
+import Tab from "../components/Tab";
+
 import FamilySettings from "../components/FamilySettings";
 import FamilyMembers from "../components/FamilyMembers";
 import FamilyApplications from "../components/FamilyApplications";
@@ -237,63 +239,47 @@ const Family = () => {
 
           {/* Tabs */}
           <ul className="mb-8 flex flex-wrap">
-            <li
-              className={
-                " hover:bg-neutral-800 px-4 py-2 max-w-44 border-b-2 border-neutral-700 cursor-pointer " +
-                (activePanel === "members" && "bg-neutral-800 border-white")
-              }
-              onClick={() => setActivePanel("members")}
-            >
-              <p className="text-neutral-200 font-medium">Medlemmer</p>
-            </li>
-            <li
-              className={
-                " hover:bg-neutral-800 px-4 py-2 max-w-44 border-b-2 border-neutral-700 cursor-pointer " +
-                (activePanel === "chat" && "bg-neutral-800 border-white")
-              }
-              onClick={() => setActivePanel("chat")}
-            >
-              <p className="text-neutral-200 font-medium">Meldinger</p>
-            </li>
-            <li
-              className={
-                " hover:bg-neutral-800 px-4 py-2 max-w-44 border-b-2 border-neutral-700 cursor-pointer " +
-                (activePanel === "safehouse" && "bg-neutral-800 border-white")
-              }
+            <Tab
+              active={activePanel === "safehouse"}
               onClick={() => setActivePanel("safehouse")}
             >
-              <p className="text-neutral-200 font-medium">Hovedkvarter</p>
-            </li>
-            <li
-              className={
-                " hover:bg-neutral-800 px-4 py-2 max-w-44 border-b-2 border-neutral-700 cursor-pointer " +
-                (activePanel === "profile" && "bg-neutral-800 border-white")
-              }
+              Hovedkvarter
+            </Tab>
+
+            <Tab
+              active={activePanel === "chat"}
+              onClick={() => setActivePanel("chat")}
+            >
+              Meldinger
+            </Tab>
+
+            <Tab
+              active={activePanel === "members"}
+              onClick={() => setActivePanel("members")}
+            >
+              Medlemmer
+            </Tab>
+
+            <Tab
+              active={activePanel === "profile"}
               onClick={() => setActivePanel("profile")}
             >
-              <p className="text-neutral-200 font-medium">Profil</p>
-            </li>
+              Profil
+            </Tab>
 
-            <li
-              className={
-                " hover:bg-neutral-800 px-4 py-2 max-w-44 border-b-2 border-neutral-700 cursor-pointer " +
-                (activePanel === "applications" &&
-                  "bg-neutral-800 border-white")
-              }
+            <Tab
+              active={activePanel === "applications"}
               onClick={() => setActivePanel("applications")}
             >
-              <p className="text-neutral-200 font-medium">Søknader</p>
-            </li>
+              Søknader
+            </Tab>
 
-            <li
-              className={
-                " hover:bg-neutral-800 px-4 py-2 max-w-44 border-b-2 border-neutral-700 cursor-pointer " +
-                (activePanel === "settings" && "bg-neutral-800 border-white")
-              }
+            <Tab
+              active={activePanel === "settings"}
               onClick={() => setActivePanel("settings")}
             >
-              <p className="text-neutral-200 font-medium">Innstillinger</p>
-            </li>
+              Innstillinger
+            </Tab>
           </ul>
 
           {/* Member panel */}
