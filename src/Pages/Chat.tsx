@@ -326,9 +326,9 @@ const Chat = () => {
               ))}
             </ul>
           ) : (
-            <div id="messages_div" className="mb-4 pb-2">
+            <div id="messages_div" className="mb-4 pb-2 h-auto overflow-hidden">
               {/* Messages */}
-              <ul>
+              <ul className="max-h-[400px] overflow-y-auto pr-[17px] w-[calc(100%+17px)]">
                 {messages.map((message) => (
                   <ChatMessage
                     key={message.id}
