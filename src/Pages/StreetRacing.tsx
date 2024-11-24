@@ -7,19 +7,21 @@ import Button from "../components/Button";
 
 import Tab from "../components/Tab";
 
+import Cars from "../Data/Cars";
+
 import { useState } from "react";
 
 const StreetRacing = () => {
-  const [selectedLiga, setSelectedLiga] = useState<string>("");
+  const [selectedLiga, setSelectedLiga] = useState<any>({});
   const [showAcceptedCars, setShowAcceptedCars] = useState<boolean>(false);
 
   const ligas = [
-    "Klasse D",
-    "Klasse C",
-    "Klasse B",
-    "Klasse A",
-    "Klasse S",
-    "Klasse El",
+    { name: "Klasse D", tier: 1 },
+    { name: "Klasse C", tier: 2 },
+    { name: "Klasse B", tier: 3 },
+    { name: "Klasse A", tier: 4 },
+    { name: "Klasse S", tier: 5 },
+    { name: "Klasse El", tier: undefined },
   ];
 
   return (
@@ -32,10 +34,10 @@ const StreetRacing = () => {
         {ligas.map((liga, index) => (
           <Tab
             key={"liga" + index}
-            active={selectedLiga === liga}
+            active={selectedLiga.name === liga.name}
             onClick={() => setSelectedLiga(liga)}
           >
-            {liga}
+            {liga.name}
           </Tab>
         ))}
       </ul>
@@ -43,7 +45,7 @@ const StreetRacing = () => {
       {selectedLiga && (
         <div className="mt-4">
           <Box>
-            <H2>{selectedLiga}</H2>
+            <H2>{selectedLiga.name}</H2>
             <div className="mb-4">
               <p
                 className="font-medium text-neutral-200 cursor-pointer select-none"
@@ -56,7 +58,25 @@ const StreetRacing = () => {
                   <i className="fa-solid fa-caret-down"></i>
                 )}
               </p>
-              {showAcceptedCars && <p>Kommer snart. Under utvikling.</p>}
+              {showAcceptedCars && (
+                <ul className="flex flex-wrap gap-x-2">
+                  {Cars.map((car) => {
+                    if (!selectedLiga.tier) {
+                      return (
+                        <li key={car.name}>
+                          <small>{car.name}</small>
+                        </li>
+                      );
+                    } else if (car.tier === selectedLiga.tier) {
+                      return (
+                        <li key={car.name}>
+                          <small>{car.name}</small>
+                        </li>
+                      );
+                    }
+                  })}
+                </ul>
+              )}
             </div>
             <div className="mb-4">
               <H3>Velg bil</H3>
