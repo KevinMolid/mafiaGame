@@ -272,7 +272,7 @@ const Chat = () => {
     <section className="flex flex-col flex-grow">
       <div className="flex-grow grid grid-cols-[1fr_4fr] h-full">
         {/* Left panel */}
-        <div className="h-full min-w-32 py-8 bg-neutral-800/50">
+        <div className="h-full min-w-32 max-w-40 py-8 bg-neutral-800/50">
           <div className="mb-4 flex justify-center">
             <Button size="small" style="secondary" onClick={handleNewChatClick}>
               Ny chat
