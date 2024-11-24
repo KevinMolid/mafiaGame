@@ -61,7 +61,7 @@ const Travel = () => {
   }
 
   return (
-    <Main img="TravelBg">
+    <Main img="">
       <H1>Flyplass</H1>
       {message && <InfoBox type="success">{message}</InfoBox>}
       {!targetLocation && (
@@ -76,12 +76,8 @@ const Travel = () => {
           til <strong className="text-white">{targetLocation}</strong>
         </p>
       )}
-      <div className="relative my-4">
-        <img
-          src="WorldMap3.png"
-          alt="World Map"
-          style={{ width: "100%", height: "auto" }}
-        />
+      <div className="relative my-4 max-w-[800px]">
+        <img src="WorldMap3.png" alt="World Map" className="w-full h-auto" />
         {locations.map((location) => (
           <div
             key={location.name}
@@ -89,8 +85,8 @@ const Travel = () => {
               position: "absolute",
               top: location.coordinates.top,
               left: location.coordinates.left,
-              width: "15px",
-              height: "15px",
+              width: "20px",
+              height: "20px",
               borderRadius: "50%",
               backgroundColor:
                 character.location === location.name
