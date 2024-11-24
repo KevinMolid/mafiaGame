@@ -272,9 +272,9 @@ const Chat = () => {
     <section className="flex flex-col flex-grow">
       <div className="flex-grow grid grid-cols-[1fr_4fr] h-full">
         {/* Left panel */}
-        <div className="h-full px-4 py-8 bg-neutral-800/50">
-          <div className="mb-4">
-            <Button style="secondary" onClick={handleNewChatClick}>
+        <div className="h-full min-w-32 py-8 bg-neutral-800/50">
+          <div className="mb-4 flex justify-center">
+            <Button size="small" style="secondary" onClick={handleNewChatClick}>
               Ny chat
             </Button>
           </div>
@@ -290,7 +290,7 @@ const Chat = () => {
                     className={`min-h-8 font-medium hover:text-white w-full text-left ${
                       receiver === otherParticipant
                         ? "bg-neutral-700/50 text-neutral-200 border-l-4 border-sky-500 pl-2"
-                        : "text-neutral-400"
+                        : "text-neutral-400 pl-2"
                     }`}
                     onClick={() => handlePlayerClick(otherParticipant)}
                   >
@@ -303,7 +303,7 @@ const Chat = () => {
         </div>
 
         {/* Right panel */}
-        <div id="right_panel" className="flex flex-col px-4 pt-8 pb-24">
+        <div id="right_panel" className="flex flex-col px-4 pt-8 pb-16">
           <div
             id="right_panel_heading"
             className="border-b border-neutral-600 mb-2"
@@ -327,6 +327,7 @@ const Chat = () => {
             </ul>
           ) : (
             <div id="messages_div" className="mb-4 pb-2">
+              {/* Messages */}
               <ul>
                 {messages.map((message) => (
                   <ChatMessage

@@ -84,13 +84,7 @@ const Travel = () => {
   return (
     <Main img="">
       <H1>Flyplass</H1>
-      <p className="mb-2">
-        Her kan du reise mellom byer. Det koster{" "}
-        <span className="font-medium text-yellow-400">
-          ${priceToTravel.toLocaleString()}
-        </span>{" "}
-        å fly.
-      </p>
+      <p className="mb-2">Her kan du reise mellom byer.</p>
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
       {!targetLocation && (
         <p>
@@ -113,8 +107,8 @@ const Travel = () => {
               position: "absolute",
               top: location.coordinates.top,
               left: location.coordinates.left,
-              width: "20px",
-              height: "20px",
+              width: "16px",
+              height: "16px",
               borderRadius: "50%",
               backgroundColor:
                 character.location === location.name
