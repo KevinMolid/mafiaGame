@@ -146,12 +146,12 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
                 <ul>
                   {messages.map((message) => (
                     <ChatMessage
+                      key={message.id}
                       id={message.id}
                       senderId={message.senderId}
                       senderName={message.senderName}
                       timestamp={message.timestamp}
                       messageText={message.text}
-                      isRead={message.isRead}
                     />
                   ))}
                 </ul>

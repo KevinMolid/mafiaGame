@@ -14,10 +14,8 @@ import {
   getDocs,
   query,
   where,
-  doc,
   addDoc,
   serverTimestamp,
-  updateDoc,
 } from "firebase/firestore";
 
 // Context
@@ -192,20 +190,6 @@ const Chat = () => {
 
         setMessages(fetchedMessages);
         setLoading(false);
-
-        // Update unread messages to mark them as read
-        fetchedMessages.forEach(async (message) => {
-          if (message.senderId !== character.id && !message.isRead) {
-            const messageRef = doc(
-              db,
-              "Conversations",
-              conversationId,
-              "Messages",
-              message.id
-            );
-            await updateDoc(messageRef, { isRead: true });
-          }
-        });
       },
       (error) => {
         setError(error.message);
@@ -230,7 +214,6 @@ const Chat = () => {
             senderName: character.username,
             text: newMessage,
             timestamp: serverTimestamp(),
-            isRead: false,
           }
         );
       } else {
@@ -347,12 +330,12 @@ const Chat = () => {
               <ul>
                 {messages.map((message) => (
                   <ChatMessage
+                    key={message.id}
                     id={message.id}
                     senderId={message.senderId}
                     senderName={message.senderName}
                     timestamp={message.timestamp}
                     messageText={message.text}
-                    isRead={message.isRead}
                   />
                 ))}
               </ul>

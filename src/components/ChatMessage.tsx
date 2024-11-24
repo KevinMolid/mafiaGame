@@ -12,7 +12,6 @@ interface Message {
   senderName: string;
   timestamp: Timestamp;
   messageText: string;
-  isRead?: boolean;
 }
 
 const ChatMessage = ({
@@ -21,7 +20,6 @@ const ChatMessage = ({
   senderName,
   timestamp,
   messageText,
-  isRead,
 }: Message) => {
   const { character } = useCharacter();
 
@@ -44,20 +42,6 @@ const ChatMessage = ({
               : "Sending..."}
           </small>
         </p>
-        {senderId === character.id && !isRead && (
-          <p>
-            <span className="text-xs text-neutral-400">
-              <i className="fa-regular fa-envelope"></i>{" "}
-            </span>
-          </p>
-        )}
-        {senderId === character.id && isRead && (
-          <p>
-            <span className="text-xs text-green-400">
-              <i className="fa-regular fa-envelope-open"></i>{" "}
-            </span>
-          </p>
-        )}
       </div>
       <div className="text-neutral-200 mb-2">
         {messageText.split("\n").map((line, index) => (

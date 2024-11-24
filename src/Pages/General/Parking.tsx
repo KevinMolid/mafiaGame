@@ -315,9 +315,9 @@ const Parking = () => {
                           <td className="px-2 py-1">
                             <button
                               onClick={() => sellCar(index)}
-                              className="font-medium hover:text-neutral-200"
+                              className="font-medium text-neutral-200 hover:text-white"
                             >
-                              Selg bil
+                              Selg
                             </button>
                           </td>
                         </tr>
@@ -340,7 +340,7 @@ const Parking = () => {
                   <td className="px-2 py-1">
                     <button
                       onClick={sellAllCars}
-                      className="font-medium hover:text-neutral-200"
+                      className="font-medium text-neutral-200 hover:text-white"
                     >
                       Selg alle
                     </button>
