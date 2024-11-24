@@ -5,6 +5,8 @@ import H3 from "../components/Typography/H3";
 import Box from "../components/Box";
 import Button from "../components/Button";
 
+import Tab from "../components/Tab";
+
 import { useState } from "react";
 
 const StreetRacing = () => {
@@ -26,19 +28,18 @@ const StreetRacing = () => {
       <p className="mb-4">
         Her kan du konkurrere i gateløp med biler du eier mot andre spillere.
       </p>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 mb-4">
+      <ul className="flex flex-wrap">
         {ligas.map((liga, index) => (
-          <div
-            key={index}
-            className="flex-grow cursor-pointer"
+          <Tab
+            key={"liga" + index}
+            active={selectedLiga === liga}
             onClick={() => setSelectedLiga(liga)}
           >
-            <Box>
-              <H3>{liga}</H3>
-            </Box>
-          </div>
+            {liga}
+          </Tab>
         ))}
-      </div>
+      </ul>
+
       {selectedLiga && (
         <div className="mt-4">
           <Box>
