@@ -176,18 +176,6 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
                   className="bg-neutral-800 grid grid-cols-[auto_min-content] rounded-lg pr-2"
                 >
                   <textarea
-                    name=""
-                    id=""
-                    rows={5}
-                    value={newMessage}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") e.preventDefault();
-                    }}
-                    onChange={handleInputChange}
-                    className="w-full resize-none bg-inherit rounded-lg px-4 py-2"
-                  ></textarea>
-
-                  <textarea
                     ref={textareaRef}
                     name=""
                     id=""
