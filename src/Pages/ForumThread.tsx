@@ -8,7 +8,7 @@ import Button from "../components/Button";
 import InfoBox from "../components/InfoBox";
 import defaultImg from "/default.jpg";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { useCharacter } from "../CharacterContext";
@@ -182,7 +182,12 @@ const ForumThread = () => {
 
           {/* Thread */}
           <div className=" pb-4">
-            <p>{thread.content}</p>
+            {thread.content.split("\n").map((line, index) => (
+              <Fragment key={index}>
+                {line}
+                <br />
+              </Fragment>
+            ))}
           </div>
 
           {/* Icons */}
@@ -251,7 +256,12 @@ const ForumThread = () => {
               </p>
             </div>
             <div className=" pb-4">
-              <p>{reply.content}</p>
+              {reply.content.split("\n").map((line, index) => (
+                <Fragment key={index}>
+                  {line}
+                  <br />
+                </Fragment>
+              ))}
             </div>
 
             {/* Icons */}

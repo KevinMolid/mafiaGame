@@ -20,7 +20,7 @@ import { sendMessage, Message } from "../Functions/messageService";
 import { breakOut } from "../Functions/RewardFunctions";
 
 // React
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // Context
 import { useCharacter } from "../CharacterContext";
@@ -91,8 +91,20 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
     return () => clearInterval(interval); // Clean up on unmount
   }, [character?.jailReleaseTime]);
 
+  // Ref for the textarea
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // Function to adjust the height of the textarea
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  };
+
   const handleInputChange = (e: any) => {
     setNewMessage(e.target.value);
+    adjustTextareaHeight();
   };
 
   const submitNewMessage = async (e: any) => {
@@ -170,6 +182,27 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
                     value={newMessage}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") e.preventDefault();
+                    }}
+                    onChange={handleInputChange}
+                    className="w-full resize-none bg-inherit rounded-lg px-4 py-2"
+                  ></textarea>
+
+                  <textarea
+                    ref={textareaRef}
+                    name=""
+                    id=""
+                    value={newMessage}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        if (e.shiftKey) {
+                          // Allow line break when Shift + Enter is pressed
+                          return;
+                        } else {
+                          // Prevent default behavior and submit the message when Enter is pressed alone
+                          e.preventDefault();
+                          submitNewMessage(e);
+                        }
+                      }
                     }}
                     onChange={handleInputChange}
                     className="w-full resize-none bg-inherit rounded-lg px-4 py-2"
