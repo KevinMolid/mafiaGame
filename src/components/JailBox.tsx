@@ -1,8 +1,9 @@
 import Box from "./Box";
 import H2 from "./Typography/H2";
 import Button from "./Button";
-import Username from "../components/Typography/Username";
 import Main from "./Main";
+
+import ChatMessage from "./ChatMessage";
 
 // Firebase
 import {
@@ -16,7 +17,6 @@ const db = getFirestore();
 
 // functions
 import { sendMessage, Message } from "../Functions/messageService";
-import { format } from "date-fns";
 import { breakOut } from "../Functions/RewardFunctions";
 
 // React
@@ -145,28 +145,14 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
               >
                 <ul>
                   {messages.map((message) => (
-                    <li key={message.id} className="mb-2">
-                      {/* Sender and timestamp */}
-                      <div className="flex gap-2 mb-1 text-stone-400 text-xs sm:text-sm">
-                        <Username
-                          character={{
-                            id: message.senderId,
-                            username: message.senderName,
-                          }}
-                        />
-                        <p>
-                          {message.timestamp
-                            ? format(
-                                message.timestamp.toDate(),
-                                "dd.MM.yyyy - HH:mm"
-                              )
-                            : "Sending..."}
-                        </p>
-                      </div>
-                      <div className="bg-slate-100 text-neutral-700 text-sm font-medium px-2 py-2 rounded-lg">
-                        {message.text}
-                      </div>
-                    </li>
+                    <ChatMessage
+                      id={message.id}
+                      senderId={message.senderId}
+                      senderName={message.senderName}
+                      timestamp={message.timestamp}
+                      messageText={message.text}
+                      isRead={message.isRead}
+                    />
                   ))}
                 </ul>
               </div>
