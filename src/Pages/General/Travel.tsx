@@ -9,7 +9,12 @@ import { useState } from "react";
 
 import { useCharacter } from "../../CharacterContext";
 
-import { getFirestore, doc, updateDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  updateDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 
 // Define your location coordinates as percentages
 const locations = [
@@ -29,6 +34,7 @@ const Travel = () => {
     "info" | "success" | "failure" | "important" | "warning"
   >("info");
   const db = getFirestore();
+  const priceToTravel = 1000;
 
   // Render nothing if character is null
   if (!character) {
@@ -41,12 +47,27 @@ const Travel = () => {
       return;
     }
 
+    // Check if the character has enough money to travel
+    if (character.stats.money < priceToTravel) {
+      setMessageType("warning");
+      setMessage("Du har ikke nok penger til å reise!");
+      return;
+    }
+
     try {
       const charDocRef = doc(db, "Characters", character.id);
+      // Update the character's location and deduct the travel cost
+      await updateDoc(charDocRef, {
+        location: targetLocation,
+        "stats.money": character.stats.money - priceToTravel,
+        lastActive: serverTimestamp(),
+      });
       await updateDoc(charDocRef, { location: targetLocation });
 
       setMessageType("success");
-      setMessage(`Du reiste til ${targetLocation}`);
+      setMessage(
+        `Du reiste til ${targetLocation} for $${priceToTravel.toLocaleString()}`
+      );
     } catch (error) {
       console.error("Feil ved oppdatering aav lokasjon:", error);
     }
@@ -63,17 +84,24 @@ const Travel = () => {
   return (
     <Main img="">
       <H1>Flyplass</H1>
-      {message && <InfoBox type="success">{message}</InfoBox>}
+      <p className="mb-2">
+        Her kan du reise mellom byer. Det koster{" "}
+        <span className="font-medium text-yellow-400">
+          ${priceToTravel.toLocaleString()}
+        </span>{" "}
+        å fly.
+      </p>
+      {message && <InfoBox type={messageType}>{message}</InfoBox>}
       {!targetLocation && (
-        <p className="text-stone-400">
-          Du befinner deg i{" "}
-          <strong className="text-white">{character.location}</strong>{" "}
+        <p>
+          Du befinner deg for øyeblikket i{" "}
+          <strong className="text-white">{character.location}</strong>.
         </p>
       )}
       {targetLocation && targetLocation !== character.location && (
-        <p className="text-stone-400">
+        <p>
           Reis fra <strong className="text-white">{character.location}</strong>{" "}
-          til <strong className="text-white">{targetLocation}</strong>
+          til <strong className="text-white">{targetLocation}</strong>?
         </p>
       )}
       <div className="relative my-4 max-w-[800px]">
@@ -113,7 +141,14 @@ const Travel = () => {
         ))}
       </div>
       {targetLocation && (
-        <Button onClick={handleTravel}>Fly til {targetLocation}</Button>
+        <div className="flex items-center gap-4">
+          <Button onClick={handleTravel}>
+            Fly til {targetLocation} <i className="fa-solid fa-plane"></i>{" "}
+            <span className="text-yellow-400">
+              ${priceToTravel.toLocaleString()}
+            </span>
+          </Button>
+        </div>
       )}
     </Main>
   );
