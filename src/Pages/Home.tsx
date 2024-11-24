@@ -177,7 +177,7 @@ const Home = () => {
           </Box>
 
           {/* Reputation */}
-          <Box>
+          {/*<Box>
             <H2>Innflytelse</H2>
             <div className="flex gap-x-4 flex-wrap">
               <p>
@@ -205,7 +205,7 @@ const Home = () => {
                 </strong>
               </p>
             </div>
-          </Box>
+          </Box>*/}
 
           {/* Equipment */}
           <div className="border border-neutral-500 mb-4 grid grid-cols-1 w-fit">

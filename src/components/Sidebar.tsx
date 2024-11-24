@@ -65,11 +65,11 @@ const Sidebar = () => {
 
         <hr className="border-neutral-600" />
 
-        <SidebarLink to="innflytelse" icon="handshake-simple">
+        {/*<SidebarLink to="innflytelse" icon="handshake-simple">
           Innflytelse
         </SidebarLink>
 
-        <hr className="border-neutral-600" />
+        <hr className="border-neutral-600" />*/}
 
         <SidebarLink to="kriminalitet" icon="money-bill">
           <div>Kriminalitet</div>
