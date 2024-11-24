@@ -35,7 +35,7 @@ const Forum = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>("");
   const [selectedCategoryTitle, setSelectedCategoryTitle] =
     useState<string>("");
   const [selectedCategoryDescription, setSelectedCategoryDescription] =
@@ -60,9 +60,13 @@ const Forum = () => {
   const { character } = useCharacter();
   const navigate = useNavigate();
 
+  {
+    /* Fetch Forum Categories */
+  }
   useEffect(() => {
     const fetchCategories = async () => {
       setLoading(true);
+
       const querySnapshot = await getDocs(collection(db, "ForumCategories"));
       const fetchedCategories: any[] = [];
       querySnapshot.forEach((doc) => {
@@ -73,7 +77,7 @@ const Forum = () => {
 
       // Automatically select "General Discussion" after categories are fetched
       const generalDiscussion = fetchedCategories.find(
-        (category) => category.title === "General Discussion"
+        (category) => category.title === "Generelt"
       );
       if (generalDiscussion) {
         fetchThreads(
