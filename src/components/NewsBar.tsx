@@ -150,7 +150,7 @@ const NewsBar = () => {
   };
 
   return (
-    <div className="news-bar py-1 border-b border-neutral-600 text-stone-400 text-sm">
+    <div className="news-bar py-1 border bg-neutral-900 border-neutral-600 text-stone-400 text-sm">
       {renderEventList(events)}
       {/* Duplicate the list for seamless scrolling */}
       {renderEventList(events, true)}

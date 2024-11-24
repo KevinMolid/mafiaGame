@@ -85,12 +85,17 @@ function App() {
                   id="page-container"
                   className="flex flex-col relative min-h-dvh"
                 >
-                  <div id="content-wrap" className="flex flex-col flex-grow">
-                    <Header />
-                    <DropdownLeft />
-                    <DropdownRight />
-                    <Infobar />
-                    <NewsBar />
+                  <div
+                    id="content-wrap"
+                    className="flex flex-col flex-grow relative"
+                  >
+                    <div className="sticky z-30 top-0 left-0 h-[max-content] w-full">
+                      <Header />
+                      <DropdownLeft />
+                      <DropdownRight />
+                      <Infobar />
+                      <NewsBar />
+                    </div>
                     <div className="relative flex flex-col flex-grow">
                       <Layout>
                         <ErrorBoundary>

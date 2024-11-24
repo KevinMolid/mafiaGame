@@ -89,128 +89,133 @@ const DropdownRight = () => {
 
   return (
     <div
-      className={`absolute z-30 top-16 sm:top-20 right-0 w-full h-full transition-opacity duration-300 ease-in-out ${
+      className={`absolute z-30 top-16 sm:top-20 right-0 w-full h-screen transition-opacity duration-300 ease-in-out ${
         menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       } bg-black/50`}
     >
-      {" "}
-      <nav
-        ref={dropdownRef}
-        className="absolute z-30 top-0 right-0 flex flex-col bg-neutral-800 min-w-56 select-none h-full min-h-[max-content] pb-12 shadow-2xl"
-      >
-        {character ? (
-          <div>
-            <Link to={`/profil/${character.id}`} onClick={toggleMenu}>
-              <div className="px-4 py-2 mt-2 flex sm:hidden gap-2 items-center hover:bg-neutral-900">
-                <img
-                  className="border border-neutral-500 w-[60px] h-[60px] object-cover hover:cursor-pointer"
-                  src={character.img || "/default.jpg"}
-                  alt="Profile picture"
-                />
-                <div className="text-stone-400">
-                  <p className="text-white font-bold">{character.username}</p>
-                  <p>{getCurrentRank(character.stats.xp)}</p>
+      <div className="absolute top-0 right-0 min-w-56 h-full overflow-hidden">
+        <nav
+          ref={dropdownRef}
+          className="absolute z-30 flex top-0 left-0 bottom-0 right-[-17px] flex-col bg-neutral-800 min-w-56 select-none h-screen pb-24 shadow-2xl overflow-y-scroll"
+        >
+          {character ? (
+            <div>
+              <Link to={`/profil/${character.id}`} onClick={toggleMenu}>
+                <div className="px-4 py-2 mt-2 flex sm:hidden gap-2 items-center hover:bg-neutral-900">
+                  <img
+                    className="border border-neutral-500 w-[60px] h-[60px] object-cover hover:cursor-pointer"
+                    src={character.img || "/default.jpg"}
+                    alt="Profile picture"
+                  />
+                  <div className="text-stone-400">
+                    <p className="text-white font-bold">{character.username}</p>
+                    <p>{getCurrentRank(character.stats.xp)}</p>
+                  </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
 
-            <hr className="border-neutral-700 my-2 sm:hidden" />
-            <div className="hidden sm:flex p-2"></div>
-          </div>
-        ) : (
-          <div className="p-2"></div>
-        )}
+              <hr className="border-neutral-700 my-2 sm:hidden" />
+              <div className="hidden sm:flex p-2"></div>
+            </div>
+          ) : (
+            <div className="p-2"></div>
+          )}
 
-        {userData?.type === "admin" && (
-          <>
+          {userData?.type === "admin" && (
+            <>
+              <DropdownOption
+                to="/admin"
+                icon="gears"
+                onClick={toggleMenu}
+                color="yellow"
+              >
+                <p>Kontrollpanel</p>
+              </DropdownOption>
+              <hr className="border-neutral-700 my-2" />
+            </>
+          )}
+
+          {userData && !hasUnreadAlerts && (
+            <DropdownOption to="/varsler" icon="bell" onClick={toggleMenu}>
+              Varsler
+            </DropdownOption>
+          )}
+
+          {userData && hasUnreadAlerts && (
             <DropdownOption
-              to="/admin"
-              icon="gears"
+              to="/varsler"
+              icon="bell fa-shake text-yellow-400"
               onClick={toggleMenu}
               color="yellow"
             >
-              <p>Kontrollpanel</p>
+              <p>Varsler</p>
+              <p>{unreadAlertCount}</p>
             </DropdownOption>
-            <hr className="border-neutral-700 my-2" />
-          </>
-        )}
+          )}
 
-        {userData && !hasUnreadAlerts && (
-          <DropdownOption to="/varsler" icon="bell" onClick={toggleMenu}>
-            Varsler
+          {userData && (
+            <DropdownOption
+              to="/meldinger"
+              icon="comment-dots"
+              onClick={toggleMenu}
+            >
+              Meldinger
+            </DropdownOption>
+          )}
+
+          {userData && (
+            <DropdownOption to="/forum" icon="comments" onClick={toggleMenu}>
+              Forum
+            </DropdownOption>
+          )}
+
+          <hr className="border-neutral-700 my-2 sm:hidden" />
+
+          <DropdownOption to="/toppliste" icon="trophy" onClick={toggleMenu}>
+            Toppliste
           </DropdownOption>
-        )}
 
-        {userData && hasUnreadAlerts && (
           <DropdownOption
-            to="/varsler"
-            icon="bell fa-shake text-yellow-400"
-            onClick={toggleMenu}
-            color="yellow"
-          >
-            <p>Varsler</p>
-            <p>{unreadAlertCount}</p>
-          </DropdownOption>
-        )}
-
-        {userData && (
-          <DropdownOption
-            to="/meldinger"
-            icon="comment-dots"
-            onClick={toggleMenu}
-          >
-            Meldinger
-          </DropdownOption>
-        )}
-
-        {userData && (
-          <DropdownOption to="/forum" icon="comments" onClick={toggleMenu}>
-            Forum
-          </DropdownOption>
-        )}
-
-        <hr className="border-neutral-700 my-2 sm:hidden" />
-
-        <DropdownOption to="/toppliste" icon="trophy" onClick={toggleMenu}>
-          Toppliste
-        </DropdownOption>
-
-        <DropdownOption
-          to="/statistikk"
-          icon="chart-simple"
-          onClick={toggleMenu}
-        >
-          Statistikk
-        </DropdownOption>
-
-        <DropdownOption to="/spillguide" icon="book-open" onClick={toggleMenu}>
-          Spillguide
-        </DropdownOption>
-
-        <hr className="border-neutral-700 my-2" />
-
-        {userData && (
-          <DropdownOption
-            icon="right-from-bracket"
-            onClick={() => {
-              logOut();
-              toggleMenu();
-            }}
-          >
-            <p>Logg ut</p>
-          </DropdownOption>
-        )}
-
-        {!userData && (
-          <DropdownOption
-            to="/logginn"
-            icon="right-to-bracket"
+            to="/statistikk"
+            icon="chart-simple"
             onClick={toggleMenu}
           >
-            Logg inn
+            Statistikk
           </DropdownOption>
-        )}
-      </nav>
+
+          <DropdownOption
+            to="/spillguide"
+            icon="book-open"
+            onClick={toggleMenu}
+          >
+            Spillguide
+          </DropdownOption>
+
+          <hr className="border-neutral-700 my-2" />
+
+          {userData && (
+            <DropdownOption
+              icon="right-from-bracket"
+              onClick={() => {
+                logOut();
+                toggleMenu();
+              }}
+            >
+              <p>Logg ut</p>
+            </DropdownOption>
+          )}
+
+          {!userData && (
+            <DropdownOption
+              to="/logginn"
+              icon="right-to-bracket"
+              onClick={toggleMenu}
+            >
+              Logg inn
+            </DropdownOption>
+          )}
+        </nav>
+      </div>
     </div>
   );
 };
