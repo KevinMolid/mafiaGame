@@ -1,12 +1,10 @@
 // Components
 import H2 from "../components/Typography/H2";
-import Username from "../components/Typography/Username";
 import Button from "../components/Button";
 
 import { Message } from "../Functions/messageService";
-import { format } from "date-fns";
 
-import { useState, useEffect, Fragment, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import {
   getFirestore,
@@ -24,6 +22,7 @@ import {
 
 // Context
 import { useCharacter } from "../CharacterContext";
+import ChatMessage from "../components/ChatMessage";
 
 const db = getFirestore();
 
@@ -347,49 +346,14 @@ const Chat = () => {
             <div id="messages_div" className="mb-4 pb-2">
               <ul>
                 {messages.map((message) => (
-                  <li key={message.id} className="mb-2">
-                    {/* Sender and timestamp */}
-                    <div className="flex gap-2 text-stone-400 text-xs sm:text-sm">
-                      <Username
-                        character={{
-                          id: message.senderId,
-                          username: message.senderName,
-                        }}
-                      />
-                      <p>
-                        <small>
-                          {message.timestamp
-                            ? format(
-                                message.timestamp.toDate(),
-                                "dd.MM.yyyy - HH:mm"
-                              )
-                            : "Sending..."}
-                        </small>
-                      </p>
-                      {message.senderId === character.id && !message.isRead && (
-                        <p>
-                          <span className="text-xs text-neutral-400">
-                            <i className="fa-regular fa-envelope"></i>{" "}
-                          </span>
-                        </p>
-                      )}
-                      {message.senderId === character.id && message.isRead && (
-                        <p>
-                          <span className="text-xs text-green-400">
-                            <i className="fa-regular fa-envelope-open"></i>{" "}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                    <div className="text-neutral-200 mb-2">
-                      {message.text.split("\n").map((line, index) => (
-                        <Fragment key={index}>
-                          {line}
-                          <br />
-                        </Fragment>
-                      ))}
-                    </div>
-                  </li>
+                  <ChatMessage
+                    id={message.id}
+                    senderId={message.senderId}
+                    senderName={message.senderName}
+                    timestamp={message.timestamp}
+                    messageText={message.text}
+                    isRead={message.isRead}
+                  />
                 ))}
               </ul>
             </div>
