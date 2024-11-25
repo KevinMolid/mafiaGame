@@ -4,6 +4,7 @@ import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
+import JailBox from "../../components/JailBox";
 
 // React
 import { useState } from "react";
@@ -307,6 +308,10 @@ const Bank = () => {
       setMessage("En feil skjedde ved overføring av penger.");
     }
   };
+
+  if (character?.inJail) {
+    return <JailBox message={message} messageType={messageType} />;
+  }
 
   return (
     <Main>

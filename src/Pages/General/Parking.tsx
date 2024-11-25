@@ -5,6 +5,7 @@ import H3 from "../../components/Typography/H3";
 import Button from "../../components/Button";
 import Box from "../../components/Box";
 import InfoBox from "../../components/InfoBox";
+import JailBox from "../../components/JailBox";
 
 import { useState, useEffect, useMemo } from "react";
 
@@ -163,6 +164,10 @@ const Parking = () => {
   const toggleUpgrading = () => {
     setUpgrading(!upgrading);
   };
+
+  if (character?.inJail) {
+    return <JailBox message={message} messageType={messageType} />;
+  }
 
   return (
     <Main>
