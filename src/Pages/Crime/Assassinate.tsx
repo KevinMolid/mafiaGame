@@ -40,6 +40,8 @@ const Assassinate = () => {
   const [wantedPlayer, setWantedPlayer] = useState("");
   const [bountyAmount, setBountyAmount] = useState<number | "">("");
 
+  const bountyCost = 1000000;
+
   if (!userCharacter) {
     return;
   }
@@ -139,10 +141,18 @@ const Assassinate = () => {
   // Handle adding bounties in the db
   const addBounty = async () => {
     if (!wantedPlayer || bountyAmount === "" || bountyAmount <= 0) {
+      setMessageType("warning");
       setMessage(
         "Du må skrive inn dusørbeløp og brukernavn på den du ønsker drept."
       );
+      return;
+    }
+
+    const totalBountyCost = bountyAmount + bountyCost;
+
+    if (userCharacter.stats.money < totalBountyCost) {
       setMessageType("warning");
+      setMessage("Du har ikke nok penger til å utlove dusøren.");
       return;
     }
 
@@ -243,6 +253,10 @@ const Assassinate = () => {
             <div>
               <div className="flex flex-col gap-2">
                 <div className="flex flex-col">
+                  <p>Her kan du utlove en dusør på spillere du ønsker drept.</p>
+                  <p className="mb-4">
+                    Det koster $1,000,000 + dusørbeløpet for å utlove en dusør.
+                  </p>
                   <H3>Ønsket drept</H3>
                   <input
                     type="text"
@@ -265,6 +279,14 @@ const Assassinate = () => {
                     onChange={handleBountyAmountInputChange}
                   />
                 </div>
+                {bountyAmount && (
+                  <p className="mb-4 text-neutral-200">
+                    Kostnad:{" "}
+                    <span className="font-medium text-yellow-400">
+                      ${(bountyAmount + bountyCost).toLocaleString()}
+                    </span>
+                  </p>
+                )}
               </div>
               <div>
                 <Button onClick={addBounty}>Utlov dusør</Button>
