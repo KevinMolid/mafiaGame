@@ -5,7 +5,6 @@ import H3 from "../../components/Typography/H3";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
-import Box from "../../components/Box";
 import Username from "../../components/Typography/Username";
 
 // React
@@ -22,6 +21,8 @@ import {
   addDoc,
   updateDoc,
   serverTimestamp,
+  onSnapshot,
+  deleteDoc,
 } from "firebase/firestore";
 
 const db = getFirestore();
@@ -40,30 +41,54 @@ const Assassinate = () => {
   const [wantedPlayer, setWantedPlayer] = useState("");
   const [bountyAmount, setBountyAmount] = useState<number | "">("");
 
-  const bountyCost = 1000000;
+  const bountyCost = 100000;
 
   if (!userCharacter) {
     return;
   }
 
   useEffect(() => {
-    // Function to fetch bounties from the database
-    const fetchBounties = async () => {
-      try {
-        const bountyQuery = query(collection(db, "Bounty"));
-        const querySnapshot = await getDocs(bountyQuery);
-        const bountiesList = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setBounties(bountiesList);
-      } catch (error) {
-        console.error("Error fetching bounties:", error);
-      }
-    };
+    // Set up onSnapshot listener
+    const bountyQuery = query(collection(db, "Bounty"));
+    const unsubscribe = onSnapshot(bountyQuery, (querySnapshot) => {
+      const updatedBounties = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setBounties(updatedBounties);
+    });
 
-    fetchBounties();
+    // Clean up the listener on unmount
+    return () => {
+      unsubscribe();
+    };
   }, []);
+
+  // Function to remove a bounty
+  const removeBounty = async (bountyId: string, bountyAmount: number) => {
+    try {
+      // Refund the bounty amount (excluding the fixed cost)
+      const refundAmount = bountyAmount;
+      const updatedMoney = userCharacter.stats.money + refundAmount;
+
+      // Update player's money
+      await updateDoc(doc(db, "Characters", userCharacter.id), {
+        "stats.money": updatedMoney,
+      });
+
+      // Delete the bounty from the database
+      await deleteDoc(doc(db, "Bounty", bountyId));
+
+      setMessage(
+        `Dusøren ble fjernet, og $${refundAmount.toLocaleString()} ble refundert.`
+      );
+      setMessageType("success");
+    } catch (error) {
+      console.error("Error removing bounty:", error);
+      setMessage("En feil oppstod under fjerning av dusøren.");
+      setMessageType("failure");
+    }
+  };
 
   // Function to handle assassination
   const killPlayer = async () => {
@@ -183,6 +208,12 @@ const Assassinate = () => {
         createdAt: serverTimestamp(),
       });
 
+      // Deduct the bounty cost from the player's money
+      const updatedMoney = userCharacter.stats.money - totalBountyCost;
+      await updateDoc(doc(db, "Characters", userCharacter.id), {
+        "stats.money": updatedMoney,
+      });
+
       setMessage(
         `Du utlovet en dusør på $${bountyAmount.toLocaleString()} for å drepe ${
           playerData.username
@@ -191,6 +222,7 @@ const Assassinate = () => {
       setMessageType("success");
       setWantedPlayer("");
       setBountyAmount("");
+      setAddingBounty(false);
     } catch (error) {
       console.error("Error adding bounty:", error);
       setMessage("En feil oppstod under opprettelsen av dusøren.");
@@ -228,8 +260,27 @@ const Assassinate = () => {
       <p className="mb-4">Her kan du forsøke å drepe en annen spiller.</p>
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
+      {/* Assassinate */}
+      {!addingBounty && (
+        <div className="mb-8">
+          <H2>Hvem vil du drepe?</H2>
+          <div className="flex flex-col gap-2 ">
+            <input
+              type="text"
+              placeholder="Brukernavn"
+              value={targetPlayer}
+              onChange={handleTargetInput}
+              className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+            />
+            <div>
+              <Button onClick={killPlayer}>Angrip spiller</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex  flex-col gap-4">
-        <Box>
+        <div>
           <div className="flex items-center justify-between mb-2">
             {addingBounty ? <H2>Ny dusør</H2> : <H2>Dusørliste</H2>}
             <Button
@@ -253,9 +304,10 @@ const Assassinate = () => {
             <div>
               <div className="flex flex-col gap-2">
                 <div className="flex flex-col">
-                  <p>Her kan du utlove en dusør på spillere du ønsker drept.</p>
+                  <p>Utlov dusør på en spiller du ønsker drept.</p>
                   <p className="mb-4">
-                    Det koster $1,000,000 + dusørbeløpet for å utlove en dusør.
+                    Å utlove en dusør koster ${bountyCost.toLocaleString()} +
+                    dusørbeløpet.
                   </p>
                   <H3>Ønsket drept</H3>
                   <input
@@ -332,6 +384,19 @@ const Assassinate = () => {
                             }}
                           />
                         </div>
+                        {bounty.PaidById === userCharacter.id && (
+                          <div className="px-2 py-1 text-center col-span-3">
+                            <Button
+                              style="black"
+                              size="small"
+                              onClick={() =>
+                                removeBounty(bounty.id, bounty.Bounty)
+                              }
+                            >
+                              Fjern dusør
+                            </Button>
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -343,25 +408,7 @@ const Assassinate = () => {
               </div>
             </>
           )}
-        </Box>
-
-        {!addingBounty && (
-          <Box>
-            <H2>Hvem vil du drepe?</H2>
-            <div className="flex flex-col gap-2 ">
-              <input
-                type="text"
-                placeholder="Brukernavn"
-                value={targetPlayer}
-                onChange={handleTargetInput}
-                className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-              />
-              <div>
-                <Button onClick={killPlayer}>Angrip spiller</Button>
-              </div>
-            </div>
-          </Box>
-        )}
+        </div>
       </div>
     </Main>
   );
