@@ -48,6 +48,8 @@ export interface Character {
   inJail?: boolean | null;
   jailReleaseTime?: any;
   conversations?: any;
+  friends?: any;
+  blacklist?: any;
 }
 
 export interface Target {
@@ -81,4 +83,6 @@ export interface Target {
   inJail?: boolean | null;
   jailReleaseTime?: any;
   conversations?: any;
+  friends?: any;
+  blacklist?: any;
 }

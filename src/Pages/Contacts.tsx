@@ -2,10 +2,12 @@ import H2 from "../components/Typography/H2";
 import H3 from "../components/Typography/H3";
 import Username from "../components/Typography/Username";
 
-import { useAuth } from "../AuthContext";
+import { useCharacter } from "../CharacterContext";
 
 const Contacts = () => {
-  const { userData } = useAuth();
+  const { character } = useCharacter();
+
+  if (!character) return;
 
   return (
     <div>
@@ -16,9 +18,9 @@ const Contacts = () => {
           <H3>
             <i className="fa-solid fa-user-group"></i> Venner
           </H3>
-          {userData.friends ? (
+          {character.friends ? (
             <ul>
-              {userData.friends.map((friend: any) => {
+              {character.friends.map((friend: any) => {
                 return (
                   <li key={friend.id}>
                     <Username
@@ -36,9 +38,9 @@ const Contacts = () => {
           <H3>
             <i className="fa-solid fa-skull-crossbones"></i> Svarteliste
           </H3>
-          {userData.blacklist ? (
+          {character.blacklist ? (
             <ul>
-              {userData.blacklist.map((player: any) => {
+              {character.blacklist.map((player: any) => {
                 return (
                   <li key={player.id}>
                     <Username

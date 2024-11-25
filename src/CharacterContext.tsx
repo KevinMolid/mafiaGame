@@ -110,6 +110,8 @@ export const CharacterProvider = ({
                 : null,
               inJail: characterData.inJail as boolean,
               jailReleaseTime: characterData.jailReleaseTime as any,
+              friends: characterData.friends as any,
+              blacklist: characterData.blacklist as any,
             };
 
             // Ensure currentRank is set to 1 in the database if it was not set

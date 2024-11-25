@@ -11,7 +11,6 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
 import { useCharacter } from "../CharacterContext";
-import { useAuth } from "../AuthContext";
 
 // Firebase
 import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
@@ -28,7 +27,6 @@ import timeAgo from "../Functions/TimeFunctions";
 
 const Profile = () => {
   const { spillerID } = useParams<{ spillerID: string }>();
-  const { userData } = useAuth();
   const [characterData, setCharacterData] = useState<any>(null);
   const { character } = useCharacter();
   const [loading, setLoading] = useState(true);
@@ -71,13 +69,13 @@ const Profile = () => {
   }, [spillerID]);
 
   const addFriend = async () => {
-    if (!spillerID || !characterData || !userData) {
+    if (!spillerID || !characterData || !character) {
       console.error("Mangler nødvendig data for å legge til venn.");
       return;
     }
 
     const newFriend = { id: spillerID, name: characterData.username };
-    const userDocRef = doc(db, "Users", userData.uid);
+    const userDocRef = doc(db, "Characters", character.id);
 
     try {
       const userDocSnap = await getDoc(userDocRef);
@@ -120,13 +118,13 @@ const Profile = () => {
   };
 
   const addToBlacklist = async () => {
-    if (!spillerID || !characterData || !userData) {
+    if (!spillerID || !characterData || !character) {
       console.error("Missing necessary data to add a friend.");
       return;
     }
 
     const newBlacklist = { id: spillerID, name: characterData.username };
-    const userDocRef = doc(db, "Users", userData.uid);
+    const userDocRef = doc(db, "Characters", character.id);
 
     try {
       const userDocSnap = await getDoc(userDocRef);
