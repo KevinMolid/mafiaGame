@@ -1,7 +1,7 @@
 // Components
 import Main from "../components/Main";
 import Notebook from "./Notebook";
-import Blacklist from "./Blacklist";
+import Blacklist from "./Contacts";
 import EditProfile from "./EditProfile";
 import Tab from "../components/Tab";
 import InfoBox from "../components/InfoBox";

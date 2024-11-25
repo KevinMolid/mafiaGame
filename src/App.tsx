@@ -33,7 +33,7 @@ import Statistics from "./Pages/Statistics.tsx";
 import Profile from "./Pages/Profile.tsx";
 import EditProfile from "./Pages/EditProfile.tsx";
 import Notebook from "./Pages/Notebook.tsx";
-import Blacklist from "./Pages/Blacklist.tsx";
+import Blacklist from "./Pages/Contacts.tsx";
 // _____________________________________________
 import Home from "./Pages/Home.tsx";
 import Shop from "./Pages/Shop.tsx";
