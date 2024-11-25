@@ -93,6 +93,16 @@ const Profile = () => {
           (friend: any) => friend.id === spillerID
         );
 
+        // Check if `blacklist` field exists and is an array
+        const currentBlacklist = Array.isArray(userData.blacklist)
+          ? userData.blacklist
+          : [];
+
+        // Avoid both in friends and blacklist
+        const isAlreadyBlacklist = currentBlacklist.some(
+          (player: any) => player.id === spillerID
+        );
+
         if (isAlreadyFriend) {
           setMessageType("warning");
           setMessage(
@@ -104,11 +114,25 @@ const Profile = () => {
         // Add new friend
         const updatedFriends = [...currentFriends, newFriend];
 
+        // Remove from blacklist if present
+        const updatedBlacklist = currentBlacklist.filter(
+          (player: any) => player.id !== spillerID
+        );
+
         // Update Firestore
-        await updateDoc(userDocRef, { friends: updatedFriends });
+        await updateDoc(userDocRef, {
+          friends: updatedFriends,
+          blacklist: updatedBlacklist,
+        });
 
         setMessageType("success");
-        setMessage(`La ${characterData.username} til som venn.`);
+        {
+          isAlreadyBlacklist
+            ? setMessage(
+                `La ${characterData.username} til som venn. ${characterData.username} ble fjernet fra svartelisten.`
+              )
+            : setMessage(`La ${characterData.username} til som venn.`);
+        }
       } else {
         console.error("Brukeren finnes ikke.");
       }
@@ -132,14 +156,24 @@ const Profile = () => {
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
 
+        // Check if `friends` field exists and is an array
+        const currentFriends = Array.isArray(userData.friends)
+          ? userData.friends
+          : [];
+
+        // Avoid duplicate friends
+        const isAlreadyFriend = currentFriends.some(
+          (friend: any) => friend.id === spillerID
+        );
+
         // Check if `blacklist` field exists and is an array
         const currentBlacklist = Array.isArray(userData.blacklist)
           ? userData.blacklist
           : [];
 
-        // Avoid duplicate friends
+        // Avoid both in friends and blacklist
         const isAlreadyBlacklist = currentBlacklist.some(
-          (blacklist: any) => blacklist.id === spillerID
+          (player: any) => player.id === spillerID
         );
 
         if (isAlreadyBlacklist) {
@@ -150,14 +184,28 @@ const Profile = () => {
           return;
         }
 
-        // Add new friend
+        // Add new Blacklist
         const updatedBlacklist = [...currentBlacklist, newBlacklist];
 
+        // Remove from blacklist if present
+        const updatedFriends = currentFriends.filter(
+          (friend: any) => friend.id !== spillerID
+        );
+
         // Update Firestore
-        await updateDoc(userDocRef, { blacklist: updatedBlacklist });
+        await updateDoc(userDocRef, {
+          friends: updatedFriends,
+          blacklist: updatedBlacklist,
+        });
 
         setMessageType("success");
-        setMessage(`La ${characterData.username} til på svartelisten.`);
+        {
+          isAlreadyFriend
+            ? setMessage(
+                `La ${characterData.username} til på svartelisten. ${characterData.username} ble fjernet fra venner.`
+              )
+            : setMessage(`La ${characterData.username} til på svartelisten.`);
+        }
       } else {
         console.error("Brukeren finnes ikke.");
       }
