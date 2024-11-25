@@ -8,6 +8,8 @@ import EditProfile from "./EditProfile";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
+import { useCharacter } from "../CharacterContext";
+
 // Firebase
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
@@ -24,6 +26,7 @@ import timeAgo from "../Functions/TimeFunctions";
 const Profile = () => {
   const { spillerID } = useParams<{ spillerID: string }>();
   const [characterData, setCharacterData] = useState<any>(null);
+  const { character } = useCharacter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<
@@ -71,6 +74,8 @@ const Profile = () => {
     return <div>Ingen spillerdata tilgjengelig.</div>;
   }
 
+  if (!character) return;
+
   const isRecentlyActive = characterData.lastActive
     ? Date.now() - characterData.lastActive.seconds * 1000 <= 5 * 60 * 1000
     : false;
@@ -87,50 +92,80 @@ const Profile = () => {
         <div className="flex flex-col h-full justify-between gap-4">
           {/* Icons */}
           <div className="text-2xl flex gap-4">
-            <Link
-              to={`/meldinger?username=${encodeURIComponent(
-                characterData.username
-              )}`}
-            >
-              <div className="hover:text-white">
-                <i className="fa-solid fa-envelope"></i>
+            {spillerID !== character.id && (
+              <Link
+                to={`/meldinger?username=${encodeURIComponent(
+                  characterData.username
+                )}`}
+              >
+                <div className="hover:text-white">
+                  <i className="fa-solid fa-envelope"></i>
+                </div>
+              </Link>
+            )}
+
+            {spillerID === character.id && (
+              <div
+                className="hover:text-white hover:cursor-pointer"
+                onClick={() => setView("profile")}
+              >
+                <i className="fa-solid fa-user"></i>
               </div>
-            </Link>
+            )}
 
-            <div
-              className="hover:text-white hover:cursor-pointer"
-              onClick={() => setView("profile")}
-            >
-              <i className="fa-solid fa-user"></i>
-            </div>
+            {spillerID === character.id && (
+              <div
+                className="hover:text-white hover:cursor-pointer"
+                onClick={() => setView("notebook")}
+              >
+                <i className="fa-solid fa-book"></i>
+              </div>
+            )}
 
-            <div
-              className="hover:text-white hover:cursor-pointer"
-              onClick={() => setView("notebook")}
-            >
-              <i className="fa-solid fa-book"></i>
-            </div>
+            {spillerID === character.id && (
+              <div
+                className="hover:text-white hover:cursor-pointer"
+                onClick={() => setView("blacklist")}
+              >
+                <i className="fa-solid fa-book-skull"></i>
+              </div>
+            )}
 
-            <div
-              className="hover:text-white hover:cursor-pointer"
-              onClick={() => setView("blacklist")}
-            >
-              <i className="fa-solid fa-book-skull"></i>
-            </div>
+            {spillerID === character.id && (
+              <div
+                className="hover:text-white hover:cursor-pointer"
+                onClick={() => setView("edit")}
+              >
+                <i className="fa-solid fa-edit"></i>
+              </div>
+            )}
 
-            <div
-              className="hover:text-white hover:cursor-pointer"
-              onClick={() => setView("edit")}
-            >
-              <i className="fa-solid fa-edit"></i>
-            </div>
+            {spillerID !== character.id && (
+              <button
+                className="hover:text-white"
+                title={`Sett ${characterData.username} som venn`}
+              >
+                <i className="fa-solid fa-user-group"></i>{" "}
+              </button>
+            )}
 
-            <button
-              className="hover:text-white"
-              title={`Svartelist ${characterData.username}`}
-            >
-              <i className="fa-solid fa-skull-crossbones"></i>
-            </button>
+            {spillerID !== character.id && (
+              <button
+                className="hover:text-white"
+                title={`Svartelist ${characterData.username}`}
+              >
+                <i className="fa-solid fa-skull-crossbones"></i>
+              </button>
+            )}
+
+            {spillerID !== character.id && (
+              <button
+                className="hover:text-white"
+                title={`Rapporter ${characterData.username}`}
+              >
+                <i className="fa-solid fa-triangle-exclamation"></i>{" "}
+              </button>
+            )}
           </div>
 
           {/* Info */}
