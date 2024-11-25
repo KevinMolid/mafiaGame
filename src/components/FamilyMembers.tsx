@@ -25,14 +25,14 @@ interface FamilyMembersInterface {
 }
 
 const FamilyMembers = ({ family }: FamilyMembersInterface) => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [editing, setEditing] = useState(false);
   const [playerToKick, setPlayerToKick] = useState<{
     id?: string;
     username?: string;
   }>({});
 
-  if (!character || !family) return null;
+  if (!userCharacter || !family) return null;
 
   // Function to render members by rank
   const renderMembersByRank = (rank: string) => {
@@ -58,7 +58,7 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
   };
 
   // Check if the user is the boss
-  const isBoss = character.id === family.leaderId;
+  const isBoss = userCharacter.id === family.leaderId;
 
   return (
     <div>

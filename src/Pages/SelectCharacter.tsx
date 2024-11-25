@@ -16,7 +16,7 @@ import { useCharacter } from "../CharacterContext";
 
 const SelectCharacter = () => {
   const { userData } = useAuth();
-  const { character, setCharacter } = useCharacter();
+  const { userCharacter, setUserCharacter } = useCharacter();
   const [availableCharacters, setAvailableCharacters] = useState<any[]>([]);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const SelectCharacter = () => {
 
       if (selectedCharacterData) {
         // Set the selected character in state
-        setCharacter({
+        setUserCharacter({
           ...selectedCharacterData,
         });
       }
@@ -75,7 +75,7 @@ const SelectCharacter = () => {
               key={availableCharacter.id}
               className={
                 "flex flex-col border min-w-44 " +
-                (character?.id !== availableCharacter.id
+                (userCharacter?.id !== availableCharacter.id
                   ? "bg-neutral-800 border-neutral-600 px-4 py-2 rounded-lg"
                   : "border-neutral-400 px-4 py-2 rounded-lg")
               }
@@ -104,7 +104,7 @@ const SelectCharacter = () => {
                 <p>Location: {availableCharacter.location}</p>
                 <p>Money: ${availableCharacter.stats.money.toLocaleString()}</p>
               </div>
-              {character?.id !== availableCharacter.id ? (
+              {userCharacter?.id !== availableCharacter.id ? (
                 <Button
                   onClick={() => handleSelectCharacter(availableCharacter.id)}
                 >

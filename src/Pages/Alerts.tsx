@@ -70,17 +70,22 @@ const formatTimeAgo = (timestamp: Timestamp): string => {
 };
 
 const Alerts = () => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAlerts = async () => {
-      if (!character || !character.id) return;
+      if (!userCharacter || !userCharacter.id) return;
 
       try {
         // Query the alerts sub-collection for the user's character
-        const alertsRef = collection(db, "Characters", character.id, "alerts");
+        const alertsRef = collection(
+          db,
+          "Characters",
+          userCharacter.id,
+          "alerts"
+        );
         const alertsQuery = query(alertsRef);
         const alertsSnapshot = await getDocs(alertsQuery);
 
@@ -114,7 +119,7 @@ const Alerts = () => {
               const alertDocRef = doc(
                 db,
                 "Characters",
-                character.id,
+                userCharacter.id,
                 "alerts",
                 unreadAlert.id
               );
@@ -134,7 +139,7 @@ const Alerts = () => {
     };
 
     fetchAlerts();
-  }, [character]);
+  }, [userCharacter]);
 
   if (loading) {
     return (

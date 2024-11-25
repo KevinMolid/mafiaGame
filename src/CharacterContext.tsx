@@ -21,8 +21,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 interface CharacterContextType {
-  character: Character | null;
-  setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
+  userCharacter: Character | null;
+  setUserCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
   loading: boolean;
 }
 
@@ -44,7 +44,7 @@ export const CharacterProvider = ({
   children: React.ReactNode;
 }) => {
   const { userData } = useAuth();
-  const [character, setCharacter] = useState<Character | null>(null);
+  const [userCharacter, setUserCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
   const alertAddedRef = useRef<boolean>(false); // Ref to track alert addition
 
@@ -174,14 +174,14 @@ export const CharacterProvider = ({
             }
 
             // Update character
-            setCharacter(newCharacter);
+            setUserCharacter(newCharacter);
           } else {
             console.error("Spillerdata er ufullstendig eller mangler stats.");
-            setCharacter(null);
+            setUserCharacter(null);
           }
         } else {
           console.error("Ingen spillerdokumenter funnet!");
-          setCharacter(null);
+          setUserCharacter(null);
         }
 
         setLoading(false);
@@ -189,7 +189,7 @@ export const CharacterProvider = ({
 
       return () => unsubscribe();
     } else {
-      setCharacter(null);
+      setUserCharacter(null);
       setLoading(false);
     }
   }, [userData]);
@@ -199,7 +199,9 @@ export const CharacterProvider = ({
   }
 
   return (
-    <CharacterContext.Provider value={{ character, setCharacter, loading }}>
+    <CharacterContext.Provider
+      value={{ userCharacter, setUserCharacter, loading }}
+    >
       {children}
     </CharacterContext.Provider>
   );

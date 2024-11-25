@@ -25,7 +25,7 @@ import ChatMessage from "../components/ChatMessage";
 const db = getFirestore();
 
 const Chat = () => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [players, setPlayers] = useState<any[]>([]);
   const [conversations, setConversations] = useState<any[]>([]);
   const [conversationId, setConversationId] = useState<string>("");
@@ -36,7 +36,7 @@ const Chat = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  if (!character) return;
+  if (!userCharacter) return;
 
   // Ref for the textarea
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -61,7 +61,7 @@ const Chat = () => {
         const conversationsSnapshot = await getDocs(
           query(
             collection(db, "Conversations"),
-            where("participants", "array-contains", character.username)
+            where("participants", "array-contains", userCharacter.username)
           )
         );
 
@@ -77,7 +77,7 @@ const Chat = () => {
     };
 
     fetchUserConversations();
-  }, [character.username]);
+  }, [userCharacter.username]);
 
   // Creating list of players
   useEffect(() => {
@@ -112,7 +112,7 @@ const Chat = () => {
       // Query the Conversations collection for a conversation with the current character's username and the clicked player's username
       const conversationQuery = query(
         collection(db, "Conversations"),
-        where("participants", "array-contains", character.username)
+        where("participants", "array-contains", userCharacter.username)
       );
 
       const conversationSnapshot = await getDocs(conversationQuery);
@@ -210,8 +210,8 @@ const Chat = () => {
         await addDoc(
           collection(db, "Conversations", conversationId, "Messages"),
           {
-            senderId: character.id,
-            senderName: character.username,
+            senderId: userCharacter.id,
+            senderName: userCharacter.username,
             text: newMessage,
             timestamp: serverTimestamp(),
           }
@@ -221,7 +221,7 @@ const Chat = () => {
         const newConversationRef = await addDoc(
           collection(db, "Conversations"),
           {
-            participants: [character.username, receiver],
+            participants: [userCharacter.username, receiver],
             createdAt: serverTimestamp(),
           }
         );
@@ -235,7 +235,7 @@ const Chat = () => {
           ...prevConversations,
           {
             id: newConversationRef.id,
-            participants: [character.username, receiver],
+            participants: [userCharacter.username, receiver],
             createdAt: serverTimestamp(), // Placeholder until server returns actual value
           },
         ]);
@@ -244,8 +244,8 @@ const Chat = () => {
         await addDoc(
           collection(db, "Conversations", newConversationRef.id, "Messages"),
           {
-            senderId: character.id,
-            senderName: character.username,
+            senderId: userCharacter.id,
+            senderName: userCharacter.username,
             text: newMessage,
             timestamp: serverTimestamp(),
           }
@@ -281,7 +281,7 @@ const Chat = () => {
           <ul>
             {conversations.map((conversation) => {
               const otherParticipant = conversation.participants.find(
-                (participant: string) => participant !== character.username
+                (participant: string) => participant !== userCharacter.username
               );
 
               return (

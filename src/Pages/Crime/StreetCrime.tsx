@@ -25,7 +25,7 @@ import {
 } from "../../Functions/RewardFunctions";
 
 const StreetCrime = () => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const { userData } = useAuth();
   const navigate = useNavigate();
 
@@ -59,11 +59,11 @@ const StreetCrime = () => {
       return;
     }
 
-    if (character && selectedCrime) {
+    if (userCharacter && selectedCrime) {
       const crime = crimes.find((c) => c.name === selectedCrime);
       if (crime) {
         await attemptReward({
-          character,
+          character: userCharacter,
           activeCharacter: userData.activeCharacter,
           xpReward: crime.xpReward, // XP reward for the crime
           moneyReward: crime.moneyReward || 0, // Optional money reward for the crime
@@ -74,15 +74,18 @@ const StreetCrime = () => {
           setMessageType,
         });
 
-        increaseHeat(character, character.id, 1);
+        increaseHeat(userCharacter, userCharacter.id, 1);
 
         // Start the cooldown after a crime
         startCooldown(90, "crime", userData.activeCharacter);
 
-        const jailChance = character.stats.heat;
-        if (character.stats.heat >= 50 || Math.random() * 100 < jailChance) {
+        const jailChance = userCharacter.stats.heat;
+        if (
+          userCharacter.stats.heat >= 50 ||
+          Math.random() * 100 < jailChance
+        ) {
           // Player failed jail check, arrest them
-          arrest(character);
+          arrest(userCharacter);
           setMessage("Handlingen feilet, og du ble arrestert!");
           setMessageType("failure");
           return;
@@ -126,7 +129,7 @@ const StreetCrime = () => {
     },
   ];
 
-  if (character?.inJail) {
+  if (userCharacter?.inJail) {
     return <JailBox message={message} messageType={messageType} />;
   }
 

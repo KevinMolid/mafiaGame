@@ -26,7 +26,7 @@ const db = getFirestore();
 
 const Admin = () => {
   const { userData } = useAuth();
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [loading, setLoading] = useState(false);
 
   const handleResetGame = async () => {
@@ -137,8 +137,8 @@ const Admin = () => {
       // Add a new GameReset event to the GameEvents collection
       const newGameEvent = {
         eventType: "GameReset",
-        resetById: character?.id || "",
-        resetByName: character?.username || "",
+        resetById: userCharacter?.id || "",
+        resetByName: userCharacter?.username || "",
         timestamp: serverTimestamp(),
       };
       await setDoc(doc(db, "GameEvents", "reset-" + Date.now()), newGameEvent);

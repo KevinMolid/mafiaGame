@@ -26,7 +26,7 @@ const locations = [
 ];
 
 const Travel = () => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [targetLocation, setTargetLocation] = useState("");
   const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -37,29 +37,29 @@ const Travel = () => {
   const priceToTravel = 1000;
 
   // Render nothing if character is null
-  if (!character) {
+  if (!userCharacter) {
     return null;
   }
 
   const handleTravel = async () => {
-    if (!character) {
+    if (!userCharacter) {
       console.error("Karakter ikke funnet");
       return;
     }
 
     // Check if the character has enough money to travel
-    if (character.stats.money < priceToTravel) {
+    if (userCharacter.stats.money < priceToTravel) {
       setMessageType("warning");
       setMessage("Du har ikke nok penger til å reise!");
       return;
     }
 
     try {
-      const charDocRef = doc(db, "Characters", character.id);
+      const charDocRef = doc(db, "Characters", userCharacter.id);
       // Update the character's location and deduct the travel cost
       await updateDoc(charDocRef, {
         location: targetLocation,
-        "stats.money": character.stats.money - priceToTravel,
+        "stats.money": userCharacter.stats.money - priceToTravel,
         lastActive: serverTimestamp(),
       });
       await updateDoc(charDocRef, { location: targetLocation });
@@ -73,7 +73,7 @@ const Travel = () => {
     }
   };
 
-  if (character?.inJail) {
+  if (userCharacter?.inJail) {
     return <JailBox message={message} messageType={messageType} />;
   }
 
@@ -85,13 +85,14 @@ const Travel = () => {
       {!targetLocation && (
         <p>
           Du befinner deg for øyeblikket i{" "}
-          <strong className="text-white">{character.location}</strong>.
+          <strong className="text-white">{userCharacter.location}</strong>.
         </p>
       )}
-      {targetLocation && targetLocation !== character.location && (
+      {targetLocation && targetLocation !== userCharacter.location && (
         <p>
-          Reis fra <strong className="text-white">{character.location}</strong>{" "}
-          til <strong className="text-white">{targetLocation}</strong>?
+          Reis fra{" "}
+          <strong className="text-white">{userCharacter.location}</strong> til{" "}
+          <strong className="text-white">{targetLocation}</strong>?
         </p>
       )}
       <div className="relative my-4 max-w-[800px]">
@@ -107,7 +108,7 @@ const Travel = () => {
               height: "16px",
               borderRadius: "50%",
               backgroundColor:
-                character.location === location.name
+                userCharacter.location === location.name
                   ? "#40b3d2"
                   : targetLocation === location.name
                   ? "#7fff00"
@@ -123,7 +124,7 @@ const Travel = () => {
             onMouseLeave={() => setHoveredLocation(null)}
             title={location.name}
             onClick={() => {
-              if (character.location !== location.name) {
+              if (userCharacter.location !== location.name) {
                 setTargetLocation(location.name);
               }
             }}

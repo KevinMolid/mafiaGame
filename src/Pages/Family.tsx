@@ -24,7 +24,7 @@ import { FamilyData } from "../Interfaces/Types";
 const db = getFirestore();
 
 const Family = () => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [family, setFamily] = useState<FamilyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,14 +37,14 @@ const Family = () => {
   >("info");
   const [amount, setAmount] = useState<number | "">("");
 
-  if (!character) return;
+  if (!userCharacter) return;
 
   useEffect(() => {
-    if (character && character.familyId) {
+    if (userCharacter && userCharacter.familyId) {
       const fetchFamily = async () => {
         try {
-          if (character.familyId) {
-            const familyRef = doc(db, "Families", character.familyId);
+          if (userCharacter.familyId) {
+            const familyRef = doc(db, "Families", userCharacter.familyId);
             const familySnap = await getDoc(familyRef);
             if (familySnap.exists()) {
               setFamily(familySnap.data() as FamilyData);
@@ -62,7 +62,7 @@ const Family = () => {
     } else {
       setLoading(false);
     }
-  }, [character]);
+  }, [userCharacter]);
 
   // Handle inputs
   const handleInputChange = (e: any) => {
@@ -77,10 +77,10 @@ const Family = () => {
 
   // Banking functions
   const deposit = async () => {
-    if (!family || !character.familyId) return;
+    if (!family || !userCharacter.familyId) return;
     try {
-      const characterRef = doc(db, "Characters", character.id);
-      const familyRef = doc(db, "Families", character.familyId);
+      const characterRef = doc(db, "Characters", userCharacter.id);
+      const familyRef = doc(db, "Families", userCharacter.familyId);
 
       if (amount === "") {
         setMessageType("warning");
@@ -91,7 +91,7 @@ const Family = () => {
       // Calculate new values
       if (amount) {
         const newBank = family.wealth ? family.wealth + amount : amount;
-        const newMoney = character.stats.money - amount;
+        const newMoney = userCharacter.stats.money - amount;
 
         // Check if there is enough money to deposit
         if (newMoney < 0) {
@@ -130,10 +130,10 @@ const Family = () => {
   };
 
   const withdraw = async () => {
-    if (!family || !character.familyId) return;
+    if (!family || !userCharacter.familyId) return;
     try {
-      const characterRef = doc(db, "Characters", character.id);
-      const familyRef = doc(db, "Families", character.familyId);
+      const characterRef = doc(db, "Characters", userCharacter.id);
+      const familyRef = doc(db, "Families", userCharacter.familyId);
 
       if (amount === "") {
         setMessageType("warning");
@@ -144,7 +144,7 @@ const Family = () => {
       // Calculate new values
       if (amount) {
         const newBank = family.wealth ? family.wealth - amount : -amount;
-        const newMoney = character.stats.money + amount;
+        const newMoney = userCharacter.stats.money + amount;
 
         // Check if there is enough money to withdraw
         if (newBank < 0) {

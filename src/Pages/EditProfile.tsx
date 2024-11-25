@@ -16,10 +16,10 @@ import { useCharacter } from "../CharacterContext";
 
 const EditProfile = () => {
   const { userData } = useAuth();
-  const { character } = useCharacter();
-  const [imgUrl, setimgUrl] = useState(character ? character.img : "");
+  const { userCharacter } = useCharacter();
+  const [imgUrl, setimgUrl] = useState(userCharacter ? userCharacter.img : "");
   const [profileTxt, setProfileTxt] = useState(
-    character ? character.profileText : ""
+    userCharacter ? userCharacter.profileText : ""
   );
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<

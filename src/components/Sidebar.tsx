@@ -13,28 +13,28 @@ import Username from "./Typography/Username";
 import { getCurrentRank } from "../Functions/RankFunctions";
 
 const Sidebar = () => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const { cooldowns } = useCooldown();
 
-  if (!character || character.status === "dead") return;
+  if (!userCharacter || userCharacter.status === "dead") return;
 
   return (
     <div className="hidden sm:block bg-neutral-800 px-4 py-8 text-sm leading-relaxed h-full pb-24">
       <div className="mb-6">
         <div className="relative">
-          <Link to={`/profil/${character.id}`}>
+          <Link to={`/profil/${userCharacter.id}`}>
             <img
               className="border border-neutral-500 w-[160px] h-[160px] object-cover m-auto mb-2 hover:cursor-pointer"
-              src={character.img || "/default.jpg"}
+              src={userCharacter.img || "/default.jpg"}
               alt="Profile picture"
             />
           </Link>
         </div>
 
-        {character ? (
+        {userCharacter ? (
           <div className="text-center text-stone-400">
-            <Username character={character} />
-            <p>{getCurrentRank(character.stats.xp)}</p>
+            <Username character={userCharacter} />
+            <p>{getCurrentRank(userCharacter.stats.xp)}</p>
           </div>
         ) : (
           <Link to="/nyspiller">

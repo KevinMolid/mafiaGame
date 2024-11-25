@@ -28,7 +28,7 @@ type Car = {
 };
 
 const Parking = () => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [parking, setParking] = useState<number | null>(null);
   const [message, setMessage] = useState<string>("");
   const [upgrading, setUpgrading] = useState<boolean>(false);
@@ -36,18 +36,19 @@ const Parking = () => {
     "success" | "failure" | "warning" | "info"
   >("info");
 
-  if (!character) {
+  if (!userCharacter) {
     return null;
   }
 
   useEffect(() => {
-    if (character?.parkingFacilities?.[character.location]) {
-      const parkingSlots = character.parkingFacilities[character.location];
+    if (userCharacter?.parkingFacilities?.[userCharacter.location]) {
+      const parkingSlots =
+        userCharacter.parkingFacilities[userCharacter.location];
       setParking(parkingSlots);
     } else {
       setParking(0);
     }
-  }, [character]);
+  }, [userCharacter]);
 
   const updateParking = async (
     characterId: string,
@@ -59,14 +60,14 @@ const Parking = () => {
     const upgradePrice = ParkingTypes[newParkingIndex].price;
 
     // Check if the character has enough money
-    if (character.stats.money < upgradePrice) {
+    if (userCharacter.stats.money < upgradePrice) {
       setMessageType("warning");
       setMessage(`Du har ikke nok penger til å oppgradere parkering.`);
       return;
     }
 
     // Subtract the upgrade cost from the user's money
-    const newMoney = character.stats.money - upgradePrice;
+    const newMoney = userCharacter.stats.money - upgradePrice;
 
     try {
       await updateDoc(characterRef, {
@@ -89,26 +90,26 @@ const Parking = () => {
   // Calculate the total value of cars in the current location
   const totalValue = useMemo(() => {
     return (
-      character.cars?.[character.location]?.reduce(
+      userCharacter.cars?.[userCharacter.location]?.reduce(
         (acc: number, car: any) => acc + car.value,
         0
       ) || 0
     );
-  }, [character]);
+  }, [userCharacter]);
 
   // Function to sell a car
   const sellCar = async (carIndex: number) => {
-    const carToSell = character.cars[character.location][carIndex];
-    const updatedCars: Car[] = character.cars[character.location].filter(
-      (_: any, index: number) => index !== carIndex
-    );
-    const newMoney = character.stats.money + carToSell.value;
+    const carToSell = userCharacter.cars[userCharacter.location][carIndex];
+    const updatedCars: Car[] = userCharacter.cars[
+      userCharacter.location
+    ].filter((_: any, index: number) => index !== carIndex);
+    const newMoney = userCharacter.stats.money + carToSell.value;
 
-    const characterRef = doc(db, "Characters", character.id);
+    const characterRef = doc(db, "Characters", userCharacter.id);
 
     try {
       await updateDoc(characterRef, {
-        [`cars.${character.location}`]: updatedCars,
+        [`cars.${userCharacter.location}`]: updatedCars,
         [`stats.money`]: newMoney,
       });
 
@@ -125,7 +126,7 @@ const Parking = () => {
 
   // Function to sell all cars
   const sellAllCars = async () => {
-    const carsToSell = character.cars[character.location] || [];
+    const carsToSell = userCharacter.cars[userCharacter.location] || [];
     const numberOfCars = carsToSell.length;
 
     if (numberOfCars === 0) {
@@ -134,7 +135,7 @@ const Parking = () => {
       return;
     }
 
-    const characterRef = doc(db, "Characters", character.id);
+    const characterRef = doc(db, "Characters", userCharacter.id);
     const updatedCars: Car[] = [];
     let totalSoldValue = 0;
 
@@ -144,8 +145,8 @@ const Parking = () => {
 
     try {
       await updateDoc(characterRef, {
-        [`cars.${character.location}`]: updatedCars,
-        [`stats.money`]: character.stats.money + totalSoldValue,
+        [`cars.${userCharacter.location}`]: updatedCars,
+        [`stats.money`]: userCharacter.stats.money + totalSoldValue,
       });
 
       setMessageType("success");
@@ -165,7 +166,7 @@ const Parking = () => {
     setUpgrading(!upgrading);
   };
 
-  if (character?.inJail) {
+  if (userCharacter?.inJail) {
     return <JailBox message={message} messageType={messageType} />;
   }
 
@@ -176,7 +177,10 @@ const Parking = () => {
           <H1>Parkering</H1>
           <p>
             Dette er en oversikt over parkering og biler du har i{" "}
-            <strong className="text-neutral-200">{character?.location}</strong>.
+            <strong className="text-neutral-200">
+              {userCharacter?.location}
+            </strong>
+            .
           </p>
         </div>
 
@@ -278,7 +282,11 @@ const Parking = () => {
                 <Button
                   onClick={() =>
                     parking !== null &&
-                    updateParking(character.id, character.location, parking + 1)
+                    updateParking(
+                      userCharacter.id,
+                      userCharacter.location,
+                      parking + 1
+                    )
                   }
                 >
                   Oppgrader <i className="fa-solid fa-circle-up"></i>{" "}
@@ -304,8 +312,8 @@ const Parking = () => {
                 </tr>
               </thead>
               <tbody>
-                {character.cars?.[character.location]?.length ? (
-                  character.cars[character.location].map(
+                {userCharacter.cars?.[userCharacter.location]?.length ? (
+                  userCharacter.cars[userCharacter.location].map(
                     (car: any, index: number) => {
                       return (
                         <tr
@@ -355,7 +363,7 @@ const Parking = () => {
             </table>
             <p>
               <strong className="text-neutral-200">
-                {character.cars?.[character.location]?.length || 0}
+                {userCharacter.cars?.[userCharacter.location]?.length || 0}
               </strong>{" "}
               av{" "}
               <strong className="text-neutral-200">

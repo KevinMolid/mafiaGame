@@ -56,7 +56,7 @@ const GTA = () => {
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "info" | "warning"
   >("info");
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const { userData } = useAuth();
   const { cooldowns, startCooldown } = useCooldown();
   const navigate = useNavigate();
@@ -87,7 +87,7 @@ const GTA = () => {
 
   // Function for stealing a random car
   const stealCar = async () => {
-    if (!character || !character.id) {
+    if (!userCharacter || !userCharacter.id) {
       setMessageType("failure");
       setMessage("Brukeren er ikke lastet opp.");
       return;
@@ -107,10 +107,11 @@ const GTA = () => {
       selectedTierCars[getRandom(0, selectedTierCars.length - 1)];
 
     try {
-      const characterRef = doc(db, "Characters", character.id);
+      const characterRef = doc(db, "Characters", userCharacter.id);
 
       // Get player's parking facility
-      const facilityType = character.parkingFacilities?.[character.location];
+      const facilityType =
+        userCharacter.parkingFacilities?.[userCharacter.location];
 
       // Check if the parking facility type is valid
       if (facilityType === undefined || facilityType === 0) {
@@ -123,7 +124,7 @@ const GTA = () => {
       const availableSlots = ParkingTypes[facilityType].slots;
 
       // Get the number of cars the player already has at the current location
-      const currentCars = character.cars?.[character.location] || [];
+      const currentCars = userCharacter.cars?.[userCharacter.location] || [];
 
       // Check if the player has available slots
       if (currentCars.length >= availableSlots) {
@@ -136,22 +137,22 @@ const GTA = () => {
       if (Math.random() <= 0.75) {
         // Success: Update characters car list
         const updatedCars = [
-          ...(character.cars?.[character.location] || []),
+          ...(userCharacter.cars?.[userCharacter.location] || []),
           randomCar,
         ];
 
         await updateDoc(characterRef, {
-          [`cars.${character.location}`]: updatedCars,
+          [`cars.${userCharacter.location}`]: updatedCars,
         });
 
-        rewardXp(character, 10);
-        increaseHeat(character, character.id, 1);
+        rewardXp(userCharacter, 10);
+        increaseHeat(userCharacter, userCharacter.id, 1);
 
         setMessageType("success");
         setMessage(`Du stjal en ${randomCar.name}!`);
 
         // Start the cooldown after a GTA
-        startCooldown(130, "gta", character.id);
+        startCooldown(130, "gta", userCharacter.id);
       } else {
         // GTA attempt failed
         setMessage(
@@ -160,13 +161,16 @@ const GTA = () => {
         setMessageType("failure");
 
         // Start the cooldown after a GTA
-        startCooldown(130, "gta", character.id);
+        startCooldown(130, "gta", userCharacter.id);
 
         // Step 4: Jail chance check based on heat level
-        const jailChance = character.stats.heat;
-        if (character.stats.heat >= 50 || Math.random() * 100 < jailChance) {
+        const jailChance = userCharacter.stats.heat;
+        if (
+          userCharacter.stats.heat >= 50 ||
+          Math.random() * 100 < jailChance
+        ) {
           // Player failed jail check, arrest them
-          arrest(character);
+          arrest(userCharacter);
           setMessage("Du prøvde å stjele en bil, men ble arrestert!");
           setMessageType("failure");
           return;
@@ -179,7 +183,7 @@ const GTA = () => {
     }
   };
 
-  if (character?.inJail) {
+  if (userCharacter?.inJail) {
     return <JailBox message={message} messageType={messageType} />;
   }
 

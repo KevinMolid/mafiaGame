@@ -24,7 +24,7 @@ import {
 const db = getFirestore();
 
 const Header = () => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const { userData } = useAuth();
   const { cooldowns, fetchCooldown } = useCooldown();
   const { toggleActions, menuOpen, toggleMenu } = useMenuContext();
@@ -33,9 +33,9 @@ const Header = () => {
   const [unreadAlertCount, setUnreadAlertCount] = useState(0);
 
   useEffect(() => {
-    if (!character || !character.id) return;
+    if (!userCharacter || !userCharacter.id) return;
 
-    const alertsRef = collection(db, "Characters", character.id, "alerts");
+    const alertsRef = collection(db, "Characters", userCharacter.id, "alerts");
     const alertsQuery = query(alertsRef, where("read", "==", false)); // Query only unread alerts
 
     // Real-time listener for unread alerts
@@ -46,7 +46,7 @@ const Header = () => {
 
     // Clean up the listener on component unmount
     return () => unsubscribe();
-  }, [character]);
+  }, [userCharacter]);
 
   // Fetch cooldowns
   useEffect(() => {

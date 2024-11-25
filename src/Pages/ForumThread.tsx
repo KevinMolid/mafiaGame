@@ -60,7 +60,7 @@ const ForumThread = () => {
   const [newReply, setNewReply] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [messageType, setMessageType] = useState<"info" | "warning">("info");
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
 
   useEffect(() => {
     const fetchThread = async () => {
@@ -135,8 +135,8 @@ const ForumThread = () => {
     try {
       const replyData = {
         content: newReply,
-        authorId: character?.id,
-        authorName: character?.username,
+        authorId: userCharacter?.id,
+        authorName: userCharacter?.username,
         createdAt: serverTimestamp(),
       };
 

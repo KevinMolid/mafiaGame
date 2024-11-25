@@ -5,9 +5,9 @@ import Username from "../components/Typography/Username";
 import { useCharacter } from "../CharacterContext";
 
 const Contacts = () => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
 
-  if (!character) return;
+  if (!userCharacter) return;
 
   return (
     <div>
@@ -18,9 +18,9 @@ const Contacts = () => {
           <H3>
             <i className="fa-solid fa-user-group"></i> Venner
           </H3>
-          {character.friends ? (
+          {userCharacter.friends ? (
             <ul>
-              {character.friends.map((friend: any) => {
+              {userCharacter.friends.map((friend: any) => {
                 return (
                   <li key={friend.id}>
                     <Username
@@ -38,9 +38,9 @@ const Contacts = () => {
           <H3>
             <i className="fa-solid fa-skull-crossbones"></i> Svarteliste
           </H3>
-          {character.blacklist ? (
+          {userCharacter.blacklist ? (
             <ul>
-              {character.blacklist.map((player: any) => {
+              {userCharacter.blacklist.map((player: any) => {
                 return (
                   <li key={player.id}>
                     <Username

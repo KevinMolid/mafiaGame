@@ -48,14 +48,14 @@ const NoFamily = ({
   setMessageType,
 }: NoFamilyInterface) => {
   const [familyName, setFamilyName] = useState("");
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [families, setFamilies] = useState<FamilyData[]>([]);
   const [applyingTo, setApplyingTo] = useState<string | null>(null);
   const [applicationText, setApplicationText] = useState<string>("");
 
   // Fetch all families from Firestore
   useEffect(() => {
-    if (!character || family) return;
+    if (!userCharacter || family) return;
 
     const fetchFamilies = async () => {
       try {
@@ -85,7 +85,7 @@ const NoFamily = ({
   // Create new family
   const createFamily = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!character) return;
+    if (!userCharacter) return;
 
     if (!familyName.trim()) {
       setMessageType("warning");
@@ -104,7 +104,7 @@ const NoFamily = ({
 
     // Check if player has enough money
     const cost = 250000000;
-    if (character.stats.money < cost) {
+    if (userCharacter.stats.money < cost) {
       setMessageType("warning");
       setMessage("Du har ikke nok penger til å opprette familie.");
       return;
@@ -125,12 +125,12 @@ const NoFamily = ({
 
       const newFamilyData = {
         name: familyName,
-        leaderName: character.username,
-        leaderId: character.id,
+        leaderName: userCharacter.username,
+        leaderId: userCharacter.id,
         members: [
           {
-            id: character.id,
-            name: character.username,
+            id: userCharacter.id,
+            name: userCharacter.username,
             rank: "Boss",
           },
         ],
@@ -148,10 +148,10 @@ const NoFamily = ({
       );
       const familyId = familyDocRef.id;
 
-      const newMoneyValue = character.stats.money - cost;
+      const newMoneyValue = userCharacter.stats.money - cost;
 
       // Update character with familyId and familyName
-      const characterRef = doc(db, "Characters", character.id);
+      const characterRef = doc(db, "Characters", userCharacter.id);
       await setDoc(
         characterRef,
         {
@@ -182,7 +182,7 @@ const NoFamily = ({
 
   // Function to add application to the family's "Applications" subcollection
   const sendApplication = async (familyName: string) => {
-    if (!character || !familyName) return;
+    if (!userCharacter || !familyName) return;
 
     try {
       const familiesQuery = query(
@@ -202,14 +202,14 @@ const NoFamily = ({
       const applicationsRef = collection(familyRef, "Applications");
 
       const applicationDocRef = await addDoc(applicationsRef, {
-        applicantId: character.id,
-        applicantUsername: character.username,
+        applicantId: userCharacter.id,
+        applicantUsername: userCharacter.username,
         applicationText: applicationText,
         appliedAt: new Date(),
       });
 
       // Update character document with activeFamilyApplication
-      const characterRef = doc(db, "Characters", character.id);
+      const characterRef = doc(db, "Characters", userCharacter.id);
       await setDoc(
         characterRef,
         {
@@ -236,11 +236,11 @@ const NoFamily = ({
 
   // Function to cancel the application
   const cancelApplication = async () => {
-    if (!character) return;
-    if (!character.activeFamilyApplication) return;
+    if (!userCharacter) return;
+    if (!userCharacter.activeFamilyApplication) return;
 
     try {
-      const { familyId, applicationId } = character.activeFamilyApplication;
+      const { familyId, applicationId } = userCharacter.activeFamilyApplication;
 
       // Delete the application document using the stored applicationId
       const applicationDocRef = doc(
@@ -253,7 +253,7 @@ const NoFamily = ({
       await deleteDoc(applicationDocRef);
 
       // Delete activeFamilyApplication from character document
-      const characterRef = doc(db, "Characters", character.id);
+      const characterRef = doc(db, "Characters", userCharacter.id);
       await updateDoc(characterRef, {
         activeFamilyApplication: deleteField(),
       });
@@ -277,7 +277,7 @@ const NoFamily = ({
 
       <div className="flex flex-col gap-4">
         {/* Create family */}
-        {!applyingTo && !character?.activeFamilyApplication && (
+        {!applyingTo && !userCharacter?.activeFamilyApplication && (
           <Box>
             <H2>Opprett ny familie</H2>
             <p className="mb-2">
@@ -310,7 +310,7 @@ const NoFamily = ({
         )}
 
         {/* Apply to family */}
-        {!applyingTo && !character?.activeFamilyApplication && (
+        {!applyingTo && !userCharacter?.activeFamilyApplication && (
           <Box>
             <H2>Bli med i en familie</H2>
             {families.length > 0 ? (
@@ -379,35 +379,35 @@ const NoFamily = ({
           </Box>
         )}
 
-        {character?.activeFamilyApplication && (
+        {userCharacter?.activeFamilyApplication && (
           <Box>
             <H2>Venter på godkjenning</H2>
             <p className="mb-4">
               Du sendte en søknad til{" "}
               <Familyname
                 family={{
-                  id: character.activeFamilyApplication.familyId,
-                  name: character.activeFamilyApplication.familyName,
+                  id: userCharacter.activeFamilyApplication.familyId,
+                  name: userCharacter.activeFamilyApplication.familyName,
                 }}
               />
               {" den "}
-              {character.activeFamilyApplication.appliedAt &&
-                `${character.activeFamilyApplication.appliedAt
+              {userCharacter.activeFamilyApplication.appliedAt &&
+                `${userCharacter.activeFamilyApplication.appliedAt
                   .toDate()
                   .toLocaleDateString("no-NO", {
                     day: "numeric",
                     month: "long",
                     year: "numeric",
-                  })} kl. ${character.activeFamilyApplication.appliedAt
+                  })} kl. ${userCharacter.activeFamilyApplication.appliedAt
                   .toDate()
                   .toLocaleTimeString("no-NO", {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}.`}
             </p>
-            {character.activeFamilyApplication.applicationText && (
+            {userCharacter.activeFamilyApplication.applicationText && (
               <p className="mb-4 text-neutral-200">
-                {character.activeFamilyApplication.applicationText}
+                {userCharacter.activeFamilyApplication.applicationText}
               </p>
             )}
             <Button style="danger" onClick={cancelApplication}>

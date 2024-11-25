@@ -54,7 +54,7 @@ const Robbery = () => {
   const [isTargetRandom, setIsTargetRandom] = useState<boolean>(true);
 
   const { userData } = useAuth();
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const { cooldowns, startCooldown } = useCooldown();
   const cooldownTime = 150;
   const navigate = useNavigate();
@@ -66,7 +66,7 @@ const Robbery = () => {
     }
   }, [userData, navigate, cooldowns]);
 
-  if (!character) {
+  if (!userCharacter) {
     return;
   }
 
@@ -90,13 +90,13 @@ const Robbery = () => {
     const charactersSnapshot = await getDocs(
       query(
         collection(db, "Characters"),
-        where("location", "==", character.location)
+        where("location", "==", userCharacter.location)
       )
     );
 
     const potentialTargets = charactersSnapshot.docs
       .map((doc) => ({ id: doc.id, ...(doc.data() as Target) }))
-      .filter((char) => char.id !== character.id);
+      .filter((char) => char.id !== userCharacter.id);
 
     if (potentialTargets.length === 0) {
       displayMessage("Det er ingen å rane i denne byen.", "failure");
@@ -127,7 +127,7 @@ const Robbery = () => {
       id: targetSnapshot.docs[0].id,
       ...(targetSnapshot.docs[0].data() as Target),
     };
-    if (target.id === character.id) {
+    if (target.id === userCharacter.id) {
       displayMessage("Du kan ikke rane deg selv.", "failure");
       return null;
     }
@@ -149,20 +149,20 @@ const Robbery = () => {
     await updateDoc(doc(db, "Characters", target.id), {
       "stats.money": target.stats.money - stolenAmount,
     });
-    await updateDoc(doc(db, "Characters", character.id), {
-      "stats.money": character.stats.money + stolenAmount,
+    await updateDoc(doc(db, "Characters", userCharacter.id), {
+      "stats.money": userCharacter.stats.money + stolenAmount,
     });
 
     await addDoc(collection(db, "Characters", target.id, "alerts"), {
       type: "robbery",
       timestamp: serverTimestamp(),
       amountLost: stolenAmount,
-      robberName: character.username,
-      robberId: character.id,
+      robberName: userCharacter.username,
+      robberId: userCharacter.id,
       read: false,
     });
 
-    rewardXp(character, 10);
+    rewardXp(userCharacter, 10);
     displayMessage(
       `Du ranet ${target.username} for $${stolenAmount.toLocaleString()}.`,
       "success"
@@ -176,10 +176,10 @@ const Robbery = () => {
     );
 
     if (
-      character.stats.heat >= 50 ||
-      Math.random() * 100 < character.stats.heat
+      userCharacter.stats.heat >= 50 ||
+      Math.random() * 100 < userCharacter.stats.heat
     ) {
-      arrest(character);
+      arrest(userCharacter);
       displayMessage("Ranforsøket feilet, og du ble arrestert!", "failure");
     }
   };
@@ -188,7 +188,7 @@ const Robbery = () => {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    if (!character || !character.id) {
+    if (!userCharacter || !userCharacter.id) {
       displayMessage("Spilleren ble ikke lastet.", "failure");
       return;
     }
@@ -223,8 +223,8 @@ const Robbery = () => {
             : "Du fant ingen å rane.",
           "failure"
         );
-        increaseHeat(character, character.id, 1);
-        startCooldown(cooldownTime, "robbery", character.id);
+        increaseHeat(userCharacter, userCharacter.id, 1);
+        startCooldown(cooldownTime, "robbery", userCharacter.id);
         return;
       }
 
@@ -235,8 +235,8 @@ const Robbery = () => {
         await handleRobberyFailure(target);
       }
 
-      increaseHeat(character, character.id, 1);
-      startCooldown(cooldownTime, "robbery", character.id);
+      increaseHeat(userCharacter, userCharacter.id, 1);
+      startCooldown(cooldownTime, "robbery", userCharacter.id);
     } catch (error) {
       console.error(error);
       displayMessage(
@@ -246,7 +246,7 @@ const Robbery = () => {
     }
   };
 
-  if (character?.inJail) {
+  if (userCharacter?.inJail) {
     return <JailBox message={message} messageType={messageType} />;
   }
 

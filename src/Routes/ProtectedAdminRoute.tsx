@@ -3,7 +3,7 @@ import { useCharacter } from "../CharacterContext";
 import { useAuth } from "../AuthContext";
 
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { character, loading } = useCharacter();
+  const { userCharacter, loading } = useCharacter();
   const { userData } = useAuth();
 
   if (loading) {
@@ -14,7 +14,7 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/logginn" />;
   }
 
-  if (!character) {
+  if (!userCharacter) {
     return <Navigate to="/nyspiller" />;
   }
 

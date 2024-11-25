@@ -12,7 +12,7 @@ import { useAuth } from "../../AuthContext";
 
 const Prison = () => {
   const { userData } = useAuth();
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "info" | "warning"
@@ -25,7 +25,7 @@ const Prison = () => {
     );
   };
 
-  if (character?.inJail) {
+  if (userCharacter?.inJail) {
     return <JailBox message={message} messageType={messageType} />;
   }
 
@@ -34,7 +34,7 @@ const Prison = () => {
       <H1>Fengsel</H1>
       <p className="mb-4">
         Her havner du dersom du blir tatt for kriminelle handlinger i{" "}
-        {character?.location}.
+        {userCharacter?.location}.
       </p>
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}

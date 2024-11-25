@@ -30,17 +30,17 @@ interface Application {
 }
 
 const FamilyApplications = () => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const db = getFirestore();
 
   useEffect(() => {
-    if (!character?.familyId) return;
+    if (!userCharacter?.familyId) return;
 
     const fetchApplications = async () => {
-      if (!character.familyId) {
+      if (!userCharacter.familyId) {
         return;
       }
       setLoading(true);
@@ -48,7 +48,7 @@ const FamilyApplications = () => {
         const applicationsRef = collection(
           db,
           "Families",
-          character.familyId,
+          userCharacter.familyId,
           "Applications"
         );
         const applicationsSnapshot = await getDocs(applicationsRef);
@@ -71,7 +71,7 @@ const FamilyApplications = () => {
     };
 
     fetchApplications();
-  }, [character?.familyId, db]);
+  }, [userCharacter?.familyId, db]);
 
   const formatAppliedAt = (appliedAt: Date) => {
     return new Intl.DateTimeFormat("no-NO", {
@@ -86,7 +86,7 @@ const FamilyApplications = () => {
   };
 
   const acceptApplication = async (application: Application) => {
-    if (!character?.familyId || !character?.familyName) return;
+    if (!userCharacter?.familyId || !userCharacter?.familyName) return;
 
     try {
       // 1. Add an alert to the applicant's Alerts subcollection
@@ -95,12 +95,12 @@ const FamilyApplications = () => {
         "Characters",
         application.applicantId,
         "alerts",
-        `AcceptedToFamily_${character.familyId}`
+        `AcceptedToFamily_${userCharacter.familyId}`
       );
       await setDoc(alertRef, {
         type: "applicationAccepted",
-        familyName: character.familyName,
-        familyId: character.familyId,
+        familyName: userCharacter.familyName,
+        familyId: userCharacter.familyId,
         timestamp: serverTimestamp(),
         read: false,
       });
@@ -112,13 +112,13 @@ const FamilyApplications = () => {
         application.applicantId
       );
       await updateDoc(applicantCharacterRef, {
-        familyId: character.familyId,
-        familyName: character.familyName,
+        familyId: userCharacter.familyId,
+        familyName: userCharacter.familyName,
         activeFamilyApplication: null,
       });
 
       // 3. Add applicant to the family's members array
-      const familyRef = doc(db, "Families", character.familyId);
+      const familyRef = doc(db, "Families", userCharacter.familyId);
       await updateDoc(familyRef, {
         members: arrayUnion({
           id: application.applicantId,
@@ -131,7 +131,7 @@ const FamilyApplications = () => {
       const applicationRef = doc(
         db,
         "Families",
-        character.familyId,
+        userCharacter.familyId,
         "Applications",
         application.documentId
       );
@@ -149,7 +149,7 @@ const FamilyApplications = () => {
 
   // Function to decline application
   const declineApplication = async (application: Application) => {
-    if (!character?.familyId || !character?.familyName) return;
+    if (!userCharacter?.familyId || !userCharacter?.familyName) return;
 
     try {
       // 1. Add an alert to the applicant's Alerts subcollection
@@ -158,12 +158,12 @@ const FamilyApplications = () => {
         "Characters",
         application.applicantId,
         "alerts",
-        `DeclinedFromFamily_${character.familyId}`
+        `DeclinedFromFamily_${userCharacter.familyId}`
       );
       await setDoc(alertRef, {
         type: "applicationDeclined",
-        familyName: character.familyName,
-        familyId: character.familyId,
+        familyName: userCharacter.familyName,
+        familyId: userCharacter.familyId,
         timestamp: new Date(),
         read: false,
       });
@@ -182,7 +182,7 @@ const FamilyApplications = () => {
       const applicationRef = doc(
         db,
         "Families",
-        character.familyId,
+        userCharacter.familyId,
         "Applications",
         application.documentId
       );

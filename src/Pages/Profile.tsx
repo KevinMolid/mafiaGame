@@ -28,7 +28,7 @@ import timeAgo from "../Functions/TimeFunctions";
 const Profile = () => {
   const { spillerID } = useParams<{ spillerID: string }>();
   const [characterData, setCharacterData] = useState<any>(null);
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<
@@ -69,13 +69,13 @@ const Profile = () => {
   }, [spillerID]);
 
   const addFriend = async () => {
-    if (!spillerID || !characterData || !character) {
+    if (!spillerID || !characterData || !userCharacter) {
       console.error("Mangler nødvendig data for å legge til venn.");
       return;
     }
 
     const newFriend = { id: spillerID, name: characterData.username };
-    const userDocRef = doc(db, "Characters", character.id);
+    const userDocRef = doc(db, "Characters", userCharacter.id);
 
     try {
       const userDocSnap = await getDoc(userDocRef);
@@ -118,13 +118,13 @@ const Profile = () => {
   };
 
   const addToBlacklist = async () => {
-    if (!spillerID || !characterData || !character) {
+    if (!spillerID || !characterData || !userCharacter) {
       console.error("Missing necessary data to add a friend.");
       return;
     }
 
     const newBlacklist = { id: spillerID, name: characterData.username };
-    const userDocRef = doc(db, "Characters", character.id);
+    const userDocRef = doc(db, "Characters", userCharacter.id);
 
     try {
       const userDocSnap = await getDoc(userDocRef);
@@ -181,7 +181,7 @@ const Profile = () => {
     return <div>Ingen spillerdata tilgjengelig.</div>;
   }
 
-  if (!character) return;
+  if (!userCharacter) return;
 
   const isRecentlyActive = characterData.lastActive
     ? Date.now() - characterData.lastActive.seconds * 1000 <= 5 * 60 * 1000
@@ -200,7 +200,7 @@ const Profile = () => {
 
         <div className="flex flex-col h-full justify-between gap-4">
           {/* Icons */}
-          {spillerID !== character.id ? (
+          {spillerID !== userCharacter.id ? (
             <div className="text-2xl flex gap-4">
               <Link
                 to={`/meldinger?username=${encodeURIComponent(
@@ -313,7 +313,7 @@ const Profile = () => {
             </li>
           </ul>
         </div>
-        {spillerID === character.id && (
+        {spillerID === userCharacter.id && (
           <ul className="flex flex-wrap col-span-2 mt-4">
             <Tab active={view === "profile"} onClick={() => setView("profile")}>
               <i className="fa-solid fa-user"></i> Profil

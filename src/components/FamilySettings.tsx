@@ -32,28 +32,32 @@ const FamilySettings = ({
   setMessage,
   setMessageType,
 }: FamilySettingsInterface) => {
-  const { character, setCharacter } = useCharacter();
+  const { userCharacter, setUserCharacter } = useCharacter();
   const [changingProfile, setChangingProfile] = useState<boolean>(false);
 
-  if (!character || !family) return;
+  if (!userCharacter || !family) return;
 
   // Function to disband the family
   const disbandFamily = async () => {
-    if (family && character.familyId && character?.id === family.leaderId) {
+    if (
+      family &&
+      userCharacter.familyId &&
+      userCharacter?.id === family.leaderId
+    ) {
       try {
         // Delete family document from Firestore
-        const familyRef = doc(db, "Families", character.familyId);
+        const familyRef = doc(db, "Families", userCharacter.familyId);
         await deleteDoc(familyRef);
 
         // Update the character's familyId to null
-        const characterRef = doc(db, "Characters", character.id);
+        const characterRef = doc(db, "Characters", userCharacter.id);
         await updateDoc(characterRef, { familyId: null, familyName: null });
 
         setMessageType("success");
         setMessage(`Du la ned familien ${family.name}.`);
 
         // Update the local character context
-        setCharacter((prev) =>
+        setUserCharacter((prev) =>
           prev ? { ...prev, familyId: null, familyName: null } : prev
         ); // Set to null
 

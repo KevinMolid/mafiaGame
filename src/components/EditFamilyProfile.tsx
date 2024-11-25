@@ -12,10 +12,10 @@ const db = getFirestore(app);
 import { useCharacter } from "../CharacterContext";
 
 const EditFamilyProfile = () => {
-  const { character } = useCharacter();
-  const [imgUrl, setimgUrl] = useState(character ? character.img : "");
+  const { userCharacter } = useCharacter();
+  const [imgUrl, setimgUrl] = useState(userCharacter ? userCharacter.img : "");
   const [profileTxt, setProfileTxt] = useState(
-    character ? character.profileText : ""
+    userCharacter ? userCharacter.profileText : ""
   );
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<
@@ -31,13 +31,13 @@ const EditFamilyProfile = () => {
   };
 
   const updateProfile = async () => {
-    if (!character || !character.familyId) {
+    if (!userCharacter || !userCharacter.familyId) {
       return;
     }
 
     try {
       // Reference to the family's document in Firestore
-      const familyRef = doc(db, "Families", character.familyId);
+      const familyRef = doc(db, "Families", userCharacter.familyId);
 
       // Update Profile Img in Firestore
       await updateDoc(familyRef, {

@@ -28,7 +28,7 @@ const db = getFirestore();
 
 const DropdownRight = () => {
   const { userData } = useAuth();
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const { menuOpen, toggleMenu } = useMenuContext();
   const [unreadAlertCount, setUnreadAlertCount] = useState(0);
   const [hasUnreadAlerts, setHasUnreadAlerts] = useState(false);
@@ -60,9 +60,9 @@ const DropdownRight = () => {
   }, [menuOpen, toggleMenu]);
 
   useEffect(() => {
-    if (!character || !character.id) return;
+    if (!userCharacter || !userCharacter.id) return;
 
-    const alertsRef = collection(db, "Characters", character.id, "alerts");
+    const alertsRef = collection(db, "Characters", userCharacter.id, "alerts");
     const alertsQuery = query(alertsRef, where("read", "==", false)); // Query only unread alerts
 
     // Real-time listener for unread alerts
@@ -74,7 +74,7 @@ const DropdownRight = () => {
 
     // Clean up the listener on component unmount
     return () => unsubscribe();
-  }, [character]);
+  }, [userCharacter]);
 
   // Sign out
   function logOut() {
@@ -98,18 +98,20 @@ const DropdownRight = () => {
           ref={dropdownRef}
           className="absolute z-30 flex top-0 left-0 bottom-0 right-[-17px] flex-col bg-neutral-800 min-w-56 select-none h-screen pb-24 shadow-2xl overflow-y-scroll"
         >
-          {character ? (
+          {userCharacter ? (
             <div>
-              <Link to={`/profil/${character.id}`} onClick={toggleMenu}>
+              <Link to={`/profil/${userCharacter.id}`} onClick={toggleMenu}>
                 <div className="px-4 py-2 mt-2 flex sm:hidden gap-2 items-center hover:bg-neutral-900">
                   <img
                     className="border border-neutral-500 w-[60px] h-[60px] object-cover hover:cursor-pointer"
-                    src={character.img || "/default.jpg"}
+                    src={userCharacter.img || "/default.jpg"}
                     alt="Profile picture"
                   />
                   <div className="text-stone-400">
-                    <p className="text-white font-bold">{character.username}</p>
-                    <p>{getCurrentRank(character.stats.xp)}</p>
+                    <p className="text-white font-bold">
+                      {userCharacter.username}
+                    </p>
+                    <p>{getCurrentRank(userCharacter.stats.xp)}</p>
                   </div>
                 </div>
               </Link>

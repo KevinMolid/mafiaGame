@@ -18,7 +18,7 @@ const db = getFirestore(app);
 import { useCharacter } from "../../CharacterContext";
 
 const Jackpot = () => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [reels, setReels] = useState<Array<number>>([0, 0, 0]);
   const [message, setMessage] = useState<string>("");
   const [messageType, setMessageType] = useState<
@@ -26,7 +26,7 @@ const Jackpot = () => {
   >("info");
   const [betAmount, setBetAmount] = useState<number>(0);
 
-  if (!character) return;
+  if (!userCharacter) return;
 
   // Function to spin the reels
   const spinReels = () => {
@@ -36,7 +36,7 @@ const Jackpot = () => {
       return;
     }
 
-    if (character?.stats.money < betAmount) {
+    if (userCharacter?.stats.money < betAmount) {
       setMessageType("warning");
       setMessage("Du har ikke så mye penger!");
       return;
@@ -53,7 +53,7 @@ const Jackpot = () => {
 
   // Function to evaluate the result of the spin
   const evaluateSpin = async (reels: number[]) => {
-    let newMoney = character.stats.money;
+    let newMoney = userCharacter.stats.money;
 
     if (reels[0] === reels[1] && reels[1] === reels[2] && reels[2] === 7) {
       newMoney += betAmount * 150; // 150x payout for 7 7 7
@@ -80,7 +80,7 @@ const Jackpot = () => {
     }
 
     try {
-      const characterRef = doc(db, "Characters", character.id);
+      const characterRef = doc(db, "Characters", userCharacter.id);
       // Update values in Firestore
       await updateDoc(characterRef, {
         "stats.money": newMoney,
@@ -90,7 +90,7 @@ const Jackpot = () => {
     }
   };
 
-  if (character?.inJail) {
+  if (userCharacter?.inJail) {
     return <JailBox message={message} messageType={messageType} />;
   }
 

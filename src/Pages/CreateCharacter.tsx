@@ -33,7 +33,7 @@ const db = getFirestore(app);
 
 const CreateCharacter = () => {
   const { user, userData, setUserData } = useAuth();
-  const { character, setCharacter } = useCharacter();
+  const { userCharacter, setUserCharacter } = useCharacter();
   const [location, setLocation] = useState<string>("New York");
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
@@ -48,7 +48,11 @@ const CreateCharacter = () => {
     "Tokyo",
   ];
 
-  if (userData.type !== "admin" && character && character.status === "alive") {
+  if (
+    userData.type !== "admin" &&
+    userCharacter &&
+    userCharacter.status === "alive"
+  ) {
     return <Navigate to="/" />;
   }
 
@@ -124,7 +128,7 @@ const CreateCharacter = () => {
       });
 
       // Set character in local state
-      setCharacter({
+      setUserCharacter({
         id: docRef.id,
         ...newCharacterData,
         createdAt: new Date(),

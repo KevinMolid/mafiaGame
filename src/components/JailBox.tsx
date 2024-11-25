@@ -33,7 +33,7 @@ interface JailBoxInterface {
 }
 
 const JailBox = ({ message, messageType }: JailBoxInterface) => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const { userData } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,11 +65,11 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
   }, []);
 
   useEffect(() => {
-    if (!character?.jailReleaseTime) return;
+    if (!userCharacter?.jailReleaseTime) return;
 
     const calculateRemainingTime = () => {
       const currentTime = new Date().getTime();
-      const releaseTime = character.jailReleaseTime;
+      const releaseTime = userCharacter.jailReleaseTime;
       const timeRemaining = Math.max(
         0,
         Math.floor((releaseTime - currentTime) / 1000)
@@ -78,7 +78,7 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
 
       // Automatically call breakOut when the timer reaches 0
       if (timeRemaining === 0) {
-        breakOut(character.id);
+        breakOut(userCharacter.id);
       }
     };
 
@@ -89,7 +89,7 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
     }, 1000); // Update every second
 
     return () => clearInterval(interval); // Clean up on unmount
-  }, [character?.jailReleaseTime]);
+  }, [userCharacter?.jailReleaseTime]);
 
   // Ref for the textarea
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -109,15 +109,15 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
 
   const submitNewMessage = async (e: any) => {
     e.preventDefault();
-    if (!character) return;
+    if (!userCharacter) return;
     if (!newMessage.trim()) return;
 
     try {
       await sendMessage(
         channelId,
         newMessage,
-        character.id,
-        character.username
+        userCharacter.id,
+        userCharacter.username
       );
       setNewMessage("");
       setError(null);
@@ -209,8 +209,8 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
           </div>
         )}
 
-        {character && userData.type === "admin" && (
-          <Button onClick={() => breakOut(character.id)}>Stikk av</Button>
+        {userCharacter && userData.type === "admin" && (
+          <Button onClick={() => breakOut(userCharacter.id)}>Stikk av</Button>
         )}
       </div>
     </Main>

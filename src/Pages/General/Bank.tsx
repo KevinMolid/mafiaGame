@@ -39,9 +39,9 @@ const Bank = () => {
   const [targetCharacter, setTargetCharacter] = useState<string>("");
   const [amountToSend, setAmountToSend] = useState<number | "">("");
 
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
 
-  if (!character) {
+  if (!userCharacter) {
     return null;
   }
 
@@ -73,7 +73,7 @@ const Bank = () => {
   // Banking functions
   const deposit = async () => {
     try {
-      const characterRef = doc(db, "Characters", character.id);
+      const characterRef = doc(db, "Characters", userCharacter.id);
 
       if (amount === "") {
         setMessageType("warning");
@@ -83,10 +83,10 @@ const Bank = () => {
 
       // Calculate new values
       if (amount) {
-        const newBank = character.stats.bank
-          ? character.stats.bank + amount
+        const newBank = userCharacter.stats.bank
+          ? userCharacter.stats.bank + amount
           : amount;
-        const newMoney = character.stats.money - amount;
+        const newMoney = userCharacter.stats.money - amount;
 
         // Check if there is enough money to deposit
         if (newMoney < 0) {
@@ -115,14 +115,14 @@ const Bank = () => {
 
   const depositAll = async () => {
     try {
-      const characterRef = doc(db, "Characters", character.id);
+      const characterRef = doc(db, "Characters", userCharacter.id);
 
       // Calculate new values
-      const newBank = character.stats.bank + character.stats.money;
+      const newBank = userCharacter.stats.bank + userCharacter.stats.money;
       const newMoney = 0;
 
       // Check if there is enough money to deposit
-      if (character.stats.money <= 0) {
+      if (userCharacter.stats.money <= 0) {
         setMessageType("warning");
         setMessage("Du har ingen penger å sette inn.");
         return;
@@ -136,7 +136,7 @@ const Bank = () => {
 
       setMessageType("success");
       setMessage(
-        `Du satte inn $${character.stats.money.toLocaleString()} på din bankkonto.`
+        `Du satte inn $${userCharacter.stats.money.toLocaleString()} på din bankkonto.`
       );
 
       setAmount("");
@@ -147,7 +147,7 @@ const Bank = () => {
 
   const withdraw = async () => {
     try {
-      const characterRef = doc(db, "Characters", character.id);
+      const characterRef = doc(db, "Characters", userCharacter.id);
 
       if (amount === "") {
         setMessageType("warning");
@@ -157,10 +157,10 @@ const Bank = () => {
 
       // Calculate new values
       if (amount) {
-        const newBank = character.stats.bank
-          ? character.stats.bank - amount
+        const newBank = userCharacter.stats.bank
+          ? userCharacter.stats.bank - amount
           : -amount;
-        const newMoney = character.stats.money + amount;
+        const newMoney = userCharacter.stats.money + amount;
 
         // Check if there is enough money to withdraw
         if (newBank < 0) {
@@ -187,11 +187,11 @@ const Bank = () => {
 
   const withdrawAll = async () => {
     try {
-      const characterRef = doc(db, "Characters", character.id);
+      const characterRef = doc(db, "Characters", userCharacter.id);
 
       // Calculate new values
       const newBank = 0;
-      const newMoney = character.stats.money + character.stats.bank;
+      const newMoney = userCharacter.stats.money + userCharacter.stats.bank;
 
       // Update values in Firestore
       await updateDoc(characterRef, {
@@ -200,7 +200,7 @@ const Bank = () => {
       });
 
       // Check if there is enough money to withdraw
-      if (character.stats.bank <= 0) {
+      if (userCharacter.stats.bank <= 0) {
         setMessageType("warning");
         setMessage("Du har ingen penger i banken.");
         return;
@@ -208,7 +208,7 @@ const Bank = () => {
 
       setMessageType("success");
       setMessage(
-        `Du tok ut $${character.stats.bank.toLocaleString()} fra din bankkonto.`
+        `Du tok ut $${userCharacter.stats.bank.toLocaleString()} fra din bankkonto.`
       );
 
       setAmount("");
@@ -238,7 +238,7 @@ const Bank = () => {
       const totalAmount = transferAmount + fee;
 
       // Check if the sender has enough money
-      if (character.stats.money < totalAmount) {
+      if (userCharacter.stats.money < totalAmount) {
         setMessageType("warning");
         setMessage("Du har ikke nok penger til å gjennomføre transaksjonen.");
         return;
@@ -263,11 +263,11 @@ const Bank = () => {
       const targetData = targetCharacterDoc.data();
 
       // Calculate the new balances
-      const newSenderMoney = character.stats.money - totalAmount;
+      const newSenderMoney = userCharacter.stats.money - totalAmount;
       const newReceiverMoney = targetData.stats.money + transferAmount;
 
       // Update both the sender's and receiver's money in Firestore
-      const senderRef = doc(db, "Characters", character.id);
+      const senderRef = doc(db, "Characters", userCharacter.id);
       await updateDoc(senderRef, {
         "stats.money": newSenderMoney,
       });
@@ -287,8 +287,8 @@ const Bank = () => {
         type: "banktransfer",
         timestamp: new Date().toISOString(),
         amountSent: transferAmount,
-        senderName: character.username,
-        senderId: character.id,
+        senderName: userCharacter.username,
+        senderId: userCharacter.id,
         read: false,
       });
 
@@ -309,7 +309,7 @@ const Bank = () => {
     }
   };
 
-  if (character?.inJail) {
+  if (userCharacter?.inJail) {
     return <JailBox message={message} messageType={messageType} />;
   }
 
@@ -328,7 +328,7 @@ const Bank = () => {
         <p className="mb-4">
           Saldo:{" "}
           <span className="font-bold text-neutral-200">
-            ${character?.stats.bank?.toLocaleString() || 0}
+            ${userCharacter?.stats.bank?.toLocaleString() || 0}
           </span>
         </p>
         <form className="flex flex-col gap-2" action="">

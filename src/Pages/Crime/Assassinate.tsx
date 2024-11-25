@@ -29,7 +29,7 @@ const db = getFirestore();
 import { useCharacter } from "../../CharacterContext";
 
 const Assassinate = () => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [targetPlayer, setTargetPlayer] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<
@@ -40,7 +40,7 @@ const Assassinate = () => {
   const [wantedPlayer, setWantedPlayer] = useState("");
   const [bountyAmount, setBountyAmount] = useState<number | "">("");
 
-  if (!character) {
+  if (!userCharacter) {
     return;
   }
 
@@ -87,7 +87,7 @@ const Assassinate = () => {
         const playerData = querySnapshot.docs[0].data();
         const targetDocId = querySnapshot.docs[0].id;
 
-        if (character?.username === playerData.username) {
+        if (userCharacter?.username === playerData.username) {
           // Suicide
           setMessage(`Du kan ikke drepe deg selv!`);
           setMessageType("warning");
@@ -95,10 +95,10 @@ const Assassinate = () => {
           // Player is already dead
           setMessage(`${playerData.username} er allerede død!`);
           setMessageType("warning");
-        } else if (character?.location !== playerData.location) {
+        } else if (userCharacter?.location !== playerData.location) {
           // Player is not in the same city
           setMessage(
-            `Du kunne ikke finne ${playerData.username} i ${character?.location}!`
+            `Du kunne ikke finne ${playerData.username} i ${userCharacter?.location}!`
           );
           setMessageType("failure");
         } else {
@@ -112,18 +112,18 @@ const Assassinate = () => {
           });
 
           // Update assassin's lastActive timestamp
-          await updateDoc(doc(db, "Characters", character.id), {
+          await updateDoc(doc(db, "Characters", userCharacter.id), {
             lastActive: serverTimestamp(),
           });
 
           // Add a document to the GameEvents collection to log the assassination
           await addDoc(collection(db, "GameEvents"), {
             eventType: "assassination",
-            assassinId: character.id,
-            assassinName: character.username,
+            assassinId: userCharacter.id,
+            assassinName: userCharacter.username,
             victimId: targetDocId,
             victimName: playerData.username,
-            location: character.location,
+            location: userCharacter.location,
             timestamp: serverTimestamp(),
           });
         }
@@ -168,8 +168,8 @@ const Assassinate = () => {
         WantedId: wantedPlayerId,
         WantedName: playerData.username,
         Bounty: bountyAmount,
-        PaidById: character.id,
-        PaidByName: character.username,
+        PaidById: userCharacter.id,
+        PaidByName: userCharacter.username,
         createdAt: serverTimestamp(),
       });
 
@@ -206,7 +206,7 @@ const Assassinate = () => {
     }
   };
 
-  if (character?.inJail) {
+  if (userCharacter?.inJail) {
     return <JailBox message={message} messageType={messageType} />;
   }
 

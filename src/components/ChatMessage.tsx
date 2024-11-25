@@ -21,9 +21,9 @@ const ChatMessage = ({
   timestamp,
   messageText,
 }: Message) => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
 
-  if (!character) return;
+  if (!userCharacter) return;
 
   return (
     <li key={id} className="mb-2">

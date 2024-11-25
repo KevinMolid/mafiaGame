@@ -20,38 +20,38 @@ import { useCharacter } from "../CharacterContext";
 import { getRankProgress } from "../Functions/RankFunctions";
 
 const Home = () => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [message] = useState("");
   const [messageType] = useState<
     "success" | "failure" | "important" | "warning" | "info"
   >("success");
 
   // Local state for XP, initialized with the character's current XP
-  const [xp, setXP] = useState<number>(character?.stats.xp || 0);
+  const [xp, setXP] = useState<number>(userCharacter?.stats.xp || 0);
 
   const bags = ["", "", "", "", "", "", "", "", "", "", "", ""];
 
   // Sync the local XP state with character stats if character changes
   useEffect(() => {
-    if (character) {
-      setXP(character.stats.xp);
+    if (userCharacter) {
+      setXP(userCharacter.stats.xp);
     }
-  }, [character]); // Runs whenever character object changes
+  }, [userCharacter]); // Runs whenever character object changes
 
-  if (!character) {
+  if (!userCharacter) {
     return null;
   }
 
   const maxHealth = 100;
-  const healthPercentage = character
-    ? (character.stats.hp / maxHealth) * 100
+  const healthPercentage = userCharacter
+    ? (userCharacter.stats.hp / maxHealth) * 100
     : 0;
 
-  const { progress, minXP, maxXP } = getRankProgress(character.stats.xp);
+  const { progress, minXP, maxXP } = getRankProgress(userCharacter.stats.xp);
 
   const maxHeat = 50;
-  const heatPercentage = character
-    ? Math.round((character.stats.heat / maxHeat) * 100)
+  const heatPercentage = userCharacter
+    ? Math.round((userCharacter.stats.heat / maxHeat) * 100)
     : 0;
 
   return (
@@ -61,37 +61,37 @@ const Home = () => {
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
       <div className="flex gap-4 mb-2">
-        <Link to={`/profil/${character.id}`}>
+        <Link to={`/profil/${userCharacter.id}`}>
           <img
             className="border border-neutral-500 size-[160px] object-cover mb-2 hover:cursor-pointer"
-            src={character.img || "/default.jpg"}
+            src={userCharacter.img || "/default.jpg"}
             alt="Profile picture"
           />
         </Link>
         <div>
           <p>
-            <Username character={character} />
+            <Username character={userCharacter} />
           </p>
           <Link to="/spillguide">
-            <p>{getCurrentRank(character.stats.xp)}</p>
+            <p>{getCurrentRank(userCharacter.stats.xp)}</p>
           </Link>
           <Link to="/bank">
-            <p>Penger: ${character.stats.money.toLocaleString()}</p>
+            <p>Penger: ${userCharacter.stats.money.toLocaleString()}</p>
           </Link>
           <Link to="/bank">
             <p>
               Bank: $
-              {character.stats.bank
-                ? character.stats.bank.toLocaleString()
+              {userCharacter.stats.bank
+                ? userCharacter.stats.bank.toLocaleString()
                 : "0"}
             </p>
           </Link>
           <p>
             Familie:{" "}
-            {character.familyName ? (
-              <Link to={`familie/profil/${character.familyId}`}>
+            {userCharacter.familyName ? (
+              <Link to={`familie/profil/${userCharacter.familyId}`}>
                 <strong className="text-neutral-200 hover:underline">
-                  {character.familyName}
+                  {userCharacter.familyName}
                 </strong>
               </Link>
             ) : (
@@ -101,7 +101,7 @@ const Home = () => {
         </div>
       </div>
 
-      {character ? (
+      {userCharacter ? (
         <div className="flex gap-4 flex-wrap">
           {/* Stats */}
           <Box>
@@ -121,7 +121,7 @@ const Home = () => {
                   ></div>
                   <div className="flex justify-center items-center z-10 col-start-1 row-start-1">
                     <p className="text-slate-50 text-xs">
-                      {character.stats.hp} / {maxHealth} hp
+                      {userCharacter.stats.hp} / {maxHealth} hp
                     </p>
                   </div>
                 </div>
@@ -168,7 +168,7 @@ const Home = () => {
                   ></div>
                   <div className="flex justify-center items-center z-10 col-start-1 row-start-1">
                     <p className="text-red-50 text-xs">
-                      {character.stats.heat} / 50
+                      {userCharacter.stats.heat} / 50
                     </p>
                   </div>
                 </div>

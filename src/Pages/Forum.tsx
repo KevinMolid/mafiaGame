@@ -57,7 +57,7 @@ const Forum = () => {
   const [newThreadTitle, setNewThreadTitle] = useState<string>("");
   const [newThreadContent, setNewThreadContent] = useState<string>("");
 
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
   const navigate = useNavigate();
 
   {
@@ -167,8 +167,8 @@ const Forum = () => {
       content: newThreadContent,
       categoryId: selectedCategory,
       createdAt: new Date().toISOString(),
-      authorId: character?.id,
-      authorName: character?.username,
+      authorId: userCharacter?.id,
+      authorName: userCharacter?.username,
     };
 
     try {

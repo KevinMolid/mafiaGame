@@ -10,22 +10,22 @@ import { Link } from "react-router-dom";
 import { useCharacter } from "../CharacterContext";
 
 const Dead = () => {
-  const { character } = useCharacter();
+  const { userCharacter } = useCharacter();
 
-  if (!character) return;
+  if (!userCharacter) return;
 
   let formattedDate = "";
 
-  if (character.diedAt) {
+  if (userCharacter.diedAt) {
     let diedAtDate;
 
     // Check if diedAt is a Timestamp or already a Date
-    if (typeof character.diedAt.toDate === "function") {
-      diedAtDate = character.diedAt.toDate(); // Firebase Timestamp
-    } else if (character.diedAt instanceof Date) {
-      diedAtDate = character.diedAt; // Already a Date
-    } else if (typeof character.diedAt === "number") {
-      diedAtDate = new Date(character.diedAt); // Milliseconds
+    if (typeof userCharacter.diedAt.toDate === "function") {
+      diedAtDate = userCharacter.diedAt.toDate(); // Firebase Timestamp
+    } else if (userCharacter.diedAt instanceof Date) {
+      diedAtDate = userCharacter.diedAt; // Already a Date
+    } else if (typeof userCharacter.diedAt === "number") {
+      diedAtDate = new Date(userCharacter.diedAt); // Milliseconds
     }
 
     if (diedAtDate) {
@@ -44,16 +44,16 @@ const Dead = () => {
       <div className="text-center relative w-5/6 sm:w-2/3 max-w-[500px] flex flex-col top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 items-center">
         <div className="bg-neutral-900/80 border border-neutral-500 p-6 rounded-lg flex flex-col gap-4 w-full">
           <H1>Du har blitt drept!</H1>
-          <Link to={`/profil/${character.id}`}>
+          <Link to={`/profil/${userCharacter.id}`}>
             <img
               className="border border-neutral-500 w-[160px] h-[160px] object-cover m-auto hover:cursor-pointer"
-              src={character.img || "/default.jpg"}
+              src={userCharacter.img || "/default.jpg"}
               alt="Profile picture"
             />
           </Link>
           <div className="text-center text-stone-400">
-            <Username character={character} />
-            <p>{getCurrentRank(character.stats.xp)}</p>
+            <Username character={userCharacter} />
+            <p>{getCurrentRank(userCharacter.stats.xp)}</p>
           </div>
           <p className="mb-2">
             Din spillkarakter ble drept{" "}
