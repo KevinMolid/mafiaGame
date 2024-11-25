@@ -65,13 +65,13 @@ const Family = () => {
   }, [userCharacter]);
 
   // Handle inputs
-  const handleInputChange = (e: any) => {
-    const value = e.target.value;
-    if (value === "") {
-      setAmount("");
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/,/g, ""); // Remove existing commas
+    if (value === "" || isNaN(Number(value))) {
+      setAmount(""); // Clear the input if it's empty or invalid
     } else {
-      const intValue = parseInt(value, 10);
-      setAmount(isNaN(intValue) ? "" : intValue);
+      const numericValue = parseInt(value, 10);
+      setAmount(numericValue); // Store the raw number
     }
   };
 
@@ -311,9 +311,9 @@ const Family = () => {
                 <form className="flex flex-col gap-2" action="">
                   <input
                     className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-                    type="number"
-                    value={amount}
-                    placeholder="Skriv inn beløp"
+                    type="text"
+                    placeholder="Beløp"
+                    value={amount ? Number(amount).toLocaleString() : ""}
                     onChange={handleInputChange}
                   />
                   <div className="flex gap-2">

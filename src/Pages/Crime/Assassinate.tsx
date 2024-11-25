@@ -196,13 +196,15 @@ const Assassinate = () => {
     setWantedPlayer(event.target.value);
   };
 
-  const handleBountyAmountInputChange = (e: any) => {
-    const value = e.target.value;
-    if (value === "") {
-      setBountyAmount("");
+  const handleBountyAmountInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value.replace(/,/g, ""); // Remove existing commas
+    if (value === "" || isNaN(Number(value))) {
+      setBountyAmount(""); // Clear the input if it's empty or invalid
     } else {
-      const intValue = parseInt(value, 10);
-      setBountyAmount(isNaN(intValue) ? "" : intValue);
+      const numericValue = parseInt(value, 10);
+      setBountyAmount(numericValue); // Store the raw number
     }
   };
 
@@ -255,9 +257,11 @@ const Assassinate = () => {
                   <H3>Dusørbeløp</H3>
                   <input
                     className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-                    type="number"
-                    value={bountyAmount}
+                    type="text"
                     placeholder="Beløp"
+                    value={
+                      bountyAmount ? Number(bountyAmount).toLocaleString() : ""
+                    }
                     onChange={handleBountyAmountInputChange}
                   />
                 </div>

@@ -338,7 +338,7 @@ const Bank = () => {
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             type="text"
             value={amount ? Number(amount).toLocaleString() : ""}
-            placeholder="Skriv inn beløp"
+            placeholder="Beløp"
             onChange={handleInputChange}
           />
           <div className="flex gap-2 flex-wrap">
