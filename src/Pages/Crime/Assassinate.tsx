@@ -130,29 +130,72 @@ const Assassinate = () => {
           setMessageType("failure");
         } else {
           // Proceed with assassination
-          setMessage(`Du angrep og drepte ${playerData.username}!`);
-          setMessageType("success");
 
-          // Update target player status to 'dead'
-          await updateDoc(doc(db, "Characters", targetDocId), {
-            status: "dead",
+          // Query bounties on the target player
+          const bountyQuery = query(
+            collection(db, "Bounty"),
+            where("WantedId", "==", targetDocId)
+          );
+          const bountySnapshot = await getDocs(bountyQuery);
+
+          let totalBountyAmount = 0;
+          const bountyIdsToDelete: string[] = [];
+
+          bountySnapshot.forEach((doc) => {
+            const bountyData = doc.data();
+            totalBountyAmount += bountyData.Bounty;
+            bountyIdsToDelete.push(doc.id);
           });
 
-          // Update assassin's lastActive timestamp
-          await updateDoc(doc(db, "Characters", userCharacter.id), {
-            lastActive: serverTimestamp(),
-          });
+          // Reward the killer with the bounty amount
+          if (totalBountyAmount > 0) {
+            const updatedMoney = userCharacter.stats.money + totalBountyAmount;
+            await updateDoc(doc(db, "Characters", userCharacter.id), {
+              "stats.money": updatedMoney,
+            });
 
-          // Add a document to the GameEvents collection to log the assassination
-          await addDoc(collection(db, "GameEvents"), {
-            eventType: "assassination",
-            assassinId: userCharacter.id,
-            assassinName: userCharacter.username,
-            victimId: targetDocId,
-            victimName: playerData.username,
-            location: userCharacter.location,
-            timestamp: serverTimestamp(),
-          });
+            // Delete bounties on the killed player
+            for (const bountyId of bountyIdsToDelete) {
+              await deleteDoc(doc(db, "Bounty", bountyId));
+            }
+
+            // Add an alert for the killer
+            await addDoc(
+              collection(db, `Characters/${userCharacter.id}/alerts`),
+              {
+                type: "bounty_reward",
+                timestamp: serverTimestamp(),
+                killedPlayerId: targetDocId,
+                killedPlayerName: playerData.username,
+                bountyAmount: totalBountyAmount,
+                read: false,
+              }
+            );
+
+            // Update target player status to 'dead'
+            await updateDoc(doc(db, "Characters", targetDocId), {
+              status: "dead",
+            });
+
+            setMessage(`Du angrep og drepte ${playerData.username}!`);
+            setMessageType("success");
+
+            // Update assassin's lastActive timestamp
+            await updateDoc(doc(db, "Characters", userCharacter.id), {
+              lastActive: serverTimestamp(),
+            });
+
+            // Add a document to the GameEvents collection to log the assassination
+            await addDoc(collection(db, "GameEvents"), {
+              eventType: "assassination",
+              assassinId: userCharacter.id,
+              assassinName: userCharacter.username,
+              victimId: targetDocId,
+              victimName: playerData.username,
+              location: userCharacter.location,
+              timestamp: serverTimestamp(),
+            });
+          }
         }
       }
     } catch (error) {
