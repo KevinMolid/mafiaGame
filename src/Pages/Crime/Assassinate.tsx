@@ -387,13 +387,13 @@ const Assassinate = () => {
                         {bounty.PaidById === userCharacter.id && (
                           <div className="px-2 py-1 text-center col-span-3">
                             <Button
-                              style="black"
+                              style="danger"
                               size="small"
                               onClick={() =>
                                 removeBounty(bounty.id, bounty.Bounty)
                               }
                             >
-                              Fjern dusør
+                              <i className="fa-solid fa-xmark"></i> Fjern dusør
                             </Button>
                           </div>
                         )}
