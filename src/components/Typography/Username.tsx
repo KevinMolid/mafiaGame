@@ -5,11 +5,11 @@ import { useCharacter } from "../../CharacterContext";
 const Username = ({ character }: any) => {
   const { userCharacter } = useCharacter();
 
-  const friendIDs = userCharacter?.friends.map((friend: any) => {
+  const friendIDs = userCharacter?.friends?.map((friend: any) => {
     return friend.id;
   });
 
-  const blacklistIDs = userCharacter?.blacklist.map((player: any) => {
+  const blacklistIDs = userCharacter?.blacklist?.map((player: any) => {
     return player.id;
   });
 
