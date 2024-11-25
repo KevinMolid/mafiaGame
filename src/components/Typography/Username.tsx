@@ -20,12 +20,12 @@ const Username = ({ character }: any) => {
           <i className="fa-solid fa-user"></i>{" "}
         </span>
       )}
-      {userCharacter && friendIDs.includes(character.id) && (
+      {userCharacter && friendIDs && friendIDs.includes(character.id) && (
         <span className="text-green-400">
           <i className="fa-solid fa-user"></i>{" "}
         </span>
       )}
-      {userCharacter && blacklistIDs.includes(character.id) && (
+      {userCharacter && blacklistIDs && blacklistIDs.includes(character.id) && (
         <span className="text-red-400">
           <i className="fa-solid fa-skull-crossbones"></i>{" "}
         </span>
