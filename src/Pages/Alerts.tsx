@@ -36,6 +36,9 @@ interface Alert {
   robberName?: string;
   senderName?: string;
   familyName?: string;
+  bountyAmount?: number;
+  killedPlayerId?: string;
+  killedPlayerName?: string;
   timestamp: Timestamp;
   read: boolean;
 }
@@ -102,6 +105,9 @@ const Alerts = () => {
           senderName: doc.data().senderName || "",
           familyId: doc.data().familyId || "",
           familyName: doc.data().familyName || "",
+          bountyAmount: doc.data().bountyAmount || 0,
+          killedPlayerId: doc.data().killedPlayerId || "",
+          killedPlayerName: doc.data().killedPlayerName || "",
           read: doc.data().read || false,
         }));
 
@@ -157,12 +163,26 @@ const Alerts = () => {
       {alerts.length === 0 ? (
         <p>Du har ingen varsler.</p>
       ) : (
-        <div className="flex gap-2 flex-col">
+        <div className="flex gap-1 md:gap-2 flex-col">
           {alerts.map((alert) => (
             <Alert key={alert.id} read={alert.read}>
               {/* Rank alert */}
               {alert.type === "xp" && (
                 <small>Du nådde ranken {alert.newRank}.</small>
+              )}
+
+              {/* Bounty Reward alert */}
+              {alert.type === "bountyReward" && (
+                <small>
+                  Du mottok ${alert.bountyAmount?.toLocaleString()} for å drepe{" "}
+                  <Username
+                    character={{
+                      id: alert.killedPlayerId,
+                      username: alert.killedPlayerName,
+                    }}
+                  />
+                  .
+                </small>
               )}
 
               {/* Robbery alert */}

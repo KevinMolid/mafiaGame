@@ -163,7 +163,7 @@ const Assassinate = () => {
             await addDoc(
               collection(db, `Characters/${userCharacter.id}/alerts`),
               {
-                type: "bounty_reward",
+                type: "bountyReward",
                 timestamp: serverTimestamp(),
                 killedPlayerId: targetDocId,
                 killedPlayerName: playerData.username,
