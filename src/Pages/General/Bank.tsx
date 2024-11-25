@@ -46,13 +46,13 @@ const Bank = () => {
   }
 
   // Handle inputs
-  const handleInputChange = (e: any) => {
-    const value = e.target.value;
-    if (value === "") {
-      setAmount("");
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/,/g, ""); // Remove existing commas
+    if (value === "" || isNaN(Number(value))) {
+      setAmount(""); // Clear the input if it's empty or invalid
     } else {
-      const intValue = parseInt(value, 10);
-      setAmount(isNaN(intValue) ? "" : intValue);
+      const numericValue = parseInt(value, 10);
+      setAmount(numericValue); // Store the raw number
     }
   };
 
@@ -60,13 +60,15 @@ const Bank = () => {
     setTargetCharacter(e.target.value);
   };
 
-  const handleAmountToSendInputChange = (e: any) => {
-    const value = e.target.value;
-    if (value === "") {
-      setAmountToSend("");
+  const handleAmountToSendInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value.replace(/,/g, ""); // Remove existing commas
+    if (value === "" || isNaN(Number(value))) {
+      setAmountToSend(""); // Clear the input if it's empty or invalid
     } else {
-      const intValue = parseInt(value, 10);
-      setAmountToSend(isNaN(intValue) ? "" : intValue);
+      const numericValue = parseInt(value, 10);
+      setAmountToSend(numericValue); // Store the raw number
     }
   };
 
@@ -334,8 +336,8 @@ const Bank = () => {
         <form className="flex flex-col gap-2" action="">
           <input
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-            type="number"
-            value={amount}
+            type="text"
+            value={amount ? Number(amount).toLocaleString() : ""}
             placeholder="Skriv inn beløp"
             onChange={handleInputChange}
           />
@@ -372,9 +374,9 @@ const Bank = () => {
           />
           <input
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-            type="number"
+            type="text"
             placeholder="Beløp"
-            value={amountToSend}
+            value={amountToSend ? Number(amountToSend).toLocaleString() : ""}
             onChange={handleAmountToSendInputChange}
           />
           <div>
