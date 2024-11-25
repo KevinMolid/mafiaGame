@@ -72,7 +72,7 @@ const Profile = () => {
 
   const addFriend = async () => {
     if (!spillerID || !characterData || !userData) {
-      console.error("Missing necessary data to add a friend.");
+      console.error("Mangler nødvendig data for å legge til venn.");
       return;
     }
 
@@ -112,10 +112,62 @@ const Profile = () => {
         setMessageType("success");
         setMessage(`La ${characterData.username} til som venn.`);
       } else {
-        console.error("User document does not exist.");
+        console.error("Brukeren finnes ikke.");
       }
     } catch (err) {
-      console.error("An error occurred while adding a friend:", err);
+      console.error("En feil oppstod da du prøvde å legge til en venn:", err);
+    }
+  };
+
+  const addToBlacklist = async () => {
+    if (!spillerID || !characterData || !userData) {
+      console.error("Missing necessary data to add a friend.");
+      return;
+    }
+
+    const newBlacklist = { id: spillerID, name: characterData.username };
+    const userDocRef = doc(db, "Users", userData.uid);
+
+    try {
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+
+        // Check if `blacklist` field exists and is an array
+        const currentBlacklist = Array.isArray(userData.blacklist)
+          ? userData.blacklist
+          : [];
+
+        // Avoid duplicate friends
+        const isAlreadyBlacklist = currentBlacklist.some(
+          (blacklist: any) => blacklist.id === spillerID
+        );
+
+        if (isAlreadyBlacklist) {
+          setMessageType("warning");
+          setMessage(
+            `${characterData.username} er allerede lagt til på svartelisten.`
+          );
+          return;
+        }
+
+        // Add new friend
+        const updatedBlacklist = [...currentBlacklist, newBlacklist];
+
+        // Update Firestore
+        await updateDoc(userDocRef, { blacklist: updatedBlacklist });
+
+        setMessageType("success");
+        setMessage(`La ${characterData.username} til på svartelisten.`);
+      } else {
+        console.error("Brukeren finnes ikke.");
+      }
+    } catch (err) {
+      console.error(
+        "En feil oppstod da du prøvde å legge til en spiller på svartelisten:",
+        err
+      );
     }
   };
 
@@ -172,6 +224,7 @@ const Profile = () => {
               </button>
 
               <button
+                onClick={addToBlacklist}
                 className="hover:text-white"
                 title={`Svartelist ${characterData.username}`}
               >
