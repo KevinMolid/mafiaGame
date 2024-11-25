@@ -3,15 +3,18 @@ import Main from "../components/Main";
 import Notebook from "./Notebook";
 import Blacklist from "./Blacklist";
 import EditProfile from "./EditProfile";
+import Tab from "../components/Tab";
+import InfoBox from "../components/InfoBox";
 
 // React
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
 import { useCharacter } from "../CharacterContext";
+import { useAuth } from "../AuthContext";
 
 // Firebase
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
 
@@ -25,6 +28,7 @@ import timeAgo from "../Functions/TimeFunctions";
 
 const Profile = () => {
   const { spillerID } = useParams<{ spillerID: string }>();
+  const { userData } = useAuth();
   const [characterData, setCharacterData] = useState<any>(null);
   const { character } = useCharacter();
   const [loading, setLoading] = useState(true);
@@ -32,6 +36,10 @@ const Profile = () => {
   const [view, setView] = useState<
     "profile" | "notebook" | "blacklist" | "edit"
   >("profile");
+  const [message, setMessage] = useState<string>("");
+  const [messageType, setMessageType] = useState<
+    "info" | "success" | "warning" | "failure"
+  >("info");
 
   useEffect(() => {
     const fetchCharacterData = async () => {
@@ -62,6 +70,55 @@ const Profile = () => {
     }
   }, [spillerID]);
 
+  const addFriend = async () => {
+    if (!spillerID || !characterData || !userData) {
+      console.error("Missing necessary data to add a friend.");
+      return;
+    }
+
+    const newFriend = { id: spillerID, name: characterData.username };
+    const userDocRef = doc(db, "Users", userData.uid);
+
+    try {
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+
+        // Check if `friends` field exists and is an array
+        const currentFriends = Array.isArray(userData.friends)
+          ? userData.friends
+          : [];
+
+        // Avoid duplicate friends
+        const isAlreadyFriend = currentFriends.some(
+          (friend: any) => friend.id === spillerID
+        );
+
+        if (isAlreadyFriend) {
+          setMessageType("warning");
+          setMessage(
+            `${characterData.username} er allerede lagt til som venn.`
+          );
+          return;
+        }
+
+        // Add new friend
+        const updatedFriends = [...currentFriends, newFriend];
+
+        // Update Firestore
+        await updateDoc(userDocRef, { friends: updatedFriends });
+
+        setMessageType("success");
+        setMessage(`La ${characterData.username} til som venn.`);
+      } else {
+        console.error("User document does not exist.");
+      }
+    } catch (err) {
+      console.error("An error occurred while adding a friend:", err);
+    }
+  };
+
   if (loading) {
     return <div>Laster...</div>;
   }
@@ -82,6 +139,8 @@ const Profile = () => {
 
   return (
     <Main>
+      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
       <div className="flex flex-col items-center md:grid md:grid-cols-[max-content_max-content] gap-4 lg:gap-8 pb-4 border-b border-neutral-700">
         <img
           className="w-[300px] h-[300px] object-cover"
@@ -91,82 +150,44 @@ const Profile = () => {
 
         <div className="flex flex-col h-full justify-between gap-4">
           {/* Icons */}
-          <div className="text-2xl flex gap-4">
-            {spillerID !== character.id && (
+          {spillerID !== character.id ? (
+            <div className="text-2xl flex gap-4">
               <Link
                 to={`/meldinger?username=${encodeURIComponent(
                   characterData.username
                 )}`}
+                title={`Send melding til ${characterData.username}`}
               >
                 <div className="hover:text-white">
                   <i className="fa-solid fa-envelope"></i>
                 </div>
               </Link>
-            )}
 
-            {spillerID === character.id && (
-              <div
-                className="hover:text-white hover:cursor-pointer"
-                onClick={() => setView("profile")}
-              >
-                <i className="fa-solid fa-user"></i>
-              </div>
-            )}
-
-            {spillerID === character.id && (
-              <div
-                className="hover:text-white hover:cursor-pointer"
-                onClick={() => setView("notebook")}
-              >
-                <i className="fa-solid fa-book"></i>
-              </div>
-            )}
-
-            {spillerID === character.id && (
-              <div
-                className="hover:text-white hover:cursor-pointer"
-                onClick={() => setView("blacklist")}
-              >
-                <i className="fa-solid fa-book-skull"></i>
-              </div>
-            )}
-
-            {spillerID === character.id && (
-              <div
-                className="hover:text-white hover:cursor-pointer"
-                onClick={() => setView("edit")}
-              >
-                <i className="fa-solid fa-edit"></i>
-              </div>
-            )}
-
-            {spillerID !== character.id && (
               <button
+                onClick={addFriend}
                 className="hover:text-white"
                 title={`Sett ${characterData.username} som venn`}
               >
                 <i className="fa-solid fa-user-group"></i>{" "}
               </button>
-            )}
 
-            {spillerID !== character.id && (
               <button
                 className="hover:text-white"
                 title={`Svartelist ${characterData.username}`}
               >
                 <i className="fa-solid fa-skull-crossbones"></i>
               </button>
-            )}
 
-            {spillerID !== character.id && (
               <button
                 className="hover:text-white"
                 title={`Rapporter ${characterData.username}`}
               >
                 <i className="fa-solid fa-triangle-exclamation"></i>{" "}
               </button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div></div>
+          )}
 
           {/* Info */}
           <ul className="grid grid-cols-[min-content_max-content] gap-x-4">
@@ -241,6 +262,28 @@ const Profile = () => {
             </li>
           </ul>
         </div>
+        {spillerID === character.id && (
+          <ul className="flex flex-wrap col-span-2 mt-4">
+            <Tab active={view === "profile"} onClick={() => setView("profile")}>
+              <i className="fa-solid fa-user"></i> Profil
+            </Tab>
+            <Tab
+              active={view === "notebook"}
+              onClick={() => setView("notebook")}
+            >
+              <i className="fa-solid fa-pencil"></i> Notater
+            </Tab>
+            <Tab
+              active={view === "blacklist"}
+              onClick={() => setView("blacklist")}
+            >
+              <i className="fa-solid fa-address-book"></i> Kontakter
+            </Tab>
+            <Tab active={view === "edit"} onClick={() => setView("edit")}>
+              <i className="fa-solid fa-pen-to-square"></i> Endre profil
+            </Tab>
+          </ul>
+        )}
       </div>
 
       {/* Views */}

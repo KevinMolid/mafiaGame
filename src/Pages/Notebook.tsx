@@ -5,7 +5,9 @@ import Button from "../components/Button";
 import { useState } from "react";
 
 const Notebook = () => {
-  const [notes, setNotes] = useState("Here are your notes. Click to Edit.");
+  const [notes, setNotes] = useState(
+    "Her er notatene dine. Trykk for å redigere."
+  );
   const [editing, setEditing] = useState(false);
 
   const handleChange = (e: any) => {
@@ -14,7 +16,7 @@ const Notebook = () => {
 
   return (
     <div className="flex flex-col gap-2">
-      <H2>Notebook</H2>
+      <H2>Notater</H2>
       <div className="mb-2">
         <Box>
           {!editing && (
