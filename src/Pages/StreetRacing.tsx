@@ -9,12 +9,10 @@ import Tab from "../components/Tab";
 
 import Cars from "../Data/Cars";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const StreetRacing = () => {
-  const [selectedLiga, setSelectedLiga] = useState<any>({});
-  const [showAcceptedCars, setShowAcceptedCars] = useState<boolean>(false);
-
+  const defaultLiga = { name: "Klasse D", tier: 1 };
   const ligas = [
     { name: "Klasse D", tier: 1 },
     { name: "Klasse C", tier: 2 },
@@ -23,6 +21,21 @@ const StreetRacing = () => {
     { name: "Klasse S", tier: 5 },
     { name: "Klasse El", tier: undefined },
   ];
+
+  // State
+  const [selectedLiga, setSelectedLiga] = useState<{
+    name: string;
+    tier: number | undefined;
+  }>(() => {
+    const storedLiga = localStorage.getItem("selectedLiga");
+    return storedLiga ? JSON.parse(storedLiga) : defaultLiga; // Handle null case
+  });
+  const [showAcceptedCars, setShowAcceptedCars] = useState<boolean>(false);
+
+  // Save selectedLiga to localStorage
+  useEffect(() => {
+    localStorage.setItem("selectedLiga", JSON.stringify(selectedLiga));
+  }, [selectedLiga]);
 
   return (
     <Main>
@@ -34,7 +47,7 @@ const StreetRacing = () => {
         {ligas.map((liga, index) => (
           <Tab
             key={"liga" + index}
-            active={selectedLiga.name === liga.name}
+            active={selectedLiga ? selectedLiga.name === liga.name : false}
             onClick={() => setSelectedLiga(liga)}
           >
             {liga.name}
