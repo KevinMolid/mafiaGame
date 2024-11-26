@@ -32,10 +32,44 @@ const FamilySettings = ({
   setMessage,
   setMessageType,
 }: FamilySettingsInterface) => {
-  const { userCharacter, setUserCharacter } = useCharacter();
+  const { userCharacter } = useCharacter();
   const [changingProfile, setChangingProfile] = useState<boolean>(false);
 
   if (!userCharacter || !family) return;
+
+  const isBoss = family.leaderId === userCharacter.id;
+
+  // Function to leave the family
+  const leaveFamily = async () => {
+    if (!userCharacter.familyId || !family) {
+      setError("Du er ikke medlem av noen familie.");
+      return;
+    }
+
+    try {
+      // Remove the user from the family's members array
+      const familyRef = doc(db, "Families", userCharacter.familyId);
+      await updateDoc(familyRef, {
+        members: family.members.filter(
+          (member) => member.id !== userCharacter.id
+        ),
+      });
+
+      // Update the character's familyId and familyName to null
+      const characterRef = doc(db, "Characters", userCharacter.id);
+      await updateDoc(characterRef, { familyId: null, familyName: null });
+
+      // Clear family state
+      setFamily(null);
+
+      // Notify the user
+      setMessageType("success");
+      setMessage(`Du forlot familien ${family.name}.`);
+    } catch (error) {
+      console.error("Feil ved forlatelse av familie:", error);
+      setError("Kunne ikke forlate familien. Vennligst prøv igjen senere.");
+    }
+  };
 
   // Function to disband the family
   const disbandFamily = async () => {
@@ -55,11 +89,6 @@ const FamilySettings = ({
 
         setMessageType("success");
         setMessage(`Du la ned familien ${family.name}.`);
-
-        // Update the local character context
-        setUserCharacter((prev) =>
-          prev ? { ...prev, familyId: null, familyName: null } : prev
-        ); // Set to null
 
         // Clear family state
         setFamily(null);
@@ -181,12 +210,21 @@ const FamilySettings = ({
               <i className="fa-solid fa-pen-to-square"></i> Endre profil
             </button>
             <hr className="my-2 border-neutral-600" />
-            <button
-              className="block text-red-400 cursor-pointer hover:underline"
-              onClick={disbandFamily}
-            >
-              <i className="fa-solid fa-ban"></i> Legg ned familie
-            </button>
+            {isBoss ? (
+              <button
+                className="block text-red-400 cursor-pointer hover:underline"
+                onClick={disbandFamily}
+              >
+                <i className="fa-solid fa-ban"></i> Legg ned familien
+              </button>
+            ) : (
+              <button
+                className="block text-red-400 cursor-pointer hover:underline"
+                onClick={leaveFamily}
+              >
+                <i className="fa-solid fa-ban"></i> Forlat familien
+              </button>
+            )}
           </div>
         </div>
       )}
