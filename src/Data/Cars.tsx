@@ -29,15 +29,37 @@ import LamborghiniVenenoRoadster from "/images/cars/Lamborghini Veneno Roadster.
 
 const Cars = [
   // Tier 1
-  { name: "Toyota Camry", value: 27000, hp: 203, img: ToyotaCamry, tier: 1 },
-  { name: "Honda Accord", value: 28000, hp: 192, img: HondaAccord, tier: 1 },
-  { name: "Nissan Altima", value: 26500, hp: 188, img: NissanAltima, tier: 1 },
+  {
+    name: "Toyota Camry",
+    value: 27000,
+    hp: 203,
+    img: ToyotaCamry,
+    tier: 1,
+    isElectric: false,
+  },
+  {
+    name: "Honda Accord",
+    value: 28000,
+    hp: 192,
+    img: HondaAccord,
+    tier: 1,
+    isElectric: false,
+  },
+  {
+    name: "Nissan Altima",
+    value: 26500,
+    hp: 188,
+    img: NissanAltima,
+    tier: 1,
+    isElectric: false,
+  },
   {
     name: "Subaru Outback",
     value: 30000,
     hp: 182,
     img: SubaruOutback,
     tier: 1,
+    isElectric: false,
   },
   { name: "Ford Escape", value: 29500, hp: 181, img: FordEscape, tier: 1 },
   {
@@ -46,22 +68,74 @@ const Cars = [
     hp: 170,
     img: ChevroletEquinox,
     tier: 1,
+    isElectric: false,
   },
-  { name: "Toyota RAV4", value: 29000, hp: 203, img: ToyotaRAV4, tier: 1 },
-  { name: "Honda CR-V", value: 31000, hp: 190, img: HondaCRV, tier: 1 },
-  { name: "Tesla Model 3", value: 42000, hp: 283, img: TeslaModel3, tier: 1 },
+  {
+    name: "Toyota RAV4",
+    value: 29000,
+    hp: 203,
+    img: ToyotaRAV4,
+    tier: 1,
+    isElectric: false,
+  },
+  {
+    name: "Honda CR-V",
+    value: 31000,
+    hp: 190,
+    img: HondaCRV,
+    tier: 1,
+    isElectric: false,
+  },
+  {
+    name: "Tesla Model 3",
+    value: 42000,
+    hp: 283,
+    img: TeslaModel3,
+    tier: 1,
+    isElectric: true,
+  },
+
   // Tier 2
-  { name: "BMW 5 Series", value: 55000, hp: 248, img: BMW5Series, tier: 2 },
+  {
+    name: "BMW 5 Series",
+    value: 55000,
+    hp: 248,
+    img: BMW5Series,
+    tier: 2,
+    isElectric: false,
+  },
   {
     name: "Mercedes-Benz E-Class",
     value: 60000,
     hp: 255,
     img: MercedesBenzEClass,
     tier: 2,
+    isElectric: false,
   },
-  { name: "Audi Q7", value: 65000, hp: 261, img: AudiQ7, tier: 2 },
-  { name: "Porsche Macan", value: 63000, hp: 261, img: PorscheMacan, tier: 2 },
-  { name: "Tesla Model S", value: 95000, hp: 670, img: TeslaModelS, tier: 2 },
+  {
+    name: "Audi Q7",
+    value: 65000,
+    hp: 261,
+    img: AudiQ7,
+    tier: 2,
+    isElectric: false,
+  },
+  {
+    name: "Porsche Macan",
+    value: 63000,
+    hp: 261,
+    img: PorscheMacan,
+    tier: 2,
+    isElectric: false,
+  },
+  {
+    name: "Tesla Model S",
+    value: 95000,
+    hp: 670,
+    img: TeslaModelS,
+    tier: 2,
+    isElectric: true,
+  },
   // Tier 3
   {
     name: "Porsche 911 Carrera",
@@ -69,6 +143,7 @@ const Cars = [
     hp: 379,
     img: Porsche911Carrera,
     tier: 3,
+    isElectric: false,
   },
   {
     name: "Mercedes-Benz S 580",
@@ -76,6 +151,7 @@ const Cars = [
     hp: 496,
     img: MercedesBenzS580,
     tier: 3,
+    isElectric: false,
   },
   {
     name: "Tesla Model X Plaid",
@@ -83,6 +159,7 @@ const Cars = [
     hp: 1020,
     img: TeslaModelXPlaid,
     tier: 3,
+    isElectric: true,
   },
   {
     name: "BMW M8 Competition",
@@ -90,6 +167,7 @@ const Cars = [
     hp: 617,
     img: BMWM8Competition,
     tier: 3,
+    isElectric: false,
   },
   {
     name: "Audi R8 V10 Performance",
@@ -97,6 +175,7 @@ const Cars = [
     hp: 602,
     img: AudiR8V10Performance,
     tier: 3,
+    isElectric: false,
   },
   // Tier 4
   {
@@ -105,6 +184,7 @@ const Cars = [
     hp: 630,
     img: LamborghiniHuracánEVO,
     tier: 4,
+    isElectric: false,
   },
   {
     name: "Ferrari F8 Tributo",
@@ -112,6 +192,7 @@ const Cars = [
     hp: 710,
     img: FerrariF8Tributo,
     tier: 4,
+    isElectric: false,
   },
   { name: "McLaren 720S", value: 300000, hp: 710, img: McLaren720s, tier: 4 },
   {
@@ -120,6 +201,7 @@ const Cars = [
     hp: 563,
     img: RollsRoyceGhost,
     tier: 4,
+    isElectric: false,
   },
   {
     name: "Aston Martin DBS Superleggera",
@@ -127,6 +209,7 @@ const Cars = [
     hp: 715,
     img: AstonMartinDBSSuperleggera,
     tier: 4,
+    isElectric: false,
   },
   // Tier 5
   {
@@ -135,6 +218,7 @@ const Cars = [
     hp: 769,
     img: FerrariSF90Stradale,
     tier: 5,
+    isElectric: false,
   },
   {
     name: "Pagani Zonda Revolucion",
@@ -142,6 +226,7 @@ const Cars = [
     hp: 800,
     img: PaganiZondaRevolucion,
     tier: 5,
+    isElectric: false,
   },
   {
     name: "Lamborghini Veneno Roadster",
@@ -149,6 +234,7 @@ const Cars = [
     hp: 750,
     img: LamborghiniVenenoRoadster,
     tier: 5,
+    isElectric: false,
   },
 ];
 

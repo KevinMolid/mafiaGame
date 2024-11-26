@@ -72,18 +72,63 @@ const StreetRacing = () => {
                 )}
               </p>
               {showAcceptedCars && (
-                <ul className="flex flex-wrap gap-x-2">
+                <ul className="flex flex-wrap gap-x-1 gap-y-1 mt-1">
                   {Cars.map((car) => {
-                    if (!selectedLiga.tier) {
+                    // Ligas without tier sorting
+                    if (!selectedLiga.tier && car.isElectric == true) {
                       return (
-                        <li key={car.name}>
-                          <small>{car.name}</small>
+                        <li
+                          key={car.name}
+                          className="bg-neutral-800 px-4 rounded-full"
+                        >
+                          <small
+                            className={
+                              "font-bold " +
+                              (car.tier == 1
+                                ? "text-neutral-400"
+                                : car.tier == 2
+                                ? "text-green-400"
+                                : car.tier == 3
+                                ? "text-blue-400"
+                                : car.tier == 4
+                                ? "text-purple-400"
+                                : car.tier == 5
+                                ? "text-yellow-400"
+                                : "")
+                            }
+                          >
+                            {car.name}
+                          </small>
                         </li>
                       );
-                    } else if (car.tier === selectedLiga.tier) {
+                      // Tier sorting
+                    } else if (
+                      car.tier === selectedLiga.tier &&
+                      car.isElectric == false
+                    ) {
                       return (
-                        <li key={car.name}>
-                          <small>{car.name}</small>
+                        <li
+                          key={car.name}
+                          className="bg-neutral-800 px-4 rounded-full"
+                        >
+                          <small
+                            className={
+                              "font-bold " +
+                              (car.tier == 1
+                                ? "text-neutral-400"
+                                : car.tier == 2
+                                ? "text-green-400"
+                                : car.tier == 3
+                                ? "text-blue-400"
+                                : car.tier == 4
+                                ? "text-purple-400"
+                                : car.tier == 5
+                                ? "text-yellow-400"
+                                : "")
+                            }
+                          >
+                            {car.name}
+                          </small>
                         </li>
                       );
                     }
