@@ -1,5 +1,5 @@
 // Files
-import logo from "../assets/DsD3.png";
+import logo from "../assets/DsDsmall.png";
 
 // Context
 import { useAuth } from "../AuthContext";
