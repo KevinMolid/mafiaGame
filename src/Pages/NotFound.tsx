@@ -6,16 +6,16 @@ import { Link } from "react-router-dom";
 const NotFound = () => {
   return (
     <Main>
-      <div className="max-w-[350px] m-auto text-center">
+      <div className="max-w-[350px] h-full flex flex-col justify-center mx-auto mb-auto pb-60 text-center">
         <H1>
           <strong className="text-7xl">404</strong>
         </H1>
         <H2>Ooops! Siden finnes ikke.</H2>
-        <p className="mb-4">Sjekk at URL-lenken stemmer.</p>
+        <p className="mb-4">Sjekk at URL-lenken stemmer!</p>
         <p className="mb-4">
           <small>
-            Dersom du mener at du har kommet hit som følge av en feil i spillet,
-            ta gjerne kontakt via{" "}
+            Dersom du har kommet hit som følge av en feil i spillet, ta gjerne
+            kontakt via{" "}
             <Link
               className="text-neutral-200 hover:underline font-medium"
               to={"/support"}
@@ -32,7 +32,7 @@ const NotFound = () => {
             className="text-neutral-200 hover:underline font-medium"
             to={"/"}
           >
-            Den siste Don{" "}
+            Den siste Don
           </Link>
           .
         </p>
