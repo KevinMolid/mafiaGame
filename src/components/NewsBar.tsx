@@ -1,4 +1,5 @@
 import Username from "./Typography/Username";
+import Familyname from "./Typography/Familyname";
 
 import { useState, useEffect } from "react";
 import {
@@ -137,6 +138,30 @@ const NewsBar = () => {
                     character={{
                       id: event.resetById,
                       username: event.resetByName,
+                    }}
+                  />{" "}
+                  {formattedTime}
+                </p>
+              </li>
+            );
+          } else if (event.eventType === "newFamily") {
+            return (
+              <li
+                key={isDuplicate ? `${event.id}-duplicate` : event.id}
+                className="news-item flex gap-1 justify-end"
+              >
+                <p>
+                  <Username
+                    character={{
+                      id: event.leaderId,
+                      username: event.leaderName,
+                    }}
+                  />{" "}
+                  opprettet familien{" "}
+                  <Familyname
+                    family={{
+                      id: event.familyId,
+                      name: event.familyName,
                     }}
                   />{" "}
                   {formattedTime}

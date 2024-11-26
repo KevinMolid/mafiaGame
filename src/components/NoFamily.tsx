@@ -21,6 +21,7 @@ import {
   deleteDoc,
   updateDoc,
   deleteField,
+  serverTimestamp,
 } from "firebase/firestore";
 
 const db = getFirestore();
@@ -163,6 +164,16 @@ const NoFamily = ({
         },
         { merge: true }
       );
+
+      // Add a document to the GameEvents collection to log creation of the family
+      await addDoc(collection(db, "GameEvents"), {
+        eventType: "newFamily",
+        familyId: familyId,
+        familyName: familyName,
+        leaderId: userCharacter.id,
+        leaderName: userCharacter.username,
+        timestamp: serverTimestamp(),
+      });
 
       // set Family in local state
       setFamily({ id: familyId, ...newFamilyData });
