@@ -73,6 +73,8 @@ import NewsBar from "./components/NewsBar.tsx";
 // Testing
 import Styles from "./Pages/Testing/Styles.tsx";
 
+import NotFound from "./Pages/NotFound.tsx";
+
 function App() {
   return (
     <AuthProvider>
@@ -343,6 +345,9 @@ function App() {
                               </ProtectedRoute>
                             }
                           />
+
+                          {/* 404 Route */}
+                          <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Layout>
                     </div>

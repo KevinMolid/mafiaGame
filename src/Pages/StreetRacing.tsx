@@ -19,7 +19,7 @@ const StreetRacing = () => {
     { name: "Klasse B", tier: 3 },
     { name: "Klasse A", tier: 4 },
     { name: "Klasse S", tier: 5 },
-    { name: "Klasse El", tier: undefined },
+    { name: "Klasse E", tier: undefined },
   ];
 
   // State
