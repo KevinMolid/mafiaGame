@@ -2,6 +2,7 @@
 import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
 import Button from "../components/Button";
+import InfoBox from "../components/InfoBox";
 
 // React
 import { useState, useEffect } from "react";
@@ -11,24 +12,18 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 
 // Firebaase
-import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 
-import firebaseConfig from "../firebaseConfig";
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const Signup = () => {
+const ForgotPassword = () => {
   const auth = getAuth();
   const { userData } = useAuth();
   const navigate = useNavigate();
 
+  const [message, setMessage] = useState<string>("");
+  const [messageType, setMessageType] = useState<
+    "info" | "success" | "warning" | "failure"
+  >("info");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
 
   useEffect(() => {
     if (userData) {
@@ -42,31 +37,21 @@ const Signup = () => {
     setEmail(event.target.value);
   }
 
-  function handlePwChange(event: any) {
-    setPassword(event.target.value);
-  }
-
-  /* Handle sign in */
-  function signUp() {
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        // Signed up
-        const user = userCredential.user;
-
-        // Add user to db
-        return setDoc(doc(db, "Users", user.uid), {
-          email: user.email,
-          uid: user.uid,
-          createdAt: new Date(),
-          activeCharacter: null,
-          characters: [],
-          type: "player",
-        });
+  /* Function to reset password */
+  const forgotPassword = (email: string) => {
+    if (!email) {
+      setMessageType("warning");
+      setMessage("Du må skrive inn en e-postadresse.");
+      return;
+    }
+    sendPasswordResetEmail(auth, email)
+      .then((response) => {
+        console.log(response);
       })
       .catch((error) => {
-        setError(error.code);
+        console.log(error.message);
       });
-  }
+  };
 
   return (
     <Main img="Mafia">
@@ -75,7 +60,10 @@ const Signup = () => {
           v. <strong>Alpha</strong>
         </small>
         <div className="bg-neutral-900/80 border border-neutral-500 p-6 rounded-lg flex flex-col gap-4 w-full">
-          <H1>Registrer bruker</H1>
+          <H1>Glemt passord</H1>
+
+          {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
           <form action="" className="flex flex-col gap-2">
             <div className="flex flex-col">
               <label htmlFor="email">E-post</label>
@@ -86,22 +74,14 @@ const Signup = () => {
                 onChange={handleEmailChange}
               />
             </div>
-            <div className="flex flex-col">
-              <label htmlFor="pw">Passord</label>
-              <input
-                className="bg-transparent px-2 py-1 border-b border-neutral-500"
-                id="pw"
-                type="password"
-                onChange={handlePwChange}
-              />
-            </div>
-            {error && <span className="text-red-500">{error}</span>}
           </form>
-          <Button onClick={signUp}>Registrer</Button>
-          <p className="text-stone-400 text-sm sm:text-base mt-4 text-center">
-            Har du allerede en bruker?{" "}
+          <Button onClick={() => forgotPassword(email)}>
+            Tilbakestill passord
+          </Button>
+          <p className="text-stone-400 text-sm sm:text-base text-center mt-4">
+            Gå tilbake til{" "}
             <Link to="/logginn">
-              <span className="text-white hover:underline">Logg inn her!</span>
+              <span className="text-white hover:underline">Logg inn!</span>
             </Link>
           </p>
         </div>
@@ -110,4 +90,4 @@ const Signup = () => {
   );
 };
 
-export default Signup;
+export default ForgotPassword;

@@ -84,21 +84,7 @@ const Login = () => {
           v. <strong>Alpha</strong>
         </small>
         <div className="bg-neutral-900/80 border border-neutral-500 p-6 rounded-lg flex flex-col gap-4 w-full">
-          <div className="flex flex-col gap-2">
-            <H1>Logg inn med</H1>
-
-            {/* Google login */}
-            <Button style="secondary" onClick={logInWithGoogle}>
-              <div className="flex justify-center gap-2">
-                <img
-                  src="https://cdn4.iconfinder.com/data/icons/logos-brands-7/512/google_logo-google_icongoogle-512.png"
-                  alt="Google logo"
-                  className="size-6"
-                />
-                <p className="mr-4">Google</p>
-              </div>
-            </Button>
-          </div>
+          <H1>Logg inn</H1>
 
           <form action="" className="flex flex-col gap-2">
             <div className="flex flex-col">
@@ -118,11 +104,37 @@ const Login = () => {
                 type="password"
                 onChange={handlePwChange}
               />
+              <p className="text-right">
+                <Link to="/glemtpassord">
+                  <span className="font-medium hover:underline">
+                    Glemt passord?
+                  </span>
+                </Link>
+              </p>
             </div>
             {error && <span className="text-red-500">{error}</span>}
           </form>
+
           <Button onClick={logIn}>Logg inn</Button>
-          <p className="text-stone-400 text-sm sm:text-base">
+
+          {/* Google login */}
+          <div className="grid grid-cols-3 items-center">
+            <hr className="border-neutral-600" />
+            <p className="text-center">Eller logg inn med</p>
+            <hr className="border-neutral-600" />
+          </div>
+          <Button style="secondary" onClick={logInWithGoogle}>
+            <div className="flex justify-center gap-2">
+              <img
+                src="https://cdn4.iconfinder.com/data/icons/logos-brands-7/512/google_logo-google_icongoogle-512.png"
+                alt="Google logo"
+                className="size-6"
+              />
+              <p className="mr-4">Google</p>
+            </div>
+          </Button>
+
+          <p className="text-center text-stone-400 text-sm sm:text-base mt-4">
             Har du ikke bruker?{" "}
             <Link to="/registrer">
               <span className="text-white hover:underline">

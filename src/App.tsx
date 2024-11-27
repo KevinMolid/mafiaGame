@@ -58,6 +58,7 @@ import Jackpot from "./Pages/Gambling/Jackpot.tsx";
 import Support from "./Pages/Support.tsx";
 import Signup from "./Pages/Signup.tsx";
 import Login from "./Pages/Login.tsx";
+import ForgotPassword from "./Pages/ForgotPassword.tsx";
 import CreateCharacter from "./Pages/CreateCharacter.tsx";
 import SelectCharacter from "./Pages/SelectCharacter.tsx";
 import Dead from "./Pages/Dead.tsx";
@@ -123,6 +124,10 @@ function App() {
                           <Route path="/statistikk" element={<Statistics />} />
                           <Route path="/registrer" element={<Signup />} />
                           <Route path="/logginn" element={<Login />} />
+                          <Route
+                            path="/glemtpassord"
+                            element={<ForgotPassword />}
+                          />
                           <Route path="/drept" element={<Dead />} />
 
                           {/* Protected Admin Routes */}
