@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import AdminList from "../../AdminList";
 
 import { useCharacter } from "../../CharacterContext";
 
@@ -12,6 +13,9 @@ const Username = ({ character }: any) => {
   const blacklistIDs = userCharacter?.blacklist?.map((player: any) => {
     return player.id;
   });
+
+  // Check if the character.id exists in AdminList
+  const isAdmin = AdminList.some((admin) => admin.id === character.id);
 
   return (
     <Link to={`/profil/${character.id}`}>
@@ -30,7 +34,16 @@ const Username = ({ character }: any) => {
           <i className="fa-solid fa-skull-crossbones"></i>{" "}
         </span>
       )}
-      <strong className="text-white hover:underline">
+      {isAdmin && (
+        <span className="text-yellow-400">
+          <i className="fa-solid fa-chess-king"></i>{" "}
+        </span>
+      )}
+      <strong
+        className={
+          "hover:underline " + (isAdmin ? "text-yellow-400" : "text-white")
+        }
+      >
         {character.username}
       </strong>
     </Link>

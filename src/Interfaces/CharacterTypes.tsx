@@ -18,6 +18,7 @@ export interface Reputation {
 
 export interface Character {
   id: string;
+  role?: string;
   location: string;
   stats: Stats;
   createdAt: Timestamp | Date;
@@ -53,6 +54,7 @@ export interface Character {
 }
 
 export interface Target {
+  role?: string;
   location: string;
   stats: Stats;
   createdAt: Timestamp;

@@ -107,6 +107,29 @@ const CharacterList = ({
     );
   };
 
+  const makeAdmin = async (character: any) => {
+    try {
+      const characterRef = doc(db, "Characters", character.id);
+
+      // Update the money in Firebase
+      await updateDoc(characterRef, {
+        role: "admin",
+      });
+
+      // Update the local state
+      setCharacters((prevCharacters) =>
+        prevCharacters.map((char) =>
+          char.id === character.id ? { ...char, role: "admin" } : char
+        )
+      );
+
+      setMessageType("success");
+      setMessage(`${character.username} ble satt som admin.`);
+    } catch (error) {
+      console.error("Feil ved oppdatering av admin-rolle:", error);
+    }
+  };
+
   const setMoney = async (character: any, newValue: number) => {
     try {
       const characterRef = doc(db, "Characters", character.id);
@@ -269,7 +292,7 @@ const CharacterList = ({
                         <i className="fa-solid fa-hand"></i> Gjennoppliv
                       </button>
                     )}
-                    {/* Set money */}
+                    {/* Set money / xp */}
                     <div className="flex gap-2">
                       <input
                         type="number"
@@ -283,6 +306,14 @@ const CharacterList = ({
                         Sett <strong>XP</strong>
                       </button>
                     </div>
+                  </div>
+                  {/* More actions */}
+                  <div className="px-4 py-1 bg-black font-medium text-sm">
+                    <button onClick={() => makeAdmin(character)}>
+                      <p>
+                        <i className="fa-solid fa-crown"></i> Sett som Admin
+                      </p>
+                    </button>
                   </div>
                   {/* Info */}
                   <div className="bg-neutral-800 px-4 py-2 text-sm flex flex-wrap gap-x-4 gap-y-1">

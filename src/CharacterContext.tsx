@@ -65,6 +65,7 @@ export const CharacterProvider = ({
           ) {
             const newCharacter: Character = {
               id: docSnapshot.id,
+              role: characterData.role as string,
               location: characterData.location as string,
               stats: characterData.stats as Stats,
               img: characterData.img as string,
