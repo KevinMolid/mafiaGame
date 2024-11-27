@@ -1,8 +1,8 @@
-# MafiaReign
+# Den siste Don
 
 ## Fight for Dominance
 
-Mafia Reign is a thrilling multiplayer strategy game where you build your criminal empire in the shadows of five major cities.
+Den siste Don is a thrilling MMO strategy game where you build your criminal empire in the shadows of five major cities.
 
 Rise through the ranks, form alliances, and challenge rival families for dominance.
 
