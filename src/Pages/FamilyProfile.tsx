@@ -67,7 +67,7 @@ const FamilyProfile = () => {
     <Main>
       <div className="flex flex-col items-center lg:grid lg:grid-cols-[max-content_max-content] gap-4 lg:gap-8 pb-4 border-b border-neutral-700">
         <img
-          className="w-[300px] h-[300px] object-cover"
+          className="w-[320px] h-[320px] object-cover"
           src={familyData.img || "/FamilyDefault.jpg"}
           alt={`${familyData.name} profilbilde`}
         />
