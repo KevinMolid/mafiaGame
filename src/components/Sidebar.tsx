@@ -24,7 +24,7 @@ const Sidebar = () => {
         <div className="relative">
           <Link to={`/profil/${userCharacter.id}`}>
             <img
-              className="border border-neutral-500 w-[160px] h-[160px] object-cover m-auto mb-2 hover:cursor-pointer"
+              className="w-[160px] h-[160px] object-cover m-auto mb-2 hover:cursor-pointer"
               src={userCharacter.img || "/default.jpg"}
               alt="Profile picture"
             />

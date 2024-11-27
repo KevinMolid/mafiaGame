@@ -61,7 +61,7 @@ const EditProfile = () => {
       <form action="" className="flex flex-col gap-4 mb-4">
         <div className="flex flex-col">
           <label htmlFor="profileImg">
-            Profilbilde (Anbefalt størrelse: 300 x 300 px)
+            Profilbilde (Anbefalt størrelse: 320 x 320 px)
           </label>
           <input
             className="bg-neutral-800 px-2 py-1"

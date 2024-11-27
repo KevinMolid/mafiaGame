@@ -213,7 +213,7 @@ const ForumThread = () => {
             <img
               src={author.img || defaultImg}
               alt={`${thread.authorName}'s avatar`}
-              className="w-24 h-24 md:w-28 md:h-28 mb-2 border border-neutral-600 object-cover"
+              className="w-[80px] h-[80px] md:w-28 md:h-28 mb-2 border border-neutral-600 object-cover"
             />
           </Link>
 
