@@ -29,7 +29,17 @@ interface Application {
   appliedAt: Date;
 }
 
-const FamilyApplications = () => {
+interface FamilyApplicationsInterface {
+  setMessage: React.Dispatch<React.SetStateAction<string>>;
+  setMessageType: React.Dispatch<
+    React.SetStateAction<"info" | "success" | "failure" | "warning">
+  >;
+}
+
+const FamilyApplications = ({
+  setMessage,
+  setMessageType,
+}: FamilyApplicationsInterface) => {
   const { userCharacter } = useCharacter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,6 +130,12 @@ const FamilyApplications = () => {
       // 3. Add applicant to the family's members array
       const familyRef = doc(db, "Families", userCharacter.familyId);
       await updateDoc(familyRef, {
+        events: arrayUnion({
+          type: "newMember",
+          characterId: application.applicantId,
+          characterName: application.applicantUsername,
+          timestamp: new Date(),
+        }),
         members: arrayUnion({
           id: application.applicantId,
           name: application.applicantUsername,
@@ -140,6 +156,11 @@ const FamilyApplications = () => {
       // Refresh applications after acceptance
       setApplications((prev) =>
         prev.filter((app) => app.documentId !== application.documentId)
+      );
+
+      setMessageType("success");
+      setMessage(
+        `Søknaden ble godkjent. ${application.applicantUsername} er nå medlem av familien.`
       );
     } catch (error) {
       console.error("Feil ved godkjenning av søknad:", error);

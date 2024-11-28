@@ -298,7 +298,6 @@ const Family = () => {
             <div>
               <H2>Hovedkvarter</H2>
               <H3>Hendelser</H3>
-              {}
 
               <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
                 <H3>Bunker</H3>
@@ -338,7 +337,12 @@ const Family = () => {
           )}
 
           {/* Applications panel */}
-          {activePanel === "applications" && <FamilyApplications />}
+          {activePanel === "applications" && (
+            <FamilyApplications
+              setMessage={setMessage}
+              setMessageType={setMessageType}
+            />
+          )}
 
           {/* Settings panel */}
           {activePanel === "settings" && (
