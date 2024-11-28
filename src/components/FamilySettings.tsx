@@ -7,7 +7,15 @@ import Box from "./Box";
 
 import { useCharacter } from "../CharacterContext";
 
-import { getFirestore, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  updateDoc,
+  deleteDoc,
+  addDoc,
+  collection,
+  serverTimestamp,
+} from "firebase/firestore";
 
 const db = getFirestore();
 
@@ -89,6 +97,16 @@ const FamilySettings = ({
 
         setMessageType("success");
         setMessage(`Du la ned familien ${family.name}.`);
+
+        // Add a document to the GameEvents to log disbanding
+        await addDoc(collection(db, "GameEvents"), {
+          eventType: "disbandedFamily",
+          familyId: family.id,
+          familyName: family.name,
+          leaderId: userCharacter.id,
+          leaderName: userCharacter.username,
+          timestamp: serverTimestamp(),
+        });
 
         // Clear family state
         setFamily(null);

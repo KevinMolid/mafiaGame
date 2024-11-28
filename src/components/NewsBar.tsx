@@ -168,6 +168,30 @@ const NewsBar = () => {
                 </p>
               </li>
             );
+          } else if (event.eventType === "disbandedFamily") {
+            return (
+              <li
+                key={isDuplicate ? `${event.id}-duplicate` : event.id}
+                className="news-item flex gap-1 justify-end"
+              >
+                <p>
+                  <Username
+                    character={{
+                      id: event.leaderId,
+                      username: event.leaderName,
+                    }}
+                  />{" "}
+                  la ned familien{" "}
+                  <Familyname
+                    family={{
+                      id: event.familyId,
+                      name: event.familyName,
+                    }}
+                  />{" "}
+                  {formattedTime}
+                </p>
+              </li>
+            );
           } else return null;
         })}
       </ul>
