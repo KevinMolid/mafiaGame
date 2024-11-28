@@ -99,7 +99,7 @@ const Robbery = () => {
       .filter((char) => char.id !== userCharacter.id);
 
     if (potentialTargets.length === 0) {
-      displayMessage("Det er ingen å rane i denne byen.", "failure");
+      displayMessage("Det er ingen å rane i denne byen.", "warning");
       return null;
     }
 
