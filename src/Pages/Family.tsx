@@ -298,6 +298,11 @@ const Family = () => {
             <div>
               <H2>Hovedkvarter</H2>
               <H3>Hendelser</H3>
+              <ul>
+                {family.events.map((familyEvent, index) => {
+                  return <li key={"event" + index}>{familyEvent.type}</li>;
+                })}
+              </ul>
 
               <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
                 <H3>Bunker</H3>
