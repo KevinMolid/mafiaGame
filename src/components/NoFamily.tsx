@@ -8,7 +8,7 @@ import Box from "./Box";
 
 import { useCharacter } from "../CharacterContext";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import {
   getFirestore,
   doc,
@@ -418,7 +418,14 @@ const NoFamily = ({
             </p>
             {userCharacter.activeFamilyApplication.applicationText && (
               <p className="mb-4 text-neutral-200">
-                {userCharacter.activeFamilyApplication.applicationText}
+                {userCharacter.activeFamilyApplication.applicationText
+                  .split("\n")
+                  .map((line, index) => (
+                    <Fragment key={index}>
+                      {line}
+                      <br />
+                    </Fragment>
+                  ))}
               </p>
             )}
             <Button style="danger" onClick={cancelApplication}>
