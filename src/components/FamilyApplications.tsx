@@ -223,7 +223,7 @@ const FamilyApplications = () => {
                     </p>
                     <p>{formatAppliedAt(application.appliedAt)}</p>
                   </div>
-                  <p className="text-white">
+                  <p>
                     {application.applicationText
                       .split("\n")
                       .map((line, index) => (
