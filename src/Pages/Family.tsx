@@ -29,8 +29,8 @@ const Family = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<
-    "members" | "safehouse" | "chat" | "profile" | "settings" | "applications"
-  >("members");
+    "members" | "hq" | "chat" | "profile" | "settings" | "applications"
+  >("hq");
   const [message, setMessage] = useState<string>("");
   const [messageType, setMessageType] = useState<
     "info" | "success" | "failure" | "warning"
@@ -240,10 +240,10 @@ const Family = () => {
           {/* Tabs */}
           <ul className="mb-8 flex flex-wrap">
             <Tab
-              active={activePanel === "safehouse"}
-              onClick={() => setActivePanel("safehouse")}
+              active={activePanel === "hq"}
+              onClick={() => setActivePanel("hq")}
             >
-              Base
+              Hovedkvarter
             </Tab>
 
             <Tab
@@ -293,9 +293,13 @@ const Family = () => {
           )}
 
           {/* Safehouse panel */}
-          {activePanel === "safehouse" && (
+          {activePanel === "hq" && (
+            // Headquarters
             <div>
-              <H2>Base</H2>
+              <H2>Hovedkvarter</H2>
+              <H3>Hendelser</H3>
+              {}
+
               <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
                 <H3>Bunker</H3>
                 <p>Antall plasser: 1/10</p>
