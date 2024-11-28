@@ -269,7 +269,7 @@ const NoFamily = ({
         activeFamilyApplication: deleteField(),
       });
 
-      setMessageType("info");
+      setMessageType("success");
       setMessage("Søknaden ble avbrutt.");
     } catch (error) {
       console.error("Error cancelling application:", error);

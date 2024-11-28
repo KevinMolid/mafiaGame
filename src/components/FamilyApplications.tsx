@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import {
   getFirestore,
   collection,
@@ -223,8 +223,16 @@ const FamilyApplications = () => {
                     </p>
                     <p>{formatAppliedAt(application.appliedAt)}</p>
                   </div>
-
-                  <p>{application.applicationText}</p>
+                  <p className="text-white">
+                    {application.applicationText
+                      .split("\n")
+                      .map((line, index) => (
+                        <Fragment key={index}>
+                          {line}
+                          <br />
+                        </Fragment>
+                      ))}
+                  </p>
 
                   <div className="flex gap-2 justify-end">
                     <Button onClick={() => acceptApplication(application)}>
