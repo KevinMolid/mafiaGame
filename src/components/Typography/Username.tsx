@@ -19,31 +19,28 @@ const Username = ({ character }: any) => {
 
   return (
     <Link to={`/profil/${character.id}`}>
-      {userCharacter && character.id === userCharacter.id && (
-        <span className="text-sky-400">
-          <i className="fa-solid fa-user"></i>{" "}
-        </span>
-      )}
-      {userCharacter && friendIDs && friendIDs.includes(character.id) && (
-        <span className="text-green-400">
-          <i className="fa-solid fa-user"></i>{" "}
-        </span>
-      )}
-      {userCharacter && blacklistIDs && blacklistIDs.includes(character.id) && (
-        <span className="text-red-400">
-          <i className="fa-solid fa-skull-crossbones"></i>{" "}
-        </span>
-      )}
-      {isAdmin && (
+      {isAdmin ? (
         <span className="text-yellow-400">
           <i className="fa-solid fa-chess-king"></i>{" "}
         </span>
+      ) : userCharacter && character.id === userCharacter.id ? (
+        <span className="text-sky-400">
+          <i className="fa-solid fa-user"></i>{" "}
+        </span>
+      ) : userCharacter && friendIDs && friendIDs.includes(character.id) ? (
+        <span className="text-green-400">
+          <i className="fa-solid fa-user"></i>{" "}
+        </span>
+      ) : userCharacter &&
+        blacklistIDs &&
+        blacklistIDs.includes(character.id) ? (
+        <span className="text-red-400">
+          <i className="fa-solid fa-skull-crossbones"></i>{" "}
+        </span>
+      ) : (
+        <span></span>
       )}
-      <strong
-        className={
-          "hover:underline " + (isAdmin ? "text-yellow-400" : "text-white")
-        }
-      >
+      <strong className="hover:underline text-white">
         {character.username}
       </strong>
     </Link>
