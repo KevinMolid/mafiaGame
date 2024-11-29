@@ -16,6 +16,8 @@ import NoFamily from "../components/NoFamily";
 import { useState, useEffect } from "react";
 import { useCharacter } from "../CharacterContext";
 
+import { formatTimestamp } from "../Functions/TimeFunctions";
+
 import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 
 // Interfaces
@@ -298,9 +300,29 @@ const Family = () => {
             <div>
               <H2>Hovedkvarter</H2>
               <H3>Hendelser</H3>
-              <ul>
+              <ul className="mb-4">
                 {family.events.map((familyEvent, index) => {
-                  return <li key={"event" + index}>{familyEvent.type}</li>;
+                  return (
+                    <li
+                      key={"event" + index}
+                      className="flex justify-between text-sm"
+                    >
+                      {familyEvent.type === "newMember" ? (
+                        <p>
+                          <Username
+                            character={{
+                              id: familyEvent.characterId,
+                              username: familyEvent.characterName,
+                            }}
+                          />{" "}
+                          ble medlem av familien.
+                        </p>
+                      ) : (
+                        <p>{familyEvent.type}</p>
+                      )}
+                      <p>{formatTimestamp(familyEvent.timestamp)}</p>
+                    </li>
+                  );
                 })}
               </ul>
 
