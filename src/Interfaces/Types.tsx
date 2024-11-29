@@ -16,7 +16,7 @@ export type FamilyData = {
   name: string;
   leaderName: string;
   leaderId: string;
-  events: FamilyEvent[];
+  events?: FamilyEvent[];
   members: FamilyMember[];
   createdAt: Date;
   rules: string;
