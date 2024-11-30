@@ -285,7 +285,13 @@ const Family = () => {
           </ul>
 
           {/* Member panel */}
-          {activePanel === "members" && <FamilyMembers family={family} />}
+          {activePanel === "members" && (
+            <FamilyMembers
+              family={family}
+              setMessage={setMessage}
+              setMessageType={setMessageType}
+            />
+          )}
 
           {/* Chat panel */}
           {activePanel === "chat" && (

@@ -4,6 +4,10 @@ import { useCharacter } from "../CharacterContext";
 import Button from "./Button";
 import { useState } from "react";
 
+import { getFirestore, doc, updateDoc } from "firebase/firestore";
+
+const db = getFirestore();
+
 type FamilyMember = {
   id: string;
   name: string;
@@ -22,9 +26,17 @@ type FamilyData = {
 
 interface FamilyMembersInterface {
   family: FamilyData;
+  setMessage: React.Dispatch<React.SetStateAction<string>>;
+  setMessageType: React.Dispatch<
+    React.SetStateAction<"info" | "success" | "failure" | "warning">
+  >;
 }
 
-const FamilyMembers = ({ family }: FamilyMembersInterface) => {
+const FamilyMembers = ({
+  family,
+  setMessage,
+  setMessageType,
+}: FamilyMembersInterface) => {
   const { userCharacter } = useCharacter();
   const [editing, setEditing] = useState(false);
   const [playerToKick, setPlayerToKick] = useState<{
@@ -55,6 +67,38 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
         )}
       </p>
     ));
+  };
+
+  // Function to kick a player from the family
+  const kickPlayer = async (player: { id: string; username: string }) => {
+    if (!userCharacter.familyId || !family) {
+      setMessageType("warning");
+      setMessage("Du er ikke medlem av noen familie.");
+      return;
+    }
+
+    try {
+      // Remove the user from the family's members array
+      const familyRef = doc(db, "Families", userCharacter.familyId);
+      await updateDoc(familyRef, {
+        members: family.members.filter((member) => member.id !== player.id),
+      });
+
+      // Update the character's familyId and familyName to null
+      const characterRef = doc(db, "Characters", player.id);
+      await updateDoc(characterRef, { familyId: null, familyName: null });
+
+      // Notify the user
+      setMessageType("success");
+      setMessage(`${player.username} ble sparket ut av familien.`);
+      setPlayerToKick({});
+    } catch (error) {
+      console.error("Feil ved sparking fra familie:", error);
+      setMessageType("failure");
+      setMessage(
+        "Kunne ikke sparke spilleren ut av familien. Prøv igjen senere."
+      );
+    }
   };
 
   // Check if the user is the boss
@@ -103,7 +147,19 @@ const FamilyMembers = ({ family }: FamilyMembersInterface) => {
             ut av familien?
           </p>
           <div className="flex justify-center gap-2 m-2">
-            <Button style="danger">Kast ut</Button>
+            <Button
+              style="danger"
+              onClick={() => {
+                playerToKick.id &&
+                  playerToKick.username &&
+                  kickPlayer({
+                    id: playerToKick.id,
+                    username: playerToKick.username,
+                  });
+              }}
+            >
+              Kast ut
+            </Button>
             <Button style="secondary" onClick={() => setPlayerToKick({})}>
               Avbryt
             </Button>
