@@ -330,12 +330,19 @@ const Family = () => {
               Profil
             </Tab>
 
-            <Tab
-              active={activePanel === "applications"}
-              onClick={() => setActivePanel("applications")}
-            >
-              Søknader
-            </Tab>
+            <div className="flex-grow relative">
+              <Tab
+                active={activePanel === "applications"}
+                onClick={() => setActivePanel("applications")}
+              >
+                <div className="flex justify-center gap-2">
+                  Søknader{" "}
+                  {applications.length > 0 && (
+                    <div className="text-sky-400">{applications.length}</div>
+                  )}
+                </div>
+              </Tab>
+            </div>
 
             <Tab
               active={activePanel === "settings"}
