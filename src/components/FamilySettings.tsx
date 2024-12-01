@@ -14,6 +14,7 @@ import {
   deleteDoc,
   addDoc,
   collection,
+  arrayUnion,
   serverTimestamp,
 } from "firebase/firestore";
 
@@ -58,6 +59,12 @@ const FamilySettings = ({
       // Remove the user from the family's members array
       const familyRef = doc(db, "Families", userCharacter.familyId);
       await updateDoc(familyRef, {
+        events: arrayUnion({
+          type: "leftMember",
+          characterId: userCharacter.id,
+          characterName: userCharacter.username,
+          timestamp: new Date(),
+        }),
         members: family.members.filter(
           (member) => member.id !== userCharacter.id
         ),
