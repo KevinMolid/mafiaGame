@@ -4,7 +4,14 @@ import { useCharacter } from "../CharacterContext";
 import Button from "./Button";
 import { useState } from "react";
 
-import { getFirestore, doc, updateDoc, arrayUnion } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  updateDoc,
+  arrayUnion,
+  serverTimestamp,
+} from "firebase/firestore";
 
 const db = getFirestore();
 
@@ -93,6 +100,22 @@ const FamilyMembers = ({
       // Update the character's familyId and familyName to null
       const characterRef = doc(db, "Characters", player.id);
       await updateDoc(characterRef, { familyId: null, familyName: null });
+
+      // 1. Add an alert to the applicant's Alerts subcollection
+      const alertRef = doc(
+        db,
+        "Characters",
+        player.id,
+        "alerts",
+        `KickedFromFamily_${userCharacter.familyId}`
+      );
+      await setDoc(alertRef, {
+        type: "KickedFromFamily",
+        familyName: userCharacter.familyName,
+        familyId: userCharacter.familyId,
+        timestamp: serverTimestamp(),
+        read: false,
+      });
 
       // Notify the user
       setMessageType("success");

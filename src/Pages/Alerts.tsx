@@ -247,6 +247,20 @@ const Alerts = () => {
                 </small>
               )}
 
+              {/* Kicked from Family alert */}
+              {alert.type === "KickedFromFamily" && (
+                <small>
+                  Du ble kastet ut av familien{" "}
+                  <Familyname
+                    family={{
+                      id: alert.familyId,
+                      name: alert.familyName,
+                    }}
+                  />
+                  .
+                </small>
+              )}
+
               <small>{formatTimeAgo(alert.timestamp)}</small>
             </Alert>
           ))}
