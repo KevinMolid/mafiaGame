@@ -7,6 +7,7 @@ import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
 import Button from "../components/Button";
 import Tab from "../components/Tab";
+import Box from "../components/Box";
 
 import FamilySettings from "../components/FamilySettings";
 import FamilyMembers from "../components/FamilyMembers";
@@ -309,71 +310,82 @@ const Family = () => {
           {/* Safehouse panel */}
           {activePanel === "hq" && (
             // Headquarters
-            <div>
-              <H2>Hovedkvarter</H2>
-              <H3>Hendelser</H3>
-              <ul className="mb-4">
-                {family.events &&
-                  family.events.map((familyEvent, index) => {
-                    return (
-                      <li
-                        key={"event" + index}
-                        className="flex justify-between text-sm"
-                      >
-                        {familyEvent.type === "newMember" ? (
-                          <p>
-                            <Username
-                              character={{
-                                id: familyEvent.characterId,
-                                username: familyEvent.characterName,
-                              }}
-                            />{" "}
-                            ble medlem av familien.
-                          </p>
-                        ) : familyEvent.type === "kickedMember" ? (
-                          <p>
-                            <Username
-                              character={{
-                                id: familyEvent.characterId,
-                                username: familyEvent.characterName,
-                              }}
-                            />{" "}
-                            ble kastet ut av familien.
-                          </p>
-                        ) : (
-                          <p>{familyEvent.type}</p>
-                        )}
-                        <p>{formatTimestamp(familyEvent.timestamp)}</p>
-                      </li>
-                    );
-                  })}
-              </ul>
-
-              <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
-                <H3>Bunker</H3>
-                <p>Antall plasser: 1/10</p>
-                <div>
-                  {" "}
-                  <Button>Gå i bunker</Button>
-                </div>
+            <div className="flex flex-wrap gap-2 md:gap-4">
+              <div className="w-full">
+                <H2>Hovedkvarter</H2>
               </div>
 
-              <div className="flex flex-col gap-2 p-4 border border-neutral-600 mb-4">
-                <H3>Doner</H3>
-                <p>Doner penger til familien.</p>
-                <form className="flex flex-col gap-2" action="">
-                  <input
-                    className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-                    type="text"
-                    placeholder="Beløp"
-                    value={amount ? Number(amount).toLocaleString() : ""}
-                    onChange={handleInputChange}
-                  />
-                  <div className="flex gap-2">
-                    <Button onClick={deposit}>Doner penger</Button>
-                    <Button onClick={withdraw}>Ta ut penger</Button>
-                  </div>
-                </form>
+              <div className="flex-grow">
+                <Box>
+                  <H3>Hendelser</H3>
+
+                  <ul className="mb-4">
+                    {family.events &&
+                      family.events.map((familyEvent, index) => {
+                        return (
+                          <li
+                            key={"event" + index}
+                            className="flex justify-between gap-4 text-sm"
+                          >
+                            {familyEvent.type === "newMember" ? (
+                              <p>
+                                <Username
+                                  character={{
+                                    id: familyEvent.characterId,
+                                    username: familyEvent.characterName,
+                                  }}
+                                />{" "}
+                                ble medlem av familien.
+                              </p>
+                            ) : familyEvent.type === "kickedMember" ? (
+                              <p>
+                                <Username
+                                  character={{
+                                    id: familyEvent.characterId,
+                                    username: familyEvent.characterName,
+                                  }}
+                                />{" "}
+                                ble kastet ut av familien.
+                              </p>
+                            ) : familyEvent.type === "leftMember" ? (
+                              <p>
+                                <Username
+                                  character={{
+                                    id: familyEvent.characterId,
+                                    username: familyEvent.characterName,
+                                  }}
+                                />{" "}
+                                forlot familien.
+                              </p>
+                            ) : (
+                              <p>{familyEvent.type}</p>
+                            )}
+                            <p>{formatTimestamp(familyEvent.timestamp)}</p>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                </Box>
+              </div>
+
+              <div className="flex-grow">
+                <Box>
+                  <H3>Doner</H3>
+                  <p>Doner penger til familien.</p>
+                  <form className="flex flex-col gap-2" action="">
+                    <input
+                      className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+                      type="text"
+                      placeholder="Beløp"
+                      value={amount ? Number(amount).toLocaleString() : ""}
+                      onChange={handleInputChange}
+                    />
+                    <div className="flex gap-2">
+                      <Button onClick={deposit}>Doner</Button>
+                      <Button onClick={withdraw}>Ta ut</Button>
+                    </div>
+                  </form>
+                </Box>
               </div>
             </div>
           )}
