@@ -18,7 +18,7 @@ import { useCharacter } from "../CharacterContext";
 
 import { formatTimestamp } from "../Functions/TimeFunctions";
 
-import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
+import { getFirestore, doc, onSnapshot, updateDoc } from "firebase/firestore";
 
 // Interfaces
 import { FamilyData } from "../Interfaces/Types";
@@ -41,30 +41,36 @@ const Family = () => {
 
   if (!userCharacter) return;
 
+  // Fetching family data with onSnapshot
   useEffect(() => {
     if (userCharacter && userCharacter.familyId) {
-      const fetchFamily = async () => {
-        try {
-          if (userCharacter.familyId) {
-            const familyRef = doc(db, "Families", userCharacter.familyId);
-            const familySnap = await getDoc(familyRef);
-            if (familySnap.exists()) {
-              setFamily(familySnap.data() as FamilyData);
-            } else {
-              setError("Family does not exist.");
-            }
+      const familyRef = doc(db, "Families", userCharacter.familyId);
+
+      // Listener for real-time updates
+      const unsubscribe = onSnapshot(
+        familyRef,
+        (snapshot) => {
+          if (snapshot.exists()) {
+            setFamily(snapshot.data() as FamilyData);
+            setError(null);
+          } else {
+            setError("Family does not exist.");
           }
-        } catch (error) {
+          setLoading(false);
+        },
+        (error) => {
+          console.error("Error fetching family data:", error);
           setError("Error fetching family data.");
-        } finally {
           setLoading(false);
         }
-      };
-      fetchFamily();
+      );
+
+      // Cleanup listener on unmount or when familyId changes
+      return () => unsubscribe();
     } else {
       setLoading(false);
     }
-  }, [userCharacter]);
+  }, [userCharacter?.familyId]);
 
   // Handle inputs
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
