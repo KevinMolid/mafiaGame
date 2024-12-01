@@ -4,7 +4,7 @@ import { useCharacter } from "../CharacterContext";
 import Button from "./Button";
 import { useState } from "react";
 
-import { getFirestore, doc, updateDoc } from "firebase/firestore";
+import { getFirestore, doc, updateDoc, arrayUnion } from "firebase/firestore";
 
 const db = getFirestore();
 
@@ -81,6 +81,12 @@ const FamilyMembers = ({
       // Remove the user from the family's members array
       const familyRef = doc(db, "Families", userCharacter.familyId);
       await updateDoc(familyRef, {
+        events: arrayUnion({
+          type: "kickedMember",
+          characterId: player.id,
+          characterName: player.username,
+          timestamp: new Date(),
+        }),
         members: family.members.filter((member) => member.id !== player.id),
       });
 

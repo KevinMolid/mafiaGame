@@ -330,6 +330,16 @@ const Family = () => {
                             />{" "}
                             ble medlem av familien.
                           </p>
+                        ) : familyEvent.type === "kickedMember" ? (
+                          <p>
+                            <Username
+                              character={{
+                                id: familyEvent.characterId,
+                                username: familyEvent.characterName,
+                              }}
+                            />{" "}
+                            ble kastet ut av familien.
+                          </p>
                         ) : (
                           <p>{familyEvent.type}</p>
                         )}
