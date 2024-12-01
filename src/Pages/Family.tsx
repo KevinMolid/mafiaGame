@@ -19,16 +19,32 @@ import { useCharacter } from "../CharacterContext";
 
 import { formatTimestamp } from "../Functions/TimeFunctions";
 
-import { getFirestore, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  onSnapshot,
+  updateDoc,
+  collection,
+  getDocs,
+} from "firebase/firestore";
 
 // Interfaces
 import { FamilyData } from "../Interfaces/Types";
+
+export interface Application {
+  documentId: string;
+  applicantId: string;
+  applicantUsername: string;
+  applicationText: string;
+  appliedAt: Date;
+}
 
 const db = getFirestore();
 
 const Family = () => {
   const { userCharacter } = useCharacter();
   const [family, setFamily] = useState<FamilyData | null>(null);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<
@@ -72,6 +88,44 @@ const Family = () => {
       setLoading(false);
     }
   }, [userCharacter?.familyId]);
+
+  // Fetch applications
+  useEffect(() => {
+    if (!userCharacter?.familyId) return;
+
+    const fetchApplications = async () => {
+      if (!userCharacter.familyId) {
+        return;
+      }
+      setLoading(true);
+      try {
+        const applicationsRef = collection(
+          db,
+          "Families",
+          userCharacter.familyId,
+          "Applications"
+        );
+        const applicationsSnapshot = await getDocs(applicationsRef);
+        const applicationsList: Application[] = applicationsSnapshot.docs.map(
+          (doc) => ({
+            documentId: doc.id,
+            applicantId: doc.data().applicantId,
+            applicantUsername: doc.data().applicantUsername,
+            applicationText: doc.data().applicationText,
+            appliedAt: doc.data().appliedAt?.toDate(),
+          })
+        );
+        setApplications(applicationsList);
+      } catch (error) {
+        console.error("Error fetching applications:", error);
+        setError("Error fetching applications.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, [userCharacter?.familyId, db]);
 
   // Handle inputs
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -403,6 +457,8 @@ const Family = () => {
             <FamilyApplications
               setMessage={setMessage}
               setMessageType={setMessageType}
+              applications={applications}
+              setApplications={setApplications}
             />
           )}
 

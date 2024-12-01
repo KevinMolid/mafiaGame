@@ -1,8 +1,6 @@
-import { useState, useEffect, Fragment } from "react";
+import { useState, Fragment } from "react";
 import {
   getFirestore,
-  collection,
-  getDocs,
   doc,
   updateDoc,
   arrayUnion,
@@ -18,70 +16,29 @@ import Username from "./Typography/Username";
 import Box from "./Box";
 import Button from "./Button";
 
+import { Application } from "../Pages/Family";
+
 // Context
 import { useCharacter } from "../CharacterContext";
-
-interface Application {
-  documentId: string;
-  applicantId: string;
-  applicantUsername: string;
-  applicationText: string;
-  appliedAt: Date;
-}
 
 interface FamilyApplicationsInterface {
   setMessage: React.Dispatch<React.SetStateAction<string>>;
   setMessageType: React.Dispatch<
     React.SetStateAction<"info" | "success" | "failure" | "warning">
   >;
+  applications: Application[];
+  setApplications: React.Dispatch<React.SetStateAction<Application[]>>;
 }
 
 const FamilyApplications = ({
   setMessage,
   setMessageType,
+  applications,
+  setApplications,
 }: FamilyApplicationsInterface) => {
   const { userCharacter } = useCharacter();
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const db = getFirestore();
-
-  useEffect(() => {
-    if (!userCharacter?.familyId) return;
-
-    const fetchApplications = async () => {
-      if (!userCharacter.familyId) {
-        return;
-      }
-      setLoading(true);
-      try {
-        const applicationsRef = collection(
-          db,
-          "Families",
-          userCharacter.familyId,
-          "Applications"
-        );
-        const applicationsSnapshot = await getDocs(applicationsRef);
-        const applicationsList: Application[] = applicationsSnapshot.docs.map(
-          (doc) => ({
-            documentId: doc.id,
-            applicantId: doc.data().applicantId,
-            applicantUsername: doc.data().applicantUsername,
-            applicationText: doc.data().applicationText,
-            appliedAt: doc.data().appliedAt?.toDate(),
-          })
-        );
-        setApplications(applicationsList);
-      } catch (error) {
-        console.error("Error fetching applications:", error);
-        setError("Error fetching applications.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchApplications();
-  }, [userCharacter?.familyId, db]);
 
   const formatAppliedAt = (appliedAt: Date) => {
     return new Intl.DateTimeFormat("no-NO", {
@@ -219,7 +176,6 @@ const FamilyApplications = ({
     }
   };
 
-  if (loading) return <p>Laster søknader...</p>;
   if (error) return <InfoBox type="failure">{error}</InfoBox>;
 
   return (
