@@ -1,7 +1,6 @@
 import H2 from "./Typography/H2";
 import H3 from "./Typography/H3";
 import Button from "./Button";
-import Username from "./Typography/Username";
 import EditFamilyProfile from "./EditFamilyProfile";
 import Box from "./Box";
 
@@ -160,67 +159,6 @@ const FamilySettings = ({
                   <Button>Inviter</Button>
                 </div>
               </div>
-            </div>
-          </Box>
-
-          <Box>
-            <H3>Tildel roller</H3>
-            <div>
-              <p>
-                Leder:{" "}
-                <Username
-                  character={{
-                    id: family.leaderId,
-                    username: family.leaderName,
-                  }}
-                />
-              </p>
-              <p>
-                Rådgiver:{" "}
-                <Username
-                  character={{
-                    id: family.leaderId,
-                    username: family.leaderName,
-                  }}
-                />
-              </p>
-              <p>
-                Nestleder:{" "}
-                <Username
-                  character={{
-                    id: family.leaderId,
-                    username: family.leaderName,
-                  }}
-                />
-              </p>
-              <p>Kapteiner:</p>
-              <p>
-                {" "}
-                <Username
-                  character={{
-                    id: family.leaderId,
-                    username: family.leaderName,
-                  }}
-                />
-              </p>
-              <p>
-                {" "}
-                <Username
-                  character={{
-                    id: family.leaderId,
-                    username: family.leaderName,
-                  }}
-                />
-              </p>
-              <p>
-                {" "}
-                <Username
-                  character={{
-                    id: family.leaderId,
-                    username: family.leaderName,
-                  }}
-                />
-              </p>
             </div>
           </Box>
 

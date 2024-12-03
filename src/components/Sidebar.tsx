@@ -49,8 +49,8 @@ const Sidebar = () => {
           Hovedkvarter
         </SidebarLink>
 
-        <SidebarLink to="butikk" icon="shop">
-          Butikk
+        <SidebarLink to="marked" icon="shop">
+          Marked
         </SidebarLink>
 
         <SidebarLink to="bank" icon="landmark">

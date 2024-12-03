@@ -36,7 +36,7 @@ import Notebook from "./Pages/Notebook.tsx";
 import Blacklist from "./Pages/Contacts.tsx";
 // _____________________________________________
 import Home from "./Pages/Home.tsx";
-import Shop from "./Pages/Shop.tsx";
+import Market from "./Pages/Market.tsx";
 import Bank from "./Pages/General/Bank.tsx";
 // _____________________________________________
 import Family from "./Pages/Family.tsx";
@@ -170,10 +170,10 @@ function App() {
                           />
 
                           <Route
-                            path="/butikk"
+                            path="/marked"
                             element={
                               <ProtectedRoute>
-                                <Shop />
+                                <Market />
                               </ProtectedRoute>
                             }
                           />

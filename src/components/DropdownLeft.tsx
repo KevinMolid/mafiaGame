@@ -48,8 +48,8 @@ const DropdownLeft = () => {
             Hovedkvarter
           </DropdownOption>
 
-          <DropdownOption to="butikk" icon="shop" onClick={toggleActions}>
-            Butikk
+          <DropdownOption to="marked" icon="shop" onClick={toggleActions}>
+            Marked
           </DropdownOption>
 
           <DropdownOption to="/bank" icon="landmark" onClick={toggleActions}>
