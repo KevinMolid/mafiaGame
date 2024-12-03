@@ -17,16 +17,28 @@ const Market = () => {
 
       {/* Tabs */}
       <ul className="mb-8 flex flex-wrap">
-        <Tab active={false} onClick={() => setActivePanel("suitcases")}>
+        <Tab
+          active={activePanel === "suitcases"}
+          onClick={() => setActivePanel("suitcases")}
+        >
           Kofferter
         </Tab>
-        <Tab active={false} onClick={() => setActivePanel("cars")}>
+        <Tab
+          active={activePanel === "cars"}
+          onClick={() => setActivePanel("cars")}
+        >
           Bilforhandler
         </Tab>
-        <Tab active={false} onClick={() => setActivePanel("diamonds")}>
+        <Tab
+          active={activePanel === "diamonds"}
+          onClick={() => setActivePanel("diamonds")}
+        >
           Diamanter
         </Tab>
-        <Tab active={false} onClick={() => setActivePanel("blackMarket")}>
+        <Tab
+          active={activePanel === "blackMarket"}
+          onClick={() => setActivePanel("blackMarket")}
+        >
           Svartebørsen
         </Tab>
       </ul>
