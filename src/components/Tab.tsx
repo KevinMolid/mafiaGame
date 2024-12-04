@@ -15,9 +15,9 @@ const Tab = ({ active, onClick, children }: TabInterface) => {
       }
       onClick={onClick}
     >
-      <p className="text-neutral-200 text-sm lg:text-base font-medium text-center">
+      <div className="text-neutral-200 text-sm lg:text-base font-medium text-center">
         {children}
-      </p>
+      </div>
     </li>
   );
 };

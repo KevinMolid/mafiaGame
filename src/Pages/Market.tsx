@@ -5,10 +5,11 @@ import Tab from "../components/Tab";
 
 import Suitcases from "../components/Suitcases";
 import Cardealer from "../components/Cardealer";
+import Airplanedealer from "../components/Airplanedealer";
 
 const Market = () => {
   const [activePanel, setActivePanel] = useState<
-    "suitcases" | "cars" | "diamonds" | "blackMarket"
+    "suitcases" | "cars" | "airplanes" | "diamonds" | "blackMarket"
   >("cars");
 
   return (
@@ -30,6 +31,12 @@ const Market = () => {
           Bilforhandler
         </Tab>
         <Tab
+          active={activePanel === "airplanes"}
+          onClick={() => setActivePanel("airplanes")}
+        >
+          Flyforhandler
+        </Tab>
+        <Tab
           active={activePanel === "diamonds"}
           onClick={() => setActivePanel("diamonds")}
         >
@@ -44,8 +51,8 @@ const Market = () => {
       </ul>
 
       {activePanel === "suitcases" && <Suitcases />}
-
       {activePanel === "cars" && <Cardealer />}
+      {activePanel === "airplanes" && <Airplanedealer />}
     </Main>
   );
 };
