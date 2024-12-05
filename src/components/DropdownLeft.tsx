@@ -124,7 +124,11 @@ const DropdownLeft = () => {
 
           <hr className="border-neutral-700 my-2 sm:hidden" />
 
-          <DropdownOption to="streetracing" icon="flag-checkered">
+          <DropdownOption
+            to="streetracing"
+            icon="flag-checkered"
+            onClick={toggleActions}
+          >
             Streetracing
           </DropdownOption>
 
