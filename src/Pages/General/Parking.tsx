@@ -6,6 +6,7 @@ import Button from "../../components/Button";
 import Box from "../../components/Box";
 import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
+import Item from "../../components/Typography/Item";
 
 import { useState, useEffect, useMemo } from "react";
 
@@ -320,7 +321,9 @@ const Parking = () => {
                           className="border bg-neutral-800 border-neutral-700"
                           key={index}
                         >
-                          <td className="px-2 py-1">{car.name}</td>
+                          <td className="px-2 py-1">
+                            <Item {...car} />
+                          </td>
                           <td className="px-2 py-1">{car.hp} hp</td>
                           <td className="px-2 py-1">
                             {"$" + car.value.toLocaleString()}

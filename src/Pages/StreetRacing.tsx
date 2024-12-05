@@ -4,6 +4,7 @@ import H2 from "../components/Typography/H2";
 import H3 from "../components/Typography/H3";
 import Box from "../components/Box";
 import Button from "../components/Button";
+import Item from "../components/Typography/Item";
 
 import Tab from "../components/Tab";
 
@@ -81,24 +82,7 @@ const StreetRacing = () => {
                           key={car.name}
                           className="bg-neutral-800 px-4 rounded-full"
                         >
-                          <small
-                            className={
-                              "font-bold " +
-                              (car.tier == 1
-                                ? "text-neutral-400"
-                                : car.tier == 2
-                                ? "text-green-400"
-                                : car.tier == 3
-                                ? "text-blue-400"
-                                : car.tier == 4
-                                ? "text-purple-400"
-                                : car.tier == 5
-                                ? "text-yellow-400"
-                                : "")
-                            }
-                          >
-                            {car.name}
-                          </small>
+                          <Item {...car} />
                         </li>
                       );
                       // Tier sorting
@@ -111,24 +95,7 @@ const StreetRacing = () => {
                           key={car.name}
                           className="bg-neutral-800 px-4 rounded-full"
                         >
-                          <small
-                            className={
-                              "font-bold " +
-                              (car.tier == 1
-                                ? "text-neutral-400"
-                                : car.tier == 2
-                                ? "text-green-400"
-                                : car.tier == 3
-                                ? "text-blue-400"
-                                : car.tier == 4
-                                ? "text-purple-400"
-                                : car.tier == 5
-                                ? "text-yellow-400"
-                                : "")
-                            }
-                          >
-                            {car.name}
-                          </small>
+                          <Item {...car} />
                         </li>
                       );
                     }

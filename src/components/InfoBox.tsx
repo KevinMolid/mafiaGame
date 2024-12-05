@@ -18,7 +18,7 @@ const InfoBox = ({ children, type }: InfoBoxInterface) => {
   const selectedType = types[type];
 
   return (
-    <div className={`text-lg py-2 px-4 rounded-lg mb-6 ${selectedType}`}>
+    <div className={`border py-2 px-4 rounded-lg mb-6 ${selectedType}`}>
       {children}
     </div>
   );

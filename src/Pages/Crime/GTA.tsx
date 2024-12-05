@@ -4,6 +4,7 @@ import H1 from "../../components/Typography/H1";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
+import Item from "../../components/Typography/Item";
 
 // Functions
 import {
@@ -37,6 +38,7 @@ type Car = {
   name: string;
   value: number;
   hp: number;
+  tier: number;
 };
 
 // Cars by tier
@@ -52,7 +54,7 @@ const tiers: { [key: number]: Car[] } = {
 const tierWeights = [0.5, 0.3, 0.15, 0.04, 0.01];
 
 const GTA = () => {
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<React.ReactNode>("");
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "info" | "warning"
   >("info");
@@ -115,7 +117,7 @@ const GTA = () => {
 
       // Check if the parking facility type is valid
       if (facilityType === undefined || facilityType === 0) {
-        setMessageType("failure");
+        setMessageType("warning");
         setMessage("Du har ingen parkeringsplass i denne byen.");
         return;
       }
@@ -128,7 +130,7 @@ const GTA = () => {
 
       // Check if the player has available slots
       if (currentCars.length >= availableSlots) {
-        setMessageType("failure");
+        setMessageType("warning");
         setMessage("Du har ingen ledige parkeringsplasser.");
         return;
       }
@@ -149,7 +151,11 @@ const GTA = () => {
         increaseHeat(userCharacter, userCharacter.id, 1);
 
         setMessageType("success");
-        setMessage(`Du stjal en ${randomCar.name}!`);
+        setMessage(
+          <p>
+            Du stjal en <Item {...randomCar} />!
+          </p>
+        );
 
         // Start the cooldown after a GTA
         startCooldown(130, "gta", userCharacter.id);

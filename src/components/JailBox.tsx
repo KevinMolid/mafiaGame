@@ -28,7 +28,7 @@ import { useAuth } from "../AuthContext";
 import InfoBox from "./InfoBox";
 
 interface JailBoxInterface {
-  message: string;
+  message: React.ReactNode;
   messageType: "success" | "failure" | "important" | "warning" | "info";
 }
 
