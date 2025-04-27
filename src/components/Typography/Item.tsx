@@ -8,7 +8,7 @@ const Item = (item: ItemProps) => {
   return (
     <span
       className={
-        "font-bold inline-flex bg-neutral-800 py-1 px-4 rounded-full " +
+        "font-bold inline-flex" +
         (item.tier == 1
           ? "text-neutral-400"
           : item.tier == 2
