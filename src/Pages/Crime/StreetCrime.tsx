@@ -17,12 +17,9 @@ import { useCharacter } from "../../CharacterContext";
 import { useAuth } from "../../AuthContext";
 import { useCooldown } from "../../CooldownContext";
 
-// Functions
-import {
-  attemptReward,
-  increaseHeat,
-  arrest,
-} from "../../Functions/RewardFunctions";
+import { getFirestore, doc, writeBatch } from "firebase/firestore";
+
+const db = getFirestore();
 
 const StreetCrime = () => {
   const { userCharacter } = useCharacter();
@@ -54,47 +51,77 @@ const StreetCrime = () => {
   // Function for comitting a crime
   const handleClick = async () => {
     if (cooldowns["crime"] > 0) {
-      setMessage("Du må vente før du kan utføre en kriminell handling.");
       setMessageType("warning");
+      setMessage("Du må vente før du kan utføre en kriminell handling.");
       return;
     }
 
-    if (userCharacter && selectedCrime) {
-      const crime = crimes.find((c) => c.name === selectedCrime);
-      if (crime) {
-        await attemptReward({
-          character: userCharacter,
-          activeCharacter: userData.activeCharacter,
-          xpReward: crime.xpReward, // XP reward for the crime
-          moneyReward: crime.moneyReward || 0, // Optional money reward for the crime
-          successMessage: `Du utførte ${crime.name}.`,
-          failureMessage: `Du prøvde å utføre ${crime.name}, men feilet. Bedre lykke neste gang!`,
-          successRate: crime.successRate,
-          setMessage,
-          setMessageType,
-        });
-
-        increaseHeat(userCharacter, userCharacter.id, 1);
-
-        // Start the cooldown after a crime
-        startCooldown(90, "crime", userData.activeCharacter);
-
-        const jailChance = userCharacter.stats.heat;
-        if (
-          userCharacter.stats.heat >= 50 ||
-          Math.random() * 100 < jailChance
-        ) {
-          // Player failed jail check, arrest them
-          arrest(userCharacter);
-          setMessage("Handlingen feilet, og du ble arrestert!");
-          setMessageType("failure");
-          return;
-        }
-      }
-    } else {
+    if (!userCharacter || !selectedCrime) {
+      setMessageType("warning");
       setMessage("Du må velge en handling!");
-      setMessageType("info");
+      return;
     }
+
+    const crime = crimes.find((c) => c.name === selectedCrime);
+
+    if (!crime) return;
+
+    const characterRef = doc(db, "Characters", userCharacter.id);
+    const batch = writeBatch(db);
+
+    // Determine rewards and crime success
+    const moneyReward = Math.floor(
+      crime.minMoneyReward +
+        Math.random() * (crime.maxMoneyReward - crime.minMoneyReward)
+    );
+    const success = Math.random() < crime.successRate;
+
+    if (success) {
+      const xpReward = crime.xpReward || 0;
+
+      // Update XP, Money, and Heat in one batch
+      batch.update(characterRef, {
+        "stats.xp": userCharacter.stats.xp + xpReward,
+        "stats.money": userCharacter.stats.money + moneyReward,
+        "stats.heat": userCharacter.stats.heat + 1,
+      });
+
+      setMessage(
+        `Du utførte ${crime.name}.${
+          moneyReward && xpReward
+            ? ` Du fikk $${moneyReward} og ${xpReward} XP!`
+            : xpReward
+            ? ` Du fikk ${xpReward} XP!`
+            : ` Du fikk $${moneyReward}!`
+        }`
+      );
+      setMessageType("success");
+    } else {
+      setMessage(
+        `Du prøvde å utføre ${crime.name}, men feilet. Bedre lykke neste gang!`
+      );
+      setMessageType("failure");
+    }
+
+    // Check for jail condition
+    const jailChance = userCharacter.stats.heat + 1;
+
+    if (userCharacter.stats.heat >= 50 || Math.random() * 100 < jailChance) {
+      batch.update(characterRef, {
+        inJail: true,
+        jailReleaseTime: new Date().getTime() + jailChance * 10 * 1000,
+        "stats.heat": 0,
+      });
+
+      setMessage("Handlingen feilet, og du ble arrestert!");
+      setMessageType("failure");
+    }
+
+    // Commit all updates at once
+    await batch.commit();
+
+    // Start the cooldown after a crime
+    startCooldown(90, "crime", userData.activeCharacter);
   };
 
   // Crime options array
@@ -104,28 +131,33 @@ const StreetCrime = () => {
       name: "Lommetyveri",
       successRate: 0.9,
       xpReward: 3,
-      moneyReward: 50,
+      minMoneyReward: 10,
+      maxMoneyReward: 500,
+      cooldownTime: 500,
     },
     {
       id: "Herverk",
       name: "Herverk",
       successRate: 0.85,
       xpReward: 4,
-      moneyReward: 200,
+      minMoneyReward: 20,
+      maxMoneyReward: 1000,
     },
     {
       id: "verdisaker",
       name: "Stjel verdisaker",
       successRate: 0.8,
       xpReward: 5,
-      moneyReward: 800,
+      minMoneyReward: 80,
+      maxMoneyReward: 8000,
     },
     {
       id: "butikk",
       name: "Ran butikk",
       successRate: 0.75,
       xpReward: 6,
-      moneyReward: 3200,
+      minMoneyReward: 160,
+      maxMoneyReward: 16000,
     },
   ];
 
