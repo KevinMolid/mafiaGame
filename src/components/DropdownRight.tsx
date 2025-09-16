@@ -89,9 +89,10 @@ const DropdownRight = () => {
 
   return (
     <div
-      className={`absolute z-30 top-16 sm:top-20 right-0 w-full h-screen transition-opacity duration-300 ease-in-out ${
-        menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-      } bg-black/50`}
+      className={`fixed inset-x-0 top-16 sm:top-20 bottom-0 z-40
+                  transition-opacity duration-300 ease-in-out
+                  ${menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"}
+                  bg-black/50`}
     >
       <div className="absolute top-0 right-0 min-w-56 h-full overflow-hidden">
         <nav
