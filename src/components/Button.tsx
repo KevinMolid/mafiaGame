@@ -30,7 +30,7 @@ const Button = ({
       type={type}
       disabled={disabled}
       className={
-        "font-medium rounded-full " +
+        "font-medium rounded-full cursor-pointer " +
         (size === "small"
           ? "px-4 min-w-16 "
           : size === "square"
