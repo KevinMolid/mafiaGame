@@ -32,6 +32,9 @@ import firebaseConfig from "../firebaseConfig";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const MAX_TITLE = 120;
+const MAX_CONTENT = 10_000;
+
 const Forum = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -219,8 +222,11 @@ const Forum = () => {
     const errs: string[] = [];
     if (!selectedCategory) errs.push("Velg en kategori.");
     if (newThreadTitle.trim().length < 3) errs.push("Emne må ha minst 3 tegn.");
+    if (newThreadTitle.length > MAX_TITLE) errs.push("Emne er for langt.");
     if (newThreadContent.trim().length < 10)
       errs.push("Innhold må ha minst 10 tegn.");
+    if (newThreadContent.length > MAX_CONTENT)
+      errs.push("Innhold er for langt.");
     return errs;
   };
 
