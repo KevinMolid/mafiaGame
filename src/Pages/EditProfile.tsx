@@ -45,11 +45,11 @@ const EditProfile = () => {
         profileText: profileTxt,
       });
 
-      setMessage("Your profile page was successfully updated!");
+      setMessage("Profilen ble oppdatert!");
       setMessageType("success");
     } catch (error) {
       console.error("Error updating profile:", error);
-      setMessage("There was an error while updating your profile page!");
+      setMessage("Det oppstod en feil under lagring av profilen!");
       setMessageType("failure");
     }
   };
