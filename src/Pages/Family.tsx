@@ -244,7 +244,7 @@ const Family = () => {
   };
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <p>Laster...</p>;
   }
 
   return (

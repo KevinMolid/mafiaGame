@@ -3,6 +3,7 @@ import H3 from "./Typography/H3";
 import Button from "./Button";
 import EditFamilyProfile from "./EditFamilyProfile";
 import Box from "./Box";
+import InfoBox from "./InfoBox";
 
 import { useCharacter } from "../CharacterContext";
 
@@ -15,13 +16,16 @@ import {
   collection,
   arrayUnion,
   serverTimestamp,
+  getDocs,
+  query,
+  where,
 } from "firebase/firestore";
 
 const db = getFirestore();
 
 // Interfaces
 import { FamilyData } from "../Interfaces/Types";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 interface FamilySettingsInterface {
   setError: React.Dispatch<React.SetStateAction<string | null>>;
@@ -42,6 +46,15 @@ const FamilySettings = ({
 }: FamilySettingsInterface) => {
   const { userCharacter } = useCharacter();
   const [changingProfile, setChangingProfile] = useState<boolean>(false);
+
+  const [inviteUsername, setInviteUsername] = useState("");
+  const [inviting, setInviting] = useState(false);
+  const inviteInputRef = useRef<HTMLInputElement>(null);
+
+  const [settingsMessage, setSettingsMessage] = useState<string>("");
+  const [settingsMessageType, setSettingsMessageType] = useState<
+    "info" | "success" | "failure" | "warning"
+  >("info");
 
   if (!userCharacter || !family) return;
 
@@ -82,6 +95,102 @@ const FamilySettings = ({
     } catch (error) {
       console.error("Feil ved forlatelse av familie:", error);
       setError("Kunne ikke forlate familien. Vennligst prøv igjen senere.");
+    }
+  };
+
+  // --- HANDLE INVITE ---
+  const handleInvite = async () => {
+    const uname = inviteUsername.trim();
+
+    // 1) tomt felt
+    if (!uname) {
+      setSettingsMessageType("warning");
+      setSettingsMessage("Skriv inn brukernavn.");
+      inviteInputRef.current?.focus();
+      return;
+    }
+
+    // 2) ikke inviter deg selv
+    if (uname.toLowerCase() === userCharacter.username?.toLowerCase()) {
+      setSettingsMessageType("warning");
+      setSettingsMessage("Du kan ikke invitere deg selv.");
+      inviteInputRef.current?.focus();
+      return;
+    }
+
+    setInviting(true);
+    try {
+      // 3) søk etter bruker (case-sensitiv først, så evt. usernameLower)
+      let snap = await getDocs(
+        query(collection(db, "Characters"), where("username", "==", uname))
+      );
+      if (snap.empty) {
+        snap = await getDocs(
+          query(
+            collection(db, "Characters"),
+            where("usernameLower", "==", uname.toLowerCase())
+          )
+        );
+      }
+      if (snap.empty) {
+        setSettingsMessageType("failure");
+        setSettingsMessage(`Fant ingen spiller med brukernavn «${uname}».`);
+        inviteInputRef.current?.focus();
+        inviteInputRef.current?.select?.();
+        return;
+      }
+
+      const userDoc = snap.docs[0];
+      const invitedId = userDoc.id;
+      const invitedData = userDoc.data() as {
+        username?: string;
+        familyId?: string;
+      };
+
+      // 4) valgfritt: blokkér hvis spilleren allerede er i familie
+      if (invitedData.familyId) {
+        setSettingsMessageType("warning");
+        setSettingsMessage(
+          `${invitedData.username || uname} er allerede i en familie.`
+        );
+        return;
+      }
+
+      // 5) lagre invitasjon (justér til din struktur om du har en annen)
+      await addDoc(collection(db, "FamilyInvites"), {
+        familyId: family.id,
+        familyName: family.name,
+        invitedId,
+        invitedName: invitedData.username || uname,
+        inviterId: userCharacter.id,
+        inviterName: userCharacter.username,
+        status: "pending",
+        createdAt: serverTimestamp(),
+      });
+
+      // 6) logg event i familien (valgfritt)
+      await updateDoc(doc(db, "Families", family.id), {
+        events: arrayUnion({
+          type: "inviteSent",
+          invitedId,
+          invitedName: invitedData.username || uname,
+          inviterId: userCharacter.id,
+          inviterName: userCharacter.username,
+          timestamp: new Date(),
+        }),
+      });
+
+      setSettingsMessageType("success");
+      setSettingsMessage(
+        `Invitasjon sendt til ${invitedData.username || uname}.`
+      );
+      setInviteUsername("");
+    } catch (err) {
+      console.error(err);
+      setSettingsMessageType("failure");
+      setSettingsMessage("Kunne ikke sende invitasjon. Prøv igjen.");
+    } finally {
+      setInviting(false);
     }
   };
 
@@ -127,6 +236,11 @@ const FamilySettings = ({
   return (
     <div>
       <H2>Innstillinger</H2>
+
+      {settingsMessage && (
+        <InfoBox type={settingsMessageType}>{settingsMessage}</InfoBox>
+      )}
+
       {/* Changing profile */}
       {changingProfile && (
         <Box>
@@ -151,12 +265,20 @@ const FamilySettings = ({
               <H3>Inviter spiller</H3>
               <div className="flex gap-2">
                 <input
+                  ref={inviteInputRef}
                   className="w-full bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
                   type="text"
                   placeholder="Brukernavn"
+                  value={inviteUsername}
+                  onChange={(e) => setInviteUsername(e.target.value)}
+                  aria-invalid={
+                    inviteUsername.trim().length === 0 ? true : undefined
+                  }
                 />
                 <div>
-                  <Button>Inviter</Button>
+                  <Button onClick={handleInvite} disabled={inviting}>
+                    {inviting ? "Sender…" : "Inviter"}
+                  </Button>
                 </div>
               </div>
             </div>
