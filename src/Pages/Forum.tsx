@@ -390,6 +390,7 @@ const Forum = () => {
                 value={newThreadTitle}
                 onChange={(e) => setNewThreadTitle(e.target.value)}
                 className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+                maxLength={MAX_TITLE}
               />
               <textarea
                 ref={contentRef}
@@ -397,6 +398,7 @@ const Forum = () => {
                 value={newThreadContent}
                 onChange={(e) => setNewThreadContent(e.target.value)}
                 className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none"
+                maxLength={MAX_CONTENT}
               />
 
               <div>
