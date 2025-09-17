@@ -76,10 +76,10 @@ const NoFamily = ({
   }, []);
 
   const isValidFamilyName = (name: string): boolean => {
-    // Check if the name is between 3 and 16 characters and matches the required format:
+    // Check if the name is between 3 and 30 characters and matches the required format:
     // - No leading or trailing spaces
     // - No multiple consecutive spaces
-    const regex = /^(?! )[A-Za-z0-9 ]{3,16}(?<! )$/;
+    const regex = /^(?! )[A-Za-z0-9 ]{3,30}(?<! )$/;
     return regex.test(name) && !/ {2,}/.test(name);
   };
 
@@ -98,7 +98,7 @@ const NoFamily = ({
     if (!isValidFamilyName(familyName)) {
       setMessageType("warning");
       setMessage(
-        "Familienavn må være mellom 3 og 16 tegn, kan ikke starte eller slutte med mellomrom, og kan ikke ha flere mellomrom etter hverandre."
+        "Familienavn må være mellom 3 og 30 tegn, kan ikke starte eller slutte med mellomrom, og kan ikke ha flere mellomrom etter hverandre."
       );
       return;
     }
@@ -300,22 +300,24 @@ const NoFamily = ({
               className="flex flex-col gap-2"
             >
               <input
-                className="bg-neutral-700 py-2 px-4 placeholder-neutral-400 text-white"
+                className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
                 type="text"
                 value={familyName}
                 onChange={(e) => {
                   const newValue = e.target.value;
-                  // Limit to 16 characters and match regex
+                  // Limit to 30 characters and match regex
                   if (
-                    newValue.length <= 16 &&
+                    newValue.length <= 30 &&
                     /^[A-Za-z0-9 ]*$/.test(newValue)
                   ) {
                     setFamilyName(newValue);
                   }
                 }}
-                placeholder="Ønsket familienavn"
+                placeholder="Familienavn"
               />
-              <Button type="submit">Opprett familie</Button>
+              <div>
+                <Button type="submit">Opprett familie</Button>
+              </div>
             </form>
           </Box>
         )}
@@ -355,7 +357,7 @@ const NoFamily = ({
                 ))}
               </ul>
             ) : (
-              <p>No families available to join.</p>
+              <p>Det finnes ingen familier.</p>
             )}
           </Box>
         )}
