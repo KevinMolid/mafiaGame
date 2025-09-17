@@ -4,13 +4,14 @@ import H1 from "../components/Typography/H1";
 import H3 from "../components/Typography/H3";
 import Username from "../components/Typography/Username";
 import Button from "../components/Button";
+import InfoBox from "../components/InfoBox";
 
 import { useCharacter } from "../CharacterContext";
 
 import { format } from "date-fns";
 
 // React
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -56,6 +57,14 @@ const Forum = () => {
   const [creatingNew, setCreatingNew] = useState<boolean>(false);
   const [newThreadTitle, setNewThreadTitle] = useState<string>("");
   const [newThreadContent, setNewThreadContent] = useState<string>("");
+
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<
+    "success" | "failure" | "important" | "warning" | "info"
+  >("success");
+
+  const titleRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   const { userCharacter } = useCharacter();
   const navigate = useNavigate();
@@ -157,16 +166,33 @@ const Forum = () => {
     setLastReplies(lastRepliesObj);
   };
 
-  // Handle submision of new forum post
+  // Handle submission of new forum post
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newThreadTitle || !newThreadContent) return;
+
+    const errors = validateNew();
+    if (errors.length) {
+      setMessage(errors.join(" "));
+      setMessageType("warning");
+
+      // focus the first invalid field
+      if (!selectedCategory) {
+        // nothing to focus here; next checks:
+        if (newThreadTitle.trim().length < 3) titleRef.current?.focus();
+        else contentRef.current?.focus();
+      } else if (newThreadTitle.trim().length < 3) {
+        titleRef.current?.focus();
+      } else {
+        contentRef.current?.focus();
+      }
+      return;
+    }
 
     const newThread = {
-      title: newThreadTitle,
-      content: newThreadContent,
+      title: newThreadTitle.trim(),
+      content: newThreadContent.trim(),
       categoryId: selectedCategory,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(), // keep your existing format
       authorId: userCharacter?.id,
       authorName: userCharacter?.username,
     };
@@ -174,14 +200,35 @@ const Forum = () => {
     try {
       const docRef = await addDoc(collection(db, "ForumThreads"), newThread);
 
-      setThreads((prev) => [...prev, { ...newThread, id: docRef.id }]);
+      setThreads((prev) => [{ ...newThread, id: docRef.id }, ...prev]); // show on top
+      setMessage("Tråden ble opprettet.");
+      setMessageType("success");
 
       setNewThreadTitle("");
       setNewThreadContent("");
       setCreatingNew(false);
     } catch (error) {
       console.error("Feil ved opprettelse av tråd: ", error);
+      setMessage("Noe gikk galt ved opprettelse av tråd. Prøv igjen.");
+      setMessageType("failure");
     }
+  };
+
+  // Validate new thread
+  const validateNew = () => {
+    const errs: string[] = [];
+    if (!selectedCategory) errs.push("Velg en kategori.");
+    if (newThreadTitle.trim().length < 3) errs.push("Emne må ha minst 3 tegn.");
+    if (newThreadContent.trim().length < 10)
+      errs.push("Innhold må ha minst 10 tegn.");
+    return errs;
+  };
+
+  const handleCancelNew = () => {
+    setCreatingNew(false);
+    setMessage("");
+    setNewThreadTitle("");
+    setNewThreadContent("");
   };
 
   const handleThreadClick = (threadId: string) => {
@@ -230,7 +277,12 @@ const Forum = () => {
             <H1>{selectedCategoryTitle}</H1>
             {!creatingNew && (
               <div>
-                <Button onClick={() => setCreatingNew(true)}>
+                <Button
+                  onClick={() => {
+                    setCreatingNew(true);
+                    setMessage("");
+                  }}
+                >
                   <i className="fa-solid fa-plus mr-1"></i> Ny tråd
                 </Button>
               </div>
@@ -314,34 +366,35 @@ const Forum = () => {
               <div className="flex justify-between items-center">
                 <H3>Lag ny tråd</H3>
                 <div>
-                  {" "}
                   <button
                     className="flex justify-center items-center gap-1  hover:text-neutral-200 px-2 py-1"
-                    onClick={() => setCreatingNew(false)}
+                    onClick={handleCancelNew}
                   >
-                    <i className="fa-solid fa-xmark"></i> Avbryt tråd
+                    <i className="fa-solid fa-xmark"></i> Avbryt
                   </button>
                 </div>
               </div>
+
+              {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
               <input
+                ref={titleRef}
                 type="text"
-                placeholder="Tittel"
+                placeholder="Emne"
                 value={newThreadTitle}
                 onChange={(e) => setNewThreadTitle(e.target.value)}
                 className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-                required
               />
               <textarea
+                ref={contentRef}
                 rows={8}
                 value={newThreadContent}
                 onChange={(e) => setNewThreadContent(e.target.value)}
                 className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none"
-                required
               />
 
               <div>
-                {" "}
-                <Button type="submit">Opprett tråd</Button>
+                <Button type="submit">Opprett</Button>
               </div>
             </form>
           )}
