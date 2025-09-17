@@ -32,7 +32,7 @@ const Cardealer = () => {
                     className={
                       "h-20 border-2 " +
                       (car.tier === 1
-                        ? "border-neutral-600"
+                        ? "border-neutral-400"
                         : car.tier === 2
                         ? "border-green-400"
                         : car.tier === 3
