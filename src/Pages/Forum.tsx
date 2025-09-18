@@ -12,7 +12,7 @@ import { format } from "date-fns";
 
 // React
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import {
   getFirestore,
@@ -71,100 +71,106 @@ const Forum = () => {
 
   const { userCharacter } = useCharacter();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fetchIdRef = useRef(0);
 
-  {
-    /* Fetch Forum Categories */
-  }
+  /* Fetch Forum Categories */
   useEffect(() => {
     const fetchCategories = async () => {
       setLoading(true);
-
       const querySnapshot = await getDocs(collection(db, "ForumCategories"));
-      const fetchedCategories: any[] = [];
-      querySnapshot.forEach((doc) => {
-        fetchedCategories.push({ id: doc.id, ...doc.data() });
-      });
-      setCategories(fetchedCategories);
-      setLoading(false);
-
-      // Automatically select "General Discussion" after categories are fetched
-      const generalDiscussion = fetchedCategories.find(
-        (category) => category.title === "Generelt"
+      const fetched: any[] = [];
+      querySnapshot.forEach((doc) =>
+        fetched.push({ id: doc.id, ...doc.data() })
       );
-      if (generalDiscussion) {
-        fetchThreads(
-          generalDiscussion.id,
-          generalDiscussion.title,
-          generalDiscussion.description
-        );
-      }
+      setCategories(fetched);
+      setLoading(false);
     };
-
     fetchCategories();
   }, []);
+
+  // Når categories eller ?cat endres, velg riktig fane
+  useEffect(() => {
+    if (!categories.length) return;
+
+    const params = new URLSearchParams(location.search);
+    const catId = params.get("cat");
+
+    // bruk ?cat hvis gyldig, ellers "Generelt", ellers første
+    const chosen =
+      (catId && categories.find((c) => c.id === catId)) ||
+      categories.find((c) => c.title === "Generelt") ||
+      categories[0];
+
+    if (!chosen) return;
+
+    // unngå unødvendig refetch hvis samme kategori allerede er valgt
+    if (selectedCategory === chosen.id) return;
+
+    fetchThreads(chosen.id, chosen.title, chosen.description);
+  }, [categories, location.search]); // <- viktig
 
   const fetchThreads = async (
     categoryId: string,
     categoryTitle: string,
     categoryDescription: string
   ) => {
-    const querySnapshot = await getDocs(
-      query(
-        collection(db, "ForumThreads"),
-        where("categoryId", "==", categoryId),
-        orderBy("createdAt", "desc")
-      )
+    const myFetchId = ++fetchIdRef.current;
+
+    // hent tråder
+    const qThreads = query(
+      collection(db, "ForumThreads"),
+      where("categoryId", "==", categoryId),
+      orderBy("createdAt", "desc")
     );
+    const thSnap = await getDocs(qThreads);
+
+    // bygg lokal liste
     const fetchedThreads: any[] = [];
-    querySnapshot.forEach((doc) => {
-      fetchedThreads.push({ id: doc.id, ...doc.data() });
-    });
+    thSnap.forEach((d) => fetchedThreads.push({ id: d.id, ...d.data() }));
+
+    // hent stats for hver tråd parallelt (count + siste svar)
+    const stats = await Promise.all(
+      fetchedThreads.map(async (t) => {
+        const repliesRef = collection(db, "ForumThreads", t.id, "Replies");
+        const [allSnap, lastSnap] = await Promise.all([
+          getDocs(repliesRef),
+          getDocs(query(repliesRef, orderBy("createdAt", "desc"), limit(1))),
+        ]);
+
+        return {
+          id: t.id,
+          count: allSnap.size,
+          last: lastSnap.empty ? null : lastSnap.docs[0].data(),
+        };
+      })
+    );
+
+    // hvis en nyere fetch har startet, dropp resultatet
+    if (myFetchId !== fetchIdRef.current) return;
+
+    // bygg objekter for state
+    const repliesCountObj: Record<string, number> = {};
+    const lastRepliesObj: Record<
+      string,
+      { authorId: string; authorName: string; createdAt: Timestamp }
+    > = {};
+
+    for (const s of stats) {
+      repliesCountObj[s.id] = s.count;
+      if (s.last) {
+        const { authorId, authorName, createdAt } = s.last as any;
+        if (authorId && authorName && createdAt) {
+          lastRepliesObj[s.id] = { authorId, authorName, createdAt };
+        }
+      }
+    }
+
+    // sett alt atomisk (i riktig rekkefølge)
     setThreads(fetchedThreads);
     setSelectedCategory(categoryId);
     setSelectedCategoryTitle(categoryTitle);
     setSelectedCategoryDescription(categoryDescription);
-
-    // Fetch replies count and last reply for each thread
-    const repliesCountObj: { [key: string]: number } = {};
-    const lastRepliesObj: {
-      [key: string]: {
-        authorId: String;
-        authorName: string;
-        createdAt: Timestamp;
-      };
-    } = {};
-
-    for (const thread of fetchedThreads) {
-      const repliesSnapshot = await getDocs(
-        collection(db, "ForumThreads", thread.id, "Replies")
-      );
-      repliesCountObj[thread.id] = repliesSnapshot.size;
-    }
-    setRepliesCount(repliesCountObj);
-
-    for (const thread of fetchedThreads) {
-      const repliesSnapshot = await getDocs(
-        collection(db, "ForumThreads", thread.id, "Replies")
-      );
-      repliesCountObj[thread.id] = repliesSnapshot.size;
-
-      // Fetch the last reply (if it exists)
-      const lastReplySnapshot = await getDocs(
-        query(
-          collection(db, "ForumThreads", thread.id, "Replies"),
-          orderBy("createdAt", "desc"),
-          limit(1)
-        )
-      );
-      if (!lastReplySnapshot.empty) {
-        const lastReply = lastReplySnapshot.docs[0].data();
-        lastRepliesObj[thread.id] = {
-          authorId: lastReply.authorId,
-          authorName: lastReply.authorName,
-          createdAt: lastReply.createdAt,
-        };
-      }
-    }
     setRepliesCount(repliesCountObj);
     setLastReplies(lastRepliesObj);
   };
@@ -238,7 +244,7 @@ const Forum = () => {
   };
 
   const handleThreadClick = (threadId: string) => {
-    navigate(`/forum/post/${threadId}`);
+    navigate(`/forum/post/${threadId}?cat=${selectedCategory}`);
   };
 
   if (loading) {
@@ -260,11 +266,7 @@ const Forum = () => {
                     "bg-neutral-800 border-white")
                 }
                 onClick={() =>
-                  fetchThreads(
-                    category.id,
-                    category.title,
-                    category.description
-                  )
+                  navigate(`/forum?cat=${category.id}`, { replace: true })
                 }
               >
                 <p className="text-neutral-200 font-medium">{category.title}</p>

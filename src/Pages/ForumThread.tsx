@@ -9,7 +9,7 @@ import InfoBox from "../components/InfoBox";
 import defaultImg from "/default.jpg";
 
 import { useEffect, useState, Fragment } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 
 import { useCharacter } from "../CharacterContext";
 
@@ -41,6 +41,7 @@ interface Thread {
   authorId: string;
   authorName: string;
   createdAt: any;
+  categoryId?: string;
 }
 
 interface Reply {
@@ -61,6 +62,9 @@ const ForumThread = () => {
   const [message, setMessage] = useState<string>("");
   const [messageType, setMessageType] = useState<"info" | "warning">("info");
   const { userCharacter } = useCharacter();
+
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchThread = async () => {
@@ -161,6 +165,19 @@ const ForumThread = () => {
 
   return (
     <Main>
+      <div className="mb-3">
+        <Button
+          onClick={() => {
+            const params = new URLSearchParams(location.search);
+            const cat = params.get("cat") || thread?.categoryId;
+            navigate(cat ? `/forum?cat=${cat}` : "/forum");
+          }}
+        >
+          <i className="fa-solid fa-arrow-left mr-2" />
+          Tilbake til forum
+        </Button>
+      </div>
+
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
       <div className="grid grid-cols-[auto_max-content] gap-4 mb-2 lg:mb-4 bg-neutral-900 border p-4 border-neutral-600">
         <div>
