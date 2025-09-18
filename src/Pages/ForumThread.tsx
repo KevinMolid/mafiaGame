@@ -16,7 +16,6 @@ import { useCharacter } from "../CharacterContext";
 import {
   getFirestore,
   doc,
-  getDoc,
   collection,
   addDoc,
   serverTimestamp,
@@ -34,8 +33,9 @@ const db = getFirestore(app);
 
 import { format } from "date-fns";
 
-import { MAX_TITLE } from "./Forum";
-import { MAX_CONTENT } from "./Forum";
+// Lokale grenser (ikke importer fra Forum.tsx)
+const MAX_TITLE = 120;
+const MAX_CONTENT = 10_000;
 
 // Define the type for a thread
 interface Thread {
@@ -55,6 +55,7 @@ interface Reply {
   authorId: string;
   authorName: string;
   createdAt: any;
+  editedAt?: any;
 }
 
 const ForumThread = () => {
@@ -73,63 +74,76 @@ const ForumThread = () => {
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
 
+  const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
+  const [editReplyContent, setEditReplyContent] = useState<string>("");
+  const [savingReplyId, setSavingReplyId] = useState<string | null>(null);
+
   const { userCharacter } = useCharacter();
 
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Live-listener for tråden + replies
   useEffect(() => {
-    const fetchThread = async () => {
-      if (postId) {
-        try {
-          const threadDoc = await getDoc(doc(db, "ForumThreads", postId));
-          if (threadDoc.exists()) {
-            const threadData = {
-              id: threadDoc.id,
-              ...threadDoc.data(),
-            } as Thread;
+    if (!postId) return;
 
-            setThread(threadData);
-            setEditTitle((threadData.title ?? "").toString());
-            setEditContent((threadData.content ?? "").toString());
+    setLoading(true);
 
-            // Fetch the author's character data
-            if (threadData.authorId) {
-              const authorDoc = await getDoc(
-                doc(db, "Characters", threadData.authorId)
-              );
-              if (authorDoc.exists()) {
-                setAuthor(authorDoc.data());
-              }
-            }
-
-            // Fetch replies for the thread
-            const repliesQuery = query(
-              collection(db, "ForumThreads", postId, "Replies"),
-              orderBy("createdAt", "asc")
-            );
-            const unsubscribe = onSnapshot(repliesQuery, (snapshot) => {
-              const repliesData = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-              })) as Reply[];
-              setReplies(repliesData);
-            });
-
-            // Cleanup subscription when component unmounts
-            return () => unsubscribe();
-          } else {
-            console.log("Finnes ingen slik tråd!");
-          }
-        } catch (error) {
-          console.error("Feil ved lasting av tråd: ", error);
-        } finally {
+    const threadRef = doc(db, "ForumThreads", postId);
+    const unsubThread = onSnapshot(
+      threadRef,
+      (snap) => {
+        if (!snap.exists()) {
+          setThread(null);
           setLoading(false);
+          return;
         }
+        const data = snap.data() as any;
+        const t = { id: snap.id, ...data } as Thread;
+        setThread(t);
+
+        // speil siste lagrede versjon i edit-feltene
+        setEditTitle((t.title ?? "").toString());
+        setEditContent((t.content ?? "").toString());
+
+        setLoading(false);
+      },
+      (err) => {
+        console.error("Feil ved onSnapshot for tråd:", err);
+        setLoading(false);
       }
+    );
+
+    const repliesQuery = query(
+      collection(db, "ForumThreads", postId, "Replies"),
+      orderBy("createdAt", "asc")
+    );
+    const unsubReplies = onSnapshot(repliesQuery, (snapshot) => {
+      const repliesData = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      })) as Reply[];
+      setReplies(repliesData);
+    });
+
+    return () => {
+      unsubThread();
+      unsubReplies();
     };
-    fetchThread();
   }, [postId]);
+
+  // Live-listener for forfatter
+  useEffect(() => {
+    if (!thread?.authorId) return;
+    const unsubAuthor = onSnapshot(
+      doc(db, "Characters", thread.authorId),
+      (snap) => {
+        if (snap.exists()) setAuthor(snap.data());
+        else setAuthor(null);
+      }
+    );
+    return () => unsubAuthor();
+  }, [thread?.authorId]);
 
   const handleReplyChange = (e: any) => {
     setNewReply(e.target.value);
@@ -146,7 +160,7 @@ const ForumThread = () => {
     }
 
     if (!postId) {
-      console.error("Ingen tråd ID-ble funnet.");
+      console.error("Ingen tråd-ID ble funnet.");
       return;
     }
 
@@ -211,8 +225,7 @@ const ForumThread = () => {
         editedBy: userCharacter?.id || null,
       });
 
-      // Oppdater lokalt for umiddelbar feedback
-      setThread({ ...thread, title, content });
+      // La onSnapshot oppdatere UI. Vi viser bare feedback her:
       setMessageType("success");
       setMessage("Tråden ble oppdatert.");
       setEditing(false);
@@ -222,6 +235,55 @@ const ForumThread = () => {
       setMessage("Kunne ikke oppdatere tråden. Prøv igjen.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const startEditReply = (reply: Reply) => {
+    setEditingReplyId(reply.id);
+    setEditReplyContent(reply.content || "");
+    setMessage("");
+  };
+
+  const cancelEditReply = () => {
+    setEditingReplyId(null);
+    setEditReplyContent("");
+    setMessage("");
+  };
+
+  const saveEditReply = async (replyId: string) => {
+    if (!postId) return;
+
+    const content = editReplyContent.trim();
+    if (content.length === 0) {
+      setMessageType("warning");
+      setMessage("Svaret kan ikke være tomt.");
+      return;
+    }
+    if (content.length > MAX_CONTENT) {
+      setMessageType("warning");
+      setMessage("Svaret er for langt.");
+      return;
+    }
+
+    try {
+      setSavingReplyId(replyId);
+      await updateDoc(doc(db, "ForumThreads", postId, "Replies", replyId), {
+        content,
+        editedAt: serverTimestamp(),
+        editedBy: userCharacter?.id || null,
+      });
+
+      // UI oppdateres av onSnapshot; rydd lokalt:
+      setEditingReplyId(null);
+      setEditReplyContent("");
+      setMessageType("success");
+      setMessage("Svaret ble oppdatert.");
+    } catch (e) {
+      console.error(e);
+      setMessageType("failure");
+      setMessage("Kunne ikke oppdatere svaret. Prøv igjen.");
+    } finally {
+      setSavingReplyId(null);
     }
   };
 
@@ -249,6 +311,7 @@ const ForumThread = () => {
       </div>
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
       <div className="grid grid-cols-[auto_max-content] gap-4 mb-2 lg:mb-4 bg-neutral-900 border p-4 border-neutral-600">
         <div>
           <div className="flex justify-between">
@@ -262,6 +325,13 @@ const ForumThread = () => {
                       "dd.MM.yyyy - HH:mm"
                     )
                   : "Sending..."}
+                {thread.editedAt && (
+                  <>
+                    {" "}
+                    • Redigert{" "}
+                    {format(thread.editedAt.toDate(), "dd.MM.yyyy - HH:mm")}
+                  </>
+                )}
               </small>
             </p>
 
@@ -340,7 +410,7 @@ const ForumThread = () => {
         <div className="flex flex-col items-center text-center">
           <Link to={`/profil/${thread.authorId}`}>
             <img
-              src={author.img || defaultImg}
+              src={author?.img || defaultImg}
               alt={`${thread.authorName}'s avatar`}
               className="w-[80px] h-[80px] md:w-28 md:h-28 mb-2 border border-neutral-600 object-cover"
             />
@@ -351,7 +421,7 @@ const ForumThread = () => {
               character={{ id: thread.authorId, username: thread.authorName }}
             />
           </p>
-          {author.familyId ? (
+          {author?.familyId ? (
             <p className="text-sm">
               <Familyname
                 family={{ id: author.familyId, name: author.familyName }}
@@ -365,51 +435,111 @@ const ForumThread = () => {
 
       {/* Display replies */}
       <div className="mb-2 lg:mb-4">
-        {replies.map((reply) => (
-          <div
-            key={reply.id}
-            className="bg-neutral-900 border border-neutral-600 px-4 pt-2 pb-4 mb-2"
-          >
-            <div className="text-sm flex gap-1 mb-2">
-              <p>
-                <Username
-                  character={{ id: reply.authorId, username: reply.authorName }}
-                />
-              </p>
-              <p>
-                <small>
-                  {reply.createdAt
-                    ? format(reply.createdAt.toDate(), "dd.MM.yyyy - HH:mm")
-                    : "Sender..."}
-                </small>
-              </p>
-            </div>
-            <div className=" pb-4">
-              {reply.content.split("\n").map((line, index) => (
-                <Fragment key={index}>
-                  {line}
-                  <br />
-                </Fragment>
-              ))}
-            </div>
+        {replies.map((reply) => {
+          const isOwnReply =
+            !!userCharacter && reply.authorId === userCharacter.id;
+          const isEditingThis = editingReplyId === reply.id;
 
-            {/* Icons */}
-            <div className="flex gap-1 text-neutral-200 font-medium">
-              <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                👍0
+          return (
+            <div
+              key={reply.id}
+              className="bg-neutral-900 border border-neutral-600 px-4 pt-2 pb-4 mb-2"
+            >
+              {/* Header-linje med bruker + tidspunkt + Endre-knapp til høyre */}
+              <div className="text-sm flex justify-between items-start mb-2">
+                <div className="flex gap-2 items-center flex-wrap">
+                  <p>
+                    <Username
+                      character={{
+                        id: reply.authorId,
+                        username: reply.authorName,
+                      }}
+                    />
+                  </p>
+                  <p>
+                    <small>
+                      {reply.createdAt && reply.createdAt.toDate
+                        ? format(reply.createdAt.toDate(), "dd.MM.yyyy - HH:mm")
+                        : "Sender..."}
+                      {reply.editedAt && reply.editedAt.toDate && (
+                        <>
+                          {" "}
+                          • Redigert{" "}
+                          {format(
+                            reply.editedAt.toDate(),
+                            "dd.MM.yyyy - HH:mm"
+                          )}
+                        </>
+                      )}
+                    </small>
+                  </p>
+                </div>
+
+                {isOwnReply && !isEditingThis && (
+                  <Button
+                    size="small"
+                    style="secondary"
+                    onClick={() => startEditReply(reply)}
+                  >
+                    <i className="fa-solid fa-pen mr-2" />
+                    Endre
+                  </Button>
+                )}
               </div>
-              <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                👎0
-              </div>
-              <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                ❤️0
-              </div>
-              <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                🔥0
-              </div>
+
+              {/* Innhold / Redigering */}
+              {!isEditingThis ? (
+                <>
+                  <div className="pb-4">
+                    {reply.content.split("\n").map((line, index) => (
+                      <Fragment key={index}>
+                        {line}
+                        <br />
+                      </Fragment>
+                    ))}
+                  </div>
+                  {/* Icons (som før) */}
+                  <div className="flex gap-1 text-neutral-200 font-medium">
+                    <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                      👍0
+                    </div>
+                    <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                      👎0
+                    </div>
+                    <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                      ❤️0
+                    </div>
+                    <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                      🔥0
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col gap-2 my-2">
+                  <textarea
+                    value={editReplyContent}
+                    onChange={(e) => setEditReplyContent(e.target.value)}
+                    maxLength={MAX_CONTENT}
+                    rows={6}
+                    className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none focus:border-white"
+                    placeholder="Skriv svaret ditt…"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => saveEditReply(reply.id)}
+                      disabled={savingReplyId === reply.id}
+                    >
+                      {savingReplyId === reply.id ? "Lagrer…" : "Lagre"}
+                    </Button>
+                    <Button onClick={cancelEditReply} style="secondary">
+                      Avbryt
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Form to reply */}
