@@ -13,7 +13,13 @@ import { useParams, Link } from "react-router-dom";
 import { useCharacter } from "../CharacterContext";
 
 // Firebase
-import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  onSnapshot,
+} from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
 
@@ -40,32 +46,37 @@ const Profile = () => {
   >("info");
 
   useEffect(() => {
-    const fetchCharacterData = async () => {
-      if (!spillerID) {
-        setError("Character ID is missing.");
-        setLoading(false);
-        return;
-      }
+    if (!spillerID) {
+      setError("Character ID is missing.");
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const charDocRef = doc(db, "Characters", spillerID);
-        const charDocSnap = await getDoc(charDocRef);
-        if (charDocSnap.exists()) {
-          setCharacterData(charDocSnap.data());
+    setLoading(true);
+    const charRef = doc(db, "Characters", spillerID);
+
+    // Realtime listener
+    const unsubscribe = onSnapshot(
+      charRef,
+      (snap) => {
+        if (snap.exists()) {
+          setCharacterData(snap.data());
+          setError(null);
         } else {
           setError("Fant ikke spilleren!");
+          setCharacterData(null);
         }
-      } catch (err) {
-        console.error("Feil ved lasting av spillerdata:", err);
+        setLoading(false);
+      },
+      (err) => {
+        console.error("Feil ved realtime-oppdatering:", err);
         setError("Feil ved lasting av spillerdata.");
-      } finally {
         setLoading(false);
       }
-    };
+    );
 
-    if (spillerID) {
-      fetchCharacterData();
-    }
+    // Rydd opp når spillerID endres / komponent unmountes
+    return () => unsubscribe();
   }, [spillerID]);
 
   const addFriend = async () => {
@@ -387,7 +398,15 @@ const Profile = () => {
 
       {/* Views */}
       {view === "profile" && (
-        <div className="py-6">{characterData.profileText}</div>
+        <div className="py-6">
+          <div className="bg-neutral-900 border border-neutral-700 rounded-md p-4 whitespace-pre-wrap break-words">
+            {characterData?.profileText?.length ? (
+              characterData.profileText
+            ) : (
+              <span className="text-neutral-500">Ingen profiltekst ennå.</span>
+            )}
+          </div>
+        </div>
       )}
 
       {view === "notebook" && (
