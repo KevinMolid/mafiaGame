@@ -32,8 +32,8 @@ import firebaseConfig from "../firebaseConfig";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const MAX_TITLE = 120;
-const MAX_CONTENT = 10_000;
+export const MAX_TITLE = 120;
+export const MAX_CONTENT = 10_000;
 
 const Forum = () => {
   const [categories, setCategories] = useState<any[]>([]);

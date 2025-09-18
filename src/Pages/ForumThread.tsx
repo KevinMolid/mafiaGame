@@ -23,6 +23,7 @@ import {
   query,
   orderBy,
   onSnapshot,
+  updateDoc,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
@@ -33,6 +34,9 @@ const db = getFirestore(app);
 
 import { format } from "date-fns";
 
+import { MAX_TITLE } from "./Forum";
+import { MAX_CONTENT } from "./Forum";
+
 // Define the type for a thread
 interface Thread {
   id: string;
@@ -42,6 +46,7 @@ interface Thread {
   authorName: string;
   createdAt: any;
   categoryId?: string;
+  editedAt?: any;
 }
 
 interface Reply {
@@ -60,7 +65,14 @@ const ForumThread = () => {
   const [replies, setReplies] = useState<Reply[]>([]);
   const [newReply, setNewReply] = useState<string>("");
   const [message, setMessage] = useState<string>("");
-  const [messageType, setMessageType] = useState<"info" | "warning">("info");
+  const [messageType, setMessageType] = useState<
+    "info" | "warning" | "success" | "failure"
+  >("info");
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+
   const { userCharacter } = useCharacter();
 
   const navigate = useNavigate();
@@ -78,6 +90,8 @@ const ForumThread = () => {
             } as Thread;
 
             setThread(threadData);
+            setEditTitle((threadData.title ?? "").toString());
+            setEditContent((threadData.content ?? "").toString());
 
             // Fetch the author's character data
             if (threadData.authorId) {
@@ -155,6 +169,62 @@ const ForumThread = () => {
     }
   };
 
+  const isAuthor = !!userCharacter && thread?.authorId === userCharacter.id;
+
+  const startEditing = () => {
+    if (!thread) return;
+    setEditTitle(thread.title || "");
+    setEditContent(thread.content || "");
+    setMessage("");
+    setEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setEditing(false);
+    setMessage("");
+  };
+
+  const saveEdit = async () => {
+    if (!postId || !thread || !isAuthor) return;
+
+    const title = editTitle.trim();
+    const content = editContent.trim();
+
+    const errs: string[] = [];
+    if (title.length < 3) errs.push("Emne må ha minst 3 tegn.");
+    if (title.length > MAX_TITLE) errs.push("Emne er for langt.");
+    if (content.length < 10) errs.push("Innhold må ha minst 10 tegn.");
+    if (content.length > MAX_CONTENT) errs.push("Innhold er for langt.");
+
+    if (errs.length) {
+      setMessageType("warning");
+      setMessage(errs.join(" "));
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await updateDoc(doc(db, "ForumThreads", postId), {
+        title,
+        content,
+        editedAt: serverTimestamp(),
+        editedBy: userCharacter?.id || null,
+      });
+
+      // Oppdater lokalt for umiddelbar feedback
+      setThread({ ...thread, title, content });
+      setMessageType("success");
+      setMessage("Tråden ble oppdatert.");
+      setEditing(false);
+    } catch (e) {
+      console.error(e);
+      setMessageType("failure");
+      setMessage("Kunne ikke oppdatere tråden. Prøv igjen.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return <p>Laster tråd...</p>;
   }
@@ -174,54 +244,96 @@ const ForumThread = () => {
           }}
         >
           <i className="fa-solid fa-arrow-left mr-2" />
-          Tilbake til forum
+          Tilbake
         </Button>
       </div>
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
       <div className="grid grid-cols-[auto_max-content] gap-4 mb-2 lg:mb-4 bg-neutral-900 border p-4 border-neutral-600">
         <div>
-          <p>
-            <small>
-              {thread.createdAt
-                ? format(
-                    typeof thread.createdAt === "string"
-                      ? new Date(thread.createdAt)
-                      : thread.createdAt.toDate(),
-                    "dd.MM.yyyy - HH:mm"
-                  )
-                : "Sending..."}
-            </small>
-          </p>
-          <div>
-            <H1>{thread.title}</H1>
+          <div className="flex justify-between">
+            <p>
+              <small>
+                {thread.createdAt
+                  ? format(
+                      typeof thread.createdAt === "string"
+                        ? new Date(thread.createdAt)
+                        : thread.createdAt.toDate(),
+                      "dd.MM.yyyy - HH:mm"
+                    )
+                  : "Sending..."}
+              </small>
+            </p>
+
+            {isAuthor && !editing && (
+              <div>
+                <Button onClick={startEditing} size="small" style="secondary">
+                  <i className="fa-solid fa-pen mr-2" />
+                  Endre
+                </Button>
+              </div>
+            )}
           </div>
 
-          {/* Thread */}
-          <div className=" pb-4">
-            {thread.content.split("\n").map((line, index) => (
-              <Fragment key={index}>
-                {line}
-                <br />
-              </Fragment>
-            ))}
-          </div>
+          {!editing ? (
+            <>
+              <div>
+                <H1>{thread.title}</H1>
+              </div>
 
-          {/* Icons */}
-          <div className="flex gap-1 text-neutral-200 font-medium">
-            <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-              👍0
+              {/* Thread */}
+              <div className=" pb-4">
+                {thread.content.split("\n").map((line, index) => (
+                  <Fragment key={index}>
+                    {line}
+                    <br />
+                  </Fragment>
+                ))}
+              </div>
+
+              {/* Icons */}
+              <div className="flex gap-1 text-neutral-200 font-medium">
+                <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                  👍0
+                </div>
+                <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                  👎0
+                </div>
+                <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                  ❤️0
+                </div>
+                <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                  🔥0
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col gap-2 my-2">
+              <input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                maxLength={MAX_TITLE}
+                className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+                placeholder="Emne (minst 3 tegn)"
+              />
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                maxLength={MAX_CONTENT}
+                rows={8}
+                className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none focus:border-white"
+                placeholder="Innhold (minst 10 tegn)"
+              />
+              <div className="flex gap-2">
+                <Button onClick={saveEdit} disabled={saving}>
+                  {saving ? "Lagrer…" : "Lagre"}
+                </Button>
+                <Button onClick={cancelEditing} style="secondary">
+                  Avbryt
+                </Button>
+              </div>
             </div>
-            <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-              👎0
-            </div>
-            <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-              ❤️0
-            </div>
-            <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-              🔥0
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Author data */}
@@ -301,7 +413,7 @@ const ForumThread = () => {
       </div>
 
       {/* Form to reply */}
-      <H2>Skriv svar</H2>
+      <H2>Svar</H2>
       <form action="" onSubmit={handleSubmit} className="flex flex-col gap-2">
         <textarea
           className="bg-neutral-900 border border-neutral-600 py-2 px-4 text-white placeholder-neutral-400 w-full resize-none"
