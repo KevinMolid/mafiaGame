@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import H1 from "../components/Typography/H1";
+import H2 from "../components/Typography/H2";
 import Button from "../components/Button";
 import InfoBox from "../components/InfoBox";
 
@@ -56,15 +56,17 @@ const EditProfile = () => {
 
   return (
     <section>
-      <H1>Endre profil</H1>
+      <H2>Endre profil</H2>
+
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
       <form action="" className="flex flex-col gap-4 mb-4">
         <div className="flex flex-col">
           <label htmlFor="profileImg">
             Profilbilde (Anbefalt størrelse: 320 x 320 px)
           </label>
           <input
-            className="bg-neutral-800 px-2 py-1"
+            className="bg-transparent border-b border-neutral-600 py-1 text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             id="profileImg"
             type="text"
             value={imgUrl}
@@ -78,7 +80,7 @@ const EditProfile = () => {
             rows={8}
             name=""
             id="profileTxt"
-            className="bg-neutral-800 px-2 py-1 resize-none"
+            className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none"
             value={profileTxt}
             onChange={handleProfileTxtChange}
           ></textarea>

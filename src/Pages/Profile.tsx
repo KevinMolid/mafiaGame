@@ -7,7 +7,7 @@ import Tab from "../components/Tab";
 import InfoBox from "../components/InfoBox";
 
 // React
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
 import { useCharacter } from "../CharacterContext";
@@ -31,15 +31,41 @@ const db = getFirestore(app);
 import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
 import timeAgo from "../Functions/TimeFunctions";
 
+type ViewKey = "profile" | "notebook" | "blacklist" | "edit";
+
 const Profile = () => {
   const { spillerID } = useParams<{ spillerID: string }>();
   const [characterData, setCharacterData] = useState<any>(null);
   const { userCharacter } = useCharacter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<
-    "profile" | "notebook" | "blacklist" | "edit"
-  >("profile");
+
+  // Persist the selected tab per character id
+  const storageKey = useMemo(
+    () => (spillerID ? `profile:view:${spillerID}` : "profile:view"),
+    [spillerID]
+  );
+
+  const [view, setView] = useState<ViewKey>(() => {
+    const saved = (
+      spillerID
+        ? localStorage.getItem(`profile:view:${spillerID}`)
+        : localStorage.getItem("profile:view")
+    ) as ViewKey | null;
+    return saved ?? "profile";
+  });
+
+  // When spillerID (and thus storageKey) changes, refresh view from storage
+  useEffect(() => {
+    const saved = localStorage.getItem(storageKey) as ViewKey | null;
+    setView(saved ?? "profile");
+  }, [storageKey]);
+
+  // keep localStorage in sync when tab changes
+  useEffect(() => {
+    localStorage.setItem(storageKey, view);
+  }, [view, storageKey]);
+
   const [message, setMessage] = useState<string>("");
   const [messageType, setMessageType] = useState<
     "info" | "success" | "warning" | "failure"
@@ -75,9 +101,24 @@ const Profile = () => {
       }
     );
 
-    // Rydd opp når spillerID endres / komponent unmountes
     return () => unsubscribe();
   }, [spillerID]);
+
+  // ---- NOTES: debounced saver that updates Characters/{id}.notes ----
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveNotes = (value: string) => {
+    if (!userCharacter) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        await updateDoc(doc(db, "Characters", userCharacter.id), {
+          notes: value,
+        });
+      } catch (e) {
+        console.error("Failed to save notes:", e);
+      }
+    }, 300);
+  };
 
   const addFriend = async () => {
     if (!spillerID || !characterData || !userCharacter) {
@@ -93,23 +134,16 @@ const Profile = () => {
 
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
-
-        // Check if `friends` field exists and is an array
         const currentFriends = Array.isArray(userData.friends)
           ? userData.friends
           : [];
-
-        // Avoid duplicate friends
         const isAlreadyFriend = currentFriends.some(
           (friend: any) => friend.id === spillerID
         );
 
-        // Check if `blacklist` field exists and is an array
         const currentBlacklist = Array.isArray(userData.blacklist)
           ? userData.blacklist
           : [];
-
-        // Avoid both in friends and blacklist
         const isAlreadyBlacklist = currentBlacklist.some(
           (player: any) => player.id === spillerID
         );
@@ -122,28 +156,22 @@ const Profile = () => {
           return;
         }
 
-        // Add new friend
         const updatedFriends = [...currentFriends, newFriend];
-
-        // Remove from blacklist if present
         const updatedBlacklist = currentBlacklist.filter(
           (player: any) => player.id !== spillerID
         );
 
-        // Update Firestore
         await updateDoc(userDocRef, {
           friends: updatedFriends,
           blacklist: updatedBlacklist,
         });
 
         setMessageType("success");
-        {
+        setMessage(
           isAlreadyBlacklist
-            ? setMessage(
-                `La ${characterData.username} til som venn. ${characterData.username} ble fjernet fra svartelisten.`
-              )
-            : setMessage(`La ${characterData.username} til som venn.`);
-        }
+            ? `La ${characterData.username} til som venn. ${characterData.username} ble fjernet fra svartelisten.`
+            : `La ${characterData.username} til som venn.`
+        );
       } else {
         console.error("Brukeren finnes ikke.");
       }
@@ -166,23 +194,16 @@ const Profile = () => {
 
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
-
-        // Check if `friends` field exists and is an array
         const currentFriends = Array.isArray(userData.friends)
           ? userData.friends
           : [];
-
-        // Avoid duplicate friends
         const isAlreadyFriend = currentFriends.some(
           (friend: any) => friend.id === spillerID
         );
 
-        // Check if `blacklist` field exists and is an array
         const currentBlacklist = Array.isArray(userData.blacklist)
           ? userData.blacklist
           : [];
-
-        // Avoid both in friends and blacklist
         const isAlreadyBlacklist = currentBlacklist.some(
           (player: any) => player.id === spillerID
         );
@@ -195,28 +216,22 @@ const Profile = () => {
           return;
         }
 
-        // Add new Blacklist
         const updatedBlacklist = [...currentBlacklist, newBlacklist];
-
-        // Remove from blacklist if present
         const updatedFriends = currentFriends.filter(
           (friend: any) => friend.id !== spillerID
         );
 
-        // Update Firestore
         await updateDoc(userDocRef, {
           friends: updatedFriends,
           blacklist: updatedBlacklist,
         });
 
         setMessageType("success");
-        {
+        setMessage(
           isAlreadyFriend
-            ? setMessage(
-                `La ${characterData.username} til på svartelisten. ${characterData.username} ble fjernet fra venner.`
-              )
-            : setMessage(`La ${characterData.username} til på svartelisten.`);
-        }
+            ? `La ${characterData.username} til på svartelisten. ${characterData.username} ble fjernet fra venner.`
+            : `La ${characterData.username} til på svartelisten.`
+        );
       } else {
         console.error("Brukeren finnes ikke.");
       }
@@ -228,23 +243,16 @@ const Profile = () => {
     }
   };
 
-  if (loading) {
-    return <div>Laster...</div>;
-  }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
-
-  if (!characterData) {
-    return <div>Ingen spillerdata tilgjengelig.</div>;
-  }
-
-  if (!userCharacter) return;
+  if (loading) return <div>Laster...</div>;
+  if (error) return <div>{error}</div>;
+  if (!characterData) return <div>Ingen spillerdata tilgjengelig.</div>;
+  if (!userCharacter) return null;
 
   const isRecentlyActive = characterData.lastActive
     ? Date.now() - characterData.lastActive.seconds * 1000 <= 5 * 60 * 1000
     : false;
+
+  const viewingOwnProfile = spillerID === userCharacter.id;
 
   return (
     <Main>
@@ -372,7 +380,8 @@ const Profile = () => {
             </li>
           </ul>
         </div>
-        {spillerID === userCharacter.id && (
+
+        {viewingOwnProfile && (
           <ul className="flex flex-wrap col-span-2 mt-4">
             <Tab active={view === "profile"} onClick={() => setView("profile")}>
               <i className="fa-solid fa-user"></i> Profil
@@ -411,19 +420,22 @@ const Profile = () => {
 
       {view === "notebook" && (
         <div className="py-6">
-          <Notebook></Notebook>
+          <Notebook
+            notes={characterData.notes ?? ""} // instant from same snapshot
+            onChangeNotes={saveNotes} // debounced saver
+          />
         </div>
       )}
 
       {view === "blacklist" && (
         <div className="py-6">
-          <Blacklist></Blacklist>
+          <Blacklist />
         </div>
       )}
 
       {view === "edit" && (
         <div className="py-6">
-          <EditProfile></EditProfile>
+          <EditProfile />
         </div>
       )}
     </Main>
