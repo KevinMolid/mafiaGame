@@ -12,6 +12,7 @@ import Box from "../components/Box";
 import FamilySettings from "../components/FamilySettings";
 import FamilyMembers from "../components/FamilyMembers";
 import FamilyApplications from "../components/FamilyApplications";
+import FamilyProfile from "./FamilyProfilePage";
 
 import NoFamily from "../components/NoFamily";
 import { useState, useEffect } from "react";
@@ -454,8 +455,7 @@ const Family = () => {
           {/* Profile panel */}
           {activePanel === "profile" && (
             <div>
-              <H2>Profil</H2>
-              <p>Dette er familiens profil.</p>
+              <FamilyProfile family={family} />
             </div>
           )}
 

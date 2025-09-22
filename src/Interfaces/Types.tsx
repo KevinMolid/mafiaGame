@@ -21,4 +21,6 @@ export type FamilyData = {
   createdAt: Date;
   rules: string;
   wealth: number;
+  img?: string;
+  profileText?: string;
 };
