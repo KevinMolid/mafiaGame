@@ -254,7 +254,7 @@ const FamilySettings = ({
               <i className="fa-solid fa-x"></i>
             </Button>
           </div>
-          <EditFamilyProfile></EditFamilyProfile>
+          <EditFamilyProfile />
         </Box>
       )}
 
