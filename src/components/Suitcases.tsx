@@ -173,7 +173,7 @@ const Suitcases = () => {
         din.
       </p>
 
-      {/* Item Display wheel (now animated) */}
+      {/* Item Display wheel */}
       <div className="border border-neutral-700 bg-neutral-950 rounded-full relative overflow-hidden max-w-[800px]">
         <button
           className="absolute flex justify-center items-center w-12 h-12 left-1 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded-full"
@@ -195,7 +195,7 @@ const Suitcases = () => {
           {itemList.map((item, index) => (
             <li
               key={`${item.name}-${index}`}
-              className={`flex h-max border-2 rounded-xl ${
+              className={`flex h-max border-2 rounded-xl cursor-pointer ${
                 item.rarity === "common"
                   ? "border-neutral-400 shadow-lg shadow-neutral-500/25"
                   : item.rarity === "uncommon"
