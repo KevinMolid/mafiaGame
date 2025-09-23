@@ -24,7 +24,7 @@ const suitcaseBoxes = [
   },
   {
     id: 3,
-    title: "Krystallkoffert",
+    title: "Diamantkoffert",
     image: b3,
     price: 25,
     currencyIcon: "fa-solid fa-gem",
@@ -37,40 +37,51 @@ const suitcaseRarities: { [key: number]: string[] } = {
   2: ["rare", "epic", "legendary"], // Krystall-koffert
 };
 
+// Visually each slot ≈ 72px wide (your images are 56px + border/gap)
+const ITEM_SLOT_PX = 72;
+
 const Suitcases = () => {
   const [wheelIndex, setWheelIndex] = useState(0);
   const [scrollIndex, setScrollIndex] = useState(0);
+
+  // how many items fit in the current container
   const [maxVisibleItems, setMaxVisibleItems] = useState(5);
+
+  // items filtered by selected suitcase rarity
   const [filteredItems, setFilteredItems] = useState(
     Items.slice(0, maxVisibleItems)
   );
-  const [itemList, setItemList] = useState(Items.slice(0, maxVisibleItems));
+
+  // animation state
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [slideDir, setSlideDir] = useState<0 | -1 | 1>(0); // -1 = left arrow (show prev), +1 = right arrow (show next)
+  const [offsetPx, setOffsetPx] = useState(0);
+
   const scrollContainerRef = useRef<HTMLUListElement | null>(null);
 
-  // Update itemList when wheelIndex changes
+  // Update filtered items when suitcase type changes
   useEffect(() => {
-    const filteredItems = Items.filter((item) =>
+    const fi = Items.filter((item) =>
       suitcaseRarities[wheelIndex].includes(item.rarity)
     );
-    setFilteredItems(filteredItems);
+    setFilteredItems(fi);
 
-    // Generate the item list for display based on maxVisibleItems
-    const newItemList = [];
-    for (let i = 0; i < maxVisibleItems; i++) {
-      newItemList.push(filteredItems[(scrollIndex + i) % filteredItems.length]);
-    }
+    // keep scrollIndex valid
+    setScrollIndex((prev) =>
+      fi.length ? ((prev % fi.length) + fi.length) % fi.length : 0
+    );
+  }, [wheelIndex]);
 
-    setItemList(newItemList);
-  }, [wheelIndex, maxVisibleItems, scrollIndex]);
-
-  // Function to adjust maxVisibleItems based on container width
+  // Adjust visible count by container width
   useEffect(() => {
     const handleResize = () => {
       if (scrollContainerRef.current) {
         const containerWidth = scrollContainerRef.current.clientWidth;
-        const itemWidth = 72;
-        const visibleItems = Math.floor(containerWidth / itemWidth);
-        setMaxVisibleItems(Math.min(visibleItems, filteredItems.length));
+        const visibleItems = Math.max(
+          1,
+          Math.floor(containerWidth / ITEM_SLOT_PX)
+        );
+        setMaxVisibleItems(Math.min(visibleItems, filteredItems.length || 1));
       }
     };
 
@@ -79,6 +90,67 @@ const Suitcases = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, [filteredItems]);
 
+  // Build render list: window of N items plus 1 buffer on each side for the slide
+  const buildRenderItems = () => {
+    if (!filteredItems.length) return { render: [] as typeof filteredItems };
+
+    const len = filteredItems.length;
+    const start = ((scrollIndex % len) + len) % len;
+
+    const windowItems = Array.from(
+      { length: Math.min(maxVisibleItems, len - 2) },
+      (_, i) => filteredItems[(start + i) % len]
+    );
+
+    const prevIdx = (start - 1 + len) % len;
+    const nextIdx = (start + windowItems.length) % len;
+
+    const render = [
+      filteredItems[prevIdx],
+      ...windowItems,
+      filteredItems[nextIdx],
+    ];
+    return { render };
+  };
+
+  const { render: itemList } = buildRenderItems();
+
+  // Helpers
+  const getCircularIndex = (index: number, length: number) => {
+    return (index + length) % length;
+  };
+
+  // Click → animate one slot
+  const handleScrollLeft = () => {
+    if (isAnimating || !filteredItems.length) return;
+    setSlideDir(-1);
+    setIsAnimating(true);
+    setOffsetPx(ITEM_SLOT_PX); // slide strip right to reveal previous
+  };
+
+  const handleScrollRight = () => {
+    if (isAnimating || !filteredItems.length) return;
+    setSlideDir(1);
+    setIsAnimating(true);
+    setOffsetPx(-ITEM_SLOT_PX); // slide strip left to reveal next
+  };
+
+  // After the CSS transition, snap the logical window and reset transform
+  const handleTransitionEnd = () => {
+    if (!isAnimating) return;
+
+    setScrollIndex((prev) => {
+      const len = filteredItems.length || 1;
+      const next = slideDir === 1 ? prev + 1 : prev - 1;
+      return getCircularIndex(next, len);
+    });
+
+    setIsAnimating(false);
+    setSlideDir(0);
+    setOffsetPx(0);
+  };
+
+  // Suitcase selection wheel classes
   const getPositionClass = (index: number) => {
     if (index === wheelIndex) return "scale-110 z-20 translate-x-0"; // Center item
     if (index === (wheelIndex + 1) % suitcaseBoxes.length)
@@ -91,22 +163,6 @@ const Suitcases = () => {
     return "opacity-0 pointer-events-none";
   };
 
-  const getCircularIndex = (index: number, length: number) => {
-    return (index + length) % length;
-  };
-
-  const handleScrollLeft = () => {
-    setScrollIndex((prevIndex) =>
-      getCircularIndex(prevIndex - 1, Items.length)
-    );
-  };
-
-  const handleScrollRight = () => {
-    setScrollIndex((prevIndex) =>
-      getCircularIndex(prevIndex + 1, Items.length)
-    );
-  };
-
   return (
     <>
       <H2>
@@ -116,21 +172,29 @@ const Suitcases = () => {
         Kofferter inneholder utstyr du kan bruke for å forbedre spillkarakteren
         din.
       </p>
-      {/* Item Display wheel */}
-      <div className="border border-neutral-700 bg-neutral-950 rounded-full p-2 relative overflow-hidden max-w-[800px]">
+
+      {/* Item Display wheel (now animated) */}
+      <div className="border border-neutral-700 bg-neutral-950 rounded-full relative overflow-hidden max-w-[800px]">
         <button
           className="absolute flex justify-center items-center w-12 h-12 left-1 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded-full"
           onClick={handleScrollLeft}
+          aria-label="Forrige"
         >
-          <i className="fa-solid fa-angle-left"></i>{" "}
+          <i className="fa-solid fa-angle-left"></i>
         </button>
+
         <ul
           ref={scrollContainerRef}
-          className="h-20 flex items-center justify-center gap-1 max-w-full"
+          className={
+            "h-20 flex items-center justify-center gap-1 max-w-full " +
+            (isAnimating ? "transition-transform duration-300 ease-out" : "")
+          }
+          style={{ transform: `translateX(${offsetPx}px)` }}
+          onTransitionEnd={handleTransitionEnd}
         >
           {itemList.map((item, index) => (
             <li
-              key={index}
+              key={`${item.name}-${index}`}
               className={`flex h-max border-2 rounded-xl ${
                 item.rarity === "common"
                   ? "border-neutral-400 shadow-lg shadow-neutral-500/25"
@@ -153,15 +217,17 @@ const Suitcases = () => {
             </li>
           ))}
         </ul>
+
         <button
           className="absolute flex justify-center items-center w-10 h-10 right-1 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded-full"
           onClick={handleScrollRight}
+          aria-label="Neste"
         >
-          <i className="fa-solid fa-angle-right"></i>{" "}
+          <i className="fa-solid fa-angle-right"></i>
         </button>
       </div>
 
-      {/* Selection wheel */}
+      {/* Selection wheel (unchanged) */}
       <div className="h-[240px] mt-4 mb-8 overflow-visible flex max-w-[800px]">
         <div className="relative flex items-center justify-center w-full">
           {suitcaseBoxes.map((box, index) => (

@@ -1,16 +1,37 @@
 import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Tab from "../components/Tab";
 
 import Suitcases from "../components/Suitcases";
 import Cardealer from "../components/Cardealer";
 import Airplanedealer from "../components/Airplanedealer";
 
+type Panel = "suitcases" | "cars" | "airplanes" | "diamonds" | "blackMarket";
+
+const STORAGE_KEY = "market:activePanel";
+
 const Market = () => {
-  const [activePanel, setActivePanel] = useState<
-    "suitcases" | "cars" | "airplanes" | "diamonds" | "blackMarket"
-  >("cars");
+  // Validate stored value safely
+  const isValid = (v: any): v is Panel =>
+    v === "suitcases" ||
+    v === "cars" ||
+    v === "airplanes" ||
+    v === "diamonds" ||
+    v === "blackMarket";
+
+  // Read once on mount
+  const initialPanel = useMemo<Panel>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return isValid(saved) ? saved : "cars";
+  }, []);
+
+  const [activePanel, setActivePanel] = useState<Panel>(initialPanel);
+
+  // Keep storage in sync
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, activePanel);
+  }, [activePanel]);
 
   return (
     <Main>
@@ -53,6 +74,7 @@ const Market = () => {
       {activePanel === "suitcases" && <Suitcases />}
       {activePanel === "cars" && <Cardealer />}
       {activePanel === "airplanes" && <Airplanedealer />}
+      {/* Render placeholders or components for the other tabs when ready */}
     </Main>
   );
 };
