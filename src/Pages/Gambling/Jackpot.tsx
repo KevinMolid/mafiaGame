@@ -24,19 +24,30 @@ const Jackpot = () => {
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "info" | "warning"
   >("info");
-  const [betAmount, setBetAmount] = useState<number>(0);
+  const [betAmount, setBetAmount] = useState<number | "">("");
 
   if (!userCharacter) return;
 
+  const handleBetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/,/g, "");
+    if (value === "" || isNaN(Number(value))) {
+      setBetAmount("");
+    } else {
+      setBetAmount(parseInt(value, 10));
+    }
+  };
+
   // Function to spin the reels
   const spinReels = () => {
-    if (betAmount < 100) {
+    const bet = typeof betAmount === "number" ? betAmount : 0;
+
+    if (bet < 100) {
       setMessageType("warning");
       setMessage("Du må satse minst $100!");
       return;
     }
 
-    if (userCharacter?.stats.money < betAmount) {
+    if (userCharacter?.stats.money < bet) {
       setMessageType("warning");
       setMessage("Du har ikke så mye penger!");
       return;
@@ -48,41 +59,37 @@ const Jackpot = () => {
       Math.floor(Math.random() * 9) + 1,
     ];
     setReels(newReels);
-    evaluateSpin(newReels);
+    evaluateSpin(newReels, bet);
   };
 
   // Function to evaluate the result of the spin
-  const evaluateSpin = async (reels: number[]) => {
+  const evaluateSpin = async (reels: number[], bet: number) => {
     let newMoney = userCharacter.stats.money;
 
     if (reels[0] === reels[1] && reels[1] === reels[2] && reels[2] === 7) {
-      newMoney += betAmount * 150; // 150x payout for 7 7 7
+      newMoney += bet * 149;
       setMessageType("success");
-      setMessage(`Jackpot! Du vant $${(betAmount * 150).toLocaleString()}!`);
+      setMessage(`Jackpot! Du vant $${(bet * 150).toLocaleString()}!`);
     } else if (reels[0] === reels[1] && reels[1] === reels[2]) {
-      newMoney += betAmount * 15; // 10x payout for matching all 3
+      newMoney += bet * 14;
       setMessageType("success");
-      setMessage(
-        `Du fikk 3 like og vant $${(betAmount * 15).toLocaleString()}!`
-      );
+      setMessage(`Du fikk 3 like og vant $${(bet * 15).toLocaleString()}!`);
     } else if (
       reels[0] === reels[1] ||
       reels[1] === reels[2] ||
       reels[0] === reels[2]
     ) {
-      newMoney += betAmount; // 1x payout for 2 matches
+      newMoney += bet; // net +1× (2× return)
       setMessageType("success");
-      setMessage(`Du fikk 2 like og vant $${betAmount.toLocaleString()}!`);
+      setMessage(`Du fikk 2 like og vant $${(bet * 2).toLocaleString()}!`);
     } else {
-      newMoney -= betAmount; // Deduct bet amount if no match
+      newMoney -= bet;
       setMessageType("failure");
-      setMessage(`Du tapte $${betAmount.toLocaleString()}. Prøv igjen!`);
+      setMessage(`Du tapte $${bet.toLocaleString()}. Prøv igjen!`);
     }
 
     try {
-      const characterRef = doc(db, "Characters", userCharacter.id);
-      // Update values in Firestore
-      await updateDoc(characterRef, {
+      await updateDoc(doc(db, "Characters", userCharacter.id), {
         "stats.money": newMoney,
       });
     } catch (error) {
@@ -101,18 +108,17 @@ const Jackpot = () => {
         <Box>
           <p>
             <small>
-              <strong>Tre like 7'ere (Jackpot!)</strong> gir 150 ganger
-              innsatsen
+              <strong>777 (Jackpot!):</strong> 150 × innsats
             </small>
           </p>
           <p>
             <small>
-              <strong>Tre like av et annet tall</strong> gir 15 ganger innsatsen
+              <strong>Tre like:</strong> 15 × innsats
             </small>
           </p>
           <p>
             <small>
-              <strong>To like</strong> gir 1 gang innsatsen
+              <strong>To like:</strong> 2 × innsats
             </small>
           </p>
         </Box>
@@ -125,9 +131,10 @@ const Jackpot = () => {
           <H2>Hvor mye vil du satse?</H2>
           <input
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-            type="number"
+            type="text"
             placeholder="Skriv inn beløp"
-            onChange={(e) => setBetAmount(Number(e.target.value))}
+            value={betAmount === "" ? "" : Number(betAmount).toLocaleString()}
+            onChange={handleBetChange}
           />
         </div>
 
