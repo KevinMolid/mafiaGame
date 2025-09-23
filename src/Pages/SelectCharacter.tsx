@@ -14,6 +14,17 @@ const db = getFirestore(app);
 import { useAuth } from "../AuthContext";
 import { useCharacter } from "../CharacterContext";
 
+const statusLabel = (status?: string) => {
+  switch ((status ?? "").toLowerCase()) {
+    case "alive":
+      return "Levende";
+    case "dead":
+      return "Død";
+    default:
+      return status ?? "Ukjent";
+  }
+};
+
 const SelectCharacter = () => {
   const { userData } = useAuth();
   const { userCharacter, setUserCharacter } = useCharacter();
@@ -26,7 +37,6 @@ const SelectCharacter = () => {
           async (characterId: string) => {
             const characterRef = doc(db, "Characters", characterId);
             const characterSnap = await getDoc(characterRef);
-
             return { id: characterSnap.id, ...characterSnap.data() };
           }
         );
@@ -70,51 +80,54 @@ const SelectCharacter = () => {
         {availableCharacters.length === 0 ? (
           <p>You have no characters.</p>
         ) : (
-          availableCharacters.map((availableCharacter) => (
-            <div
-              key={availableCharacter.id}
-              className={
-                "flex flex-col border min-w-44 " +
-                (userCharacter?.id !== availableCharacter.id
-                  ? "bg-neutral-800 border-neutral-600 px-4 py-2 rounded-lg"
-                  : "border-neutral-400 px-4 py-2 rounded-lg")
-              }
-            >
-              <p>
-                <strong className="text-white">
-                  {availableCharacter.username}
-                </strong>
-              </p>
-              <div className="flex flex-col mb-2">
+          availableCharacters.map((availableCharacter) => {
+            const status = String(availableCharacter.status || "");
+            const statusClass =
+              status.toLowerCase() === "alive"
+                ? "text-green-500"
+                : status.toLowerCase() === "dead"
+                ? "text-red-500"
+                : "text-neutral-300";
+
+            return (
+              <div
+                key={availableCharacter.id}
+                className={
+                  "flex flex-col border min-w-44 " +
+                  (userCharacter?.id !== availableCharacter.id
+                    ? "bg-neutral-800 border-neutral-600 px-4 py-2 rounded-lg"
+                    : "border-neutral-400 px-4 py-2 rounded-lg")
+                }
+              >
                 <p>
-                  Status:{" "}
-                  <span
-                    className={
-                      availableCharacter.status === "alive"
-                        ? "text-green-500"
-                        : availableCharacter.status === "dead"
-                        ? "text-red-500"
-                        : ""
-                    }
-                  >
-                    {availableCharacter.status[0].toUpperCase() +
-                      availableCharacter.status.slice(1)}
-                  </span>
+                  <strong className="text-white">
+                    {availableCharacter.username}
+                  </strong>
                 </p>
-                <p>Location: {availableCharacter.location}</p>
-                <p>Money: ${availableCharacter.stats.money.toLocaleString()}</p>
+                <div className="flex flex-col mb-2">
+                  <p>
+                    Status:{" "}
+                    <span className={statusClass}>
+                      {statusLabel(availableCharacter.status)}
+                    </span>
+                  </p>
+                  <p>Lokasjon: {availableCharacter.location}</p>
+                  <p>
+                    Penger: ${availableCharacter.stats.money.toLocaleString()}
+                  </p>
+                </div>
+                {userCharacter?.id !== availableCharacter.id ? (
+                  <Button
+                    onClick={() => handleSelectCharacter(availableCharacter.id)}
+                  >
+                    Sett som aktiv
+                  </Button>
+                ) : (
+                  <Button disabled={true}>Aktiv</Button>
+                )}
               </div>
-              {userCharacter?.id !== availableCharacter.id ? (
-                <Button
-                  onClick={() => handleSelectCharacter(availableCharacter.id)}
-                >
-                  Set as active
-                </Button>
-              ) : (
-                <h1 className="text-center text-neutral-200">Active</h1>
-              )}
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </Main>
