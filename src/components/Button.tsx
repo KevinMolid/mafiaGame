@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 
 interface ButtonInterface {
   children: ReactNode;
-  onClick?: () => void;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>; // <-- accept event
   type?: "button" | "submit" | "reset";
   style?:
     | "primary"
