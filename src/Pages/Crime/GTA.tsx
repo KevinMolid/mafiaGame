@@ -19,7 +19,7 @@ import Cars from "../../Data/Cars";
 
 // React
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 // Context
 import { useAuth } from "../../AuthContext";
@@ -131,7 +131,18 @@ const GTA = () => {
       // Check if the player has available slots
       if (currentCars.length >= availableSlots) {
         setMessageType("warning");
-        setMessage("Du har ingen ledige parkeringsplasser.");
+        setMessage(
+          <span>
+            Du har ingen ledige parkeringsplasser. Gå til{" "}
+            <strong>
+              <Link to="/parkering">
+                <i className={`fa-solid fa-square-parking`}></i> Parkering
+              </Link>{" "}
+            </strong>
+            for å oppgradere eller frigjøre plass.
+          </span>
+        );
+        return;
         return;
       }
 
