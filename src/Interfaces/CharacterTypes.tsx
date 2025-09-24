@@ -37,6 +37,7 @@ export interface Character {
   username_lowercase: string;
   parkingFacilities?: any;
   cars?: any;
+  airplane?: any;
   familyId?: string | null;
   familyName?: string | null;
   activeFamilyApplication?: {
@@ -73,6 +74,7 @@ export interface Target {
   username_lowercase: string;
   parkingFacilities?: any;
   cars?: any;
+  airplane?: any;
   familyId?: string | null;
   familyName?: string | null;
   activeFamilyApplication?: {

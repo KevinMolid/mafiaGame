@@ -95,6 +95,7 @@ export const CharacterProvider = ({
               uid: characterData.uid as string,
               parkingFacilities: characterData.parkingFacilities as any,
               cars: characterData.cars as any,
+              airplane: characterData.airplane as any,
               familyId: characterData.familyId as string,
               familyName: characterData.familyName as string,
               activeFamilyApplication: characterData.activeFamilyApplication
