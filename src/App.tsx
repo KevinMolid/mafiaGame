@@ -32,7 +32,6 @@ import Statistics from "./Pages/Statistics.tsx";
 // Left dropdown menu
 import Profile from "./Pages/Profile.tsx";
 import EditProfile from "./Pages/EditProfile.tsx";
-import Notebook from "./Pages/Notebook.tsx";
 import Blacklist from "./Pages/Contacts.tsx";
 // _____________________________________________
 import Home from "./Pages/Home.tsx";
@@ -192,15 +191,6 @@ function App() {
                             element={
                               <ProtectedRoute>
                                 <EditProfile />
-                              </ProtectedRoute>
-                            }
-                          />
-
-                          <Route
-                            path="/notater"
-                            element={
-                              <ProtectedRoute>
-                                <Notebook />
                               </ProtectedRoute>
                             }
                           />
