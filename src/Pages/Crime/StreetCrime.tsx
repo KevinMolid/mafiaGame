@@ -1,7 +1,6 @@
 // Components
 import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
-import H2 from "../../components/Typography/H2";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
@@ -89,7 +88,7 @@ const StreetCrime = () => {
       setMessage(
         `Du utførte ${crime.name}.${
           moneyReward && xpReward
-            ? ` Du fikk $${moneyReward} og ${xpReward} XP!`
+            ? ` Du fikk $${moneyReward} og ${xpReward}xp!`
             : xpReward
             ? ` Du fikk ${xpReward} XP!`
             : ` Du fikk $${moneyReward}!`
@@ -165,6 +164,10 @@ const StreetCrime = () => {
     return <JailBox message={message} messageType={messageType} />;
   }
 
+  // Helpers
+  const pct = (n: number) => `${Math.round(n * 100)}%`;
+  const money = (n: number) => `${n.toLocaleString()}`;
+
   return (
     <Main>
       <H1>Kriminalitet</H1>
@@ -186,8 +189,7 @@ const StreetCrime = () => {
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
-      <H2>Hva vil du gjøre?</H2>
-      <ul className="flex gap-2 flex-wrap mb-4">
+      <ul className="grid grid-cols-2 gap-2 mb-4 max-w-[500px]">
         {crimes.map((crime) => (
           <li
             key={crime.id}
@@ -199,12 +201,34 @@ const StreetCrime = () => {
                 : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
             }
           >
-            <p className={selectedCrime === crime.name ? "text-white" : ""}>
+            <p
+              className={
+                selectedCrime == crime.name
+                  ? "text-white font-bold text-lg"
+                  : "font-bold text-lg"
+              }
+            >
               {crime.name}
             </p>
+
+            {/* Chance of success */}
             <p className="text-neutral-100 font-bold">
-              {crime.successRate * 100} %
+              {pct(crime.successRate)}
             </p>
+
+            <div className="flex justify-center gap-1 mt-2 mb-1">
+              {/* XP reward */}
+              <p className="text-neutral-950 text-xs bg-neutral-500 px-2 rounded-lg">
+                <span className="font-semibold">{crime.xpReward}xp</span>
+              </p>
+
+              {/* Money range */}
+              <p className="text-neutral-950 text-xs bg-neutral-500 px-2 rounded-lg">
+                <span className="font-semibold">
+                  ${money(crime.minMoneyReward)} – {money(crime.maxMoneyReward)}
+                </span>
+              </p>
+            </div>
           </li>
         ))}
       </ul>
