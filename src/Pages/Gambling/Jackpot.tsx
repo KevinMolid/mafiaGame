@@ -17,6 +17,9 @@ const db = getFirestore(app);
 
 import { useCharacter } from "../../CharacterContext";
 
+// helper – strips spaces, NBSP, commas, dots, etc.
+const sanitizeInt = (s: string) => s.replace(/[^\d]/g, "");
+
 const Jackpot = () => {
   const { userCharacter } = useCharacter();
   const [reels, setReels] = useState<Array<number>>([0, 0, 0]);
@@ -26,15 +29,12 @@ const Jackpot = () => {
   >("info");
   const [betAmount, setBetAmount] = useState<number | "">("");
 
-  if (!userCharacter) return;
+  if (!userCharacter) return null;
 
   const handleBetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/,/g, "");
-    if (value === "" || isNaN(Number(value))) {
-      setBetAmount("");
-    } else {
-      setBetAmount(parseInt(value, 10));
-    }
+    const cleaned = sanitizeInt(e.target.value);
+    if (cleaned === "") setBetAmount("");
+    else setBetAmount(parseInt(cleaned, 10));
   };
 
   // Function to spin the reels
