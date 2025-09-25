@@ -12,7 +12,6 @@ import {
   getDocs,
   doc,
   updateDoc,
-  Timestamp,
 } from "firebase/firestore";
 import { useCharacter } from "../CharacterContext";
 
@@ -23,8 +22,8 @@ import { initializeApp } from "firebase/app";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Define the structure of an alert
-interface Alert {
+// Define the structure of an alert item (note: timestamp is a Date now)
+interface AlertItem {
   id: string;
   type: string;
   newRank?: string;
@@ -39,42 +38,39 @@ interface Alert {
   bountyAmount?: number;
   killedPlayerId?: string;
   killedPlayerName?: string;
-  timestamp: Timestamp;
+  timestamp: Date;
   read: boolean;
 }
 
-// Helper function to format the time difference
-const formatTimeAgo = (timestamp: Timestamp): string => {
-  const currentTime = new Date();
-  const alertTime = timestamp.toDate();
-  const differenceInSeconds = Math.floor(
-    (currentTime.getTime() - alertTime.getTime()) / 1000
-  );
+// --- helpers ---
+type RawTs = any; // Firestore Timestamp | string | number | Date | {seconds, nanoseconds}
 
-  if (differenceInSeconds < 60) {
-    return `${differenceInSeconds} sek`;
-  }
-  const differenceInMinutes = Math.floor(differenceInSeconds / 60);
-  if (differenceInMinutes < 60) {
-    return `${differenceInMinutes} min`;
-  }
-  const differenceInHours = Math.floor(differenceInMinutes / 60);
-  if (differenceInHours < 24) {
-    if (differenceInHours === 1) {
-      return `${differenceInHours} time`;
-    }
-    return `${differenceInHours} timer`;
-  }
-  const differenceInDays = Math.floor(differenceInHours / 24);
-  if (differenceInDays === 1) {
-    return `${differenceInDays} dag`;
-  }
-  return `${differenceInDays} dager`;
+const toDate = (ts: RawTs): Date => {
+  if (!ts) return new Date(0);
+  if (typeof ts.toDate === "function") return ts.toDate(); // Firestore Timestamp
+  if (typeof ts.seconds === "number") return new Date(ts.seconds * 1000); // Timestamp-like
+  if (ts instanceof Date) return ts;
+  if (typeof ts === "string") return new Date(ts); // ISO
+  if (typeof ts === "number") return new Date(ts); // millis
+  return new Date(0);
+};
+
+// Helper function to format the time difference
+const formatTimeAgo = (date: Date): string => {
+  const now = new Date();
+  const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
+  if (diffSec < 60) return `${diffSec} sek`;
+  const min = Math.floor(diffSec / 60);
+  if (min < 60) return `${min} min`;
+  const hrs = Math.floor(min / 60);
+  if (hrs < 24) return hrs === 1 ? `${hrs} time` : `${hrs} timer`;
+  const days = Math.floor(hrs / 24);
+  return days === 1 ? `${days} dag` : `${days} dager`;
 };
 
 const Alerts = () => {
   const { userCharacter } = useCharacter();
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -83,39 +79,35 @@ const Alerts = () => {
 
       try {
         // Query the alerts sub-collection for the user's character
-        const alertsRef = collection(
-          db,
-          "Characters",
-          userCharacter.id,
-          "alerts"
-        );
+        const alertsRef = collection(db, "Characters", userCharacter.id, "alerts");
         const alertsQuery = query(alertsRef);
         const alertsSnapshot = await getDocs(alertsQuery);
 
-        const fetchedAlerts: Alert[] = alertsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          type: doc.data().type || "",
-          timestamp: doc.data().timestamp || "",
-          newRank: doc.data().newRank || "",
-          amountLost: doc.data().amountLost || 0,
-          amountSent: doc.data().amountSent || 0,
-          robberId: doc.data().robberId || "",
-          robberName: doc.data().robberName || "",
-          senderId: doc.data().senderId || "",
-          senderName: doc.data().senderName || "",
-          familyId: doc.data().familyId || "",
-          familyName: doc.data().familyName || "",
-          bountyAmount: doc.data().bountyAmount || 0,
-          killedPlayerId: doc.data().killedPlayerId || "",
-          killedPlayerName: doc.data().killedPlayerName || "",
-          read: doc.data().read || false,
-        }));
+        const fetchedAlerts: AlertItem[] = alertsSnapshot.docs.map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            type: data.type || "",
+            // normalize to Date for easy sorting/formatting
+            timestamp: toDate(data.timestamp),
+            newRank: data.newRank || "",
+            amountLost: data.amountLost || 0,
+            amountSent: data.amountSent || 0,
+            robberId: data.robberId || "",
+            robberName: data.robberName || "",
+            senderId: data.senderId || "",
+            senderName: data.senderName || "",
+            familyId: data.familyId || "",
+            familyName: data.familyName || "",
+            bountyAmount: data.bountyAmount || 0,
+            killedPlayerId: data.killedPlayerId || "",
+            killedPlayerName: data.killedPlayerName || "",
+            read: data.read || false,
+          };
+        });
 
         // Sort alerts by timestamp in descending order (newest first)
-        fetchedAlerts.sort(
-          (a, b) =>
-            b.timestamp.toDate().getTime() - a.timestamp.toDate().getTime()
-        );
+        fetchedAlerts.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
         // Mark unread alerts as read
         const unreadAlerts = fetchedAlerts.filter((alert) => !alert.read);
@@ -136,7 +128,6 @@ const Alerts = () => {
         }
 
         setAlerts(fetchedAlerts);
-
         setLoading(false);
       } catch (error) {
         console.error("Error fetching alerts:", error);
