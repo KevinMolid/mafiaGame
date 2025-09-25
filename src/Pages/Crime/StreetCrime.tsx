@@ -6,7 +6,7 @@ import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
 
 // React
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 
 // Firebase
 import { useNavigate } from "react-router-dom";
@@ -30,7 +30,7 @@ const StreetCrime = () => {
   const [selectedCrime, setSelectedCrime] = useState<string>(
     localStorage.getItem("selectedCrime") || "Lommetyveri"
   );
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<ReactNode>("")
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "important" | "warning" | "info"
   >("success");
@@ -86,13 +86,16 @@ const StreetCrime = () => {
       });
 
       setMessage(
-        `Du utførte ${crime.name}.${
-          moneyReward && xpReward
-            ? ` Du fikk $${moneyReward} og ${xpReward}xp!`
-            : xpReward
-            ? ` Du fikk ${xpReward} XP!`
-            : ` Du fikk $${moneyReward}!`
-        }`
+        <>
+          Du utførte <strong>{crime.name}</strong>.
+          {moneyReward && xpReward ? (
+            <> Du fikk <strong>${money(moneyReward)}</strong> og <strong>{xpReward} XP</strong>!</>
+          ) : xpReward ? (
+            <> Du fikk <strong>{xpReward} XP</strong>!</>
+          ) : (
+            <> Du fikk <strong>${money(moneyReward)}</strong>!</>
+          )}
+        </>
       );
       setMessageType("success");
     } else {
@@ -166,7 +169,7 @@ const StreetCrime = () => {
 
   // Helpers
   const pct = (n: number) => `${Math.round(n * 100)}%`;
-  const money = (n: number) => `${n.toLocaleString()}`;
+  const money = (n: number) => n.toLocaleString("nb-NO");
 
   return (
     <Main>
