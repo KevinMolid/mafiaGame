@@ -1,21 +1,29 @@
 import { Link } from "react-router-dom";
 import AdminList from "../../AdminList";
-
 import { useCharacter } from "../../CharacterContext";
 
-const Username = ({ character }: any) => {
+type UsernameProps = {
+  character: { id: string; username: string };
+  /** If true, do not force white; let it inherit parent color */
+  useParentColor?: boolean;
+  /** Extra classes for the username text (appended last, can override color) */
+  className?: string;
+};
+
+const Username = ({ character, useParentColor = false, className }: UsernameProps) => {
   const { userCharacter } = useCharacter();
 
-  const friendIDs = userCharacter?.friends?.map((friend: any) => {
-    return friend.id;
-  });
-
-  const blacklistIDs = userCharacter?.blacklist?.map((player: any) => {
-    return player.id;
-  });
-
-  // Check if the character.id exists in AdminList
+  const friendIDs = userCharacter?.friends?.map((f: any) => f.id);
+  const blacklistIDs = userCharacter?.blacklist?.map((p: any) => p.id);
   const isAdmin = AdminList.some((admin) => admin.id === character.id);
+
+  const nameClasses = [
+    "hover:underline",
+    useParentColor ? "" : "text-white",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <Link to={`/profil/${character.id}`}>
@@ -27,22 +35,18 @@ const Username = ({ character }: any) => {
         <span className="text-sky-400">
           <i className="fa-solid fa-user"></i>{" "}
         </span>
-      ) : userCharacter && friendIDs && friendIDs.includes(character.id) ? (
+      ) : userCharacter && friendIDs?.includes(character.id) ? (
         <span className="text-green-400">
           <i className="fa-solid fa-user"></i>{" "}
         </span>
-      ) : userCharacter &&
-        blacklistIDs &&
-        blacklistIDs.includes(character.id) ? (
+      ) : userCharacter && blacklistIDs?.includes(character.id) ? (
         <span className="text-red-400">
           <i className="fa-solid fa-skull-crossbones"></i>{" "}
         </span>
       ) : (
-        <span></span>
+        <span />
       )}
-      <strong className="hover:underline text-white">
-        {character.username}
-      </strong>
+      <strong className={nameClasses}>{character.username}</strong>
     </Link>
   );
 };
