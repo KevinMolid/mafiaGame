@@ -45,31 +45,27 @@ const Bank = () => {
     return null;
   }
 
-  // Handle inputs
+  const sanitizeInt = (s: string) => {
+    // remove anything that isn't 0–9 (covers spaces, NBSP, commas, dots, etc.)
+    const cleaned = s.replace(/[^\d]/g, "");
+    return cleaned;
+  };
+
+ // 2) handlers
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/,/g, ""); // Remove existing commas
-    if (value === "" || isNaN(Number(value))) {
-      setAmount(""); // Clear the input if it's empty or invalid
-    } else {
-      const numericValue = parseInt(value, 10);
-      setAmount(numericValue); // Store the raw number
-    }
+    const cleaned = sanitizeInt(e.target.value);
+    if (cleaned === "") setAmount("");
+    else setAmount(parseInt(cleaned, 10));
   };
 
   const handleTargetCharacterInputChange = (e: any) => {
     setTargetCharacter(e.target.value);
   };
 
-  const handleAmountToSendInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value.replace(/,/g, ""); // Remove existing commas
-    if (value === "" || isNaN(Number(value))) {
-      setAmountToSend(""); // Clear the input if it's empty or invalid
-    } else {
-      const numericValue = parseInt(value, 10);
-      setAmountToSend(numericValue); // Store the raw number
-    }
+  const handleAmountToSendInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleaned = sanitizeInt(e.target.value);
+    if (cleaned === "") setAmountToSend("");
+    else setAmountToSend(parseInt(cleaned, 10));
   };
 
   // Banking functions
@@ -333,27 +329,23 @@ const Bank = () => {
             ${userCharacter?.stats.bank?.toLocaleString() || 0}
           </span>
         </p>
-        <form className="flex flex-col gap-2" action="">
+        <form className="flex flex-col gap-2" onSubmit={(e) => e.preventDefault()}>
           <input
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             type="text"
-            value={amount ? Number(amount).toLocaleString() : ""}
+            inputMode="numeric"
             placeholder="Beløp"
+            value={amount !== "" ? amount.toLocaleString("nb-NO") : ""}
             onChange={handleInputChange}
           />
           <div className="flex gap-2 flex-wrap">
             <div className="flex gap-2">
-              <Button style="secondary" onClick={withdraw}>
-                Ta ut
-              </Button>
-              <Button style="secondary" onClick={deposit}>
-                Sett inn
-              </Button>
+              <Button type="button" style="secondary" onClick={withdraw}>Ta ut</Button>
+              <Button type="button" style="secondary" onClick={deposit}>Sett inn</Button>
             </div>
-
             <div className="flex gap-2">
-              <Button onClick={withdrawAll}>Ta ut alt</Button>
-              <Button onClick={depositAll}>Sett inn alt</Button>
+              <Button type="button" onClick={withdrawAll}>Ta ut alt</Button>
+              <Button type="button" onClick={depositAll}>Sett inn alt</Button>
             </div>
           </div>
         </form>
