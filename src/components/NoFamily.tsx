@@ -79,7 +79,7 @@ const NoFamily = ({
     // Check if the name is between 3 and 30 characters and matches the required format:
     // - No leading or trailing spaces
     // - No multiple consecutive spaces
-    const regex = /^(?! )[A-Za-z0-9 ]{3,30}(?<! )$/;
+    const regex = /^(?! )[A-Za-z0-9 æÆøØåÅ]{3,30}(?<! )$/u;
     return regex.test(name) && !/ {2,}/.test(name);
   };
 
@@ -304,13 +304,10 @@ const NoFamily = ({
                 type="text"
                 value={familyName}
                 onChange={(e) => {
-                  const newValue = e.target.value;
+                  const v = e.target.value;
                   // Limit to 30 characters and match regex
-                  if (
-                    newValue.length <= 30 &&
-                    /^[A-Za-z0-9 ]*$/.test(newValue)
-                  ) {
-                    setFamilyName(newValue);
+                  if (v.length <= 30 && /^[A-Za-z0-9 æÆøØåÅ]*$/u.test(v)) {
+                    setFamilyName(v);
                   }
                 }}
                 placeholder="Familienavn"
