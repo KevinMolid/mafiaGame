@@ -15,6 +15,8 @@ import firebaseConfig from "../firebaseConfig";
 import Username from "./Typography/Username";
 import InfoBox from "./InfoBox";
 import Familyname from "./Typography/Familyname";
+import Button from "./Button";
+
 // Functions
 import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
 
@@ -31,7 +33,7 @@ const CharacterList = ({
 }: CharacterListProps) => {
   const [characters, setCharacters] = useState<Array<any>>([]);
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>("");
-  const [newValue, setNewValue] = useState<number | null>(null);
+  const [newValue, setNewValue] = useState<number | "">("");
   const [message, setMessage] = useState<string>("");
   const [messageType, setMessageType] = useState<
     "success" | "warning" | "info"
@@ -79,6 +81,14 @@ const CharacterList = ({
       return a.username.localeCompare(b.username); // Sort alphabetically
     }
   });
+
+  const sanitizeInt = (s: string) => s.replace(/[^\d]/g, "");
+
+  const handleAdminNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleaned = sanitizeInt(e.target.value);
+    if (cleaned === "") setNewValue("");
+    else setNewValue(parseInt(cleaned, 10));
+  };
 
   const killPlayer = async (character: any) => {
     const characterRef = doc(db, "Characters", character.id);
@@ -185,18 +195,22 @@ const CharacterList = ({
   };
 
   const handleSetMoney = (character: any) => {
-    if (!newValue) {
+    if (newValue === "") {
+      setMessageType("warning");
       setMessage("Du må skrive inn en verdi.");
     } else {
       setMoney(character, newValue);
+      setNewValue("")
     }
   };
 
   const handleSetXp = (character: any) => {
-    if (!newValue) {
+    if (newValue === "") {
+      setMessageType("warning");
       setMessage("Du må skrive inn en verdi.");
     } else {
       setXp(character, newValue);
+      setNewValue("")
     }
   };
 
@@ -271,7 +285,9 @@ const CharacterList = ({
                 ) : (
                   <div
                     className="text-xl text-neutral-200 hover:text-white cursor-pointer"
-                    onClick={() => setSelectedCharacterId(character.id)}
+                    onClick={() => {setSelectedCharacterId(character.id)
+                      setNewValue("")
+                    }}
                   >
                     <i className="fa-solid fa-caret-down"></i>
                   </div>
@@ -280,41 +296,6 @@ const CharacterList = ({
 
               {selectedCharacterId === character.id && (
                 <div className="border border-neutral-600 mb-2 mt-2">
-                  {/* Actions */}
-                  <div className="bg-neutral-900 text-neutral-400 font-medium px-4 py-1 text-sm flex gap-4">
-                    {character.status === "alive" && (
-                      <button onClick={() => killPlayer(character)}>
-                        <i className="fa-solid fa-gun"></i> Drep
-                      </button>
-                    )}
-                    {character.status === "dead" && (
-                      <button onClick={() => resurrectPlayer(character)}>
-                        <i className="fa-solid fa-hand"></i> Gjennoppliv
-                      </button>
-                    )}
-                    {/* Set money / xp */}
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        onChange={(e) => setNewValue(parseInt(e.target.value))}
-                        className="bg-neutral-800 px-2 w-24"
-                      />
-                      <button onClick={() => handleSetMoney(character)}>
-                        Sett <i className="fa-solid fa-dollar-sign"></i>
-                      </button>
-                      <button onClick={() => handleSetXp(character)}>
-                        Sett <strong>XP</strong>
-                      </button>
-                    </div>
-                  </div>
-                  {/* More actions */}
-                  <div className="px-4 py-1 bg-black font-medium text-sm">
-                    <button onClick={() => makeAdmin(character)}>
-                      <p>
-                        <i className="fa-solid fa-crown"></i> Sett som Admin
-                      </p>
-                    </button>
-                  </div>
                   {/* Info */}
                   <div className="bg-neutral-800 px-4 py-2 text-sm flex flex-wrap gap-x-4 gap-y-1">
                     <p>
@@ -347,6 +328,41 @@ const CharacterList = ({
                     <p>Penger: ${character.money.toLocaleString()}</p>
                     <p>Bank: ${character.bank.toLocaleString()}</p>
                     <p>Lokasjon: {character.location}</p>
+                  </div>
+                  {/* Actions */}
+                  <div className="bg-neutral-900 text-neutral-400 font-medium px-4 py-1 text-sm flex gap-4">
+                    {character.status === "alive" && (
+                      <Button onClick={() => killPlayer(character)} style="danger">
+                        <i className="fa-solid fa-gun"></i> Drep
+                      </Button>
+                    )}
+                    {character.status === "dead" && (
+                      <Button onClick={() => resurrectPlayer(character)}>
+                        <i className="fa-solid fa-hand"></i> Gjennoppliv
+                      </Button>
+                    )}
+                    {/* Set money / xp */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="0"
+                        value={newValue === "" ? "" : newValue.toLocaleString("nb-NO")}
+                        onChange={handleAdminNumberChange}
+                        className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+                      />
+                      <Button onClick={() => handleSetMoney(character)}>
+                        Sett <i className="fa-solid fa-dollar-sign"></i>
+                      </Button>
+                      <Button onClick={() => handleSetXp(character)}>
+                        Sett <strong>XP</strong>
+                      </Button>
+                      <Button onClick={() => makeAdmin(character)}>
+                      <p>
+                        <i className="fa-solid fa-crown"></i> Sett som Admin
+                      </p>
+                    </Button>
+                    </div>
                   </div>
                 </div>
               )}
