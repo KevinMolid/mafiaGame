@@ -161,9 +161,9 @@ const Robbery = () => {
       <>
         Du ranet{" "}
         <Username useParentColor character={{ id: target.id, username: target.username }} /> for{" "}
-        <span className="text-neutral-200">
+        <strong>
           ${stolenAmount.toLocaleString("nb-NO")}
-        </span>
+        </strong>
         .
       </>,
       "success"
