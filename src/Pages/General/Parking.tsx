@@ -31,7 +31,7 @@ type Car = {
 const Parking = () => {
   const { userCharacter } = useCharacter();
   const [parking, setParking] = useState<number | null>(null);
-  const [message, setMessage] = useState<string>("");
+  const [message, setMessage] = useState<React.ReactNode>("");
   const [upgrading, setUpgrading] = useState<boolean>(false);
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "warning" | "info"
@@ -79,7 +79,11 @@ const Parking = () => {
       setParking(newParkingIndex);
       setMessageType("success");
       setMessage(
-        `Du kjøpte ${upgradeName} for $${upgradePrice.toLocaleString()}.`
+        <p>
+          Du kjøpte <strong>{upgradeName}</strong> for{" "}
+          <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{upgradePrice.toLocaleString("nb-NO")}</strong>.
+        </p>
       );
     } catch (error) {
       console.error("Feil ved oppdatering av parkering: ", error);
@@ -116,7 +120,11 @@ const Parking = () => {
 
       setMessageType("success");
       setMessage(
-        `Solgte en ${carToSell.name} for $${carToSell.value.toLocaleString()}.`
+        <p>
+          Du solgte en <strong>{carToSell.name}</strong> for{" "}
+          <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{carToSell.value.toLocaleString("nb-NO")}</strong>.
+        </p>
       );
     } catch (error) {
       console.error("Feil ved salg av bil: ", error);
@@ -152,9 +160,14 @@ const Parking = () => {
 
       setMessageType("success");
       setMessage(
-        `Du solgte ${numberOfCars} ${
-          numberOfCars === 1 ? "bil" : "biler"
-        } for $${totalSoldValue.toLocaleString()}.`
+        <p>
+          Du solgte{" "}
+          <strong>
+            {numberOfCars} {numberOfCars === 1 ? "bil" : "biler"}
+          </strong>{" "}
+          for <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{totalSoldValue.toLocaleString("nb-NO")}</strong>.
+        </p>
       );
     } catch (error) {
       console.error("Feil ved salg av biler: ", error);
@@ -292,7 +305,7 @@ const Parking = () => {
                 >
                   Oppgrader <i className="fa-solid fa-circle-up"></i>{" "}
                   <strong className="text-yellow-400">
-                    ${ParkingTypes[parking + 1].price.toLocaleString()}
+                    ${ParkingTypes[parking + 1].price.toLocaleString("nb-NO")}
                   </strong>
                 </Button>
               </div>
@@ -326,7 +339,7 @@ const Parking = () => {
                           </td>
                           <td className="px-2 py-1">{car.hp} hp</td>
                           <td className="px-2 py-1">
-                            {"$" + car.value.toLocaleString()}
+                            {"$" + car.value.toLocaleString("nb-NO")}
                           </td>
                           <td className="px-2 py-1">
                             <button
@@ -352,7 +365,9 @@ const Parking = () => {
                 <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
                   <td className="px-2 py-1"></td>
                   <td className="px-2 py-1">Total verdi</td>
-                  <td className="px-2 py-1">${totalValue.toLocaleString()}</td>
+                  <td className="px-2 py-1">
+                    ${totalValue.toLocaleString("nb-NO")}
+                  </td>
                   <td className="px-2 py-1">
                     <button
                       onClick={sellAllCars}

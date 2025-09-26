@@ -178,7 +178,8 @@ const Robbery = () => {
           useParentColor
           character={{ id: target.id, username: target.username }}
         />{" "}
-        for <strong>${stolenAmount.toLocaleString("nb-NO")}</strong>.
+        for <i className="fa-solid fa-dollar-sign"></i>{" "}
+        <strong>{stolenAmount.toLocaleString("nb-NO")}</strong>.
       </>,
       "success"
     );
