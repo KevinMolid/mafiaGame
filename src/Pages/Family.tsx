@@ -61,33 +61,44 @@ const Family = () => {
 
   // Fetching family data with onSnapshot
   useEffect(() => {
-    if (userCharacter && userCharacter.familyId) {
-      const familyRef = doc(db, "Families", userCharacter.familyId);
+    // starting a new family check => we're "loading"
+    setLoading(true);
 
-      // Listener for real-time updates
-      const unsubscribe = onSnapshot(
-        familyRef,
-        (snapshot) => {
-          if (snapshot.exists()) {
-            setFamily(snapshot.data() as FamilyData);
-            setError(null);
-          } else {
-            setError("Family does not exist.");
-          }
-          setLoading(false);
-        },
-        (error) => {
-          console.error("Error fetching family data:", error);
-          setError("Error fetching family data.");
-          setLoading(false);
-        }
-      );
-
-      // Cleanup listener on unmount or when familyId changes
-      return () => unsubscribe();
-    } else {
+    // If we don't have a character yet, we cannot resolve family; show nothing or stop loading
+    if (!userCharacter) {
+      setFamily(null);
       setLoading(false);
+      return;
     }
+
+    // No family => render NoFamily and stop loading
+    if (!userCharacter.familyId) {
+      setFamily(null);
+      setLoading(false);
+      return;
+    }
+
+    const unsub = onSnapshot(
+      doc(db, "Families", userCharacter.familyId),
+      (snap) => {
+        if (!snap.exists()) {
+          setFamily(null);
+          setLoading(false);
+          return;
+        }
+        const data = snap.data() as FamilyData;
+        setFamily({ ...data, id: snap.id });
+        setLoading(false);
+      },
+      (err) => {
+        console.error(err);
+        setError("Kunne ikke hente familie.");
+        // Even on error, stop the spinner so the UI can show the error
+        setLoading(false);
+      }
+    );
+
+    return unsub;
   }, [userCharacter?.familyId]);
 
   // Fetch applications

@@ -9,9 +9,9 @@ import { useCharacter } from "../CharacterContext";
 
 import {
   getFirestore,
+  writeBatch,
   doc,
   updateDoc,
-  deleteDoc,
   addDoc,
   collection,
   arrayUnion,
@@ -20,6 +20,8 @@ import {
   query,
   where,
 } from "firebase/firestore";
+
+import { useNavigate } from "react-router-dom";
 
 const db = getFirestore();
 
@@ -55,6 +57,8 @@ const FamilySettings = ({
   const [settingsMessageType, setSettingsMessageType] = useState<
     "info" | "success" | "failure" | "warning"
   >("info");
+
+  const navigate = useNavigate();
 
   if (!userCharacter || !family) return;
 
@@ -196,40 +200,54 @@ const FamilySettings = ({
 
   // Function to disband the family
   const disbandFamily = async () => {
-    if (
-      family &&
-      userCharacter.familyId &&
-      userCharacter?.id === family.leaderId
-    ) {
-      try {
-        // Delete family document from Firestore
-        const familyRef = doc(db, "Families", userCharacter.familyId);
-        await deleteDoc(familyRef);
-
-        // Update the character's familyId to null
-        const characterRef = doc(db, "Characters", userCharacter.id);
-        await updateDoc(characterRef, { familyId: null, familyName: null });
-
-        setMessageType("success");
-        setMessage(`Du la ned familien ${family.name}.`);
-
-        // Add a document to the GameEvents to log disbanding
-        await addDoc(collection(db, "GameEvents"), {
-          eventType: "disbandedFamily",
-          familyId: family.id,
-          familyName: family.name,
-          leaderId: userCharacter.id,
-          leaderName: userCharacter.username,
-          timestamp: serverTimestamp(),
-        });
-
-        // Clear family state
-        setFamily(null);
-      } catch (error) {
-        setError("Feil ved nedleggelse av familie.");
-      }
-    } else {
+    if (!family || !userCharacter?.id || userCharacter.id !== family.leaderId) {
       setError("Bare lederen av familien kan legge ned familien.");
+      return;
+    }
+
+    try {
+      setError(null);
+
+      const batch = writeBatch(db);
+
+      // snapshot current ids/names so we can safely use after delete
+      const familyId = family.id;
+      const familyName = family.name;
+
+      // 1) clear all members (including leader)
+      for (const m of family.members ?? []) {
+        const charRef = doc(db, "Characters", m.id);
+        batch.update(charRef, { familyId: null, familyName: null });
+      }
+
+      // 2) log event (use a known doc id to use batch)
+      const gameEventRef = doc(collection(db, "GameEvents"));
+      batch.set(gameEventRef, {
+        eventType: "disbandedFamily",
+        familyId,
+        familyName,
+        leaderId: userCharacter.id,
+        leaderName: userCharacter.username,
+        timestamp: serverTimestamp(),
+      });
+
+      // 3) delete family last
+      const familyRef = doc(db, "Families", familyId);
+      batch.delete(familyRef);
+
+      // commit
+      await batch.commit();
+
+      // local/UI updates AFTER the batch succeeds
+      setFamily(null);
+      setMessageType("success");
+      setMessage(`Du la ned familien ${familyName}.`);
+
+      // make sure we aren't on a route that expects an existing family
+      navigate("/familie"); // <- adjust to your actual NoFamily route
+    } catch (e) {
+      console.error(e);
+      setError("Feil ved nedleggelse av familie.");
     }
   };
 
