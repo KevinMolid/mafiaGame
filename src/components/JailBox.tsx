@@ -134,7 +134,7 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
     <Main img="PrisonBg">
       <div className="my-4">
         <H2>Du er i fengsel!</H2>
-        <p>Du kan ikke gjøre noen handlinger mens du sitter i fengsel.</p>
+        <p className="mb-4">Du kan ikke gjøre noen handlinger mens du sitter i fengsel.</p>
         <p className="mb-4">
           Tid som gjenstår:{" "}
           <strong className="text-neutral-200">{remainingTime} sekunder</strong>

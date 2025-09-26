@@ -44,10 +44,15 @@ const Chat = () => {
   // Function to adjust the height of the textarea
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = "0px"; // or "auto"
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   };
+
+  useEffect(() => {
+  adjustTextareaHeight();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [newMessage, conversationId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewMessage(e.target.value);
@@ -351,13 +356,14 @@ const Chat = () => {
               <form
                 action=""
                 onSubmit={submitNewMessage}
-                className="bg-neutral-800 grid grid-cols-[auto_min-content] rounded-lg pr-2"
+                className="grid grid-cols-[auto_min-content] gap-2 pr-2"
               >
                 <textarea
                   ref={textareaRef}
                   name=""
                   id=""
                   value={newMessage}
+                  placeholder="Melding"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       if (e.shiftKey) {
@@ -371,16 +377,17 @@ const Chat = () => {
                     }
                   }}
                   onChange={handleInputChange}
-                  className="w-full resize-none bg-inherit rounded-lg px-4 py-2"
+                  className="w-full bg-neutral-800 outline-none resize-none bg-inherit rounded-3xl px-4 py-2"
                 ></textarea>
 
-                <button
+                  <div className="mt-auto">
+                <Button
                   type="submit"
-                  id="send_icon"
-                  className="w-8 flex justify-center items-center text-neutral-400 hover:text-white hover:cursor-pointer"
+                  size="square"
                 >
-                  <i className=" text-xl fa-solid fa-paper-plane"></i>
-                </button>
+                  <i className=" fa-solid fa-paper-plane"></i>
+                </Button>
+                  </div>
               </form>
             </div>
           )}

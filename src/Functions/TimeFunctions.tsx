@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 
-const timeAgo = (timestamp: number) => {
+export const timeAgo = (timestamp: number) => {
   const secondsElapsed = Math.floor((Date.now() - timestamp) / 1000);
 
   if (secondsElapsed < 60) return `${secondsElapsed} sek`;
