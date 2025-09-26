@@ -27,6 +27,8 @@ import {
   updateDoc,
   collection,
   getDocs,
+  query,
+  orderBy,
 } from "firebase/firestore";
 
 // Interfaces
@@ -40,12 +42,20 @@ export interface Application {
   appliedAt: Date;
 }
 
+type FamilyEvent = {
+  type: "created" | "newMember" | "kickedMember" | "leftMember" | string;
+  characterId?: string;
+  characterName?: string;
+  timestamp?: any; // Firestore Timestamp | Date
+};
+
 const db = getFirestore();
 
 const Family = () => {
   const { userCharacter } = useCharacter();
   const [family, setFamily] = useState<FamilyData | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [events, setEvents] = useState<FamilyEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<
@@ -57,21 +67,18 @@ const Family = () => {
   >("info");
   const [amount, setAmount] = useState<number | "">("");
 
-  if (!userCharacter) return;
+  if (!userCharacter) return null;
 
   // Fetching family data with onSnapshot
   useEffect(() => {
-    // starting a new family check => we're "loading"
     setLoading(true);
 
-    // If we don't have a character yet, we cannot resolve family; show nothing or stop loading
     if (!userCharacter) {
       setFamily(null);
       setLoading(false);
       return;
     }
 
-    // No family => render NoFamily and stop loading
     if (!userCharacter.familyId) {
       setFamily(null);
       setLoading(false);
@@ -93,8 +100,32 @@ const Family = () => {
       (err) => {
         console.error(err);
         setError("Kunne ikke hente familie.");
-        // Even on error, stop the spinner so the UI can show the error
         setLoading(false);
+      }
+    );
+
+    return unsub;
+  }, [userCharacter?.familyId]);
+
+  // Subscribe to Events subcollection (ordered by timestamp desc)
+  useEffect(() => {
+    if (!userCharacter?.familyId) {
+      setEvents([]);
+      return;
+    }
+
+    const eventsRef = collection(db, "Families", userCharacter.familyId, "Events");
+    const q = query(eventsRef, orderBy("timestamp", "desc"));
+
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const items: FamilyEvent[] = snap.docs.map((d) => d.data() as FamilyEvent);
+        setEvents(items);
+      },
+      (err) => {
+        console.error("events onSnapshot error:", err);
+        setEvents([]);
       }
     );
 
@@ -106,9 +137,7 @@ const Family = () => {
     if (!userCharacter?.familyId) return;
 
     const fetchApplications = async () => {
-      if (!userCharacter.familyId) {
-        return;
-      }
+      if (!userCharacter.familyId) return;
       setLoading(true);
       try {
         const applicationsRef = collection(
@@ -118,18 +147,16 @@ const Family = () => {
           "Applications"
         );
         const applicationsSnapshot = await getDocs(applicationsRef);
-        const applicationsList: Application[] = applicationsSnapshot.docs.map(
-          (doc) => ({
-            documentId: doc.id,
-            applicantId: doc.data().applicantId,
-            applicantUsername: doc.data().applicantUsername,
-            applicationText: doc.data().applicationText,
-            appliedAt: doc.data().appliedAt?.toDate(),
-          })
-        );
+        const applicationsList: Application[] = applicationsSnapshot.docs.map((doc) => ({
+          documentId: doc.id,
+          applicantId: doc.data().applicantId,
+          applicantUsername: doc.data().applicantUsername,
+          applicationText: doc.data().applicationText,
+          appliedAt: doc.data().appliedAt?.toDate(),
+        }));
         setApplications(applicationsList);
-      } catch (error) {
-        console.error("Error fetching applications:", error);
+      } catch (err) {
+        console.error("Error fetching applications:", err);
         setError("Error fetching applications.");
       } finally {
         setLoading(false);
@@ -137,16 +164,16 @@ const Family = () => {
     };
 
     fetchApplications();
-  }, [userCharacter?.familyId, db]);
+  }, [userCharacter?.familyId]);
 
   // Handle inputs
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/,/g, ""); // Remove existing commas
+    const value = e.target.value.replace(/,/g, "");
     if (value === "" || isNaN(Number(value))) {
-      setAmount(""); // Clear the input if it's empty or invalid
+      setAmount("");
     } else {
       const numericValue = parseInt(value, 10);
-      setAmount(numericValue); // Store the raw number
+      setAmount(numericValue);
     }
   };
 
@@ -163,44 +190,29 @@ const Family = () => {
         return;
       }
 
-      // Calculate new values
       if (amount) {
         const newBank = family.wealth ? family.wealth + amount : amount;
         const newMoney = userCharacter.stats.money - amount;
 
-        // Check if there is enough money to deposit
         if (newMoney < 0) {
           setMessageType("warning");
           setMessage("Du har ikke så mye penger.");
           return;
         }
 
-        // Update values in Firestore
-        await updateDoc(characterRef, {
-          "stats.money": newMoney,
-        });
+        await updateDoc(characterRef, { "stats.money": newMoney });
+        await updateDoc(familyRef, { wealth: newBank });
 
-        await updateDoc(familyRef, {
-          wealth: newBank,
-        });
-
-        setFamily((prevFamily) => {
-          if (!prevFamily) return prevFamily; // or handle null case appropriately
-          return {
-            ...prevFamily,
-            wealth: newBank,
-          };
-        });
-
-        setMessageType("success");
-        setMessage(
-          `Du donerte $${amount.toLocaleString()} til ${family.name}.`
+        setFamily((prevFamily) =>
+          prevFamily ? { ...prevFamily, wealth: newBank } : prevFamily
         );
 
+        setMessageType("success");
+        setMessage(`Du donerte $${amount.toLocaleString()} til ${family.name}.`);
         setAmount("");
       }
-    } catch (error) {
-      console.error("Feil ved innskudd:", error);
+    } catch (err) {
+      console.error("Feil ved innskudd:", err);
     }
   };
 
@@ -216,44 +228,37 @@ const Family = () => {
         return;
       }
 
-      // Calculate new values
       if (amount) {
         const newBank = family.wealth ? family.wealth - amount : -amount;
         const newMoney = userCharacter.stats.money + amount;
 
-        // Check if there is enough money to withdraw
         if (newBank < 0) {
           setMessageType("warning");
           setMessage("Familien har ikke så mye penger.");
           return;
         }
 
-        // Update values in Firestore
-        await updateDoc(characterRef, {
-          "stats.money": newMoney,
-        });
+        await updateDoc(characterRef, { "stats.money": newMoney });
+        await updateDoc(familyRef, { wealth: newBank });
 
-        await updateDoc(familyRef, {
-          wealth: newBank,
-        });
-
-        setFamily((prevFamily) => {
-          if (!prevFamily) return prevFamily; // or handle null case appropriately
-          return {
-            ...prevFamily,
-            wealth: newBank,
-          };
-        });
+        setFamily((prevFamily) =>
+          prevFamily ? { ...prevFamily, wealth: newBank } : prevFamily
+        );
 
         setMessageType("success");
         setMessage(`Du tok ut $${amount.toLocaleString()} fra ${family.name}.`);
-
         setAmount("");
       }
-    } catch (error) {
-      console.error("Feil ved uttak:", error);
+    } catch (err) {
+      console.error("Feil ved uttak:", err);
     }
   };
+
+  // Already subscribed desc; keep a safe sort fallback if needed
+  const sortedEvents = events.slice().sort((a, b) => {
+    const toMs = (t: any) => (t?.toDate ? t.toDate().getTime() : new Date(t ?? 0).getTime());
+    return toMs(b.timestamp) - toMs(a.timestamp);
+  });
 
   if (loading) {
     return <p>Laster...</p>;
@@ -269,12 +274,11 @@ const Family = () => {
         setMessage={setMessage}
         messageType={messageType}
         setMessageType={setMessageType}
-      ></NoFamily>
+      />
 
       {family && (
         <>
           {/* Header */}
-
           <H1>
             <strong>{family.name}</strong>
           </H1>
@@ -314,17 +318,11 @@ const Family = () => {
 
           {/* Tabs */}
           <ul className="mb-8 flex flex-wrap">
-            <Tab
-              active={activePanel === "hq"}
-              onClick={() => setActivePanel("hq")}
-            >
+            <Tab active={activePanel === "hq"} onClick={() => setActivePanel("hq")}>
               Hovedkvarter
             </Tab>
 
-            <Tab
-              active={activePanel === "chat"}
-              onClick={() => setActivePanel("chat")}
-            >
+            <Tab active={activePanel === "chat"} onClick={() => setActivePanel("chat")}>
               Chat
             </Tab>
 
@@ -382,7 +380,6 @@ const Family = () => {
 
           {/* Safehouse panel */}
           {activePanel === "hq" && (
-            // Headquarters
             <div className="flex flex-wrap gap-2 md:gap-4">
               <div className="w-full">
                 <H2>Hovedkvarter</H2>
@@ -393,50 +390,59 @@ const Family = () => {
                   <H3>Hendelser</H3>
 
                   <ul className="mb-4">
-                    {family.events &&
-                      family.events.map((familyEvent, index) => {
-                        return (
-                          <li
-                            key={"event" + index}
-                            className="flex justify-between gap-4 text-sm"
-                          >
-                            {familyEvent.type === "newMember" ? (
-                              <p>
-                                <Username
-                                  character={{
-                                    id: familyEvent.characterId,
-                                    username: familyEvent.characterName,
-                                  }}
-                                />{" "}
-                                ble medlem av familien.
-                              </p>
-                            ) : familyEvent.type === "kickedMember" ? (
-                              <p>
-                                <Username
-                                  character={{
-                                    id: familyEvent.characterId,
-                                    username: familyEvent.characterName,
-                                  }}
-                                />{" "}
-                                ble kastet ut av familien.
-                              </p>
-                            ) : familyEvent.type === "leftMember" ? (
-                              <p>
-                                <Username
-                                  character={{
-                                    id: familyEvent.characterId,
-                                    username: familyEvent.characterName,
-                                  }}
-                                />{" "}
-                                forlot familien.
-                              </p>
-                            ) : (
-                              <p>{familyEvent.type}</p>
-                            )}
-                            <p>{formatTimestamp(familyEvent.timestamp)}</p>
-                          </li>
-                        );
-                      })}
+                    {sortedEvents.map((familyEvent, index) => (
+                      <li
+                        key={"event" + index}
+                        className="flex justify-between gap-4 text-sm"
+                      >
+                        {familyEvent.type === "created" ? (
+                          <p>
+                            Familien ble opprettet av{" "}
+                            <Username
+                              character={{
+                                id: familyEvent.characterId!,
+                                username: familyEvent.characterName!,
+                              }}
+                            />
+                            .
+                          </p>
+                        ) : familyEvent.type === "newMember" ? (
+                          <p>
+                            <Username
+                              character={{
+                                id: familyEvent.characterId!,
+                                username: familyEvent.characterName!,
+                              }}
+                            />{" "}
+                            ble medlem av familien.
+                          </p>
+                        ) : familyEvent.type === "kickedMember" ? (
+                          <p>
+                            <Username
+                              character={{
+                                id: familyEvent.characterId!,
+                                username: familyEvent.characterName!,
+                              }}
+                            />{" "}
+                            ble kastet ut av familien.
+                          </p>
+                        ) : familyEvent.type === "leftMember" ? (
+                          <p>
+                            <Username
+                              character={{
+                                id: familyEvent.characterId!,
+                                username: familyEvent.characterName!,
+                              }}
+                            />{" "}
+                            forlot familien.
+                          </p>
+                        ) : (
+                          <p>{familyEvent.type}</p>
+                        )}
+
+                        <p>{formatTimestamp(familyEvent.timestamp)}</p>
+                      </li>
+                    ))}
                   </ul>
                 </Box>
               </div>

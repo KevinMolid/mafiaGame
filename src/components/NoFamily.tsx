@@ -61,18 +61,20 @@ const NoFamily = ({
     const fetchFamilies = async () => {
       try {
         const familiesSnapshot = await getDocs(collection(db, "Families"));
-        const familiesData: FamilyData[] = familiesSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<FamilyData, "id">),
+        const familiesData: FamilyData[] = familiesSnapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...(docSnap.data() as Omit<FamilyData, "id">),
         }));
         setFamilies(familiesData);
       } catch (error) {
+        console.error("fetchFamilies error:", error);
         setMessageType("failure");
         setMessage("Feil ved henting av familier.");
       }
     };
 
     fetchFamilies();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isValidFamilyName = (name: string): boolean => {
@@ -83,7 +85,7 @@ const NoFamily = ({
     return regex.test(name) && !/ {2,}/.test(name);
   };
 
-  // Create new family
+  // Create new family (clean model: Events as subcollection)
   const createFamily = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!userCharacter) return;
@@ -104,7 +106,7 @@ const NoFamily = ({
     }
 
     // Check if player has enough money
-    const cost = 250000000;
+    const cost = 250_000_000;
     if (userCharacter.stats.money < cost) {
       setMessageType("warning");
       setMessage("Du har ikke nok penger til å opprette familie.");
@@ -124,7 +126,8 @@ const NoFamily = ({
         return;
       }
 
-      const newFamilyData = {
+      // 1) Create the family document (no inline events; createdAt is server time)
+      const familyDocRef = await addDoc(collection(db, "Families"), {
         name: familyName,
         leaderName: userCharacter.username,
         leaderId: userCharacter.id,
@@ -135,23 +138,25 @@ const NoFamily = ({
             rank: "Boss",
           },
         ],
-        createdAt: new Date(),
+        createdAt: serverTimestamp(),
         rules: "",
         img: "",
         profileText: "",
         wealth: 0,
-      };
+      });
 
-      // Create new family document and get the familyId from doc reference
-      const familyDocRef = await addDoc(
-        collection(db, "Families"),
-        newFamilyData
-      );
       const familyId = familyDocRef.id;
 
-      const newMoneyValue = userCharacter.stats.money - cost;
+      // 2) Add the first event in a subcollection with server timestamp
+      await addDoc(collection(familyDocRef, "Events"), {
+        type: "created",
+        characterId: userCharacter.id,
+        characterName: userCharacter.username,
+        timestamp: serverTimestamp(),
+      });
 
-      // Update character with familyId and familyName
+      // 3) Deduct the creation cost and update character with family info
+      const newMoneyValue = userCharacter.stats.money - cost;
       const characterRef = doc(db, "Characters", userCharacter.id);
       await setDoc(
         characterRef,
@@ -165,7 +170,7 @@ const NoFamily = ({
         { merge: true }
       );
 
-      // Add a document to the GameEvents collection to log creation of the family
+      // 4) Log a global game event
       await addDoc(collection(db, "GameEvents"), {
         eventType: "newFamily",
         familyId: familyId,
@@ -175,13 +180,29 @@ const NoFamily = ({
         timestamp: serverTimestamp(),
       });
 
-      // set Family in local state
-      setFamily({ id: familyId, ...newFamilyData });
-      setFamilyName(familyName);
+      // 5) Optimistic local state (no events on the family object; Family.tsx can fetch Events)
+      setFamily({
+        id: familyId,
+        name: familyName,
+        leaderName: userCharacter.username,
+        leaderId: userCharacter.id,
+        members: [
+          { id: userCharacter.id, name: userCharacter.username, rank: "Boss" },
+        ],
+        createdAt: new Date(), // temporary local date; onSnapshot will replace
+        rules: "",
+        img: "",
+        profileText: "",
+        wealth: 0,
+        // events intentionally omitted or set to [] because Events live in a subcollection now
+        events: [],
+      } as FamilyData);
 
+      setFamilyName("");
       setMessageType("success");
       setMessage(`Du opprettet ${familyName} for $${cost.toLocaleString()}.`);
     } catch (error) {
+      console.error("createFamily error:", error);
       setMessageType("failure");
       setMessage("Feil ved opprettelse av familie.");
     }
@@ -278,7 +299,7 @@ const NoFamily = ({
     }
   };
 
-  if (family) return;
+  if (family) return null;
 
   return (
     <>
@@ -294,11 +315,7 @@ const NoFamily = ({
             <p className="mb-2">
               Kostnad: <strong className="text-yellow-400">$250,000,000</strong>
             </p>
-            <form
-              action=""
-              onSubmit={createFamily}
-              className="flex flex-col gap-2"
-            >
+            <form action="" onSubmit={createFamily} className="flex flex-col gap-2">
               <input
                 className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
                 type="text"
@@ -325,28 +342,28 @@ const NoFamily = ({
             <H2>Bli med i en familie</H2>
             {families.length > 0 ? (
               <ul>
-                {families.map((family) => (
+                {families.map((fam) => (
                   <li
-                    key={family.name}
+                    key={fam.name}
                     className="mb-4 flex justify-between items-center"
                   >
                     <div>
                       <p>
-                        <Familyname family={family}></Familyname>
+                        <Familyname family={fam}></Familyname>
                       </p>
                       <small>
                         Leder:{" "}
                         <Username
                           character={{
-                            id: family.leaderId,
-                            username: family.leaderName,
+                            id: fam.leaderId,
+                            username: fam.leaderName,
                           }}
                         />
                       </small>
                     </div>
 
                     <div>
-                      <Button onClick={() => setApplyingTo(family.name)}>
+                      <Button onClick={() => setApplyingTo(fam.name)}>
                         Skriv søknad
                       </Button>
                     </div>
