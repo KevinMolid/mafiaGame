@@ -70,6 +70,7 @@ const EditProfile = () => {
             id="profileImg"
             type="text"
             value={imgUrl}
+            spellCheck={false}
             onChange={handleImgChange}
           />
         </div>
@@ -82,6 +83,7 @@ const EditProfile = () => {
             id="profileTxt"
             className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none"
             value={profileTxt}
+            spellCheck={false}
             onChange={handleProfileTxtChange}
           ></textarea>
         </div>

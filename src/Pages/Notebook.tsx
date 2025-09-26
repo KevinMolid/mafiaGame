@@ -28,6 +28,7 @@ const Notebook = ({ notes: incomingNotes, onChangeNotes }: NotebookProps) => {
           value={notes}
           onChange={handleChange}
           rows={8}
+          spellCheck={false}
           className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none"
         />
       </div>

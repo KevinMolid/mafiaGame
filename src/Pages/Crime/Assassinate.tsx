@@ -8,7 +8,7 @@ import JailBox from "../../components/JailBox";
 import Username from "../../components/Typography/Username";
 
 // React
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // Firebase
 import {
@@ -32,19 +32,23 @@ import { useCharacter } from "../../CharacterContext";
 const Assassinate = () => {
   const { userCharacter } = useCharacter();
   const [targetPlayer, setTargetPlayer] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<React.ReactNode>("");
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "warning" | "info"
   >("info");
   const [bounties, setBounties] = useState<any[]>([]);
   const [addingBounty, setAddingBounty] = useState<boolean>(false);
   const [wantedPlayer, setWantedPlayer] = useState("");
-  const [bountyAmount, setBountyAmount] = useState<number | "">("");
+
+  // RAW input string to avoid formatting while typing
+  const [bountyAmountInput, setBountyAmountInput] = useState<string>("");
+
+  const bountyInputRef = useRef<HTMLInputElement>(null);
 
   const bountyCost = 100000;
 
   if (!userCharacter) {
-    return;
+    return null;
   }
 
   useEffect(() => {
@@ -58,29 +62,42 @@ const Assassinate = () => {
       setBounties(updatedBounties);
     });
 
-    // Clean up the listener on unmount
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
-  // Function to remove a bounty
+  const formatDigitsWithSpaces = (digits: string) =>
+    digits.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+  const formatMoney = (n: number) => {
+    const localized = n.toLocaleString("nb-NO");
+    const withSpaces = localized.replace(/\u00A0|\u202F/g, " ");
+    return withSpaces === String(n)
+      ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+      : withSpaces;
+  };
+
+  const sanitizeInt = (s: string) => s.replace(/[^\d]/g, ""); // keep digits only
+
+  const parsedBountyAmount = (): number =>
+    bountyAmountInput === "" ? 0 : parseInt(bountyAmountInput, 10);
+
+  // Remove bounty
   const removeBounty = async (bountyId: string, bountyAmount: number) => {
     try {
-      // Refund the bounty amount (excluding the fixed cost)
       const refundAmount = bountyAmount;
       const updatedMoney = userCharacter.stats.money + refundAmount;
 
-      // Update player's money
       await updateDoc(doc(db, "Characters", userCharacter.id), {
         "stats.money": updatedMoney,
       });
 
-      // Delete the bounty from the database
       await deleteDoc(doc(db, "Bounty", bountyId));
 
       setMessage(
-        `Dusøren ble fjernet, og $${refundAmount.toLocaleString()} ble refundert.`
+        <p>
+          Dusøren ble fjernet, og <strong>${formatMoney(refundAmount)}</strong>{" "}
+          ble refundert.
+        </p>
       );
       setMessageType("success");
     } catch (error) {
@@ -90,7 +107,7 @@ const Assassinate = () => {
     }
   };
 
-  // Function to handle assassination
+  // Assassinate
   const killPlayer = async () => {
     if (!targetPlayer) {
       setMessage("Du må skrive inn et brukernavn.");
@@ -99,7 +116,6 @@ const Assassinate = () => {
     }
 
     try {
-      // Query the "Characters" collection for a player with the matching username
       const q = query(
         collection(db, "Characters"),
         where("username_lowercase", "==", targetPlayer.toLowerCase())
@@ -107,7 +123,6 @@ const Assassinate = () => {
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
-        // No player found
         setMessage(`Spilleren ${targetPlayer} finnes ikke.`);
         setMessageType("warning");
       } else {
@@ -115,23 +130,18 @@ const Assassinate = () => {
         const targetDocId = querySnapshot.docs[0].id;
 
         if (userCharacter?.username === playerData.username) {
-          // Suicide
           setMessage(`Du kan ikke drepe deg selv!`);
           setMessageType("warning");
         } else if (playerData.status === "dead") {
-          // Player is already dead
           setMessage(`${playerData.username} er allerede død!`);
           setMessageType("warning");
         } else if (userCharacter?.location !== playerData.location) {
-          // Player is not in the same city
           setMessage(
             `Du kunne ikke finne ${playerData.username} i ${userCharacter?.location}!`
           );
           setMessageType("failure");
         } else {
-          // Proceed with assassination
-
-          // Query bounties on the target player
+          // Collect bounties on the victim
           const bountyQuery = query(
             collection(db, "Bounty"),
             where("WantedId", "==", targetDocId)
@@ -147,19 +157,16 @@ const Assassinate = () => {
             bountyIdsToDelete.push(doc.id);
           });
 
-          // Reward the killer with the bounty amount
           if (totalBountyAmount > 0) {
             const updatedMoney = userCharacter.stats.money + totalBountyAmount;
             await updateDoc(doc(db, "Characters", userCharacter.id), {
               "stats.money": updatedMoney,
             });
 
-            // Delete bounties on the killed player
             for (const bountyId of bountyIdsToDelete) {
               await deleteDoc(doc(db, "Bounty", bountyId));
             }
 
-            // Add an alert for the killer
             await addDoc(
               collection(db, `Characters/${userCharacter.id}/alerts`),
               {
@@ -172,7 +179,6 @@ const Assassinate = () => {
               }
             );
 
-            // Update target player status to 'dead'
             await updateDoc(doc(db, "Characters", targetDocId), {
               status: "dead",
             });
@@ -180,12 +186,10 @@ const Assassinate = () => {
             setMessage(`Du angrep og drepte ${playerData.username}!`);
             setMessageType("success");
 
-            // Update assassin's lastActive timestamp
             await updateDoc(doc(db, "Characters", userCharacter.id), {
               lastActive: serverTimestamp(),
             });
 
-            // Add a document to the GameEvents collection to log the assassination
             await addDoc(collection(db, "GameEvents"), {
               eventType: "assassination",
               assassinId: userCharacter.id,
@@ -199,16 +203,17 @@ const Assassinate = () => {
         }
       }
     } catch (error) {
-      // Handle any errors during the query
       console.error("Error checking target player:", error);
       setMessage("En ukjent feil oppstod da du prøvde å drepe en spiller.");
       setMessageType("failure");
     }
   };
 
-  // Handle adding bounties in the db
+  // Add bounty
   const addBounty = async () => {
-    if (!wantedPlayer || bountyAmount === "" || bountyAmount <= 0) {
+    const bountyAmount = parsedBountyAmount();
+
+    if (!wantedPlayer || bountyAmount <= 0) {
       setMessageType("warning");
       setMessage(
         "Du må skrive inn dusørbeløp og brukernavn på den du ønsker drept."
@@ -225,7 +230,7 @@ const Assassinate = () => {
     }
 
     try {
-      // Check if the wanted player exists in the database
+      // Check player exists
       const q = query(
         collection(db, "Characters"),
         where("username_lowercase", "==", wantedPlayer.toLowerCase())
@@ -241,7 +246,6 @@ const Assassinate = () => {
       const playerData = querySnapshot.docs[0].data();
       const wantedPlayerId = querySnapshot.docs[0].id;
 
-      // Add the bounty to the Bounty collection
       await addDoc(collection(db, "Bounty"), {
         WantedId: wantedPlayerId,
         WantedName: playerData.username,
@@ -251,20 +255,25 @@ const Assassinate = () => {
         createdAt: serverTimestamp(),
       });
 
-      // Deduct the bounty cost from the player's money
       const updatedMoney = userCharacter.stats.money - totalBountyCost;
       await updateDoc(doc(db, "Characters", userCharacter.id), {
         "stats.money": updatedMoney,
       });
 
       setMessage(
-        `Du utlovet en dusør på $${bountyAmount.toLocaleString()} for å drepe ${
-          playerData.username
-        }!`
+        <p>
+          Du utlovet en dusør på <strong>${formatMoney(bountyAmount)}</strong>{" "}
+          for å drepe{" "}
+          <Username
+            useParentColor
+            character={{ id: wantedPlayerId, username: playerData.username }}
+          />
+          .
+        </p>
       );
       setMessageType("success");
       setWantedPlayer("");
-      setBountyAmount("");
+      setBountyAmountInput("");
       setAddingBounty(false);
     } catch (error) {
       console.error("Error adding bounty:", error);
@@ -273,29 +282,29 @@ const Assassinate = () => {
     }
   };
 
-  const handleTargetInput = (event: any) => {
+  // Inputs
+  const handleTargetInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTargetPlayer(event.target.value);
   };
 
-  const handleWantedInput = (event: any) => {
+  const handleWantedInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setWantedPlayer(event.target.value);
   };
 
   const handleBountyAmountInputChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = e.target.value.replace(/,/g, ""); // Remove existing commas
-    if (value === "" || isNaN(Number(value))) {
-      setBountyAmount(""); // Clear the input if it's empty or invalid
-    } else {
-      const numericValue = parseInt(value, 10);
-      setBountyAmount(numericValue); // Store the raw number
-    }
+    // Keep RAW digits only to avoid reformatting while typing
+    const cleaned = sanitizeInt(e.target.value);
+    setBountyAmountInput(cleaned);
   };
 
   if (userCharacter?.inJail) {
     return <JailBox message={message} messageType={messageType} />;
   }
+
+  const bountyAmount = parsedBountyAmount();
+  const hasBountyAmount = bountyAmountInput !== "" && bountyAmount > 0;
 
   return (
     <Main>
@@ -312,6 +321,7 @@ const Assassinate = () => {
               type="text"
               placeholder="Brukernavn"
               value={targetPlayer}
+              spellCheck={false}
               onChange={handleTargetInput}
               className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             />
@@ -349,7 +359,7 @@ const Assassinate = () => {
                 <div className="flex flex-col">
                   <p>Utlov dusør på en spiller du ønsker drept.</p>
                   <p className="mb-4">
-                    Å utlove en dusør koster ${bountyCost.toLocaleString()} +
+                    Å utlove en dusør koster ${formatMoney(bountyCost)} +
                     dusørbeløpet.
                   </p>
                   <H3>Ønsket drept</H3>
@@ -357,6 +367,7 @@ const Assassinate = () => {
                     type="text"
                     placeholder="Brukernavn"
                     value={wantedPlayer}
+                    spellCheck={false}
                     onChange={handleWantedInput}
                     className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
                   />
@@ -365,20 +376,29 @@ const Assassinate = () => {
                 <div className="flex flex-col mb-4">
                   <H3>Dusørbeløp</H3>
                   <input
+                    ref={bountyInputRef}
                     className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
                     type="text"
+                    inputMode="numeric"
                     placeholder="Beløp"
-                    value={
-                      bountyAmount ? Number(bountyAmount).toLocaleString() : ""
-                    }
+                    value={formatDigitsWithSpaces(bountyAmountInput)}
                     onChange={handleBountyAmountInputChange}
+                    onBlur={(e) => {
+                      // Optional: trim leading zeros on blur
+                      const cleaned = sanitizeInt(e.target.value).replace(
+                        /^0+(?!$)/,
+                        ""
+                      );
+                      setBountyAmountInput(cleaned);
+                    }}
                   />
                 </div>
-                {bountyAmount && (
+
+                {hasBountyAmount && (
                   <p className="mb-4 text-neutral-200">
                     Kostnad:{" "}
                     <span className="font-medium text-yellow-400">
-                      ${(bountyAmount + bountyCost).toLocaleString()}
+                      ${formatMoney(bountyAmount + bountyCost)}
                     </span>
                   </p>
                 )}
@@ -417,7 +437,7 @@ const Assassinate = () => {
                           />
                         </div>
                         <div className="px-2 py-1 text-yellow-400 font-bold">
-                          ${bounty.Bounty.toLocaleString()}
+                          ${Number(bounty.Bounty).toLocaleString("nb-NO")}
                         </div>
                         <div className="px-2 py-1">
                           <Username

@@ -26,13 +26,14 @@ import {
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../../firebaseConfig";
+import Username from "../../components/Typography/Username";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const Bank = () => {
   const [amount, setAmount] = useState<number | "">("");
-  const [message, setMessage] = useState<string>("");
+  const [message, setMessage] = useState<React.ReactNode>("");
   const [messageType, setMessageType] = useState<
     "success" | "warning" | "info"
   >("info");
@@ -52,7 +53,7 @@ const Bank = () => {
     return cleaned;
   };
 
- // 2) handlers
+  // 2) handlers
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const cleaned = sanitizeInt(e.target.value);
     if (cleaned === "") setAmount("");
@@ -63,7 +64,9 @@ const Bank = () => {
     setTargetCharacter(e.target.value);
   };
 
-  const handleAmountToSendInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAmountToSendInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const cleaned = sanitizeInt(e.target.value);
     if (cleaned === "") setAmountToSend("");
     else setAmountToSend(parseInt(cleaned, 10));
@@ -102,7 +105,10 @@ const Bank = () => {
 
         setMessageType("success");
         setMessage(
-          `Du satte inn $${amount.toLocaleString()} på din bankkonto.`
+          <p>
+            Du satte inn <i className="fa-solid fa-dollar-sign"></i>{" "}
+            <strong>{amount.toLocaleString("nb-NO")}</strong> på din bankkonto.
+          </p>
         );
 
         setAmount("");
@@ -135,7 +141,11 @@ const Bank = () => {
 
       setMessageType("success");
       setMessage(
-        `Du satte inn $${userCharacter.stats.money.toLocaleString()} på din bankkonto.`
+        <p>
+          Du satte inn <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{userCharacter.stats.money.toLocaleString("nb-NO")}</strong>{" "}
+          på din bankkonto.
+        </p>
       );
 
       setAmount("");
@@ -175,7 +185,12 @@ const Bank = () => {
         });
 
         setMessageType("success");
-        setMessage(`Du tok ut $${amount.toLocaleString()} fra din bankkonto.`);
+        setMessage(
+          <p>
+            Du tok ut <i className="fa-solid fa-dollar-sign"></i>{" "}
+            <strong>{amount.toLocaleString("nb-NO")}</strong> fra din bankkonto.
+          </p>
+        );
 
         setAmount("");
       }
@@ -207,7 +222,11 @@ const Bank = () => {
 
       setMessageType("success");
       setMessage(
-        `Du tok ut $${userCharacter.stats.bank.toLocaleString()} fra din bankkonto.`
+        <p>
+          Du tok ut <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{userCharacter.stats.bank.toLocaleString("nb-NO")}</strong>{" "}
+          fra din bankkonto.
+        </p>
       );
 
       setAmount("");
@@ -259,6 +278,7 @@ const Bank = () => {
       }
 
       const targetCharacterDoc = targetQuerySnapshot.docs[0];
+      const targetId = targetCharacterDoc.id;
       const targetData = targetCharacterDoc.data();
 
       // Calculate the new balances
@@ -293,9 +313,16 @@ const Bank = () => {
 
       setMessageType("success");
       setMessage(
-        `Du overførte $${transferAmount.toLocaleString()} til ${
-          targetData.username
-        }. En avgift på $${fee.toLocaleString()} ble betalt til banken.`
+        <p>
+          Du overførte <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{transferAmount.toLocaleString("nb-NO")}</strong> til{" "}
+          <Username
+            useParentColor
+            character={{ id: targetId, username: targetData.username }}
+          />
+          . En avgift på <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{fee.toLocaleString("nb-NO")}</strong> ble betalt til banken.
+        </p>
       );
 
       // Reset the input fields
@@ -327,10 +354,14 @@ const Bank = () => {
         <p className="mb-4">
           Saldo:{" "}
           <span className="font-bold text-neutral-200">
-            ${userCharacter?.stats.bank?.toLocaleString() || 0}
+            <i className="fa-solid fa-dollar-sign"></i>{" "}
+            {userCharacter?.stats.bank?.toLocaleString("nb-NO") || 0}
           </span>
         </p>
-        <form className="flex flex-col gap-2" onSubmit={(e) => e.preventDefault()}>
+        <form
+          className="flex flex-col gap-2"
+          onSubmit={(e) => e.preventDefault()}
+        >
           <input
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             type="text"
@@ -341,12 +372,20 @@ const Bank = () => {
           />
           <div className="flex gap-2 flex-wrap">
             <div className="flex gap-2">
-              <Button type="button" style="secondary" onClick={withdraw}>Ta ut</Button>
-              <Button type="button" style="secondary" onClick={deposit}>Sett inn</Button>
+              <Button type="button" style="secondary" onClick={withdraw}>
+                Ta ut
+              </Button>
+              <Button type="button" style="secondary" onClick={deposit}>
+                Sett inn
+              </Button>
             </div>
             <div className="flex gap-2">
-              <Button type="button" onClick={withdrawAll}>Ta ut alt</Button>
-              <Button type="button" onClick={depositAll}>Sett inn alt</Button>
+              <Button type="button" onClick={withdrawAll}>
+                Ta ut alt
+              </Button>
+              <Button type="button" onClick={depositAll}>
+                Sett inn alt
+              </Button>
             </div>
           </div>
         </form>
@@ -362,14 +401,15 @@ const Bank = () => {
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             type="text"
             placeholder="Brukernavn"
+            spellCheck={false}
             value={targetCharacter}
             onChange={handleTargetCharacterInputChange}
           />
           <input
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-            type="text"
+            type="numeric"
             placeholder="Beløp"
-            value={amountToSend ? Number(amountToSend).toLocaleString() : ""}
+            value={amountToSend ? amountToSend.toLocaleString("nb-NO") : ""}
             onChange={handleAmountToSendInputChange}
           />
           <div>

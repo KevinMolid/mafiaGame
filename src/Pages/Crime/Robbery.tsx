@@ -10,7 +10,11 @@ import JailBox from "../../components/JailBox";
 import Username from "../../components/Typography/Username"; // <-- NEW
 
 // Functions
-import { rewardXp, increaseHeat, arrest } from "../../Functions/RewardFunctions";
+import {
+  rewardXp,
+  increaseHeat,
+  arrest,
+} from "../../Functions/RewardFunctions";
 
 // Context
 import { useAuth } from "../../AuthContext";
@@ -42,7 +46,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const Robbery = () => {
-  const [message, setMessage] = useState<React.ReactNode>(""); // <-- allow JSX
+  const [message, setMessage] = useState<React.ReactNode>("");
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "warning" | "info"
   >("info");
@@ -81,9 +85,14 @@ const Robbery = () => {
     setMessage(text);
   };
 
-  const findRandomTarget = async (): Promise<(Target & { id: string }) | null> => {
+  const findRandomTarget = async (): Promise<
+    (Target & { id: string }) | null
+  > => {
     const charactersSnapshot = await getDocs(
-      query(collection(db, "Characters"), where("location", "==", userCharacter.location))
+      query(
+        collection(db, "Characters"),
+        where("location", "==", userCharacter.location)
+      )
     );
 
     const potentialTargets = charactersSnapshot.docs
@@ -95,7 +104,9 @@ const Robbery = () => {
       return null;
     }
 
-    return potentialTargets[Math.floor(Math.random() * potentialTargets.length)];
+    return potentialTargets[
+      Math.floor(Math.random() * potentialTargets.length)
+    ];
   };
 
   const findSpecificTarget = async (
@@ -129,7 +140,10 @@ const Robbery = () => {
       displayMessage(
         <>
           Du prøvde å rane{" "}
-          <Username useParentColor character={{ id: target.id, username: target.username }} />
+          <Username
+            useParentColor
+            character={{ id: target.id, username: target.username }}
+          />
           , men fant ingen ting å stjele.
         </>,
         "failure"
@@ -160,11 +174,11 @@ const Robbery = () => {
     displayMessage(
       <>
         Du ranet{" "}
-        <Username useParentColor character={{ id: target.id, username: target.username }} /> for{" "}
-        <strong>
-          ${stolenAmount.toLocaleString("nb-NO")}
-        </strong>
-        .
+        <Username
+          useParentColor
+          character={{ id: target.id, username: target.username }}
+        />{" "}
+        for <strong>${stolenAmount.toLocaleString("nb-NO")}</strong>.
       </>,
       "success"
     );
@@ -174,7 +188,10 @@ const Robbery = () => {
     displayMessage(
       <>
         Du prøvde å rane{" "}
-        <Username useParentColor character={{ id: (target as any).id, username: target.username }} />
+        <Username
+          useParentColor
+          character={{ id: (target as any).id, username: target.username }}
+        />
         , men feilet. Bedre lykke neste gang!
       </>,
       "failure"
@@ -204,7 +221,10 @@ const Robbery = () => {
     }
 
     if (!isTargetRandom && !targetCharacter) {
-      displayMessage("Du må angi et mål for å rane en bestemt spiller.", "warning");
+      displayMessage(
+        "Du må angi et mål for å rane en bestemt spiller.",
+        "warning"
+      );
       return;
     }
 
@@ -215,13 +235,19 @@ const Robbery = () => {
 
       if (!target) return;
 
-      const foundPlayer = !isTargetRandom ? Math.random() <= 0.5 : Math.random() <= 0.9;
+      const foundPlayer = !isTargetRandom
+        ? Math.random() <= 0.5
+        : Math.random() <= 0.9;
       if (!foundPlayer) {
         displayMessage(
           !isTargetRandom ? (
             <>
               Du fant ikke{" "}
-              <Username useParentColor character={{ id: target.id, username: target.username }} />.
+              <Username
+                useParentColor
+                character={{ id: target.id, username: target.username }}
+              />
+              .
             </>
           ) : (
             "Du fant ingen å rane."
@@ -244,7 +270,10 @@ const Robbery = () => {
       startCooldown(cooldownTime, "robbery", userCharacter.id);
     } catch (error) {
       console.error(error);
-      displayMessage("Det oppstod en feil under ranet. Prøv igjen senere.", "failure");
+      displayMessage(
+        "Det oppstod en feil under ranet. Prøv igjen senere.",
+        "failure"
+      );
     }
   };
 
@@ -262,11 +291,19 @@ const Robbery = () => {
       <div className="flex items-baseline justify-between gap-4">
         <H1>Ran spiller</H1>
         {helpActive ? (
-          <Button size="small" style="helpActive" onClick={() => setHelpActive(!helpActive)}>
+          <Button
+            size="small"
+            style="helpActive"
+            onClick={() => setHelpActive(!helpActive)}
+          >
             <i className="fa-solid fa-question"></i>
           </Button>
         ) : (
-          <Button size="small" style="help" onClick={() => setHelpActive(!helpActive)}>
+          <Button
+            size="small"
+            style="help"
+            onClick={() => setHelpActive(!helpActive)}
+          >
             <i className="fa-solid fa-question"></i>
           </Button>
         )}
@@ -280,10 +317,16 @@ const Robbery = () => {
           <Box type="help">
             <H3>Rane en tilfeldig spiller</H3>
             <p>90% sjanse for å finne en tilfeldig spiller</p>
-            <p className="mb-4">75% sjanse for å stjele 10-50% av spillerens utsetående penger</p>
+            <p className="mb-4">
+              75% sjanse for å stjele 10-50% av spillerens utsetående penger
+            </p>
             <H3>Rane en bestemt spiller</H3>
-            <p>50% sjanse for å finne spilleren dersom vedkommende er i samme by</p>
-            <p>75% sjanse for å stjele 10-50% av spillerens utsetående penger</p>
+            <p>
+              50% sjanse for å finne spilleren dersom vedkommende er i samme by
+            </p>
+            <p>
+              75% sjanse for å stjele 10-50% av spillerens utsetående penger
+            </p>
           </Box>
         </div>
       )}
@@ -291,7 +334,9 @@ const Robbery = () => {
       {cooldowns["robbery"] > 0 && (
         <p className="mb-4 text-stone-400">
           Du må vente{" "}
-          <span className="font-bold text-neutral-200">{cooldowns["robbery"]}</span>{" "}
+          <span className="font-bold text-neutral-200">
+            {cooldowns["robbery"]}
+          </span>{" "}
           sekunder før du kan rane en spiller.
         </p>
       )}
@@ -304,20 +349,28 @@ const Robbery = () => {
           <li
             className={
               "border px-4 py-2 flex-grow text-center cursor-pointer max-w-64 " +
-              (isTargetRandom ? "bg-neutral-900 border-neutral-600" : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
+              (isTargetRandom
+                ? "bg-neutral-900 border-neutral-600"
+                : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
             }
             onClick={() => setIsTargetRandom(true)}
           >
-            <p className={isTargetRandom ? "text-white" : ""}>Tilfeldig spiller</p>
+            <p className={isTargetRandom ? "text-white" : ""}>
+              Tilfeldig spiller
+            </p>
           </li>
           <li
             className={
               "border px-4 py-2 flex-grow text-center cursor-pointer max-w-64 " +
-              (isTargetRandom ? "bg-neutral-800 hover:bg-neutral-700 border-transparent" : "bg-neutral-900 border-neutral-600")
+              (isTargetRandom
+                ? "bg-neutral-800 hover:bg-neutral-700 border-transparent"
+                : "bg-neutral-900 border-neutral-600")
             }
             onClick={() => setIsTargetRandom(false)}
           >
-            <p className={isTargetRandom ? "" : "text-white"}>Bestemt spiller</p>
+            <p className={isTargetRandom ? "" : "text-white"}>
+              Bestemt spiller
+            </p>
           </li>
         </ul>
 
@@ -327,6 +380,7 @@ const Robbery = () => {
             type="text"
             placeholder="Brukernavn"
             value={targetCharacter}
+            spellCheck={false}
             onChange={handleTargetCharacterInputChange}
           />
         )}

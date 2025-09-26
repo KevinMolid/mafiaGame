@@ -30,7 +30,7 @@ const StreetCrime = () => {
   const [selectedCrime, setSelectedCrime] = useState<string>(
     localStorage.getItem("selectedCrime") || "Lommetyveri"
   );
-  const [message, setMessage] = useState<ReactNode>("")
+  const [message, setMessage] = useState<ReactNode>("");
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "important" | "warning" | "info"
   >("success");
@@ -89,11 +89,28 @@ const StreetCrime = () => {
         <>
           Du utførte <strong>{crime.name}</strong>.
           {moneyReward && xpReward ? (
-            <> Du fikk <strong>${money(moneyReward)}</strong> og <strong>{xpReward} XP</strong>!</>
+            <>
+              {" "}
+              Du fikk{" "}
+              <strong>
+                <i className="fa-solid fa-dollar-sign"></i> {money(moneyReward)}
+              </strong>{" "}
+              og <strong>{xpReward} XP</strong>!
+            </>
           ) : xpReward ? (
-            <> Du fikk <strong>{xpReward} XP</strong>!</>
+            <>
+              {" "}
+              Du fikk <strong>{xpReward} XP</strong>!
+            </>
           ) : (
-            <> Du fikk <strong>${money(moneyReward)}</strong>!</>
+            <>
+              {" "}
+              Du fikk{" "}
+              <strong>
+                <i className="fa-solid fa-dollar-sign"></i> {money(moneyReward)}
+              </strong>
+              !
+            </>
           )}
         </>
       );
@@ -228,7 +245,8 @@ const StreetCrime = () => {
               {/* Money range */}
               <p className="text-neutral-950 text-xs bg-neutral-500 px-2 rounded-lg">
                 <span className="font-semibold">
-                  ${money(crime.minMoneyReward)} – {money(crime.maxMoneyReward)}
+                  <i className="fa-solid fa-dollar-sign"></i>{" "}
+                  {money(crime.minMoneyReward)} – {money(crime.maxMoneyReward)}
                 </span>
               </p>
             </div>

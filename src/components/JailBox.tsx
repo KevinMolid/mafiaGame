@@ -139,7 +139,9 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
     <Main img="PrisonBg">
       <div className="my-4">
         <H2>Du er i fengsel!</H2>
-        <p className="mb-4">Du kan ikke gjøre noen handlinger mens du sitter i fengsel.</p>
+        <p className="mb-4">
+          Du kan ikke gjøre noen handlinger mens du sitter i fengsel.
+        </p>
         <p className="mb-4">
           Tid som gjenstår:{" "}
           <strong className="text-neutral-200">{remainingTime} sekunder</strong>
@@ -185,6 +187,7 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
                     rows={1}
                     value={newMessage}
                     placeholder="Melding"
+                    spellCheck={false}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         if (e.shiftKey) {
@@ -201,9 +204,7 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
                     className="w-full bg-neutral-800 outline-none resize-none rounded-3xl px-4 py-2 leading-normal"
                   ></textarea>
 
-                  <Button
-                    type="submit" size="square"
-                  >
+                  <Button type="submit" size="square">
                     <i className=" text-xl fa-solid fa-paper-plane"></i>
                   </Button>
                 </form>

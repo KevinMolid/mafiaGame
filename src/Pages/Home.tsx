@@ -76,13 +76,16 @@ const Home = () => {
             <p>{getCurrentRank(userCharacter.stats.xp)}</p>
           </Link>
           <Link to="/bank">
-            <p>Penger: ${userCharacter.stats.money.toLocaleString()}</p>
+            <p>
+              Penger: <i className="fa-solid fa-dollar-sign"></i>{" "}
+              {userCharacter.stats.money.toLocaleString("nb-NO")}
+            </p>
           </Link>
           <Link to="/bank">
             <p>
-              Bank: $
+              Bank: <i className="fa-solid fa-dollar-sign"></i>{" "}
               {userCharacter.stats.bank
-                ? userCharacter.stats.bank.toLocaleString()
+                ? userCharacter.stats.bank.toLocaleString("nb-NO")
                 : "0"}
             </p>
           </Link>

@@ -101,7 +101,10 @@ const Chat = () => {
 
         const conversationsList: Conversation[] =
           conversationsSnapshot.docs.map((docSnap) => {
-            const data = docSnap.data() as { participants?: unknown; createdAt?: any };
+            const data = docSnap.data() as {
+              participants?: unknown;
+              createdAt?: any;
+            };
             const participants = Array.isArray(data.participants)
               ? (data.participants as string[])
               : [];
@@ -183,7 +186,10 @@ const Chat = () => {
       let found: Conversation | null = null;
 
       conversationSnapshot.forEach((docSnap) => {
-        const data = docSnap.data() as { participants?: unknown; createdAt?: any };
+        const data = docSnap.data() as {
+          participants?: unknown;
+          createdAt?: any;
+        };
         const participants = Array.isArray(data.participants)
           ? (data.participants as string[])
           : [];
@@ -197,7 +203,10 @@ const Chat = () => {
       } else {
         // No conversation yet; clear selection and persist intended partner
         setConversationId("");
-        localStorage.setItem(LS_KEY, JSON.stringify({ id: "", other: username }));
+        localStorage.setItem(
+          LS_KEY,
+          JSON.stringify({ id: "", other: username })
+        );
       }
 
       setIsCreatingChat(false);
@@ -256,10 +265,13 @@ const Chat = () => {
         );
       } else {
         // Create a new conversation and persist as active
-        const newConversationRef = await addDoc(collection(db, "Conversations"), {
-          participants: [userCharacter.username, receiver],
-          createdAt: serverTimestamp(),
-        });
+        const newConversationRef = await addDoc(
+          collection(db, "Conversations"),
+          {
+            participants: [userCharacter.username, receiver],
+            createdAt: serverTimestamp(),
+          }
+        );
 
         setConversationId(newConversationRef.id);
 
@@ -397,6 +409,7 @@ const Chat = () => {
                   rows={1}
                   value={newMessage}
                   placeholder="Melding"
+                  spellCheck={false}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       if (e.shiftKey) {

@@ -288,6 +288,7 @@ const FamilySettings = ({
                   type="text"
                   placeholder="Brukernavn"
                   value={inviteUsername}
+                  spellCheck={false}
                   onChange={(e) => setInviteUsername(e.target.value)}
                   aria-invalid={
                     inviteUsername.trim().length === 0 ? true : undefined

@@ -96,7 +96,7 @@ const Infobar = () => {
       <Link to="/bank" className="flex items-center gap-1 sm:gap-2">
         <i className="fa-solid fa-dollar-sign"></i>
         <Tooltip label="Money">
-          <p>{userCharacter.stats.money.toLocaleString()}</p>
+          <p>{userCharacter.stats.money.toLocaleString("nb-NO")}</p>
         </Tooltip>
       </Link>
 
