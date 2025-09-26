@@ -23,7 +23,7 @@ const sanitizeInt = (s: string) => s.replace(/[^\d]/g, "");
 const Jackpot = () => {
   const { userCharacter } = useCharacter();
   const [reels, setReels] = useState<Array<number>>([0, 0, 0]);
-  const [message, setMessage] = useState<string>("");
+  const [message, setMessage] = useState<React.ReactNode>("");
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "info" | "warning"
   >("info");
@@ -69,11 +69,22 @@ const Jackpot = () => {
     if (reels[0] === reels[1] && reels[1] === reels[2] && reels[2] === 7) {
       newMoney += bet * 149;
       setMessageType("success");
-      setMessage(`Jackpot! Du vant $${(bet * 150).toLocaleString()}!`);
+      setMessage(
+        <p>
+          <strong>Jackpot!</strong> Du vant{" "}
+          <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{(bet * 150).toLocaleString("nb-NO")}</strong>!
+        </p>
+      );
     } else if (reels[0] === reels[1] && reels[1] === reels[2]) {
       newMoney += bet * 14;
       setMessageType("success");
-      setMessage(`Du fikk 3 like og vant $${(bet * 15).toLocaleString()}!`);
+      setMessage(
+        <p>
+          Du fikk 3 like og vant <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{(bet * 15).toLocaleString("nb-NO")}</strong>!
+        </p>
+      );
     } else if (
       reels[0] === reels[1] ||
       reels[1] === reels[2] ||
@@ -81,11 +92,21 @@ const Jackpot = () => {
     ) {
       newMoney += bet; // net +1× (2× return)
       setMessageType("success");
-      setMessage(`Du fikk 2 like og vant $${(bet * 2).toLocaleString()}!`);
+      setMessage(
+        <p>
+          Du fikk 2 like og vant <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{(bet * 2).toLocaleString("nb-NO")}</strong>!
+        </p>
+      );
     } else {
       newMoney -= bet;
       setMessageType("failure");
-      setMessage(`Du tapte $${bet.toLocaleString()}. Prøv igjen!`);
+      setMessage(
+        <p>
+          Du tapte <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{bet.toLocaleString("nb-NO")}</strong>. Prøv igjen!
+        </p>
+      );
     }
 
     try {
@@ -133,7 +154,9 @@ const Jackpot = () => {
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             type="text"
             placeholder="Skriv inn beløp"
-            value={betAmount === "" ? "" : Number(betAmount).toLocaleString()}
+            value={
+              betAmount === "" ? "" : Number(betAmount).toLocaleString("nb-NO")
+            }
             onChange={handleBetChange}
           />
         </div>

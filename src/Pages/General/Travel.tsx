@@ -29,7 +29,7 @@ const Travel = () => {
   const { userCharacter } = useCharacter();
   const [targetLocation, setTargetLocation] = useState("");
   const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<React.ReactNode>("");
   const [messageType, setMessageType] = useState<
     "info" | "success" | "failure" | "important" | "warning"
   >("info");
@@ -66,7 +66,11 @@ const Travel = () => {
 
       setMessageType("success");
       setMessage(
-        `Du reiste til ${targetLocation} for $${priceToTravel.toLocaleString()}`
+        <p>
+          Du reiste til <strong>{targetLocation}</strong> for{" "}
+          <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{priceToTravel.toLocaleString("nb-NO")}</strong>.
+        </p>
       );
     } catch (error) {
       console.error("Feil ved oppdatering aav lokasjon:", error);
@@ -136,7 +140,8 @@ const Travel = () => {
           <Button onClick={handleTravel}>
             Fly til {targetLocation} <i className="fa-solid fa-plane"></i>{" "}
             <span className="text-yellow-400">
-              ${priceToTravel.toLocaleString()}
+              <i className="fa-solid fa-dollar-sign"></i>{" "}
+              {priceToTravel.toLocaleString("nb-NO")}
             </span>
           </Button>
         </div>
