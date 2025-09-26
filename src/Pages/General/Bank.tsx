@@ -22,6 +22,7 @@ import {
   query,
   where,
   addDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../../firebaseConfig";
@@ -283,7 +284,7 @@ const Bank = () => {
       );
       await addDoc(alertRef, {
         type: "banktransfer",
-        timestamp: new Date().toISOString(),
+        timestamp: serverTimestamp(),
         amountSent: transferAmount,
         senderName: userCharacter.username,
         senderId: userCharacter.id,
