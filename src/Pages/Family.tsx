@@ -166,15 +166,14 @@ const Family = () => {
     fetchApplications();
   }, [userCharacter?.familyId]);
 
+  // Helper
+  const sanitizeInt = (s: string) => s.replace(/[^\d]/g, "");
+
   // Handle inputs
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/,/g, "");
-    if (value === "" || isNaN(Number(value))) {
-      setAmount("");
-    } else {
-      const numericValue = parseInt(value, 10);
-      setAmount(numericValue);
-    }
+    const cleaned = sanitizeInt(e.target.value);
+    if (cleaned === "") setAmount("");
+    else setAmount(parseInt(cleaned, 10));
   };
 
   // Banking functions
@@ -456,7 +455,7 @@ const Family = () => {
                       className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
                       type="text"
                       placeholder="Beløp"
-                      value={amount ? Number(amount).toLocaleString() : ""}
+                      value={amount !== "" ? amount.toLocaleString("nb-NO") : ""}
                       onChange={handleInputChange}
                     />
                     <div className="flex gap-2">
