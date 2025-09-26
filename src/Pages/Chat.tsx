@@ -1,11 +1,15 @@
 // Components
 import H2 from "../components/Typography/H2";
 import Button from "../components/Button";
+import ChatMessage from "../components/ChatMessage";
 
+// Types
 import { Message } from "../Functions/messageService";
 
-import { useState, useEffect, useRef } from "react";
+// React
+import { useState, useEffect, useRef, useMemo } from "react";
 
+// Firebase
 import {
   getFirestore,
   collection,
@@ -20,14 +24,20 @@ import {
 
 // Context
 import { useCharacter } from "../CharacterContext";
-import ChatMessage from "../components/ChatMessage";
 
 const db = getFirestore();
+
+// ---- Types ----
+type Conversation = {
+  id: string;
+  participants: string[];
+  createdAt?: any;
+};
 
 const Chat = () => {
   const { userCharacter } = useCharacter();
   const [players, setPlayers] = useState<any[]>([]);
-  const [conversations, setConversations] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [conversationId, setConversationId] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
@@ -36,30 +46,49 @@ const Chat = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  if (!userCharacter) return;
+  if (!userCharacter) return null;
 
-  // Ref for the textarea
+  // Per-user storage key so multiple accounts don't collide
+  const LS_KEY = useMemo(
+    () => `lastConversation:${userCharacter.id}`,
+    [userCharacter.id]
+  );
+
+  // ---- Textarea autosize ----
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // Function to adjust the height of the textarea
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "0px"; // or "auto"
+      textareaRef.current.style.height = "0px";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   };
 
   useEffect(() => {
-  adjustTextareaHeight();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [newMessage, conversationId]);
+    adjustTextareaHeight();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newMessage, conversationId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewMessage(e.target.value);
     adjustTextareaHeight();
   };
 
-  // Fetching conversations where the user is a participant
+  // ---- Conversation helpers ----
+  const selectConversationByObject = (conv: Conversation) => {
+    if (!conv) return;
+    const other =
+      conv.participants.find((p) => p !== userCharacter.username) || "";
+    setConversationId(conv.id);
+    setReceiver(other);
+    localStorage.setItem(LS_KEY, JSON.stringify({ id: conv.id, other }));
+  };
+
+  const handleNewChatClick = () => {
+    setIsCreatingChat(true);
+  };
+
+  // ---- Fetch conversations for user + restore last open ----
   useEffect(() => {
     const fetchUserConversations = async () => {
       try {
@@ -70,21 +99,53 @@ const Chat = () => {
           )
         );
 
-        const conversationsList = conversationsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const conversationsList: Conversation[] =
+          conversationsSnapshot.docs.map((docSnap) => {
+            const data = docSnap.data() as { participants?: unknown; createdAt?: any };
+            const participants = Array.isArray(data.participants)
+              ? (data.participants as string[])
+              : [];
+            return { id: docSnap.id, participants, createdAt: data.createdAt };
+          });
+
         setConversations(conversationsList);
-      } catch (error) {
-        console.error("Error fetching conversations:", error);
+
+        // Try restoring last open conversation from localStorage
+        const saved = localStorage.getItem(LS_KEY);
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved) as { id?: string; other?: string };
+            if (parsed.id) {
+              const exists = conversationsList.find((c) => c.id === parsed.id);
+              if (exists) {
+                setConversationId(parsed.id);
+                const other =
+                  parsed.other ||
+                  exists.participants.find(
+                    (p) => p !== userCharacter.username
+                  ) ||
+                  "";
+                setReceiver(other);
+              } else {
+                localStorage.removeItem(LS_KEY);
+              }
+            }
+          } catch {
+            // ignore bad JSON
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching conversations:", err);
         setError("Feil ved lasting av samtaler.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUserConversations();
-  }, [userCharacter.username]);
+  }, [LS_KEY, userCharacter.username]);
 
-  // Creating list of players
+  // ---- (Optional) Fetch all players when creating a chat ----
   useEffect(() => {
     const fetchAllPlayers = async () => {
       try {
@@ -94,8 +155,8 @@ const Chat = () => {
           ...doc.data(),
         }));
         setPlayers(players);
-      } catch (error) {
-        console.error("Error fetching players:", error);
+      } catch (err) {
+        console.error("Error fetching players:", err);
         setError("Feil ved lasting av spillere.");
       }
     };
@@ -105,16 +166,13 @@ const Chat = () => {
     }
   }, [isCreatingChat]);
 
-  const handleNewChatClick = () => {
-    setIsCreatingChat(true);
-  };
-
+  // ---- Find or start conversation with a given username ----
   const handlePlayerClick = async (username: string) => {
     try {
-      // Set receiver's username for display
+      // Show receiver in header immediately
       setReceiver(username);
 
-      // Query the Conversations collection for a conversation with the current character's username and the clicked player's username
+      // Find an existing conversation with both participants
       const conversationQuery = query(
         collection(db, "Conversations"),
         where("participants", "array-contains", userCharacter.username)
@@ -122,37 +180,41 @@ const Chat = () => {
 
       const conversationSnapshot = await getDocs(conversationQuery);
 
-      let foundConversationId = "";
+      let found: Conversation | null = null;
 
-      conversationSnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.participants.includes(username)) {
-          foundConversationId = doc.id; // Conversation found
+      conversationSnapshot.forEach((docSnap) => {
+        const data = docSnap.data() as { participants?: unknown; createdAt?: any };
+        const participants = Array.isArray(data.participants)
+          ? (data.participants as string[])
+          : [];
+        if (participants.includes(username)) {
+          found = { id: docSnap.id, participants, createdAt: data.createdAt };
         }
       });
 
-      if (foundConversationId) {
-        // Set the conversation ID if found
-        setConversationId(foundConversationId);
+      if (found) {
+        selectConversationByObject(found);
       } else {
+        // No conversation yet; clear selection and persist intended partner
         setConversationId("");
+        localStorage.setItem(LS_KEY, JSON.stringify({ id: "", other: username }));
       }
 
-      // Close the player list view
       setIsCreatingChat(false);
-    } catch (error) {
-      console.error("Error finding conversation:", error);
+    } catch (err) {
+      console.error("Error finding conversation:", err);
       setError("Feil ved henting av samtale.");
     }
   };
 
+  // ---- Subscribe to selected conversation's messages ----
   useEffect(() => {
     if (!conversationId) {
       setMessages([]);
       setLoading(false);
       return;
     }
-    // Fetch messages for the selected Channel or Conversation
+
     const unsubscribe = onSnapshot(
       query(
         collection(db, "Conversations", conversationId, "Messages"),
@@ -167,51 +229,22 @@ const Chat = () => {
         setMessages(fetchedMessages);
         setLoading(false);
       },
-      (error) => {
-        setError(error.message);
+      (err) => {
+        setError(err.message);
       }
     );
 
     return () => unsubscribe();
   }, [conversationId]);
 
-  useEffect(() => {
-    if (!conversationId) {
-      setMessages([]);
-      setLoading(false);
-      return;
-    }
-
-    const unsubscribe = onSnapshot(
-      query(
-        collection(db, "Conversations", conversationId, "Messages"),
-        orderBy("timestamp")
-      ),
-      async (snapshot) => {
-        const fetchedMessages = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Message[];
-
-        setMessages(fetchedMessages);
-        setLoading(false);
-      },
-      (error) => {
-        setError(error.message);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [conversationId]);
-
+  // ---- Send message / create conversation ----
   const submitNewMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!newMessage.trim()) return; // Prevent empty messages
+    if (!newMessage.trim()) return;
 
     try {
       if (conversationId) {
-        // Add a new message to the existing conversation's Messages sub-collection
         await addDoc(
           collection(db, "Conversations", conversationId, "Messages"),
           {
@@ -222,30 +255,28 @@ const Chat = () => {
           }
         );
       } else {
-        // Create a new conversation document and add the first message
-        const newConversationRef = await addDoc(
-          collection(db, "Conversations"),
-          {
-            participants: [userCharacter.username, receiver],
-            createdAt: serverTimestamp(),
-          }
-        );
+        // Create a new conversation and persist as active
+        const newConversationRef = await addDoc(collection(db, "Conversations"), {
+          participants: [userCharacter.username, receiver],
+          createdAt: serverTimestamp(),
+        });
 
-        // Update the conversationId and set receiver in state
         setConversationId(newConversationRef.id);
-        setReceiver(receiver); // Set the receiver when creating a new chat
 
-        // Update conversations state to include the new conversation
-        setConversations((prevConversations) => [
-          ...prevConversations,
+        setConversations((prev) => [
+          ...prev,
           {
             id: newConversationRef.id,
             participants: [userCharacter.username, receiver],
-            createdAt: serverTimestamp(), // Placeholder until server returns actual value
+            createdAt: serverTimestamp(),
           },
         ]);
 
-        // Add the initial message to the Messages sub-collection
+        localStorage.setItem(
+          LS_KEY,
+          JSON.stringify({ id: newConversationRef.id, other: receiver })
+        );
+
         await addDoc(
           collection(db, "Conversations", newConversationRef.id, "Messages"),
           {
@@ -257,10 +288,9 @@ const Chat = () => {
         );
       }
 
-      // Clear the new message input field
       setNewMessage("");
-    } catch (error) {
-      console.error("Feil ved sending av melding:", error);
+    } catch (err) {
+      console.error("Feil ved sending av melding:", err);
       setError("Feil ved sending av melding.");
     }
   };
@@ -280,7 +310,7 @@ const Chat = () => {
         <div className="h-full min-w-32 md:min-w-36 lg:min-w-40 py-8 bg-neutral-800/50">
           <div className="mb-4 flex justify-center">
             <Button size="small" style="secondary" onClick={handleNewChatClick}>
-              Ny chat
+              <i className="fa-solid fa-plus"></i> Ny chat
             </Button>
           </div>
           <ul>
@@ -289,15 +319,19 @@ const Chat = () => {
                 (participant: string) => participant !== userCharacter.username
               );
 
+              const isActive =
+                conversation.id === conversationId ||
+                (receiver && otherParticipant === receiver);
+
               return (
                 <li key={conversation.id}>
                   <button
                     className={`min-h-8 font-medium hover:text-white w-full text-left ${
-                      receiver === otherParticipant
+                      isActive
                         ? "bg-neutral-700/50 text-neutral-200 border-l-4 border-sky-500 pl-2"
                         : "text-neutral-400 pl-2"
                     }`}
-                    onClick={() => handlePlayerClick(otherParticipant)}
+                    onClick={() => selectConversationByObject(conversation)}
                   >
                     {otherParticipant}
                   </button>
@@ -360,34 +394,29 @@ const Chat = () => {
               >
                 <textarea
                   ref={textareaRef}
-                  name=""
-                  id=""
+                  rows={1}
                   value={newMessage}
                   placeholder="Melding"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       if (e.shiftKey) {
-                        // Allow line break when Shift + Enter is pressed
                         return;
                       } else {
-                        // Prevent default behavior and submit the message when Enter is pressed alone
                         e.preventDefault();
                         submitNewMessage(e);
                       }
                     }
                   }}
                   onChange={handleInputChange}
-                  className="w-full bg-neutral-800 outline-none resize-none bg-inherit rounded-3xl px-4 py-2"
+                  className="w-full bg-neutral-800 outline-none resize-none rounded-3xl px-4 py-2 leading-normal"
+                  style={{ minHeight: 0 }}
                 ></textarea>
 
-                  <div className="mt-auto">
-                <Button
-                  type="submit"
-                  size="square"
-                >
-                  <i className=" fa-solid fa-paper-plane"></i>
-                </Button>
-                  </div>
+                <div className="mt-auto">
+                  <Button type="submit" size="square">
+                    <i className=" fa-solid fa-paper-plane"></i>
+                  </Button>
+                </div>
               </form>
             </div>
           )}
