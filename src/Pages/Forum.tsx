@@ -51,7 +51,7 @@ const Forum = () => {
   );
   const [lastReplies, setLastReplies] = useState<{
     [key: string]: {
-      authorId: String;
+      authorId: string;
       authorName: string;
       createdAt: Timestamp;
     };

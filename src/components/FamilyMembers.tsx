@@ -9,8 +9,9 @@ import {
   doc,
   setDoc,
   updateDoc,
-  arrayUnion,
   serverTimestamp,
+  addDoc,
+  collection,
 } from "firebase/firestore";
 
 const db = getFirestore();
@@ -59,7 +60,7 @@ const FamilyMembers = ({
       (member) => member.rank === rank
     );
     if (membersWithRank.length === 0) {
-      return <p className="text-neutral-200">-</p>; // Render "Ingen" if no members with this rank
+      return <p className="text-neutral-200">-</p>;
     }
     return membersWithRank.map((member) => (
       <p key={member.id} className="flex justify-center items-center gap-2">
@@ -84,24 +85,34 @@ const FamilyMembers = ({
       return;
     }
 
+    // Only leader can kick
+    if (userCharacter.id !== family.leaderId) {
+      setMessageType("warning");
+      setMessage("Bare lederen kan kaste ut medlemmer.");
+      return;
+    }
+
     try {
-      // Remove the user from the family's members array
       const familyRef = doc(db, "Families", userCharacter.familyId);
+
+      // 1) Update members array on the family
       await updateDoc(familyRef, {
-        events: arrayUnion({
-          type: "kickedMember",
-          characterId: player.id,
-          characterName: player.username,
-          timestamp: new Date(),
-        }),
         members: family.members.filter((member) => member.id !== player.id),
       });
 
-      // Update the character's familyId and familyName to null
+      // 2) Log event in Events subcollection (clean model)
+      await addDoc(collection(familyRef, "Events"), {
+        type: "kickedMember",
+        characterId: player.id,
+        characterName: player.username,
+        timestamp: serverTimestamp(),
+      });
+
+      // 3) Update the kicked character's family fields
       const characterRef = doc(db, "Characters", player.id);
       await updateDoc(characterRef, { familyId: null, familyName: null });
 
-      // 1. Add an alert to the applicant's Alerts subcollection
+      // 4) Notify the kicked player via Alerts subcollection
       const alertRef = doc(
         db,
         "Characters",
@@ -111,13 +122,13 @@ const FamilyMembers = ({
       );
       await setDoc(alertRef, {
         type: "KickedFromFamily",
-        familyName: userCharacter.familyName,
+        familyName: family.name, // use current family data
         familyId: userCharacter.familyId,
         timestamp: serverTimestamp(),
         read: false,
       });
 
-      // Notify the user
+      // 5) UI feedback
       setMessageType("success");
       setMessage(`${player.username} ble sparket ut av familien.`);
       setPlayerToKick({});
@@ -132,6 +143,8 @@ const FamilyMembers = ({
 
   // Check if the user is the boss
   const isBoss = userCharacter.id === family.leaderId;
+
+  const safeUsername = playerToKick.username ?? "(ukjent)";
 
   return (
     <div>
@@ -165,12 +178,11 @@ const FamilyMembers = ({
             <i className="fa-solid fa-ban"></i>
           </p>
           <p className="mb-4">
-            {" "}
             Vil du kaste{" "}
             <Username
               character={{
                 id: playerToKick.id,
-                username: playerToKick.username,
+                username: safeUsername, // ensure string
               }}
             />{" "}
             ut av familien?
@@ -179,12 +191,12 @@ const FamilyMembers = ({
             <Button
               style="danger"
               onClick={() => {
-                playerToKick.id &&
-                  playerToKick.username &&
+                if (playerToKick.id) {
                   kickPlayer({
                     id: playerToKick.id,
-                    username: playerToKick.username,
+                    username: safeUsername, // ensure string
                   });
+                }
               }}
             >
               Kast ut
