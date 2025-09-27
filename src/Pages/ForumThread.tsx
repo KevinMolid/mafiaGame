@@ -58,6 +58,51 @@ interface Reply {
   editedAt?: any;
 }
 
+/** Small card that shows a reply author's avatar + family, live */
+const ReplyAuthorCard = ({
+  authorId,
+  authorName,
+}: {
+  authorId: string;
+  authorName: string;
+}) => {
+  const [authorDoc, setAuthorDoc] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (!authorId) return;
+    const unsub = onSnapshot(doc(db, "Characters", authorId), (snap) => {
+      setAuthorDoc(snap.exists() ? snap.data() : null);
+    });
+    return () => unsub();
+  }, [authorId]);
+
+  return (
+    <div className="flex flex-col items-center text-center">
+      <Link to={`/profil/${authorId}`}>
+        <img
+          src={authorDoc?.img || defaultImg}
+          alt={`${authorName}'s avatar`}
+          className="w-[80px] h-[80px] md:w-28 md:h-28 mb-2 object-cover"
+        />
+      </Link>
+
+      <p className="text-sm">
+        <Username character={{ id: authorId, username: authorName }} />
+      </p>
+
+      {authorDoc?.familyId ? (
+        <p className="text-sm">
+          <Familyname
+            family={{ id: authorDoc.familyId, name: authorDoc.familyName }}
+          />
+        </p>
+      ) : (
+        <p className="text-sm">Ingen familie</p>
+      )}
+    </div>
+  );
+};
+
 const ForumThread = () => {
   const { postId } = useParams<{ postId: string }>();
   const [thread, setThread] = useState<Thread | null>(null);
@@ -406,13 +451,13 @@ const ForumThread = () => {
           )}
         </div>
 
-        {/* Author data */}
+        {/* Author data (thread author) */}
         <div className="flex flex-col items-center text-center">
           <Link to={`/profil/${thread.authorId}`}>
             <img
               src={author?.img || defaultImg}
               alt={`${thread.authorName}'s avatar`}
-              className="w-[80px] h-[80px] md:w-28 md:h-28 mb-2 border border-neutral-600 object-cover"
+              className="w-[80px] h-[80px] md:w-28 md:h-28 mb-2 object-cover"
             />
           </Link>
 
@@ -443,100 +488,104 @@ const ForumThread = () => {
           return (
             <div
               key={reply.id}
-              className="bg-neutral-900 border border-neutral-600 px-4 pt-2 pb-4 mb-2"
+              className="grid grid-cols-[auto_max-content] gap-4 bg-neutral-900 border border-neutral-600 px-4 pt-2 pb-4 mb-2"
             >
-              {/* Header-linje med bruker + tidspunkt + Endre-knapp til høyre */}
-              <div className="text-sm flex justify-between items-start mb-2">
-                <div className="flex gap-2 items-center flex-wrap">
-                  <p>
-                    <Username
-                      character={{
-                        id: reply.authorId,
-                        username: reply.authorName,
-                      }}
-                    />
-                  </p>
-                  <p>
-                    <small>
-                      {reply.createdAt && reply.createdAt.toDate
-                        ? format(reply.createdAt.toDate(), "dd.MM.yyyy - HH:mm")
-                        : "Sender..."}
-                      {reply.editedAt && reply.editedAt.toDate && (
-                        <>
-                          {" "}
-                          • Redigert{" "}
-                          {format(
-                            reply.editedAt.toDate(),
-                            "dd.MM.yyyy - HH:mm"
-                          )}
-                        </>
-                      )}
-                    </small>
-                  </p>
+              {/* Left: reply content */}
+              <div>
+                {/* Header-linje med bruker + tidspunkt + Endre-knapp til høyre */}
+                <div className="text-sm flex justify-between items-start mb-2">
+                  <div className="flex gap-2 items-center flex-wrap">
+                    <p>
+                      <small>
+                        {reply.createdAt && (reply as any).createdAt?.toDate
+                          ? format(
+                              (reply as any).createdAt.toDate(),
+                              "dd.MM.yyyy - HH:mm"
+                            )
+                          : "Sender..."}
+                        {reply.editedAt && (reply as any).editedAt?.toDate && (
+                          <>
+                            {" "}
+                            • Redigert{" "}
+                            {format(
+                              (reply as any).editedAt.toDate(),
+                              "dd.MM.yyyy - HH:mm"
+                            )}
+                          </>
+                        )}
+                      </small>
+                    </p>
+                  </div>
+
+                  {isOwnReply && !isEditingThis && (
+                    <Button
+                      size="small"
+                      style="secondary"
+                      onClick={() => startEditReply(reply)}
+                    >
+                      <i className="fa-solid fa-pen mr-2" />
+                      Endre
+                    </Button>
+                  )}
                 </div>
 
-                {isOwnReply && !isEditingThis && (
-                  <Button
-                    size="small"
-                    style="secondary"
-                    onClick={() => startEditReply(reply)}
-                  >
-                    <i className="fa-solid fa-pen mr-2" />
-                    Endre
-                  </Button>
+                {/* Innhold / Redigering */}
+                {!isEditingThis ? (
+                  <>
+                    <div className="pb-4">
+                      {reply.content.split("\n").map((line, index) => (
+                        <Fragment key={index}>
+                          {line}
+                          <br />
+                        </Fragment>
+                      ))}
+                    </div>
+                    {/* Icons (som før) */}
+                    <div className="flex gap-1 text-neutral-200 font-medium">
+                      <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                        👍0
+                      </div>
+                      <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                        👎0
+                      </div>
+                      <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                        ❤️0
+                      </div>
+                      <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
+                        🔥0
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col gap-2 my-2">
+                    <textarea
+                      value={editReplyContent}
+                      onChange={(e) => setEditReplyContent(e.target.value)}
+                      maxLength={MAX_CONTENT}
+                      rows={6}
+                      className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none focus:border-white"
+                      placeholder="Skriv svaret ditt…"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => saveEditReply(reply.id)}
+                        disabled={savingReplyId === reply.id}
+                      >
+                        {savingReplyId === reply.id ? "Lagrer…" : "Lagre"}
+                      </Button>
+                      <Button onClick={cancelEditReply} style="secondary">
+                        Avbryt
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
 
-              {/* Innhold / Redigering */}
-              {!isEditingThis ? (
-                <>
-                  <div className="pb-4">
-                    {reply.content.split("\n").map((line, index) => (
-                      <Fragment key={index}>
-                        {line}
-                        <br />
-                      </Fragment>
-                    ))}
-                  </div>
-                  {/* Icons (som før) */}
-                  <div className="flex gap-1 text-neutral-200 font-medium">
-                    <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                      👍0
-                    </div>
-                    <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                      👎0
-                    </div>
-                    <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                      ❤️0
-                    </div>
-                    <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                      🔥0
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col gap-2 my-2">
-                  <textarea
-                    value={editReplyContent}
-                    onChange={(e) => setEditReplyContent(e.target.value)}
-                    maxLength={MAX_CONTENT}
-                    rows={6}
-                    className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none focus:border-white"
-                    placeholder="Skriv svaret ditt…"
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => saveEditReply(reply.id)}
-                      disabled={savingReplyId === reply.id}
-                    >
-                      {savingReplyId === reply.id ? "Lagrer…" : "Lagre"}
-                    </Button>
-                    <Button onClick={cancelEditReply} style="secondary">
-                      Avbryt
-                    </Button>
-                  </div>
-                </div>
-              )}
+              {/* Right: reply author card */}
+              <ReplyAuthorCard
+                authorId={reply.authorId}
+                authorName={reply.authorName}
+              />
             </div>
           );
         })}
