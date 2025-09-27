@@ -5,7 +5,7 @@ import H2 from "../components/Typography/H2";
 import Button from "../components/Button";
 
 // React
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 
 // Context
@@ -31,22 +31,23 @@ import firebaseConfig from "../firebaseConfig";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const cities = ["Mexico City", "New York", "Moskva", "Rio de Janeiro", "Tokyo"];
+
 const CreateCharacter = () => {
   const { user, userData, setUserData } = useAuth();
   const { userCharacter, setUserCharacter } = useCharacter();
-  const [location, setLocation] = useState<string>("New York");
+  const [location, setLocation] = useState<string>(() => {
+    const i = Math.floor(Math.random() * cities.length);
+    return cities[i];
+  });
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
 
-  const navigate = useNavigate();
+  type NameStatus = "idle" | "checking" | "available" | "taken" | "invalid";
+  const [nameStatus, setNameStatus] = useState<NameStatus>("idle");
+  const lastCheckedRef = useRef<string>("");
 
-  const cities = [
-    "Mexico City",
-    "New York",
-    "Moskva",
-    "Rio de Janeiro",
-    "Tokyo",
-  ];
+  const navigate = useNavigate();
 
   if (
     userData.type !== "admin" &&
@@ -57,18 +58,26 @@ const CreateCharacter = () => {
   }
 
   /* Handle username input field */
-  function handleUsernameChange(e: any) {
+  function handleUsernameChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
     const regex = /^[A-Za-zæÆøØåÅ0-9]*$/;
 
-    if (regex.test(value) && value.length <= 16) {
-      setUsername(value);
-      setError("");
-    } else if (!regex.test(value)) {
+    if (!regex.test(value)) {
       setError("Brukernavnet kan bare inneholde tall og bokstaver.");
-    } else if (value.length > 16) {
-      setError("Brukernavnet kan ikke være lengre enn 16 tegn.");
+      setUsername(value);
+      setNameStatus("invalid");
+      return;
     }
+    if (value.length > 16) {
+      setError("Brukernavnet kan ikke være lengre enn 16 tegn.");
+      setUsername(value);
+      setNameStatus("invalid");
+      return;
+    }
+
+    setUsername(value);
+    setError(""); // clear format error; availability checked in effect
+    setNameStatus(value.length >= 3 ? "checking" : "invalid");
   }
 
   // Check if the username already exists in the "Characters" collection
@@ -79,26 +88,62 @@ const CreateCharacter = () => {
       where("username_lowercase", "==", lowercaseUsername)
     );
     const querySnapshot = await getDocs(q);
-
-    return querySnapshot.empty; // Returns true if no documents found
+    return querySnapshot.empty; // true if no documents found
   }
 
+  // NEW: Debounced live availability check
+  useEffect(() => {
+    // preconditions: format valid + >=3 chars
+    const regex = /^[A-Za-zæÆøØåÅ0-9]*$/;
+    if (!regex.test(username) || username.length < 3 || username.length > 16) {
+      setNameStatus(username ? "invalid" : "idle");
+      return;
+    }
+
+    setNameStatus("checking");
+    const candidate = username;
+    lastCheckedRef.current = candidate;
+
+    const t = setTimeout(async () => {
+      try {
+        const unique = await isUsernameUnique(candidate);
+        // Guard against out-of-order responses
+        if (lastCheckedRef.current !== candidate) return;
+
+        setNameStatus(unique ? "available" : "taken");
+        if (!unique) setError("Brukernavnet finnes allerede.");
+        else setError(""); // clear any previous error
+      } catch {
+        // Network or query error — treat as unknown/invalid UX-wise
+        if (lastCheckedRef.current !== candidate) return;
+        setNameStatus("invalid");
+      }
+    }, 400); // debounce
+
+    return () => clearTimeout(t);
+  }, [username]);
+
   async function handleClick() {
-    // Check that username is at least 3 characters
-    if (username.length < 3) {
-      setError("Brukernavnet må inneholde minst 3 tegn.");
+    // Final sync checks before write
+    const regex = /^[A-Za-zæÆøØåÅ0-9]*$/;
+    if (!regex.test(username) || username.length < 3 || username.length > 16) {
+      setError(
+        username.length < 3
+          ? "Brukernavnet må inneholde minst 3 tegn."
+          : "Ugyldig brukernavn."
+      );
+      return;
+    }
+
+    const isUnique = await isUsernameUnique(username);
+    if (!isUnique) {
+      setError("Brukernavnet finnes allerede.");
+      setNameStatus("taken");
       return;
     }
 
     try {
-      // Check if the username is unique
-      const isUnique = await isUsernameUnique(username);
-      if (!isUnique) {
-        setError("Brukernavnet finnes allerede.");
-        return;
-      }
-
-      // Add the new character to the "Characters" collection
+      // ... your existing addDoc + updates unchanged
       const newCharacterData = {
         uid: user.uid,
         username: username,
@@ -120,33 +165,53 @@ const CreateCharacter = () => {
         newCharacterData
       );
 
-      // Update the user document in the "Users" collection
       const userDocRef = doc(db, "Users", user.uid);
       await updateDoc(userDocRef, {
         characters: arrayUnion(docRef.id),
         activeCharacter: docRef.id,
       });
 
-      // Set character in local state
       setUserCharacter({
         id: docRef.id,
         ...newCharacterData,
         createdAt: new Date(),
       });
 
-      // Update user data in local state
       setUserData({
         ...user,
         characters: [...(user.characters || []), docRef.id],
         activeCharacter: docRef.id,
       });
 
-      // Navigate to home page after character is created
       navigate("/");
     } catch (e) {
       console.error("Error adding document: ", e);
     }
   }
+
+  function UsernameHint() {
+    if (!username) return null;
+    if (nameStatus === "checking")
+      return <span className="text-stone-400">Sjekker tilgjengelighet…</span>;
+    if (nameStatus === "available")
+      return (
+        <span className="text-emerald-500">
+          Tilgjengelig <i className="fa-solid fa-check"></i>
+        </span>
+      );
+    if (nameStatus === "taken")
+      return <span className="text-red-500">Opptatt ✖</span>;
+    if (nameStatus === "invalid")
+      return (
+        <span className="text-amber-500">
+          Minst 3 tegn. Kun bokstaver og tall.
+        </span>
+      );
+    return null;
+  }
+
+  const isSubmitDisabled =
+    nameStatus !== "available" || !!error || username.length === 0;
 
   return (
     <Main img="MafiaBg">
@@ -156,14 +221,31 @@ const CreateCharacter = () => {
           <H2>Velg brukernavn</H2>
         </label>
         <input
-          className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+          className={
+            "bg-transparent border-b py-1 text-lg font-medium text-white placeholder-neutral-500 focus:outline-none " +
+            (nameStatus === "taken"
+              ? "border-red-500 focus:border-red-500"
+              : nameStatus === "available"
+              ? "border-emerald-500 focus:border-emerald-500"
+              : "border-neutral-600 focus:border-white")
+          }
           id="username"
           type="text"
           placeholder="Ønsket brukernavn"
           value={username}
           onChange={handleUsernameChange}
+          maxLength={16}
+          autoComplete="off"
+          spellCheck={false}
         />
-        {error && <span className="text-red-500">{error}</span>}
+        <div className="min-h-[1.5rem]">
+          {/* Live hint or error */}
+          {error ? (
+            <span className="text-red-500">{error}</span>
+          ) : (
+            <UsernameHint />
+          )}
+        </div>
 
         <H2>Velg hvor du vil starte</H2>
         <ul className="flex gap-2 flex-wrap">
@@ -183,7 +265,9 @@ const CreateCharacter = () => {
           ))}
         </ul>
       </form>
-      <Button onClick={handleClick}>Opprett karakter</Button>
+      <Button onClick={handleClick} disabled={isSubmitDisabled}>
+        Opprett karakter
+      </Button>
     </Main>
   );
 };
