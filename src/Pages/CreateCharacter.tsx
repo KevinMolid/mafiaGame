@@ -229,7 +229,6 @@ const CreateCharacter = () => {
             "Så, du har bestemt deg for å trå inn i denne verdenen...",
             "Her finnes ingen regler, bare makt og penger. Før vi går videre, hvem er du?",
           ]}
-          onComplete={() => console.log("Dialogue done")}
         />
         <div className="order-2 sm:order-1">
           <H1>Opprett ny spillkarakter</H1>
