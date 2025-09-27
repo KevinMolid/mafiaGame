@@ -157,7 +157,7 @@ const DropdownLeft = () => {
 
           <hr className="border-neutral-700 my-2 sm:hidden" />
 
-          <DropdownOption to="/jackpot" icon="coins" onClick={toggleActions}>
+          <DropdownOption to="/casino" icon="coins" onClick={toggleActions}>
             Casino
           </DropdownOption>
         </nav>
