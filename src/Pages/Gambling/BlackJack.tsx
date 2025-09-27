@@ -489,7 +489,9 @@ const BlackJack = () => {
 
     if (playerBJ || dealerBJ) {
       if (playerBJ && dealerBJ) {
-        const msg = "Uavgjort: Begge har Blackjack.";
+        const msg = `Uavgjort: Begge har Blackjack. Du fikk ${fmt(
+          nextEffective
+        )} tilbake.`;
         setMessage(msg);
         persistNow({ message: msg });
         await settleImmediate("push");
@@ -500,7 +502,7 @@ const BlackJack = () => {
         persistNow({ message: msg });
         await settleImmediate("playerBJ");
       } else {
-        const msg = "Dealer har Blackjack. Du taper.";
+        const msg = `Dealer har Blackjack. Du tapte ${fmt(nextEffective)}.`;
         setMessage(msg);
         persistNow({ message: msg });
         await settleImmediate("dealerBJ");
@@ -528,7 +530,7 @@ const BlackJack = () => {
     const { total } = handValue(next);
     if (total > 21) {
       nextType = "failure";
-      nextMsg = "Bust! Du taper.";
+      nextMsg = `Bust! Du tapte ${fmt(effectiveBet)}.`;
       nextPhase = "settled";
       setMessageType(nextType);
       setMessage(nextMsg);
@@ -591,7 +593,7 @@ const BlackJack = () => {
     const { total } = handValue(next);
     if (total > 21) {
       nextType = "failure";
-      nextMsg = "Bust etter dobling. Du taper.";
+      nextMsg = `Bust etter dobling. Du tapte ${fmt(nextEffective)}.`;
       nextPhase = "settled";
       setMessageType(nextType);
       setMessage(nextMsg);
@@ -643,18 +645,18 @@ const BlackJack = () => {
     if (dv > 21) {
       await credit(effectiveBet * 2);
       nextType = "success";
-      nextMsg = "Dealer bust! Du vinner din innsats.";
+      nextMsg = `Dealer bust! Du vant ${fmt(effectiveBet)}!`;
     } else if (p > dv) {
       await credit(effectiveBet * 2);
       nextType = "success";
-      nextMsg = "Du vinner!";
+      nextMsg = `Du vant ${fmt(effectiveBet)}!`;
     } else if (p < dv) {
       nextType = "failure";
-      nextMsg = "Du taper.";
+      nextMsg = `Du tapte ${fmt(effectiveBet)}.`;
     } else {
       await credit(effectiveBet);
       nextType = "info";
-      nextMsg = "Uavgjort!";
+      nextMsg = `Uavgjort – du fikk ${fmt(effectiveBet)} tilbake.`;
     }
 
     setMessageType(nextType);
