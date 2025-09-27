@@ -537,6 +537,7 @@ const BlackJack = () => {
         setMsg(
           <p>
             Uavgjort: Begge har Blackjack. Du fikk{" "}
+            <i className="fa-solid fa-dollar-sign"></i>{" "}
             <strong>{fmt(nextEffective)}</strong> tilbake.
           </p>,
           plain,
@@ -548,7 +549,8 @@ const BlackJack = () => {
         const plain = `Blackjack! Du vinner ${fmt(win)} (3:2).`;
         setMsg(
           <p>
-            Blackjack! Du vinner <strong>{fmt(win)}</strong> (3:2).
+            Blackjack! Du vant <i className="fa-solid fa-dollar-sign"></i>{" "}
+            <strong>{fmt(win)}</strong> (3:2).
           </p>,
           plain,
           { kind: "win", amount: win }
@@ -558,8 +560,9 @@ const BlackJack = () => {
         const plain = `Dealer har Blackjack. Du tapte ${fmt(nextEffective)}.`;
         setMsg(
           <p>
-            Dealer har Blackjack. Du tapte <strong>{fmt(nextEffective)}</strong>
-            .
+            Dealer har Blackjack. Du tapte{" "}
+            <i className="fa-solid fa-dollar-sign"></i>{" "}
+            <strong>{fmt(nextEffective)}</strong>.
           </p>,
           plain,
           { kind: "lose", amount: nextEffective }
