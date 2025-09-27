@@ -109,7 +109,8 @@ const Assassinate = () => {
 
   // Assassinate
   const killPlayer = async () => {
-    if (!targetPlayer) {
+    const input = targetPlayer.trim();
+    if (!input) {
       setMessage("Du må skrive inn et brukernavn.");
       setMessageType("warning");
       return;
@@ -118,90 +119,114 @@ const Assassinate = () => {
     try {
       const q = query(
         collection(db, "Characters"),
-        where("username_lowercase", "==", targetPlayer.toLowerCase())
+        where("username_lowercase", "==", input.toLowerCase())
       );
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
-        setMessage(`Spilleren ${targetPlayer} finnes ikke.`);
+        setMessage(`Spilleren ${input} finnes ikke.`);
         setMessageType("warning");
-      } else {
-        const playerData = querySnapshot.docs[0].data();
-        const targetDocId = querySnapshot.docs[0].id;
-
-        if (userCharacter?.username === playerData.username) {
-          setMessage(`Du kan ikke drepe deg selv!`);
-          setMessageType("warning");
-        } else if (playerData.status === "dead") {
-          setMessage(`${playerData.username} er allerede død!`);
-          setMessageType("warning");
-        } else if (userCharacter?.location !== playerData.location) {
-          setMessage(
-            `Du kunne ikke finne ${playerData.username} i ${userCharacter?.location}!`
-          );
-          setMessageType("failure");
-        } else {
-          // Collect bounties on the victim
-          const bountyQuery = query(
-            collection(db, "Bounty"),
-            where("WantedId", "==", targetDocId)
-          );
-          const bountySnapshot = await getDocs(bountyQuery);
-
-          let totalBountyAmount = 0;
-          const bountyIdsToDelete: string[] = [];
-
-          bountySnapshot.forEach((doc) => {
-            const bountyData = doc.data();
-            totalBountyAmount += bountyData.Bounty;
-            bountyIdsToDelete.push(doc.id);
-          });
-
-          if (totalBountyAmount > 0) {
-            const updatedMoney = userCharacter.stats.money + totalBountyAmount;
-            await updateDoc(doc(db, "Characters", userCharacter.id), {
-              "stats.money": updatedMoney,
-            });
-
-            for (const bountyId of bountyIdsToDelete) {
-              await deleteDoc(doc(db, "Bounty", bountyId));
-            }
-
-            await addDoc(
-              collection(db, `Characters/${userCharacter.id}/alerts`),
-              {
-                type: "bountyReward",
-                timestamp: serverTimestamp(),
-                killedPlayerId: targetDocId,
-                killedPlayerName: playerData.username,
-                bountyAmount: totalBountyAmount,
-                read: false,
-              }
-            );
-
-            await updateDoc(doc(db, "Characters", targetDocId), {
-              status: "dead",
-            });
-
-            setMessage(`Du angrep og drepte ${playerData.username}!`);
-            setMessageType("success");
-
-            await updateDoc(doc(db, "Characters", userCharacter.id), {
-              lastActive: serverTimestamp(),
-            });
-
-            await addDoc(collection(db, "GameEvents"), {
-              eventType: "assassination",
-              assassinId: userCharacter.id,
-              assassinName: userCharacter.username,
-              victimId: targetDocId,
-              victimName: playerData.username,
-              location: userCharacter.location,
-              timestamp: serverTimestamp(),
-            });
-          }
-        }
+        return;
       }
+
+      const targetDoc = querySnapshot.docs[0];
+      const playerData: any = targetDoc.data();
+      const targetDocId = targetDoc.id;
+
+      if (userCharacter?.username === playerData.username) {
+        setMessage(`Du kan ikke drepe deg selv!`);
+        setMessageType("warning");
+        return;
+      }
+      if (playerData.status === "dead") {
+        setMessage(`${playerData.username} er allerede død!`);
+        setMessageType("warning");
+        return;
+      }
+      if (userCharacter?.location !== playerData.location) {
+        setMessage(
+          `Du kunne ikke finne ${playerData.username} i ${userCharacter?.location}!`
+        );
+        setMessageType("failure");
+        return;
+      }
+
+      // Collect bounties on the victim (if any)
+      const bountyQuery = query(
+        collection(db, "Bounty"),
+        where("WantedId", "==", targetDocId)
+      );
+      const bountySnapshot = await getDocs(bountyQuery);
+
+      let totalBountyAmount = 0;
+      const bountyIdsToDelete: string[] = [];
+
+      bountySnapshot.forEach((d) => {
+        const bountyData = d.data() as any;
+        totalBountyAmount += Number(bountyData.Bounty || 0);
+        bountyIdsToDelete.push(d.id);
+      });
+
+      // 1) Kill the target regardless of bounty
+      await updateDoc(doc(db, "Characters", targetDocId), {
+        status: "dead",
+        diedAt: serverTimestamp(),
+      });
+
+      // 2) If there is bounty, pay it and remove bounties + alert
+      if (totalBountyAmount > 0) {
+        const updatedMoney =
+          (userCharacter.stats.money || 0) + totalBountyAmount;
+        await updateDoc(doc(db, "Characters", userCharacter.id), {
+          "stats.money": updatedMoney,
+        });
+
+        for (const bountyId of bountyIdsToDelete) {
+          await deleteDoc(doc(db, "Bounty", bountyId));
+        }
+
+        await addDoc(collection(db, `Characters/${userCharacter.id}/alerts`), {
+          type: "bountyReward",
+          timestamp: serverTimestamp(),
+          killedPlayerId: targetDocId,
+          killedPlayerName: playerData.username,
+          bountyAmount: totalBountyAmount,
+          read: false,
+        });
+      }
+
+      // 3) Feedback + logs (always)
+      setMessage(
+        totalBountyAmount > 0 ? (
+          <p>
+            Du angrep og drepte <strong>{playerData.username}</strong> og mottok{" "}
+            <strong>${formatMoney(totalBountyAmount)}</strong> i dusør!
+          </p>
+        ) : (
+          <p>
+            Du angrep og drepte <strong>{playerData.username}</strong>.
+          </p>
+        )
+      );
+      setMessageType("success");
+
+      await updateDoc(doc(db, "Characters", userCharacter.id), {
+        lastActive: serverTimestamp(),
+      });
+
+      await addDoc(collection(db, "GameEvents"), {
+        eventType: "assassination",
+        assassinId: userCharacter.id,
+        assassinName: userCharacter.username,
+        victimId: targetDocId,
+        victimName: playerData.username,
+        location: userCharacter.location,
+        bountyPaid: totalBountyAmount > 0 ? totalBountyAmount : 0,
+        timestamp: serverTimestamp(),
+      });
+
+      // Optional: clear input after success
+      setTargetPlayer("");
     } catch (error) {
       console.error("Error checking target player:", error);
       setMessage("En ukjent feil oppstod da du prøvde å drepe en spiller.");
@@ -243,7 +268,7 @@ const Assassinate = () => {
         return;
       }
 
-      const playerData = querySnapshot.docs[0].data();
+      const playerData = querySnapshot.docs[0].data() as any;
       const wantedPlayerId = querySnapshot.docs[0].id;
 
       await addDoc(collection(db, "Bounty"), {
