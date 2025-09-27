@@ -219,7 +219,7 @@ const CreateCharacter = () => {
 
   return (
     <Main img="MafiaBg">
-      <div className="grid sm:grid-cols-[auto_200px] gap-4">
+      <div className="grid sm:grid-cols-[auto_200px] gap-8">
         <Dialogue
           className="order-1 sm:order-2 mx-auto sm:mx-0"
           imageSrc={Christian}
