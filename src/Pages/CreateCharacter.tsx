@@ -4,6 +4,10 @@ import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import Button from "../components/Button";
 
+import Dialogue from "../components/Dialogue";
+
+import Christian from "/images/characters/Christian3.jpg";
+
 // React
 import { useState, useEffect, useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -215,59 +219,76 @@ const CreateCharacter = () => {
 
   return (
     <Main img="MafiaBg">
-      <H1>Opprett ny spillkarakter</H1>
-      <form action="" className="flex flex-col mb-4 gap-2">
-        <label htmlFor="username">
-          <H2>Velg brukernavn</H2>
-        </label>
-        <input
-          className={
-            "bg-transparent border-b py-1 text-lg font-medium text-white placeholder-neutral-500 focus:outline-none " +
-            (nameStatus === "taken"
-              ? "border-red-500 focus:border-red-500"
-              : nameStatus === "available"
-              ? "border-emerald-500 focus:border-emerald-500"
-              : "border-neutral-600 focus:border-white")
-          }
-          id="username"
-          type="text"
-          placeholder="Ønsket brukernavn"
-          value={username}
-          onChange={handleUsernameChange}
-          maxLength={16}
-          autoComplete="off"
-          spellCheck={false}
+      <div className="grid sm:grid-cols-[auto_200px] gap-4">
+        <Dialogue
+          className="order-1 sm:order-2 mx-auto sm:mx-0"
+          imageSrc={Christian}
+          imageAlt="Don Romano"
+          speaker="Don Romano"
+          lines={[
+            "Så, du har bestemt deg for å trå inn i denne verdenen...",
+            "Her finnes ingen regler, bare makt og penger. Før vi går videre, hvem er du?",
+          ]}
+          onComplete={() => console.log("Dialogue done")}
         />
-        <div className="min-h-[1.5rem]">
-          {/* Live hint or error */}
-          {error ? (
-            <span className="text-red-500">{error}</span>
-          ) : (
-            <UsernameHint />
-          )}
-        </div>
-
-        <H2>Velg hvor du vil starte</H2>
-        <ul className="flex gap-2 flex-wrap">
-          {cities.map((city) => (
-            <li
-              key={city}
+        <div className="order-2 sm:order-1">
+          <H1>Opprett ny spillkarakter</H1>
+          <form action="" className="flex flex-col mb-4 gap-2">
+            <label htmlFor="username">
+              <H2>Velg brukernavn</H2>
+            </label>
+            <input
               className={
-                "border px-4 py-2 flex-grow text-center cursor-pointer " +
-                (city === location
-                  ? "bg-neutral-900 border-neutral-600"
-                  : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
+                "bg-transparent border-b py-1 text-lg font-medium text-white placeholder-neutral-500 focus:outline-none " +
+                (nameStatus === "taken"
+                  ? "border-red-500 focus:border-red-500"
+                  : nameStatus === "available"
+                  ? "border-emerald-500 focus:border-emerald-500"
+                  : "border-neutral-600 focus:border-white")
               }
-              onClick={() => setLocation(city)}
-            >
-              <p className={city === location ? "text-white" : ""}>{city}</p>
-            </li>
-          ))}
-        </ul>
-      </form>
-      <Button onClick={handleClick} disabled={isSubmitDisabled}>
-        Opprett karakter
-      </Button>
+              id="username"
+              type="text"
+              placeholder="Brukernavn"
+              value={username}
+              onChange={handleUsernameChange}
+              maxLength={16}
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <div className="min-h-[1.5rem]">
+              {/* Live hint or error */}
+              {error ? (
+                <span className="text-red-500">{error}</span>
+              ) : (
+                <UsernameHint />
+              )}
+            </div>
+
+            <H2>Velg hvor du vil starte</H2>
+            <ul className="flex gap-2 flex-wrap">
+              {cities.map((city) => (
+                <li
+                  key={city}
+                  className={
+                    "border px-4 py-2 flex-grow text-center cursor-pointer " +
+                    (city === location
+                      ? "bg-neutral-900 border-neutral-600"
+                      : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
+                  }
+                  onClick={() => setLocation(city)}
+                >
+                  <p className={city === location ? "text-white" : ""}>
+                    {city}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </form>
+          <Button onClick={handleClick} disabled={isSubmitDisabled}>
+            Opprett karakter
+          </Button>
+        </div>
+      </div>
     </Main>
   );
 };
