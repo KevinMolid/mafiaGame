@@ -1,6 +1,6 @@
 import { useState } from "react";
-import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
+import H3 from "../../components/Typography/H3";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import Box from "../../components/Box";
@@ -123,7 +123,7 @@ const Jackpot = () => {
 
   return (
     <div>
-      <H1>Jackpot</H1>
+      <H2>Jackpot</H2>
       <div className="mb-4">
         <Box>
           <p>
@@ -148,7 +148,7 @@ const Jackpot = () => {
 
       <div className="flex flex-col gap-4">
         <div>
-          <H2>Hvor mye vil du satse?</H2>
+          <H3>Hvor mye vil du satse?</H3>
           <input
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             type="text"

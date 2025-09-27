@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
+import H3 from "../../components/Typography/H3";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 
@@ -396,13 +396,13 @@ const BlackJack = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <H1>BlackJack</H1>
+      <H2>BlackJack</H2>
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
       {/* Bet input (only editable in betting phase) */}
       <div>
-        <H2>Hvor mye vil du satse?</H2>
+        <H3>Hvor mye vil du satse?</H3>
         <input
           className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
           type="text"
