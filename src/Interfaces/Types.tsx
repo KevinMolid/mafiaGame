@@ -24,3 +24,11 @@ export type FamilyData = {
   img?: string;
   profileText?: string;
 };
+
+export type Car = {
+  name: string;
+  value: number;
+  hp: number;
+  tier: number;
+  isElectric?: boolean;
+};

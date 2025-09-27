@@ -21,12 +21,10 @@ import ParkingTypes from "../../Data/ParkingTypes";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Define the Car type according to your existing car structure
-type Car = {
-  name: string;
-  hp: number;
-  value: number;
-};
+import type { Car } from "../../Interfaces/Types";
+
+type SortKey = "name" | "hp" | "value";
+type SortDir = "asc" | "desc";
 
 const Parking = () => {
   const { userCharacter } = useCharacter();
@@ -36,6 +34,8 @@ const Parking = () => {
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "warning" | "info"
   >("info");
+  const [sortKey, setSortKey] = useState<SortKey>("name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   if (!userCharacter) {
     return null;
@@ -50,6 +50,15 @@ const Parking = () => {
       setParking(0);
     }
   }, [userCharacter]);
+
+  function requestSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  }
 
   const updateParking = async (
     characterId: string,
@@ -184,6 +193,28 @@ const Parking = () => {
     return <JailBox message={message} messageType={messageType} />;
   }
 
+  const carsAtLocation: Car[] =
+    userCharacter.cars?.[userCharacter.location] || [];
+
+  const sortedCars = useMemo(() => {
+    const withIndex = carsAtLocation.map((car, idx) => ({
+      ...car,
+      __idx: idx,
+    }));
+    withIndex.sort((a, b) => {
+      const dir = sortDir === "asc" ? 1 : -1;
+      if (sortKey === "name") {
+        return a.name.localeCompare(b.name, "nb") * dir;
+      }
+      if (sortKey === "hp") {
+        return (a.hp - b.hp) * dir;
+      }
+      // sortKey === "value"
+      return (a.value - b.value) * dir;
+    });
+    return withIndex;
+  }, [carsAtLocation, sortKey, sortDir]);
+
   return (
     <Main>
       <div className="flex flex-col gap-4">
@@ -305,7 +336,8 @@ const Parking = () => {
                 >
                   Oppgrader <i className="fa-solid fa-circle-up"></i>{" "}
                   <strong className="text-yellow-400">
-                    ${ParkingTypes[parking + 1].price.toLocaleString("nb-NO")}
+                    <i className="fa-solid fa-dollar-sign"></i>{" "}
+                    {ParkingTypes[parking + 1].price.toLocaleString("nb-NO")}
                   </strong>
                 </Button>
               </div>
@@ -319,40 +351,103 @@ const Parking = () => {
             <table className="w-full table-auto border border-collapse text-left">
               <thead>
                 <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
-                  <th className="px-2 py-1">Bil</th>
-                  <th className="px-2 py-1">Motorkraft</th>
-                  <th className="px-2 py-1">Verdi</th>
+                  <th className="px-2 py-1">
+                    <button
+                      type="button"
+                      onClick={() => requestSort("name")}
+                      className="flex items-center gap-1 hover:underline"
+                    >
+                      Bil
+                      <span
+                        className={
+                          "inline-block w-4 text-center " +
+                          (sortKey === "name" ? "opacity-100" : "invisible")
+                        }
+                        aria-hidden
+                      >
+                        {sortDir === "asc" ? (
+                          <i className="fa-solid fa-caret-up"></i>
+                        ) : (
+                          <i className="fa-solid fa-caret-down"></i>
+                        )}
+                      </span>
+                    </button>
+                  </th>
+
+                  <th className="px-2 py-1">
+                    <button
+                      type="button"
+                      onClick={() => requestSort("hp")}
+                      className="flex items-center gap-1 hover:underline"
+                    >
+                      Effekt
+                      <span
+                        className={
+                          "inline-block w-4 text-center " +
+                          (sortKey === "hp" ? "opacity-100" : "invisible")
+                        }
+                        aria-hidden
+                      >
+                        {sortDir === "asc" ? (
+                          <i className="fa-solid fa-caret-up"></i>
+                        ) : (
+                          <i className="fa-solid fa-caret-down"></i>
+                        )}
+                      </span>
+                    </button>
+                  </th>
+
+                  <th className="px-2 py-1">
+                    <button
+                      type="button"
+                      onClick={() => requestSort("value")}
+                      className="flex items-center gap-1 hover:underline"
+                    >
+                      Verdi
+                      <span
+                        className={
+                          "inline-block w-4 text-center " +
+                          (sortKey === "value" ? "opacity-100" : "invisible")
+                        }
+                        aria-hidden
+                      >
+                        {sortDir === "asc" ? (
+                          <i className="fa-solid fa-caret-up"></i>
+                        ) : (
+                          <i className="fa-solid fa-caret-down"></i>
+                        )}
+                      </span>
+                    </button>
+                  </th>
+
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                {userCharacter.cars?.[userCharacter.location]?.length ? (
-                  userCharacter.cars[userCharacter.location].map(
-                    (car: any, index: number) => {
-                      return (
-                        <tr
-                          className="border bg-neutral-800 border-neutral-700"
-                          key={index}
+                {sortedCars.length ? (
+                  sortedCars.map((car: any) => (
+                    <tr
+                      className="border bg-neutral-800 border-neutral-700"
+                      key={car.__idx}
+                    >
+                      <td className="px-2 py-1">
+                        <Item name={car.name} tier={car.tier} />
+                      </td>
+                      <td className="px-2 py-1">{car.hp} hk</td>
+                      <td className="px-2 py-1">
+                        <i className="fa-solid fa-dollar-sign"></i>{" "}
+                        {car.value.toLocaleString("nb-NO")}
+                      </td>
+                      <td className="px-2 py-1">
+                        <button
+                          onClick={() => sellCar(car.__idx)} // use original index
+                          className="font-medium text-neutral-200 hover:text-white"
                         >
-                          <td className="px-2 py-1">
-                            <Item {...car} />
-                          </td>
-                          <td className="px-2 py-1">{car.hp} hp</td>
-                          <td className="px-2 py-1">
-                            {"$" + car.value.toLocaleString("nb-NO")}
-                          </td>
-                          <td className="px-2 py-1">
-                            <button
-                              onClick={() => sellCar(index)}
-                              className="font-medium text-neutral-200 hover:text-white"
-                            >
-                              Selg
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    }
-                  )
+                          Selg
+                        </button>
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr className="border bg-neutral-800 border-neutral-700">
                     <td colSpan={4} className="px-2 py-1">

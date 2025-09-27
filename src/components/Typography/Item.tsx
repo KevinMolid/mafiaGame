@@ -1,28 +1,23 @@
-interface ItemProps {
-  name: string;
-  tier: number;
-  [key: string]: any; // Allows for additional attributes
-}
+import React from "react";
 
-const Item = (item: ItemProps) => {
+type ItemProps = React.HTMLAttributes<HTMLSpanElement> & {
+  name: string;
+  tier?: number; // make it optional; default below
+};
+
+const TIER_CLASSES: Record<number, string> = {
+  1: "text-neutral-400",
+  2: "text-emerald-400",
+  3: "text-sky-400",
+  4: "text-violet-400",
+  5: "text-amber-300",
+};
+
+const Item = ({ name, tier = 1, className = "", ...rest }: ItemProps) => {
+  const color = TIER_CLASSES[tier] ?? "text-neutral-300";
   return (
-    <span
-      className={
-        "font-bold inline-flex" +
-        (item.tier == 1
-          ? "text-neutral-400"
-          : item.tier == 2
-          ? "text-green-400"
-          : item.tier == 3
-          ? "text-blue-400"
-          : item.tier == 4
-          ? "text-purple-400"
-          : item.tier == 5
-          ? "text-yellow-400"
-          : "")
-      }
-    >
-      {item.name}
+    <span className={`font-bold inline-flex ${color} ${className}`} {...rest}>
+      {name}
     </span>
   );
 };

@@ -34,12 +34,7 @@ import firebaseConfig from "../../firebaseConfig";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-type Car = {
-  name: string;
-  value: number;
-  hp: number;
-  tier: number;
-};
+import type { Car } from "../../Interfaces/Types";
 
 // Cars by tier
 const tiers: { [key: number]: Car[] } = {
