@@ -622,7 +622,8 @@ const BlackJack = () => {
     if (phase !== "player" && phase !== "dealt") return;
     setPhase("dealer");
     persistNow({ phase: "dealer" });
-    dealerPlay(effectiveBet);
+    // Pass snapshots to avoid stale state issues
+    dealerPlay([...playerHand], effectiveBet);
   };
 
   const double = async () => {
@@ -703,12 +704,13 @@ const BlackJack = () => {
     });
 
     if (nextPhase !== "settled") {
-      dealerPlay(nextEffective);
+      // Pass snapshots to avoid stale state issues
+      dealerPlay(next, nextEffective);
     }
   };
 
   // Dealer plays: Stand on all 17 (including soft 17)
-  const dealerPlay = async (eff: number = effectiveBet) => {
+  const dealerPlay = async (playerSnapshot: Card[], eff: number) => {
     let d = [...dealerHand];
     while (true) {
       const hv = handValue(d);
@@ -719,7 +721,7 @@ const BlackJack = () => {
     }
     setDealerHand(d);
 
-    const p = handValue(playerHand).total;
+    const p = handValue(playerSnapshot).total;
     const dv = handValue(d).total;
 
     let nextPhase: Phase = "settled";
