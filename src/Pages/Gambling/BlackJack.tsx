@@ -622,7 +622,7 @@ const BlackJack = () => {
     if (phase !== "player" && phase !== "dealt") return;
     setPhase("dealer");
     persistNow({ phase: "dealer" });
-    dealerPlay();
+    dealerPlay(effectiveBet);
   };
 
   const double = async () => {
@@ -703,12 +703,12 @@ const BlackJack = () => {
     });
 
     if (nextPhase !== "settled") {
-      dealerPlay();
+      dealerPlay(nextEffective);
     }
   };
 
   // Dealer plays: Stand on all 17 (including soft 17)
-  const dealerPlay = async () => {
+  const dealerPlay = async (eff: number = effectiveBet) => {
     let d = [...dealerHand];
     while (true) {
       const hv = handValue(d);
@@ -735,27 +735,27 @@ const BlackJack = () => {
     }
 
     if (dv > 21) {
-      await credit(effectiveBet * 2);
+      await credit(eff * 2);
       nextType = "success";
-      nextShape = { kind: "dealer_bust", amount: effectiveBet };
-      nextMsgPlain = `Dealer bust! Du vant ${fmt(effectiveBet)}!`;
+      nextShape = { kind: "dealer_bust", amount: eff };
+      nextMsgPlain = `Dealer bust! Du vant ${fmt(eff)}!`;
       nextMsgNode = renderMessageFromShape(nextShape);
     } else if (p > dv) {
-      await credit(effectiveBet * 2);
+      await credit(eff * 2);
       nextType = "success";
-      nextShape = { kind: "win", amount: effectiveBet };
-      nextMsgPlain = `Du vant ${fmt(effectiveBet)}!`;
+      nextShape = { kind: "win", amount: eff };
+      nextMsgPlain = `Du vant ${fmt(eff)}!`;
       nextMsgNode = renderMessageFromShape(nextShape);
     } else if (p < dv) {
       nextType = "failure";
-      nextShape = { kind: "lose", amount: effectiveBet };
-      nextMsgPlain = `Du tapte ${fmt(effectiveBet)}.`;
+      nextShape = { kind: "lose", amount: eff };
+      nextMsgPlain = `Du tapte ${fmt(eff)}.`;
       nextMsgNode = renderMessageFromShape(nextShape);
     } else {
-      await credit(effectiveBet);
+      await credit(eff);
       nextType = "info";
-      nextShape = { kind: "push", amount: effectiveBet };
-      nextMsgPlain = `Uavgjort – du fikk ${fmt(effectiveBet)} tilbake.`;
+      nextShape = { kind: "push", amount: eff };
+      nextMsgPlain = `Uavgjort – du fikk ${fmt(eff)} tilbake.`;
       nextMsgNode = renderMessageFromShape(nextShape);
     }
 
