@@ -13,7 +13,7 @@ interface ButtonInterface {
     | "danger"
     | "realistic"
     | "exit";
-  size?: "small" | "normal" | "square";
+  size?: "small" | "normal" | "square" | "small-square";
   disabled?: boolean;
 }
 
@@ -30,6 +30,8 @@ const Button = ({
       ? "px-4 min-w-16"
       : size === "square"
       ? "w-10 h-10"
+      : size === "small-square"
+      ? "w-7 h-7"
       : "px-4 py-1 min-w-32";
 
   // Base “disabled” overrides: these will apply whenever the element is disabled

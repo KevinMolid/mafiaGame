@@ -8,7 +8,7 @@ import Button from "../components/Button";
 import InfoBox from "../components/InfoBox";
 import defaultImg from "/default.jpg";
 
-import { useEffect, useState, Fragment } from "react";
+import { useEffect, useState, Fragment, useRef } from "react";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 
 import { useCharacter } from "../CharacterContext";
@@ -23,6 +23,8 @@ import {
   orderBy,
   onSnapshot,
   updateDoc,
+  increment,
+  runTransaction,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
@@ -37,6 +39,8 @@ import { format } from "date-fns";
 const MAX_TITLE = 120;
 const MAX_CONTENT = 10_000;
 
+type ReactionKey = "like" | "dislike" | "heart" | "fire" | "poop";
+
 // Define the type for a thread
 interface Thread {
   id: string;
@@ -47,6 +51,8 @@ interface Thread {
   createdAt: any;
   categoryId?: string;
   editedAt?: any;
+  reactions?: Partial<Record<ReactionKey, number>>;
+  reactionsByUser?: Record<string, ReactionKey>;
 }
 
 interface Reply {
@@ -56,6 +62,8 @@ interface Reply {
   authorName: string;
   createdAt: any;
   editedAt?: any;
+  reactions?: Partial<Record<ReactionKey, number>>;
+  reactionsByUser?: Record<string, ReactionKey>;
 }
 
 /** Small card that shows a reply author's avatar + family, live */
@@ -103,6 +111,122 @@ const ReplyAuthorCard = ({
   );
 };
 
+/** Reusable “+” reaction dropdown */
+const ReactionMenu = ({
+  onReact,
+}: {
+  onReact?: (emoji: ReactionKey) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (!ref.current) return;
+      if (!ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    if (open) document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [open]);
+
+  const handle = (which: ReactionKey) => {
+    onReact?.(which);
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative inline-block" ref={ref}>
+      <Button
+        type="button"
+        size="small-square"
+        style="secondary"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <i className="fa-solid fa-plus"></i>
+      </Button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute left-0 z-20 mt-1 min-w-32 rounded-md border border-neutral-700 bg-neutral-900 p-1 shadow-lg"
+        >
+          <button
+            role="menuitem"
+            className="w-full text-left px-2 py-1 rounded hover:bg-neutral-800"
+            onClick={() => handle("like")}
+            title="Liker"
+          >
+            👍 Liker
+          </button>
+          <button
+            role="menuitem"
+            className="w-full text-left px-2 py-1 rounded hover:bg-neutral-800"
+            onClick={() => handle("dislike")}
+            title="Misliker"
+          >
+            👎 Misliker
+          </button>
+          <button
+            role="menuitem"
+            className="w-full text-left px-2 py-1 rounded hover:bg-neutral-800"
+            onClick={() => handle("heart")}
+            title="Hjerte"
+          >
+            ❤️ Hjerte
+          </button>
+          <button
+            role="menuitem"
+            className="w-full text-left px-2 py-1 rounded hover:bg-neutral-800"
+            onClick={() => handle("fire")}
+            title="Flamme"
+          >
+            🔥 Flamme
+          </button>
+          <button
+            role="menuitem"
+            className="w-full text-left px-2 py-1 rounded hover:bg-neutral-800"
+            onClick={() => handle("poop")}
+            title="Dritt"
+          >
+            💩 Dritt
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Render a reaction chip with optional highlight background
+function ReactionChip({
+  icon,
+  count,
+  highlight,
+  label,
+}: {
+  icon: string;
+  count: number | undefined;
+  highlight: boolean;
+  label: string;
+}) {
+  if (!count || count <= 0) return null; // hide zero-count reactions entirely
+  return (
+    <span
+      aria-label={label}
+      className={
+        "inline-flex items-center justify-center px-2 py-1 rounded-full " +
+        (highlight ? "bg-neutral-800" : "bg-transparent")
+      }
+    >
+      <span className="flex items-center">
+        <span aria-hidden>{icon}</span>
+        <span className="tabular-nums">{count}</span>
+      </span>
+    </span>
+  );
+}
+
 const ForumThread = () => {
   const { postId } = useParams<{ postId: string }>();
   const [thread, setThread] = useState<Thread | null>(null);
@@ -147,7 +271,6 @@ const ForumThread = () => {
         const t = { id: snap.id, ...data } as Thread;
         setThread(t);
 
-        // speil siste lagrede versjon i edit-feltene
         setEditTitle((t.title ?? "").toString());
         setEditContent((t.content ?? "").toString());
 
@@ -270,7 +393,6 @@ const ForumThread = () => {
         editedBy: userCharacter?.id || null,
       });
 
-      // La onSnapshot oppdatere UI. Vi viser bare feedback her:
       setMessageType("success");
       setMessage("Tråden ble oppdatert.");
       setEditing(false);
@@ -318,7 +440,6 @@ const ForumThread = () => {
         editedBy: userCharacter?.id || null,
       });
 
-      // UI oppdateres av onSnapshot; rydd lokalt:
       setEditingReplyId(null);
       setEditReplyContent("");
       setMessageType("success");
@@ -331,6 +452,108 @@ const ForumThread = () => {
       setSavingReplyId(null);
     }
   };
+
+  // --- Reactions: transaction-based “once per user” ---
+  const addReactionToDocOnce = async (
+    targetRef: ReturnType<typeof doc>,
+    userId: string,
+    reaction: ReactionKey
+  ) => {
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(targetRef);
+      if (!snap.exists()) throw new Error("Target does not exist");
+
+      const data = snap.data() as any;
+      const reactionsByUser: Record<string, ReactionKey> =
+        data?.reactionsByUser ?? {};
+      const already = reactionsByUser[userId];
+
+      if (already) {
+        throw new Error("already-reacted");
+      }
+
+      const fieldCountsPath = `reactions.${reaction}`;
+      const userPath = `reactionsByUser.${userId}`;
+
+      tx.update(targetRef, {
+        [fieldCountsPath]: increment(1),
+        [userPath]: reaction,
+      });
+    });
+  };
+
+  const addReactionToThread = async (reaction: ReactionKey) => {
+    if (!userCharacter) {
+      setMessageType("warning");
+      setMessage("Du må være logget inn for å reagere.");
+      return;
+    }
+    if (!postId) return;
+
+    // prevent self-reaction
+    if (thread?.authorId === userCharacter.id) {
+      setMessageType("warning");
+      setMessage("Du kan ikke reagere på ditt eget innlegg.");
+      return;
+    }
+
+    try {
+      await addReactionToDocOnce(
+        doc(db, "ForumThreads", postId),
+        userCharacter.id,
+        reaction
+      );
+    } catch (e: any) {
+      if (e?.message === "already-reacted") {
+        setMessageType("warning");
+        setMessage("Du har allerede reagert på denne tråden.");
+      } else {
+        console.error(e);
+        setMessageType("failure");
+        setMessage("Kunne ikke lagre reaksjonen. Prøv igjen.");
+      }
+    }
+  };
+
+  const addReactionToReply = async (replyId: string, reaction: ReactionKey) => {
+    if (!userCharacter) {
+      setMessageType("warning");
+      setMessage("Du må være logget inn for å reagere.");
+      return;
+    }
+    if (!postId) return;
+
+    const reply = replies.find((r) => r.id === replyId);
+    if (reply && reply.authorId === userCharacter.id) {
+      setMessageType("warning");
+      setMessage("Du kan ikke reagere på ditt eget svar.");
+      return;
+    }
+
+    try {
+      await addReactionToDocOnce(
+        doc(db, "ForumThreads", postId, "Replies", replyId),
+        userCharacter.id,
+        reaction
+      );
+    } catch (e: any) {
+      if (e?.message === "already-reacted") {
+        setMessageType("warning");
+        setMessage("Du har allerede reagert på dette svaret.");
+      } else {
+        console.error(e);
+        setMessageType("failure");
+        setMessage("Kunne ikke lagre reaksjonen. Prøv igjen.");
+      }
+    }
+  };
+
+  // Helpers to know if user has reacted (hide the "+" in that case) and if user is author (also hide)
+  const userId = userCharacter?.id;
+  const threadUserReaction: ReactionKey | undefined =
+    (userId && thread?.reactionsByUser?.[userId]) || undefined;
+  const threadAlreadyReacted = !!threadUserReaction;
+  const isThreadAuthor = !!userId && userId === thread?.authorId;
 
   if (loading) {
     return <p>Laster tråd...</p>;
@@ -406,20 +629,47 @@ const ForumThread = () => {
                 ))}
               </div>
 
-              {/* Icons */}
-              <div className="flex gap-1 text-neutral-200 font-medium">
-                <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                  👍0
-                </div>
-                <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                  👎0
-                </div>
-                <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                  ❤️0
-                </div>
-                <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                  🔥0
-                </div>
+              {/* Reactions: counts (hide 0) + chosen highlight + conditionally show "+" */}
+              <div className="flex gap-3 items-center text-neutral-200 font-medium">
+                {thread.reactions && (
+                  <div className="flex items-center gap-3 text-sm text-neutral-300">
+                    <ReactionChip
+                      icon="👍"
+                      label="Liker"
+                      count={thread.reactions?.like}
+                      highlight={threadUserReaction === "like"}
+                    />
+                    <ReactionChip
+                      icon="👎"
+                      label="Misliker"
+                      count={thread.reactions?.dislike}
+                      highlight={threadUserReaction === "dislike"}
+                    />
+                    <ReactionChip
+                      icon="❤️"
+                      label="Hjerte"
+                      count={thread.reactions?.heart}
+                      highlight={threadUserReaction === "heart"}
+                    />
+                    <ReactionChip
+                      icon="🔥"
+                      label="Flamme"
+                      count={thread.reactions?.fire}
+                      highlight={threadUserReaction === "fire"}
+                    />
+                    <ReactionChip
+                      icon="💩"
+                      label="Dritt"
+                      count={thread.reactions?.poop}
+                      highlight={threadUserReaction === "poop"}
+                    />
+                  </div>
+                )}
+
+                {/* Hide plus if already reacted OR if user is the author */}
+                {!threadAlreadyReacted && !isThreadAuthor && (
+                  <ReactionMenu onReact={(r) => addReactionToThread(r)} />
+                )}
               </div>
             </>
           ) : (
@@ -428,6 +678,7 @@ const ForumThread = () => {
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 maxLength={MAX_TITLE}
+                spellCheck={false}
                 className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
                 placeholder="Emne (minst 3 tegn)"
               />
@@ -436,7 +687,8 @@ const ForumThread = () => {
                 onChange={(e) => setEditContent(e.target.value)}
                 maxLength={MAX_CONTENT}
                 rows={8}
-                className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none focus:border-white"
+                spellCheck={false}
+                className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none"
                 placeholder="Innhold (minst 10 tegn)"
               />
               <div className="flex gap-2">
@@ -485,6 +737,10 @@ const ForumThread = () => {
             !!userCharacter && reply.authorId === userCharacter.id;
           const isEditingThis = editingReplyId === reply.id;
 
+          const replyUserReaction: ReactionKey | undefined =
+            (userId && reply.reactionsByUser?.[userId]) || undefined;
+          const replyAlreadyReacted = !!replyUserReaction;
+
           return (
             <div
               key={reply.id}
@@ -492,7 +748,7 @@ const ForumThread = () => {
             >
               {/* Left: reply content */}
               <div>
-                {/* Header-linje med bruker + tidspunkt + Endre-knapp til høyre */}
+                {/* Header-linje med tidspunkt + Endre-knapp */}
                 <div className="text-sm flex justify-between items-start mb-2">
                   <div className="flex gap-2 items-center flex-wrap">
                     <p>
@@ -540,20 +796,49 @@ const ForumThread = () => {
                         </Fragment>
                       ))}
                     </div>
-                    {/* Icons (som før) */}
-                    <div className="flex gap-1 text-neutral-200 font-medium">
-                      <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                        👍0
-                      </div>
-                      <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                        👎0
-                      </div>
-                      <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                        ❤️0
-                      </div>
-                      <div className="bg-neutral-800 py-1 px-2 rounded-md cursor-pointer">
-                        🔥0
-                      </div>
+                    {/* Reactions: counts (hide 0) + chosen highlight + conditionally show "+" */}
+                    <div className="flex items-center gap-3 text-neutral-200 font-medium h-full">
+                      {reply.reactions && (
+                        <div className="flex items-center gap-3 text-sm text-neutral-300">
+                          <ReactionChip
+                            icon="👍"
+                            label="Liker"
+                            count={reply.reactions?.like}
+                            highlight={replyUserReaction === "like"}
+                          />
+                          <ReactionChip
+                            icon="👎"
+                            label="Misliker"
+                            count={reply.reactions?.dislike}
+                            highlight={replyUserReaction === "dislike"}
+                          />
+                          <ReactionChip
+                            icon="❤️"
+                            label="Hjerte"
+                            count={reply.reactions?.heart}
+                            highlight={replyUserReaction === "heart"}
+                          />
+                          <ReactionChip
+                            icon="🔥"
+                            label="Flamme"
+                            count={reply.reactions?.fire}
+                            highlight={replyUserReaction === "fire"}
+                          />
+                          <ReactionChip
+                            icon="💩"
+                            label="Dritt"
+                            count={reply.reactions?.poop}
+                            highlight={replyUserReaction === "poop"}
+                          />
+                        </div>
+                      )}
+
+                      {/* Hide plus if already reacted OR if this reply is by the current user */}
+                      {!replyAlreadyReacted && !isOwnReply && (
+                        <ReactionMenu
+                          onReact={(r) => addReactionToReply(reply.id, r)}
+                        />
+                      )}
                     </div>
                   </>
                 ) : (
@@ -563,7 +848,8 @@ const ForumThread = () => {
                       onChange={(e) => setEditReplyContent(e.target.value)}
                       maxLength={MAX_CONTENT}
                       rows={6}
-                      className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none focus:border-white"
+                      spellCheck={false}
+                      className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none"
                       placeholder="Skriv svaret ditt…"
                     />
                     <div className="flex gap-2">
@@ -599,6 +885,7 @@ const ForumThread = () => {
           name="reply"
           id="reply"
           rows={6}
+          spellCheck={false}
           onChange={handleReplyChange}
           value={newReply}
         ></textarea>
