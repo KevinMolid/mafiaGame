@@ -919,22 +919,20 @@ const BlackJack = () => {
 
       <div className="rounded border border-neutral-700 p-4 bg-neutral-900">
         {/* Always render the table; show placeholders when empty */}
-        {phase !== "betting" && (
+        {phase !== "betting" && dealerHand.length !== 0 && (
           <div>
             {/* Dealer */}
             <div className="mb-4">
               <div className="font-semibold mb-1">Dealer</div>
-              {dealerHand.length === 0 ? (
-                <div className="text-neutral-400">—</div>
-              ) : (
-                <HandRow
-                  cards={dealerHand}
-                  hideHole={phase === "player" || phase === "dealt"}
-                />
-              )}
+
+              <HandRow
+                cards={dealerHand}
+                hideHole={phase === "player" || phase === "dealt"}
+              />
+
               {(phase === "dealer" || phase === "settled") && (
                 <div className="text-sm text-neutral-300">
-                  Sum: {dealerHand.length ? handValue(dealerHand).total : "—"}
+                  Sum: {dealerHand.length && handValue(dealerHand).total}
                 </div>
               )}
             </div>

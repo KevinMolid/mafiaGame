@@ -1,4 +1,12 @@
-import { createContext, useContext, useState, useEffect, useRef } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import { Character, Stats, Reputation } from "./Interfaces/CharacterTypes";
 import { getCurrentRank } from "./Functions/RankFunctions.tsx";
 import {
@@ -20,10 +28,32 @@ import { useAuth } from "./AuthContext";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+/* ---------- Oslo time helper ---------- */
+const getOsloYmd = (d: Date = new Date()): string => {
+  // en-CA yields YYYY-MM-DD
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Oslo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+};
+
+const baselineKey = (userId?: string) => `xp:baseline:${userId ?? "anon"}`;
+
+/* ---------- Context types ---------- */
+interface DailyXpState {
+  baselineXp: number;
+  xpToday: number;
+  refreshDailyBaseline: () => void;
+}
+
 interface CharacterContextType {
   userCharacter: Character | null;
   setUserCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
   loading: boolean;
+  /** New: XP since Oslo midnight */
+  dailyXp: DailyXpState;
 }
 
 const CharacterContext = createContext<CharacterContextType | undefined>(
@@ -47,6 +77,46 @@ export const CharacterProvider = ({
   const [userCharacter, setUserCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
   const alertAddedRef = useRef<boolean>(false); // Ref to track alert addition
+
+  // --- New: daily XP state ---
+  const [baselineXp, setBaselineXp] = useState<number>(0);
+  const [xpToday, setXpToday] = useState<number>(0);
+
+  // Ensure we have a baseline for the current Oslo day and compute xpToday
+  const ensureBaselineForToday = useCallback(
+    (currentXp: number, userId?: string) => {
+      const key = baselineKey(userId);
+      const today = getOsloYmd();
+      try {
+        const raw = localStorage.getItem(key);
+        const obj = raw ? JSON.parse(raw) : null;
+
+        if (!obj || obj.date !== today) {
+          // New day in Oslo → set a new baseline to current XP
+          const next = { date: today, baseline: currentXp };
+          localStorage.setItem(key, JSON.stringify(next));
+          setBaselineXp(currentXp);
+          setXpToday(0);
+        } else {
+          const base = typeof obj.baseline === "number" ? obj.baseline : 0;
+          setBaselineXp(base);
+          setXpToday(Math.max(0, currentXp - base));
+        }
+      } catch {
+        const next = { date: today, baseline: currentXp };
+        localStorage.setItem(key, JSON.stringify(next));
+        setBaselineXp(currentXp);
+        setXpToday(0);
+      }
+    },
+    []
+  );
+
+  // Optional helper to re-evaluate the baseline now
+  const refreshDailyBaseline = useCallback(() => {
+    if (!userCharacter) return;
+    ensureBaselineForToday(userCharacter.stats?.xp ?? 0, userCharacter.id);
+  }, [userCharacter, ensureBaselineForToday]);
 
   useEffect(() => {
     if (userData && userData.activeCharacter) {
@@ -136,11 +206,10 @@ export const CharacterProvider = ({
                 where("newRank", "==", newRankName)
               );
 
-              // Wait for the query to complete before proceeding
               const existingAlerts = await getDocs(alertQuery);
 
               if (existingAlerts.empty && !alertAddedRef.current) {
-                alertAddedRef.current = true; // Set flag before adding to ensure it's only set once
+                alertAddedRef.current = true;
                 const alertRef = collection(
                   db,
                   "Characters",
@@ -177,13 +246,23 @@ export const CharacterProvider = ({
 
             // Update character
             setUserCharacter(newCharacter);
+
+            // --- New: compute daily XP vs Oslo midnight ---
+            ensureBaselineForToday(
+              newCharacter.stats?.xp ?? 0,
+              newCharacter.id
+            );
           } else {
             console.error("Spillerdata er ufullstendig eller mangler stats.");
             setUserCharacter(null);
+            setBaselineXp(0);
+            setXpToday(0);
           }
         } else {
           console.error("Ingen spillerdokumenter funnet!");
           setUserCharacter(null);
+          setBaselineXp(0);
+          setXpToday(0);
         }
 
         setLoading(false);
@@ -192,18 +271,62 @@ export const CharacterProvider = ({
       return () => unsubscribe();
     } else {
       setUserCharacter(null);
+      setBaselineXp(0);
+      setXpToday(0);
       setLoading(false);
     }
-  }, [userData]);
+  }, [userData, ensureBaselineForToday]);
+
+  // Watch for Oslo day rollover (e.g., tab left open) and for XP changes
+  useEffect(() => {
+    if (!userCharacter) return;
+
+    let lastOsloDate = getOsloYmd();
+    const interval = setInterval(() => {
+      const now = getOsloYmd();
+      const currentXp = userCharacter.stats?.xp ?? 0;
+
+      if (now !== lastOsloDate) {
+        // New day in Oslo
+        lastOsloDate = now;
+        ensureBaselineForToday(currentXp, userCharacter.id);
+      } else {
+        // Same day: recompute xpToday if XP moved elsewhere in the app
+        try {
+          const key = baselineKey(userCharacter.id);
+          const raw = localStorage.getItem(key);
+          const obj = raw ? JSON.parse(raw) : null;
+          const base = obj?.baseline ?? baselineXp;
+          setXpToday(Math.max(0, currentXp - base));
+        } catch {
+          // If something odd in storage, reset baseline
+          ensureBaselineForToday(currentXp, userCharacter.id);
+        }
+      }
+    }, 60_000); // check each minute
+
+    return () => clearInterval(interval);
+  }, [userCharacter, baselineXp, ensureBaselineForToday]);
+
+  const value = useMemo<CharacterContextType>(() => {
+    return {
+      userCharacter,
+      setUserCharacter,
+      loading,
+      dailyXp: {
+        baselineXp,
+        xpToday,
+        refreshDailyBaseline,
+      },
+    };
+  }, [userCharacter, loading, baselineXp, xpToday, refreshDailyBaseline]);
 
   if (loading) {
     return <div>Laster spillerdata...</div>;
   }
 
   return (
-    <CharacterContext.Provider
-      value={{ userCharacter, setUserCharacter, loading }}
-    >
+    <CharacterContext.Provider value={value}>
       {children}
     </CharacterContext.Provider>
   );

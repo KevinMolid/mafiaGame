@@ -61,3 +61,15 @@ export const formatTimestamp = (timestamp: Timestamp | Date): string => {
     } kl. ${timeFormatter.format(date)}`;
   }
 };
+
+export const getOsloYmd = (d: Date = new Date()): string => {
+  // Returns YYYY-MM-DD in Europe/Oslo
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Oslo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  // en-CA gives "YYYY-MM-DD"
+  return fmt.format(d);
+};

@@ -20,7 +20,7 @@ import { useCharacter } from "../CharacterContext";
 import { getRankProgress } from "../Functions/RankFunctions";
 
 const Home = () => {
-  const { userCharacter } = useCharacter();
+  const { userCharacter, dailyXp } = useCharacter();
   const [message] = useState("");
   const [messageType] = useState<
     "success" | "failure" | "important" | "warning" | "info"
@@ -63,7 +63,7 @@ const Home = () => {
       <div className="flex gap-4 mb-2">
         <Link to={`/profil/${userCharacter.id}`}>
           <img
-            className="border border-neutral-500 size-[160px] object-cover mb-2 hover:cursor-pointer"
+            className="size-[160px] object-cover mb-2 hover:cursor-pointer"
             src={userCharacter.img || "/default.jpg"}
             alt="Profile picture"
           />
@@ -109,7 +109,7 @@ const Home = () => {
           {/* Stats */}
           <Box>
             <H2>Status</H2>
-            <div className="flex flex-col lg:flex-row flex-wrap gap-4 mb-6">
+            <div className="flex flex-col lg:flex-row flex-wrap gap-4">
               <div className="flex flex-col gap-1">
                 <p>
                   Helse:{" "}
@@ -176,6 +176,13 @@ const Home = () => {
                   </div>
                 </div>
               </div>
+
+              <p className="w-full">
+                Ranket i dag:{" "}
+                <strong className="text-neutral-200">
+                  {dailyXp.xpToday.toLocaleString("nb-NO")} xp
+                </strong>
+              </p>
             </div>
           </Box>
 
