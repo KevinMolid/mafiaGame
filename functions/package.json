@@ -1,13 +1,13 @@
 {
   "name": "functions",
   "scripts": {
-    "lint": "eslint --ext .js,.ts .",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern lib",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
-    "deploy": "firebase deploy --only functions",
+    "deploy": "npm run build && npx firebase-tools deploy --only functions:accrueDailyBankInterest",
     "logs": "firebase functions:log"
   },
   "engines": {

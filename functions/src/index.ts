@@ -45,8 +45,17 @@ export const accrueDailyBankInterest = onSchedule(
 
       const batch = db.batch();
 
+      type CharacterStats = {
+        bank?: number;
+        bankLastInterestDate?: string;
+        };
+
+        type CharacterDoc = {
+        stats?: CharacterStats;
+        };
+
       snap.docs.forEach((docSnap) => {
-        const data = docSnap.data() as any;
+        const data = docSnap.data() as CharacterDoc;
         const stats = data?.stats ?? {};
         const bank: number = Number(stats.bank) || 0;
         const already = stats.bankLastInterestDate === today;
