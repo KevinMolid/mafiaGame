@@ -183,7 +183,7 @@ type PersistedState = {
   playerHand: Card[];
   dealerHand: Card[];
   shoe: Card[];
-  message: string;
+  message: string; // persisted version only (plain text)
   messageType: "success" | "failure" | "info" | "warning";
 };
 
@@ -265,10 +265,11 @@ const BlackJack = () => {
   const [effectiveBet, setEffectiveBet] = useState<number>(0);
   const [playerHand, setPlayerHand] = useState<Card[]>([]);
   const [dealerHand, setDealerHand] = useState<Card[]>([]);
-  const [message, setMessage] = useState<string>("");
+  const [message, setMessage] = useState<React.ReactNode>("");
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "info" | "warning"
   >("info");
+  const [messageText, setMessageText] = useState<string>(""); // persisted
 
   // Money
   const userMoney = (userCharacter as any)?.stats?.money ?? 0;
@@ -286,13 +287,14 @@ const BlackJack = () => {
       setEffectiveBet(loaded.effectiveBet);
       setPlayerHand(loaded.playerHand);
       setDealerHand(loaded.dealerHand);
-      setMessage(loaded.message);
+      setMessage(loaded.message); // string is fine as ReactNode
+      setMessageText(loaded.message);
       setMessageType(loaded.messageType);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
 
-  // --- Persist helper that writes EXACT values we want (avoid stale state) ---
+  // Persist helper
   const persistNow = (overrides: Partial<PersistedState> = {}) => {
     const toSave: PersistedState = {
       phase,
@@ -300,7 +302,7 @@ const BlackJack = () => {
       effectiveBet,
       playerHand,
       dealerHand,
-      message,
+      message: messageText, // always the plain version
       messageType,
       shoe: shoeRef.current,
       ...overrides,
@@ -310,6 +312,13 @@ const BlackJack = () => {
     } catch (e) {
       console.warn("Could not persist blackjack state:", e);
     }
+  };
+
+  // Helper to set rich UI message + plain persisted text
+  const setMsg = (node: React.ReactNode, plain: string) => {
+    setMessage(node);
+    setMessageText(plain);
+    persistNow({ message: plain });
   };
 
   // Draw N cards and persist the shoe immediately
@@ -334,7 +343,6 @@ const BlackJack = () => {
     }
 
     shoeRef.current = next;
-    // persist deck immediately, using current (possibly soon-to-change) state
     persistNow({ shoe: next });
     return taken;
   };
@@ -355,6 +363,7 @@ const BlackJack = () => {
     setDealerHand([]);
     setEffectiveBet(0);
     setMessage("");
+    setMessageText("");
     setMessageType("info");
     setPhase("betting");
     persistNow({
@@ -416,46 +425,32 @@ const BlackJack = () => {
   const deal = async () => {
     if (!characterRef) {
       setMessageType("warning");
-      setMessage("Du må være logget inn.");
-      persistNow({ messageType: "warning", message: "Du må være logget inn." });
+      setMsg("Du må være logget inn.", "Du må være logget inn.");
       return;
     }
     if (betAmount === "" || betAmount <= 0) {
       setMessageType("warning");
-      setMessage("Skriv inn en gyldig innsats.");
-      persistNow({
-        messageType: "warning",
-        message: "Skriv inn en gyldig innsats.",
-      });
+      setMsg("Skriv inn en gyldig innsats.", "Skriv inn en gyldig innsats.");
       return;
     }
     if ((betAmount as number) < 100) {
       setMessageType("warning");
-      setMessage("Du må satse minst $100!");
-      persistNow({
-        messageType: "warning",
-        message: "Du må satse minst $100!",
-      });
+      setMsg("Du må satse minst $100!", "Du må satse minst $100!");
       return;
     }
     if (userMoney < (betAmount as number)) {
       setMessageType("warning");
-      setMessage("Du har ikke nok penger.");
-      persistNow({
-        messageType: "warning",
-        message: "Du har ikke nok penger.",
-      });
+      setMsg("Du har ikke nok penger.", "Du har ikke nok penger.");
       return;
     }
 
     const debited = await tryDebit(betAmount as number);
     if (!debited) {
       setMessageType("failure");
-      setMessage("Klarte ikke å reservere innsatsen. Prøv igjen.");
-      persistNow({
-        messageType: "failure",
-        message: "Klarte ikke å reservere innsatsen. Prøv igjen.",
-      });
+      setMsg(
+        "Klarte ikke å reservere innsatsen. Prøv igjen.",
+        "Klarte ikke å reservere innsatsen. Prøv igjen."
+      );
       return;
     }
 
@@ -474,7 +469,6 @@ const BlackJack = () => {
     setEffectiveBet(nextEffective);
     setPhase("dealt");
 
-    // Persist the "dealt" state first
     persistNow({
       playerHand: nextPlayer,
       dealerHand: nextDealer,
@@ -489,22 +483,19 @@ const BlackJack = () => {
 
     if (playerBJ || dealerBJ) {
       if (playerBJ && dealerBJ) {
-        const msg = `Uavgjort: Begge har Blackjack. Du fikk ${fmt(
+        const plain = `Uavgjort: Begge har Blackjack. Du fikk ${fmt(
           nextEffective
         )} tilbake.`;
-        setMessage(msg);
-        persistNow({ message: msg });
+        setMsg(plain, plain);
         await settleImmediate("push");
       } else if (playerBJ) {
         const win = Math.floor((betAmount as number) * 1.5);
-        const msg = `Blackjack! Du vinner ${fmt(win)} (3:2).`;
-        setMessage(msg);
-        persistNow({ message: msg });
+        const plain = `Blackjack! Du vinner ${fmt(win)} (3:2).`;
+        setMsg(plain, plain);
         await settleImmediate("playerBJ");
       } else {
-        const msg = `Dealer har Blackjack. Du tapte ${fmt(nextEffective)}.`;
-        setMessage(msg);
-        persistNow({ message: msg });
+        const plain = `Dealer har Blackjack. Du tapte ${fmt(nextEffective)}.`;
+        setMsg(plain, plain);
         await settleImmediate("dealerBJ");
       }
       return;
@@ -512,9 +503,10 @@ const BlackJack = () => {
 
     setPhase("player");
     setMessageType("info");
-    const msg = "Din tur: Trekk kort / Stå / Doble innsats";
-    setMessage(msg);
-    persistNow({ phase: "player", messageType: "info", message: msg });
+    setMsg(
+      "Din tur: Trekk kort / Stå / Doble innsats",
+      "Din tur: Trekk kort / Stå / Doble innsats"
+    );
   };
 
   const hit = () => {
@@ -524,23 +516,31 @@ const BlackJack = () => {
     setPlayerHand(next);
 
     let nextPhase: Phase = phase;
-    let nextMsg = message;
     let nextType: PersistedState["messageType"] = messageType;
+    let plain = messageText;
+    let node: React.ReactNode = message;
 
     const { total } = handValue(next);
     if (total > 21) {
       nextType = "failure";
-      nextMsg = `Bust! Du tapte ${fmt(effectiveBet)}.`;
+      plain = `Bust! Du tapte ${fmt(effectiveBet)}.`;
+      node = (
+        <p>
+          Bust! Du tapte <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{fmt(effectiveBet)}</strong>.
+        </p>
+      );
       nextPhase = "settled";
       setMessageType(nextType);
-      setMessage(nextMsg);
+      setMessage(node);
+      setMessageText(plain);
       setPhase(nextPhase);
     }
 
     persistNow({
       playerHand: next,
       phase: nextPhase,
-      message: nextMsg,
+      message: plain,
       messageType: nextType,
     });
   };
@@ -556,26 +556,29 @@ const BlackJack = () => {
     if (phase !== "player") return;
     if (playerHand.length !== 2) {
       setMessageType("warning");
-      const msg = "Du kan bare dobele på to kort.";
-      setMessage(msg);
-      persistNow({ messageType: "warning", message: msg });
+      setMsg(
+        "Du kan bare dobele på to kort.",
+        "Du kan bare dobele på to kort."
+      );
       return;
     }
     if (!characterRef || betAmount === "") return;
 
     if (userMoney < (betAmount as number)) {
       setMessageType("warning");
-      const msg = "Du har ikke nok penger til å doble.";
-      setMessage(msg);
-      persistNow({ messageType: "warning", message: msg });
+      setMsg(
+        "Du har ikke nok penger til å doble.",
+        "Du har ikke nok penger til å doble."
+      );
       return;
     }
     const debited = await tryDebit(betAmount as number);
     if (!debited) {
       setMessageType("failure");
-      const msg = "Klarte ikke å reservere doblingsbeløpet.";
-      setMessage(msg);
-      persistNow({ messageType: "failure", message: msg });
+      setMsg(
+        "Klarte ikke å reservere doblingsbeløpet.",
+        "Klarte ikke å reservere doblingsbeløpet."
+      );
       return;
     }
 
@@ -587,16 +590,25 @@ const BlackJack = () => {
     setPlayerHand(next);
 
     let nextPhase: Phase = "dealer";
-    let nextMsg = message;
     let nextType: PersistedState["messageType"] = messageType;
+    let plain = messageText;
+    let node: React.ReactNode = message;
 
     const { total } = handValue(next);
     if (total > 21) {
       nextType = "failure";
-      nextMsg = `Bust etter dobling. Du tapte ${fmt(nextEffective)}.`;
+      plain = `Bust etter dobling. Du tapte ${fmt(nextEffective)}.`;
+      node = (
+        <p>
+          Bust etter dobling. Du tapte{" "}
+          <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{fmt(nextEffective)}</strong>.
+        </p>
+      );
       nextPhase = "settled";
       setMessageType(nextType);
-      setMessage(nextMsg);
+      setMessage(node);
+      setMessageText(plain);
       setPhase(nextPhase);
     } else {
       setPhase("dealer");
@@ -606,7 +618,7 @@ const BlackJack = () => {
       effectiveBet: nextEffective,
       playerHand: next,
       phase: nextPhase,
-      message: nextMsg,
+      message: plain,
       messageType: nextType,
     });
 
@@ -633,8 +645,11 @@ const BlackJack = () => {
     const dv = handValue(d).total;
 
     let nextPhase: Phase = "settled";
-    let nextMsg = "";
     let nextType: PersistedState["messageType"] = "info";
+
+    // Two parallel message forms: node for UI, plain for storage
+    let nextMsgNode: React.ReactNode = "";
+    let nextMsgPlain = "";
 
     if (!characterRef) {
       setPhase(nextPhase);
@@ -645,28 +660,53 @@ const BlackJack = () => {
     if (dv > 21) {
       await credit(effectiveBet * 2);
       nextType = "success";
-      nextMsg = `Dealer bust! Du vant ${fmt(effectiveBet)}!`;
+      nextMsgPlain = `Dealer bust! Du vant ${fmt(effectiveBet)}!`;
+      nextMsgNode = (
+        <p>
+          Dealer bust! Du vant <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{fmt(effectiveBet)}</strong>!
+        </p>
+      );
     } else if (p > dv) {
       await credit(effectiveBet * 2);
       nextType = "success";
-      nextMsg = `Du vant ${fmt(effectiveBet)}!`;
+      nextMsgPlain = `Du vant ${fmt(effectiveBet)}!`;
+      nextMsgNode = (
+        <p>
+          Du vant <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{fmt(effectiveBet)}</strong>!
+        </p>
+      );
     } else if (p < dv) {
       nextType = "failure";
-      nextMsg = `Du tapte ${fmt(effectiveBet)}.`;
+      nextMsgPlain = `Du tapte ${fmt(effectiveBet)}.`;
+      nextMsgNode = (
+        <p>
+          Du tapte <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{fmt(effectiveBet)}</strong>.
+        </p>
+      );
     } else {
       await credit(effectiveBet);
       nextType = "info";
-      nextMsg = `Uavgjort – du fikk ${fmt(effectiveBet)} tilbake.`;
+      nextMsgPlain = `Uavgjort – du fikk ${fmt(effectiveBet)} tilbake.`;
+      nextMsgNode = (
+        <p>
+          Uavgjort – du fikk <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{fmt(effectiveBet)}</strong> tilbake.
+        </p>
+      );
     }
 
     setMessageType(nextType);
-    setMessage(nextMsg);
+    setMessage(nextMsgNode);
+    setMessageText(nextMsgPlain);
     setPhase(nextPhase);
 
     persistNow({
       dealerHand: d,
       phase: nextPhase,
-      message: nextMsg,
+      message: nextMsgPlain, // persist plain text
       messageType: nextType,
     });
   };
@@ -786,7 +826,7 @@ const BlackJack = () => {
 
         {/* Bet & status */}
         <div className="mt-3 text-sm text-neutral-300">
-          Innsats:{" "}
+          Innsats: <i className="fa-solid fa-dollar-sign"></i>{" "}
           <strong>
             {effectiveBet
               ? fmt(effectiveBet)

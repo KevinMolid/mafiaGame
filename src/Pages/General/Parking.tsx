@@ -465,7 +465,8 @@ const Parking = () => {
                   <td className="px-2 py-1"></td>
                   <td className="px-2 py-1">Total verdi</td>
                   <td className="px-2 py-1">
-                    ${totalValue.toLocaleString("nb-NO")}
+                    <i className="fa-solid fa-dollar-sign"></i>{" "}
+                    {totalValue.toLocaleString("nb-NO")}
                   </td>
                   <td className="px-2 py-1">
                     <button
