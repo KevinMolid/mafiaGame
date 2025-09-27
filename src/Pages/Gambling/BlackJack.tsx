@@ -676,64 +676,77 @@ const BlackJack = () => {
   const playerVal = handValue(playerHand).total;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col">
       <H2>BlackJack</H2>
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
-      {/* Bet input (only editable in betting phase) */}
-      <div>
-        <H3>Hvor mye vil du satse?</H3>
-        <input
-          className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-          type="text"
-          placeholder="Beløp"
-          value={
-            betAmount === "" ? "" : Number(betAmount).toLocaleString("nb-NO")
-          }
-          onChange={handleBetChange}
-          disabled={!canDeal}
-        />
-        {canDeal && betAmount !== "" && (betAmount as number) > userMoney && (
-          <p className="text-sm text-red-300 mt-1">Du har ikke nok penger.</p>
-        )}
-        {canDeal && betAmount !== "" && (betAmount as number) < 100 && (
-          <p className="text-sm text-red-300 mt-1">Du må satse minst $100!</p>
-        )}
-      </div>
-
       {/* Table */}
       <div className="rounded border border-neutral-700 p-4 bg-neutral-900">
-        {/* Dealer */}
-        <div className="mb-4">
-          <div className="font-semibold mb-1">Dealer</div>
-          {dealerHand.length === 0 ? (
-            <div className="text-neutral-400">—</div>
-          ) : (
-            <HandRow
-              cards={dealerHand}
-              hideHole={phase === "player" || phase === "dealt"}
-            />
-          )}
-          {(phase === "dealer" || phase === "settled") && (
-            <div className="text-sm text-neutral-300">
-              Sum: {dealerHand.length ? handValue(dealerHand).total : "—"}
+        {dealerHand.length !== 0 && (
+          <div>
+            {/* Dealer */}
+            <div className="mb-4">
+              <div className="font-semibold mb-1">Dealer</div>
+              {dealerHand.length === 0 ? (
+                <div className="text-neutral-400">—</div>
+              ) : (
+                <HandRow
+                  cards={dealerHand}
+                  hideHole={phase === "player" || phase === "dealt"}
+                />
+              )}
+              {(phase === "dealer" || phase === "settled") && (
+                <div className="text-sm text-neutral-300">
+                  Sum: {dealerHand.length ? handValue(dealerHand).total : "—"}
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Player */}
-        <div className="mb-2">
-          <div className="font-semibold mb-1">Spiller</div>
-          {playerHand.length ? (
-            <HandRow cards={playerHand} />
-          ) : (
-            <div className="text-neutral-400">—</div>
-          )}
-          {playerHand.length > 0 && (
-            <div className="text-sm text-neutral-300">Sum: {playerVal}</div>
-          )}
-        </div>
+            {/* Player */}
+            <div className="mb-2">
+              <div className="font-semibold mb-1">Dine kort</div>
+              {playerHand.length ? (
+                <HandRow cards={playerHand} />
+              ) : (
+                <div className="text-neutral-400">—</div>
+              )}
+              {playerHand.length > 0 && (
+                <div className="text-sm text-neutral-300">Sum: {playerVal}</div>
+              )}
+            </div>
+          </div>
+        )}
+        {/* Bet input (only editable in betting phase) */}
+        {phase === "betting" && (
+          <div>
+            <H3>Hvor mye vil du satse?</H3>
+            <input
+              className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+              type="text"
+              placeholder="Beløp"
+              value={
+                betAmount === ""
+                  ? ""
+                  : Number(betAmount).toLocaleString("nb-NO")
+              }
+              onChange={handleBetChange}
+              disabled={!canDeal}
+            />
+            {canDeal &&
+              betAmount !== "" &&
+              (betAmount as number) > userMoney && (
+                <p className="text-sm text-red-300 mt-1">
+                  Du har ikke nok penger.
+                </p>
+              )}
+            {canDeal && betAmount !== "" && (betAmount as number) < 100 && (
+              <p className="text-sm text-red-300 mt-1">
+                Du må satse minst $100!
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Controls */}
         <div className="flex flex-wrap gap-2 mt-3">
