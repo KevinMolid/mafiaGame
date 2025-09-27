@@ -1,6 +1,6 @@
 import H2 from "./Typography/H2";
 import Item from "./Typography/Item";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Button from "./Button";
 import InfoBox from "./InfoBox";
 
@@ -13,9 +13,13 @@ import { useAuth } from "../AuthContext";
 import {
   getFirestore,
   doc,
-  updateDoc,
-  increment,
-  arrayUnion,
+  runTransaction,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  where,
+  serverTimestamp,
 } from "firebase/firestore";
 
 /** Simple string -> uint32 hash */
@@ -58,9 +62,6 @@ const Cardealer = () => {
   const [message, setMessage] = useState<React.ReactNode>("");
   const [messageType, setMessageType] = useState<MessageType>("info");
 
-  // local optimistic set for instant UI; persisted state comes from Firestore below
-  const [boughtSet, setBoughtSet] = useState<Set<string>>(new Set());
-
   const { userCharacter } = useCharacter();
   const { userData } = useAuth();
 
@@ -71,45 +72,55 @@ const Cardealer = () => {
     () => mulberry32(hash32(`${playerKey}:${dayKey}`)),
     [playerKey, dayKey]
   );
-
   const todaysCars = useMemo(() => pickN(Cars, 3, rng), [rng]);
 
-  // helpers based on GTA conventions
   const currentCity =
     (userCharacter as any)?.location ?? (userCharacter as any)?.city ?? "Tokyo";
 
-  // --- PERSISTED "bought today" from Firestore (hydration) ---
-  const boughtFromServer = useMemo(() => {
-    const list = ((userCharacter as any)?.dealership?.dailyBought?.[dayKey] ??
-      []) as string[];
-    return new Set<string>(list);
-  }, [userCharacter, dayKey]);
+  // LIVE: cars in current city (for capacity check)
+  const [carsInCity, setCarsInCity] = useState<
+    {
+      id: string;
+      name: string;
+      value: number;
+      hp: number;
+      tier: number;
+      isElectric?: boolean;
+      city: string;
+      acquiredAt?: any;
+    }[]
+  >([]);
 
-  const boughtFromGarage = useMemo(() => {
-    const carsObj = (userCharacter as any)?.cars ?? {};
-    const names: string[] = [];
-    const keyOf = (t: number) => new Date(t).toISOString().slice(0, 10); // UTC key, matches dayKey
-    for (const city in carsObj) {
-      const arr = carsObj[city] as any[];
-      if (!Array.isArray(arr)) continue;
-      for (const c of arr) {
-        const t = c?.boughtAt;
-        if (
-          typeof t === "number" &&
-          keyOf(t) === dayKey &&
-          typeof c?.name === "string"
-        ) {
-          names.push(c.name);
-        }
-      }
-    }
-    return new Set<string>(names);
-  }, [userCharacter, dayKey]);
+  useEffect(() => {
+    if (!userCharacter?.id || !currentCity) return;
+    const carsCol = collection(db, "Characters", userCharacter.id, "cars");
+    const qCity = query(carsCol, where("city", "==", currentCity));
+    const unsub = onSnapshot(qCity, (snap) => {
+      const arr = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+      setCarsInCity(arr);
+    });
+    return () => unsub();
+  }, [userCharacter?.id, currentCity]);
 
-  const isBought = (name: string) =>
-    boughtFromServer.has(name) ||
-    boughtFromGarage.has(name) ||
-    boughtSet.has(name);
+  // LIVE: subscribe to the character doc to read dealership flags
+  const [ownedEver, setOwnedEver] = useState<Set<string>>(new Set());
+  const [boughtToday, setBoughtToday] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!userCharacter?.id) return;
+    const ref = doc(db, "Characters", userCharacter.id);
+    const unsub = onSnapshot(ref, (snap) => {
+      const data = snap.data() || {};
+      const owned = (data?.dealership?.ownedModels ?? []) as string[];
+      const daily = (data?.dealership?.dailyBought?.[dayKey] ?? []) as string[];
+      setOwnedEver(new Set(owned));
+      setBoughtToday(new Set(daily));
+    });
+    return () => unsub();
+  }, [userCharacter?.id, dayKey]);
+
+  const isBlocked = (name: string) =>
+    ownedEver.has(name) || boughtToday.has(name);
 
   async function handleBuy(car: (typeof Cars)[number]) {
     if (!userCharacter || !userCharacter.id || !userData) {
@@ -118,8 +129,8 @@ const Cardealer = () => {
       return;
     }
 
-    // prevent double-buy clicks
-    if (isBought(car.name)) return;
+    // quick client-side gate
+    if (isBlocked(car.name)) return;
 
     const characterRef = doc(db, "Characters", userCharacter.id);
 
@@ -128,7 +139,6 @@ const Cardealer = () => {
       currentCity
     ];
     const hasFacility = facilityType !== undefined && facilityType !== 0;
-
     if (!hasFacility) {
       setMessageType("warning");
       setMessage("Du har ingen parkeringsplass i denne byen.");
@@ -136,19 +146,15 @@ const Cardealer = () => {
     }
 
     const slots = ParkingTypes[facilityType]?.slots ?? 0;
-    const currentCars: any[] =
-      (userCharacter as any)?.cars?.[currentCity] ?? [];
-
-    // capacity check
-    if (currentCars.length >= slots) {
+    const currentCount = carsInCity.length;
+    if (currentCount >= slots) {
       setMessageType("warning");
       setMessage(
-        `Du har ingen ledige parkeringsplasser i ${currentCity}. (${currentCars.length}/${slots})`
+        `Du har ingen ledige parkeringsplasser i ${currentCity}. (${currentCount}/${slots})`
       );
       return;
     }
 
-    // money check
     if (money < car.value) {
       setMessageType("warning");
       setMessage("Du har ikke nok penger til å kjøpe denne bilen.");
@@ -157,48 +163,76 @@ const Cardealer = () => {
 
     setIsBuying(true);
     try {
-      const updatedCars = [
-        ...currentCars,
-        {
-          name: car.name,
-          value: car.value,
-          hp: car.hp,
-          tier: car.tier,
-          img: car.img ?? null,
-          city: currentCity,
-          boughtAt: Date.now(),
-        },
-      ];
+      // Create garage doc first (we'll keep its id if the transaction succeeds)
+      // (You can also create it inside the transaction; here we create after TX to keep serverTimestamp.)
+      // We'll do transaction first, THEN add the car doc to avoid creating a car if TX fails.
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(characterRef);
+        if (!snap.exists()) {
+          throw new Error("Character not found.");
+        }
+        const data = snap.data() || {};
 
-      // Single atomic doc update:
-      // - add car to garage
-      // - subtract money
-      // - mark this car as bought today (persists across reloads)
-      await updateDoc(characterRef, {
-        [`cars.${currentCity}`]: updatedCars,
-        "stats.money": increment(-car.value),
-        [`dealership.dailyBought.${dayKey}`]: arrayUnion(car.name),
+        // Re-check inside TX: block if already owned (FOREVER) or bought today
+        const owned = new Set<string>(
+          (data?.dealership?.ownedModels ?? []) as string[]
+        );
+        const daily = new Set<string>(
+          ((data?.dealership?.dailyBought ?? {})[dayKey] ?? []) as string[]
+        );
+        if (owned.has(car.name) || daily.has(car.name)) {
+          throw new Error("Denne bilen er allerede kjøpt.");
+        }
+
+        const currentMoney = Number(data?.stats?.money ?? 0);
+        if (currentMoney < car.value) {
+          throw new Error("Ikke nok penger.");
+        }
+
+        // Atomic updates: decrease money + mark logs
+        tx.update(characterRef, {
+          "stats.money": currentMoney - car.value,
+          // Mark bought today
+          [`dealership.dailyBought.${dayKey}`]: Array.from(
+            new Set([...(daily as any), car.name])
+          ),
+          // Mark owned ever
+          "dealership.ownedModels": Array.from(
+            new Set([...(owned as any), car.name])
+          ),
+        });
       });
 
-      // optimistic UI so it's locked immediately
-      setBoughtSet((prev) => {
-        const next = new Set(prev);
-        next.add(car.name);
-        return next;
+      // Only after TX succeeds, add the car to the garage subcollection
+      await addDoc(collection(db, "Characters", userCharacter.id, "cars"), {
+        name: car.name,
+        value: car.value,
+        hp: car.hp,
+        tier: car.tier,
+        isElectric: !!car.isElectric,
+        img: car.img ?? null,
+        city: currentCity,
+        acquiredAt: serverTimestamp(),
+        source: "dealer",
       });
 
       setMessageType("success");
       setMessage(
         <p>
-          Du kjøpte en <Item {...car} /> i {currentCity} for{" "}
-          <strong>${car.value.toLocaleString()}</strong>!
+          Du kjøpte en <Item name={car.name} tier={car.tier} /> i {currentCity}{" "}
+          for{" "}
+          <strong>
+            <i className="fa-solid fa-dollar-sign"></i>{" "}
+            {car.value.toLocaleString("nb-NO")}
+          </strong>
+          !
         </p>
       );
       setSelectedCar(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       setMessageType("failure");
-      setMessage("Noe gikk galt under kjøpet. Prøv igjen.");
+      setMessage(err?.message || "Noe gikk galt under kjøpet. Prøv igjen.");
     } finally {
       setIsBuying(false);
     }
@@ -219,24 +253,25 @@ const Cardealer = () => {
 
       <ul className="flex flex-wrap gap-2 mb-4">
         {todaysCars.map((car) => {
-          const bought = isBought(car.name);
+          const blocked = isBlocked(car.name);
+          const selected = selectedCar === car.name;
+
           return (
             <li
               key={car.name}
               className={`flex border justify-between relative ${
-                bought
+                blocked
                   ? "opacity-60 bg-neutral-800 border-neutral-800"
-                  : selectedCar === car.name
+                  : selected
                   ? "bg-neutral-900 border-neutral-600 cursor-pointer"
                   : "bg-neutral-800 border-neutral-800 cursor-pointer"
               }`}
               onClick={() => {
-                if (bought) return; // block selecting bought cars
+                if (blocked) return;
                 setSelectedCar(car.name);
               }}
             >
-              {/* small badge when bought */}
-              {bought && (
+              {blocked && (
                 <span className="absolute top-1 right-1 font-semibold uppercase px-2 py-0.5 rounded border-2 border-neutral-400 text-neutral-200 bg-neutral-800">
                   Kjøpt
                 </span>
@@ -246,18 +281,19 @@ const Cardealer = () => {
                 {car.img && (
                   <img
                     src={car.img}
+                    alt={car.name}
                     className={
                       "h-fit w-52 border-2 " +
                       (car.tier === 1
                         ? "border-neutral-400"
                         : car.tier === 2
-                        ? "border-green-400"
+                        ? "border-emerald-400"
                         : car.tier === 3
-                        ? "border-blue-400"
+                        ? "border-sky-400"
                         : car.tier === 4
-                        ? "border-purple-400"
+                        ? "border-violet-400"
                         : car.tier === 5
-                        ? "border-yellow-400"
+                        ? "border-amber-300"
                         : "")
                     }
                   />
@@ -270,13 +306,13 @@ const Cardealer = () => {
                           car.tier === 1
                             ? "text-neutral-400"
                             : car.tier === 2
-                            ? "text-green-400"
+                            ? "text-emerald-400"
                             : car.tier === 3
-                            ? "text-blue-400"
+                            ? "text-sky-400"
                             : car.tier === 4
-                            ? "text-purple-400"
+                            ? "text-violet-400"
                             : car.tier === 5
-                            ? "text-yellow-400"
+                            ? "text-amber-300"
                             : ""
                         }
                       >
@@ -287,24 +323,20 @@ const Cardealer = () => {
                   </div>
 
                   <Button
-                    disabled={
-                      isBuying ||
-                      bought ||
-                      !selectedCar ||
-                      selectedCar !== car.name
-                    }
+                    disabled={isBuying || blocked || !selected}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (!bought) handleBuy(car);
+                      if (!blocked) handleBuy(car);
                     }}
                   >
-                    {bought ? (
+                    {blocked ? (
                       "Kjøpt"
                     ) : (
                       <>
                         Kjøp{" "}
                         <strong className="text-yellow-400">
-                          ${car.value.toLocaleString()}
+                          <i className="fa-solid fa-dollar-sign"></i>{" "}
+                          {car.value.toLocaleString("nb-NO")}
                         </strong>
                       </>
                     )}

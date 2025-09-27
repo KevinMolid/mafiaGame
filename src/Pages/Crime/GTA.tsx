@@ -27,7 +27,15 @@ import { useCharacter } from "../../CharacterContext";
 import { useCooldown } from "../../CooldownContext";
 
 // Firebase
-import { getFirestore, doc, updateDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  query,
+  where,
+  getCountFromServer,
+  serverTimestamp,
+} from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../../firebaseConfig";
 
@@ -98,60 +106,56 @@ const GTA = () => {
 
     const tier = getRandomTier();
     const selectedTierCars = tiers[tier];
-
-    // Randomly select a car from the selected tier
     const randomCar =
       selectedTierCars[getRandom(0, selectedTierCars.length - 1)];
 
     try {
-      const characterRef = doc(db, "Characters", userCharacter.id);
-
-      // Get player's parking facility
+      // 1) Capacity in current city
       const facilityType =
         userCharacter.parkingFacilities?.[userCharacter.location];
-
-      // Check if the parking facility type is valid
       if (facilityType === undefined || facilityType === 0) {
         setMessageType("warning");
         setMessage("Du har ingen parkeringsplass i denne byen.");
         return;
       }
-
-      // Get the number of slots available in the parking facility
       const availableSlots = ParkingTypes[facilityType].slots;
 
-      // Get the number of cars the player already has at the current location
-      const currentCars = userCharacter.cars?.[userCharacter.location] || [];
+      // Count cars in this city under Characters/{id}/cars
+      const carsCol = collection(db, "Characters", userCharacter.id, "cars");
+      const qCity = query(carsCol, where("city", "==", userCharacter.location));
+      const countSnap = await getCountFromServer(qCity);
+      const currentCount = countSnap.data().count || 0;
 
-      // Check if the player has available slots
-      if (currentCars.length >= availableSlots) {
+      if (currentCount >= availableSlots) {
         setMessageType("warning");
         setMessage(
           <span>
             Du har ingen ledige parkeringsplasser. Gå til{" "}
             <strong>
               <Link to="/parkering">
-                <i className={`fa-solid fa-square-parking`}></i> Parkering
-              </Link>{" "}
-            </strong>
+                <i className="fa-solid fa-square-parking"></i> Parkering
+              </Link>
+            </strong>{" "}
             for å oppgradere eller frigjøre plass.
           </span>
         );
         return;
-        return;
       }
 
-      // Try to steal a car (75% chance)
+      // 2) Attempt theft (75% success)
       if (Math.random() <= 0.75) {
-        // Success: Update characters car list
-        const updatedCars = [
-          ...(userCharacter.cars?.[userCharacter.location] || []),
-          randomCar,
-        ];
+        // Normalize isElectric (legacy data might miss it)
+        const carDoc = {
+          name: randomCar.name,
+          value: randomCar.value,
+          hp: randomCar.hp,
+          tier: randomCar.tier,
+          isElectric: !!randomCar.isElectric,
+          city: userCharacter.location,
+          acquiredAt: serverTimestamp(),
+        };
 
-        await updateDoc(characterRef, {
-          [`cars.${userCharacter.location}`]: updatedCars,
-        });
+        await addDoc(carsCol, carDoc);
 
         rewardXp(userCharacter, 10);
         increaseHeat(userCharacter, userCharacter.id, 1);
@@ -159,29 +163,23 @@ const GTA = () => {
         setMessageType("success");
         setMessage(
           <p>
-            Du stjal en <Item {...randomCar} />!
+            Du stjal en <Item name={randomCar.name} tier={randomCar.tier} />!
           </p>
         );
 
-        // Start the cooldown after a GTA
         startCooldown(130, "gta", userCharacter.id);
       } else {
-        // GTA attempt failed
         setMessage(
-          `Du prøvde å stjele en bil, men feilet. Bedre lykke neste gang!`
+          "Du prøvde å stjele en bil, men feilet. Bedre lykke neste gang!"
         );
         setMessageType("failure");
-
-        // Start the cooldown after a GTA
         startCooldown(130, "gta", userCharacter.id);
 
-        // Step 4: Jail chance check based on heat level
         const jailChance = userCharacter.stats.heat;
         if (
           userCharacter.stats.heat >= 50 ||
           Math.random() * 100 < jailChance
         ) {
-          // Player failed jail check, arrest them
           arrest(userCharacter);
           setMessage("Du prøvde å stjele en bil, men ble arrestert!");
           setMessageType("failure");

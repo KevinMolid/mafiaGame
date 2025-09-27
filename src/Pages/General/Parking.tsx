@@ -13,7 +13,18 @@ import { useState, useEffect, useMemo } from "react";
 import { useCharacter } from "../../CharacterContext";
 
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  doc as fsDoc,
+  deleteDoc,
+  writeBatch,
+  getFirestore,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import firebaseConfig from "../../firebaseConfig";
 
 import ParkingTypes from "../../Data/ParkingTypes";
@@ -29,6 +40,7 @@ type SortDir = "asc" | "desc";
 const Parking = () => {
   const { userCharacter } = useCharacter();
   const [parking, setParking] = useState<number | null>(null);
+  const [cars, setCars] = useState<(Car & { id: string })[]>([]);
   const [message, setMessage] = useState<React.ReactNode>("");
   const [upgrading, setUpgrading] = useState<boolean>(false);
   const [messageType, setMessageType] = useState<
@@ -41,6 +53,7 @@ const Parking = () => {
     return null;
   }
 
+  // Load parking facility level for current city
   useEffect(() => {
     if (userCharacter?.parkingFacilities?.[userCharacter.location]) {
       const parkingSlots =
@@ -51,10 +64,24 @@ const Parking = () => {
     }
   }, [userCharacter]);
 
+  // Live subscribe to cars in current city from subcollection
+  useEffect(() => {
+    if (!userCharacter?.id || !userCharacter.location) return;
+
+    const carsCol = collection(db, "Characters", userCharacter.id, "cars");
+    const q = query(carsCol, where("city", "==", userCharacter.location));
+
+    const unsub = onSnapshot(q, (snap) => {
+      const arr = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Car) }));
+      setCars(arr);
+    });
+
+    return () => unsub();
+  }, [userCharacter?.id, userCharacter?.location]);
+
   function requestSort(key: SortKey) {
-    if (key === sortKey) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
+    if (key === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else {
       setSortKey(key);
       setSortDir("asc");
     }
@@ -101,87 +128,87 @@ const Parking = () => {
 
   const canUpgrade = parking !== null && parking < ParkingTypes.length - 1;
 
-  // Calculate the total value of cars in the current location
-  const totalValue = useMemo(() => {
-    return (
-      userCharacter.cars?.[userCharacter.location]?.reduce(
-        (acc: number, car: any) => acc + car.value,
-        0
-      ) || 0
-    );
-  }, [userCharacter]);
+  // Total value of cars in the current city (from subcollection)
+  const totalValue = useMemo(
+    () => cars.reduce((sum, c) => sum + (c.value || 0), 0),
+    [cars]
+  );
 
-  // Function to sell a car
-  const sellCar = async (carIndex: number) => {
-    const carToSell = userCharacter.cars[userCharacter.location][carIndex];
-    const updatedCars: Car[] = userCharacter.cars[
-      userCharacter.location
-    ].filter((_: any, index: number) => index !== carIndex);
-    const newMoney = userCharacter.stats.money + carToSell.value;
+  // Sorted view of cars (from subcollection)
+  const sortedCars = useMemo(() => {
+    const arr = [...cars];
+    arr.sort((a, b) => {
+      const dir = sortDir === "asc" ? 1 : -1;
+      if (sortKey === "name") return a.name.localeCompare(b.name, "nb") * dir;
+      if (sortKey === "hp") return (a.hp - b.hp) * dir;
+      return (a.value - b.value) * dir;
+    });
+    return arr;
+  }, [cars, sortKey, sortDir]);
 
-    const characterRef = doc(db, "Characters", userCharacter.id);
+  // Sell a single car: delete doc + add money
+  const sellCar = async (carId: string, carValue: number) => {
+    const characterRef = fsDoc(db, "Characters", userCharacter.id);
+    const carRef = fsDoc(db, "Characters", userCharacter.id, "cars", carId);
 
     try {
+      await deleteDoc(carRef);
       await updateDoc(characterRef, {
-        [`cars.${userCharacter.location}`]: updatedCars,
-        [`stats.money`]: newMoney,
+        "stats.money": (userCharacter.stats.money || 0) + (carValue || 0),
       });
 
       setMessageType("success");
       setMessage(
         <p>
-          Du solgte en <strong>{carToSell.name}</strong> for{" "}
+          Du solgte en <strong>bil</strong> for{" "}
           <i className="fa-solid fa-dollar-sign"></i>{" "}
-          <strong>{carToSell.value.toLocaleString("nb-NO")}</strong>.
+          <strong>{(carValue || 0).toLocaleString("nb-NO")}</strong>.
         </p>
       );
-    } catch (error) {
-      console.error("Feil ved salg av bil: ", error);
+    } catch (err) {
+      console.error("Feil ved salg av bil: ", err);
       setMessageType("failure");
-      setMessage(`En ukjent feil ddkket opp ved salg av bil.`);
+      setMessage("En ukjent feil dukket opp ved salg av bil.");
     }
   };
 
-  // Function to sell all cars
+  // Sell all cars in current city: batch delete + add money
   const sellAllCars = async () => {
-    const carsToSell = userCharacter.cars[userCharacter.location] || [];
-    const numberOfCars = carsToSell.length;
-
-    if (numberOfCars === 0) {
+    if (cars.length === 0) {
       setMessageType("info");
       setMessage("Du har ingen biler å selge.");
       return;
     }
 
-    const characterRef = doc(db, "Characters", userCharacter.id);
-    const updatedCars: Car[] = [];
-    let totalSoldValue = 0;
+    const characterRef = fsDoc(db, "Characters", userCharacter.id);
+    const batch = writeBatch(db);
 
-    for (const car of carsToSell) {
-      totalSoldValue += car.value;
+    let totalSoldValue = 0;
+    for (const car of cars) {
+      totalSoldValue += car.value || 0;
+      const carRef = fsDoc(db, "Characters", userCharacter.id, "cars", car.id);
+      batch.delete(carRef);
     }
 
     try {
+      await batch.commit();
       await updateDoc(characterRef, {
-        [`cars.${userCharacter.location}`]: updatedCars,
-        [`stats.money`]: userCharacter.stats.money + totalSoldValue,
+        "stats.money": (userCharacter.stats.money || 0) + totalSoldValue,
       });
 
       setMessageType("success");
       setMessage(
         <p>
-          Du solgte{" "}
-          <strong>
-            {numberOfCars} {numberOfCars === 1 ? "bil" : "biler"}
-          </strong>{" "}
-          for <i className="fa-solid fa-dollar-sign"></i>{" "}
+          Du solgte <strong>{cars.length}</strong>{" "}
+          {cars.length === 1 ? "bil" : "biler"} for{" "}
+          <i className="fa-solid fa-dollar-sign"></i>{" "}
           <strong>{totalSoldValue.toLocaleString("nb-NO")}</strong>.
         </p>
       );
-    } catch (error) {
-      console.error("Feil ved salg av biler: ", error);
+    } catch (err) {
+      console.error("Feil ved salg av biler: ", err);
       setMessageType("failure");
-      setMessage(`En ukjent feil dukket opp ved salg av biler.`);
+      setMessage("En ukjent feil dukket opp ved salg av biler.");
     }
   };
 
@@ -192,28 +219,6 @@ const Parking = () => {
   if (userCharacter?.inJail) {
     return <JailBox message={message} messageType={messageType} />;
   }
-
-  const carsAtLocation: Car[] =
-    userCharacter.cars?.[userCharacter.location] || [];
-
-  const sortedCars = useMemo(() => {
-    const withIndex = carsAtLocation.map((car, idx) => ({
-      ...car,
-      __idx: idx,
-    }));
-    withIndex.sort((a, b) => {
-      const dir = sortDir === "asc" ? 1 : -1;
-      if (sortKey === "name") {
-        return a.name.localeCompare(b.name, "nb") * dir;
-      }
-      if (sortKey === "hp") {
-        return (a.hp - b.hp) * dir;
-      }
-      // sortKey === "value"
-      return (a.value - b.value) * dir;
-    });
-    return withIndex;
-  }, [carsAtLocation, sortKey, sortDir]);
 
   return (
     <Main>
@@ -250,7 +255,6 @@ const Parking = () => {
             </div>
 
             <div className="flex gap-4">
-              {/* Show loading if parking is still null */}
               <p>
                 Plasser:{" "}
                 <strong className="text-neutral-200">
@@ -425,10 +429,10 @@ const Parking = () => {
               </thead>
               <tbody>
                 {sortedCars.length ? (
-                  sortedCars.map((car: any) => (
+                  sortedCars.map((car) => (
                     <tr
                       className="border bg-neutral-800 border-neutral-700"
-                      key={car.__idx}
+                      key={car.id}
                     >
                       <td className="px-2 py-1">
                         <Item name={car.name} tier={car.tier} />
@@ -440,7 +444,7 @@ const Parking = () => {
                       </td>
                       <td className="px-2 py-1">
                         <button
-                          onClick={() => sellCar(car.__idx)} // use original index
+                          onClick={() => sellCar(car.id, car.value)}
                           className="font-medium text-neutral-200 hover:text-white"
                         >
                           Selg
@@ -475,10 +479,7 @@ const Parking = () => {
               </tfoot>
             </table>
             <p>
-              <strong className="text-neutral-200">
-                {userCharacter.cars?.[userCharacter.location]?.length || 0}
-              </strong>{" "}
-              av{" "}
+              <strong className="text-neutral-200">{cars.length}</strong> av{" "}
               <strong className="text-neutral-200">
                 {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
               </strong>{" "}
