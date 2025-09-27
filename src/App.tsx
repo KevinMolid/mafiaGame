@@ -52,7 +52,7 @@ import Travel from "./Pages/General/Travel.tsx";
 import Prison from "./Pages/General/Prison.tsx";
 import Parking from "./Pages/General/Parking.tsx";
 // Gambling ______________________________________
-import Jackpot from "./Pages/Gambling/Jackpot.tsx";
+import Casino from "./Pages/Gambling/Casino.tsx";
 
 import Support from "./Pages/Support.tsx";
 import Signup from "./Pages/Signup.tsx";
@@ -323,10 +323,10 @@ function App() {
 
                           {/* Gambling */}
                           <Route
-                            path="/jackpot"
+                            path="/casino"
                             element={
                               <ProtectedRoute>
-                                <Jackpot />
+                                <Casino />
                               </ProtectedRoute>
                             }
                           />

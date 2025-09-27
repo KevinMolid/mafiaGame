@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
 import Button from "../../components/Button";
@@ -123,7 +122,7 @@ const Jackpot = () => {
   }
 
   return (
-    <Main>
+    <div>
       <H1>Jackpot</H1>
       <div className="mb-4">
         <Box>
@@ -153,7 +152,7 @@ const Jackpot = () => {
           <input
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             type="text"
-            placeholder="Skriv inn beløp"
+            placeholder="Beløp"
             value={
               betAmount === "" ? "" : Number(betAmount).toLocaleString("nb-NO")
             }
@@ -193,7 +192,7 @@ const Jackpot = () => {
           </div>
         </div>
       </div>
-    </Main>
+    </div>
   );
 };
 
