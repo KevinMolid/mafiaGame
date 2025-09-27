@@ -19,6 +19,8 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 
+import { FirebaseError } from "firebase/app";
+
 const Login = () => {
   const auth = getAuth();
   const { userData } = useAuth();
@@ -35,6 +37,38 @@ const Login = () => {
     }
   }, [userData, navigate]);
 
+  function getAuthErrorMessage(err: unknown): string {
+    if (err && typeof err === "object" && "code" in err) {
+      const code = (err as FirebaseError).code;
+
+      const M: Record<string, string> = {
+        "auth/invalid-credential": "Brukernavnet og/eller passordet er feil.",
+        "auth/user-not-found": "Fant ingen bruker med denne e-posten.",
+        "auth/wrong-password": "Brukernavnet og/eller passordet er feil.",
+        "auth/invalid-email": "Ugyldig e-postadresse.",
+        "auth/too-many-requests": "For mange forsøk. Vent litt og prøv igjen.",
+        "auth/network-request-failed":
+          "Nettverksfeil. Sjekk tilkoblingen og prøv igjen.",
+        "auth/popup-closed-by-user": "Innlogging avbrutt.",
+        "auth/cancelled-popup-request":
+          "Et annet innloggingsvindu er allerede åpent.",
+        "auth/popup-blocked":
+          "Nettleseren blokkerte innloggingsvinduet. Tillat popup-vinduer og prøv igjen.",
+        "auth/account-exists-with-different-credential":
+          "Denne e-posten er allerede knyttet til en annen innloggingsmetode.",
+        "auth/operation-not-allowed":
+          "Denne innloggingsmetoden er ikke aktivert.",
+        "auth/user-disabled": "Denne kontoen er deaktivert.",
+        "auth/weak-password": "Passordet er for svakt.",
+        "auth/email-already-in-use": "E-posten er allerede i bruk.",
+      };
+
+      if (M[code]) return M[code];
+      return `Noe gikk galt (${code}). Prøv igjen.`;
+    }
+    return "Noe gikk galt. Prøv igjen.";
+  }
+
   /* Handle input fields */
   function handleEmailChange(event: any) {
     setEmail(event.target.value);
@@ -46,9 +80,9 @@ const Login = () => {
 
   /* Handle Login*/
   function logIn() {
-    signInWithEmailAndPassword(auth, email, password).catch((error) => {
-      setError(error.code);
-    });
+    signInWithEmailAndPassword(auth, email.trim(), password)
+      .then(() => setError(""))
+      .catch((error) => setError(getAuthErrorMessage(error)));
   }
 
   /* Login with Facebook */

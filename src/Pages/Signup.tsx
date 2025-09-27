@@ -15,6 +15,8 @@ import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 
+import { FirebaseError } from "firebase/app";
+
 import firebaseConfig from "../firebaseConfig";
 
 // Initialize Firebase
@@ -37,22 +39,44 @@ const Signup = () => {
     }
   }, [userData, navigate]);
 
-  /* Handle input fields */
-  function handleEmailChange(event: any) {
-    setEmail(event.target.value);
+  function getAuthErrorMessage(err: unknown): string {
+    if (err && typeof err === "object" && "code" in err) {
+      const code = (err as FirebaseError).code;
+
+      const M: Record<string, string> = {
+        "auth/email-already-in-use": "E-posten er allerede i bruk.",
+        "auth/invalid-email": "Ugyldig e-postadresse.",
+        "auth/weak-password": "Passordet er for svakt (minst 6 tegn).",
+        "auth/operation-not-allowed":
+          "Denne innloggingsmetoden er ikke aktivert.",
+        "auth/too-many-requests": "For mange forsøk. Vent litt og prøv igjen.",
+        "auth/network-request-failed":
+          "Nettverksfeil. Sjekk tilkoblingen og prøv igjen.",
+        "auth/missing-password": "Du må skrive inn passord.",
+      };
+
+      if (M[code]) return M[code];
+      return `Noe gikk galt (${code}). Prøv igjen.`;
+    }
+    return "Noe gikk galt. Prøv igjen.";
   }
 
-  function handlePwChange(event: any) {
-    setPassword(event.target.value);
+  /* Handle input fields */
+  function handleEmailChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setEmail(e.target.value);
+  }
+
+  function handlePwChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setPassword(e.target.value);
   }
 
   /* Handle sign in */
   function signUp() {
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        // Signed up
-        const user = userCredential.user;
+    setError(""); // clear previous error
 
+    createUserWithEmailAndPassword(auth, email.trim(), password)
+      .then((userCredential) => {
+        const user = userCredential.user;
         // Add user to db
         return setDoc(doc(db, "Users", user.uid), {
           email: user.email,
@@ -63,8 +87,12 @@ const Signup = () => {
           type: "player",
         });
       })
-      .catch((error) => {
-        setError(error.code);
+      .then(() => {
+        setError("");
+        navigate("/"); // go home after successful signup
+      })
+      .catch((err) => {
+        setError(getAuthErrorMessage(err));
       });
   }
 
