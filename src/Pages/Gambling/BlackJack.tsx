@@ -3,10 +3,7 @@ import H2 from "../../components/Typography/H2";
 import H3 from "../../components/Typography/H3";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
-
 import { useCharacter } from "../../CharacterContext";
-
-// Firestore money updates
 import { getFirestore, doc, updateDoc, increment } from "firebase/firestore";
 const db = getFirestore();
 
@@ -31,7 +28,6 @@ type Rank =
   | "Q"
   | "K";
 type Card = { rank: Rank; suit: Suit };
-
 type Phase = "betting" | "dealt" | "player" | "dealer" | "settled";
 
 const SUITS: Suit[] = ["♠", "♥", "♦", "♣"];
@@ -58,7 +54,6 @@ const SUIT_SLUG: Record<Suit, "clubs" | "hearts" | "diamonds" | "spades"> = {
   "♦": "diamonds",
   "♠": "spades",
 };
-
 const RANK_SLUG: Record<Rank, string> = {
   A: "ace",
   "2": "2",
@@ -74,13 +69,11 @@ const RANK_SLUG: Record<Rank, string> = {
   Q: "queen",
   K: "king",
 };
-
 const CARD_BACK = "/images/cards/card_back.png";
 
 function cardSrc(card: Card) {
   return `/images/cards/${RANK_SLUG[card.rank]}_of_${SUIT_SLUG[card.suit]}.png`;
 }
-
 function CardImg({
   card,
   hidden = false,
@@ -102,7 +95,6 @@ function CardImg({
     />
   );
 }
-
 function HandRow({
   cards,
   hideHole = false,
@@ -118,24 +110,20 @@ function HandRow({
     </div>
   );
 }
-// -----------------------------
 
-// Build a single 52-card deck
+// -----------------------------
+// Deck / shoe
 function buildDeck(): Card[] {
   const deck: Card[] = [];
   for (const suit of SUITS) for (const rank of RANKS) deck.push({ rank, suit });
   return deck;
 }
-
-// Fisher-Yates
 function shuffle<T>(arr: T[]) {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
 }
-
-// Build a shoe with N decks
 function buildShoe(numDecks = 6): Card[] {
   const shoe: Card[] = [];
   for (let i = 0; i < numDecks; i++) shoe.push(...buildDeck());
@@ -149,10 +137,9 @@ function rawCardValue(rank: Rank): number {
   if (rank === "K" || rank === "Q" || rank === "J" || rank === "10") return 10;
   return parseInt(rank, 10);
 }
-
 function handValue(cards: Card[]) {
-  let total = 0;
-  let aces = 0;
+  let total = 0,
+    aces = 0;
   for (const c of cards) {
     if (!c) continue;
     total += rawCardValue(c.rank);
@@ -168,14 +155,49 @@ function handValue(cards: Card[]) {
       : false;
   return { total, isSoft };
 }
-
 function isBlackjack(cards: Card[]) {
   return cards.length === 2 && handValue(cards).total === 21;
 }
 
 const CUT_CARD_REMAINING = 52; // reshuffle when shoe drops below 1 deck
 
-// ---------- Persistence ----------
+// ---------- Message shape & persistence ----------
+type MessageShape =
+  | { kind: "plain"; text: string }
+  | { kind: "info"; text: string }
+  | { kind: "warning"; text: string }
+  | { kind: "win"; amount: number }
+  | { kind: "lose"; amount: number }
+  | { kind: "push"; amount: number }
+  | { kind: "dealer_bust"; amount: number }
+  | { kind: "player_bust"; amount: number };
+
+function renderMessageFromShape(shape: MessageShape): React.ReactNode {
+  const $ = (v: number) => (
+    <>
+      <i className="fa-solid fa-dollar-sign"></i> <strong>{fmt(v)}</strong>
+    </>
+  );
+  switch (shape.kind) {
+    case "win":
+      return <p>Du vant {$(shape.amount)}!</p>;
+    case "lose":
+      return <p>Du tapte {$(shape.amount)}.</p>;
+    case "push":
+      return <p>Uavgjort – du fikk {$(shape.amount)} tilbake.</p>;
+    case "dealer_bust":
+      return <p>Dealer bust! Du vant {$(shape.amount)}!</p>;
+    case "player_bust":
+      return <p>Bust! Du tapte {$(shape.amount)}.</p>;
+    case "warning":
+      return <p>{shape.text}</p>;
+    case "info":
+      return <p>{shape.text}</p>;
+    default:
+      return <p>{shape.text}</p>;
+  }
+}
+
 type PersistedState = {
   phase: Phase;
   betAmount: number | "";
@@ -183,21 +205,16 @@ type PersistedState = {
   playerHand: Card[];
   dealerHand: Card[];
   shoe: Card[];
-  message: string; // persisted version only (plain text)
+  message: string; // plain, for fallback
+  messageShape: MessageShape; // new: reconstruct JSX from this
   messageType: "success" | "failure" | "info" | "warning";
 };
 
 const STORAGE_KEY_BASE = "blackjack:state";
-
 const isCard = (c: any): c is Card =>
   !!c && RANKS.includes(c.rank) && SUITS.includes(c.suit);
-
 const isPhase = (p: any): p is Phase =>
-  p === "betting" ||
-  p === "dealt" ||
-  p === "player" ||
-  p === "dealer" ||
-  p === "settled";
+  ["betting", "dealt", "player", "dealer", "settled"].includes(p);
 
 function safeParseState(json: string | null): PersistedState | null {
   if (!json) return null;
@@ -213,7 +230,6 @@ function safeParseState(json: string | null): PersistedState | null {
       typeof obj.effectiveBet === "number" && obj.effectiveBet >= 0
         ? obj.effectiveBet
         : 0;
-
     const playerHand = Array.isArray(obj.playerHand)
       ? obj.playerHand.filter(isCard)
       : [];
@@ -223,7 +239,6 @@ function safeParseState(json: string | null): PersistedState | null {
     const shoe = Array.isArray(obj.shoe)
       ? obj.shoe.filter(isCard)
       : buildShoe(6);
-
     const messageType: PersistedState["messageType"] =
       obj.messageType === "success" ||
       obj.messageType === "failure" ||
@@ -231,8 +246,13 @@ function safeParseState(json: string | null): PersistedState | null {
       obj.messageType === "warning"
         ? obj.messageType
         : "info";
-
     const message = typeof obj.message === "string" ? obj.message : "";
+
+    // messageShape fallback
+    const messageShape: MessageShape =
+      obj.messageShape && typeof obj.messageShape === "object"
+        ? obj.messageShape
+        : { kind: "plain", text: message };
 
     return {
       phase: obj.phase,
@@ -242,20 +262,21 @@ function safeParseState(json: string | null): PersistedState | null {
       dealerHand,
       shoe,
       message,
+      messageShape,
       messageType,
     };
   } catch {
     return null;
   }
 }
-// ----------------------------------
 
+// ----------------------------------
 const BlackJack = () => {
   const { userCharacter } = useCharacter();
   const userId = userCharacter?.id ?? "anon";
   const storageKey = `${STORAGE_KEY_BASE}:${userId}`;
 
-  // Shoe in a ref (we mutate it and persist explicitly)
+  // Shoe
   const initialShoe = useMemo(() => buildShoe(6), []);
   const shoeRef = useRef<Card[]>(initialShoe);
 
@@ -269,7 +290,12 @@ const BlackJack = () => {
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "info" | "warning"
   >("info");
-  const [messageText, setMessageText] = useState<string>(""); // persisted
+  const [messageText, setMessageText] = useState<string>(""); // persisted plain
+  const [messageShape, setMessageShape] = useState<MessageShape>({
+    // persisted shape
+    kind: "plain",
+    text: "",
+  });
 
   // Money
   const userMoney = (userCharacter as any)?.stats?.money ?? 0;
@@ -287,8 +313,9 @@ const BlackJack = () => {
       setEffectiveBet(loaded.effectiveBet);
       setPlayerHand(loaded.playerHand);
       setDealerHand(loaded.dealerHand);
-      setMessage(loaded.message); // string is fine as ReactNode
+      setMessage(renderMessageFromShape(loaded.messageShape)); // ← rebuild JSX after reload
       setMessageText(loaded.message);
+      setMessageShape(loaded.messageShape);
       setMessageType(loaded.messageType);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -302,7 +329,8 @@ const BlackJack = () => {
       effectiveBet,
       playerHand,
       dealerHand,
-      message: messageText, // always the plain version
+      message: messageText,
+      messageShape, // persist the shape
       messageType,
       shoe: shoeRef.current,
       ...overrides,
@@ -314,21 +342,24 @@ const BlackJack = () => {
     }
   };
 
-  // Helper to set rich UI message + plain persisted text
-  const setMsg = (node: React.ReactNode, plain: string) => {
+  // Helper to set rich UI message + plain + shape (shape drives reload rendering)
+  const setMsg = (
+    node: React.ReactNode,
+    plain: string,
+    shape: MessageShape
+  ) => {
     setMessage(node);
     setMessageText(plain);
-    persistNow({ message: plain });
+    setMessageShape(shape);
+    persistNow({ message: plain, messageShape: shape });
   };
 
   // Draw N cards and persist the shoe immediately
   const drawFromShoe = (n: number): Card[] => {
     let pool = shoeRef.current;
-
     if (!pool || pool.length < n || pool.length < CUT_CARD_REMAINING) {
       pool = buildShoe(6);
     }
-
     const next = [...pool];
     const taken: Card[] = [];
     for (let i = 0; i < n; i++) {
@@ -341,7 +372,6 @@ const BlackJack = () => {
       const c = next.pop();
       if (c) taken.push(c);
     }
-
     shoeRef.current = next;
     persistNow({ shoe: next });
     return taken;
@@ -354,7 +384,7 @@ const BlackJack = () => {
     persistNow({ betAmount: next });
   };
 
-  // Reset state for a new hand (keep shoe; reshuffle if low)
+  // Reset state for a new hand
   const resetRound = (reshuffleIfNeeded = true) => {
     if (reshuffleIfNeeded && shoeRef.current.length < CUT_CARD_REMAINING) {
       shoeRef.current = buildShoe(6);
@@ -364,6 +394,7 @@ const BlackJack = () => {
     setEffectiveBet(0);
     setMessage("");
     setMessageText("");
+    setMessageShape({ kind: "plain", text: "" });
     setMessageType("info");
     setPhase("betting");
     persistNow({
@@ -371,6 +402,7 @@ const BlackJack = () => {
       dealerHand: [],
       effectiveBet: 0,
       message: "",
+      messageShape: { kind: "plain", text: "" },
       messageType: "info",
       phase: "betting",
       shoe: shoeRef.current,
@@ -389,7 +421,6 @@ const BlackJack = () => {
       return false;
     }
   };
-
   const credit = async (amount: number) => {
     if (!characterRef) return;
     try {
@@ -406,7 +437,6 @@ const BlackJack = () => {
       return;
     }
     let nextMessageType: PersistedState["messageType"] = messageType;
-
     if (outcome === "push") {
       await credit(effectiveBet);
       nextMessageType = "info";
@@ -425,22 +455,35 @@ const BlackJack = () => {
   const deal = async () => {
     if (!characterRef) {
       setMessageType("warning");
-      setMsg("Du må være logget inn.", "Du må være logget inn.");
+      setMsg(<p>Du må være logget inn.</p>, "Du må være logget inn.", {
+        kind: "warning",
+        text: "Du må være logget inn.",
+      });
       return;
     }
     if (betAmount === "" || betAmount <= 0) {
       setMessageType("warning");
-      setMsg("Skriv inn en gyldig innsats.", "Skriv inn en gyldig innsats.");
+      setMsg(
+        <p>Skriv inn en gyldig innsats.</p>,
+        "Skriv inn en gyldig innsats.",
+        { kind: "warning", text: "Skriv inn en gyldig innsats." }
+      );
       return;
     }
     if ((betAmount as number) < 100) {
       setMessageType("warning");
-      setMsg("Du må satse minst $100!", "Du må satse minst $100!");
+      setMsg(<p>Du må satse minst $100!</p>, "Du må satse minst $100!", {
+        kind: "warning",
+        text: "Du må satse minst $100!",
+      });
       return;
     }
     if (userMoney < (betAmount as number)) {
       setMessageType("warning");
-      setMsg("Du har ikke nok penger.", "Du har ikke nok penger.");
+      setMsg(<p>Du har ikke nok penger.</p>, "Du har ikke nok penger.", {
+        kind: "warning",
+        text: "Du har ikke nok penger.",
+      });
       return;
     }
 
@@ -448,8 +491,12 @@ const BlackJack = () => {
     if (!debited) {
       setMessageType("failure");
       setMsg(
+        <p>Klarte ikke å reservere innsatsen. Prøv igjen.</p>,
         "Klarte ikke å reservere innsatsen. Prøv igjen.",
-        "Klarte ikke å reservere innsatsen. Prøv igjen."
+        {
+          kind: "plain",
+          text: "Klarte ikke å reservere innsatsen. Prøv igjen.",
+        }
       );
       return;
     }
@@ -475,6 +522,7 @@ const BlackJack = () => {
       effectiveBet: nextEffective,
       phase: "dealt",
       message: "",
+      messageShape: { kind: "plain", text: "" },
       messageType: "info",
     });
 
@@ -486,16 +534,36 @@ const BlackJack = () => {
         const plain = `Uavgjort: Begge har Blackjack. Du fikk ${fmt(
           nextEffective
         )} tilbake.`;
-        setMsg(plain, plain);
+        setMsg(
+          <p>
+            Uavgjort: Begge har Blackjack. Du fikk{" "}
+            <strong>{fmt(nextEffective)}</strong> tilbake.
+          </p>,
+          plain,
+          { kind: "push", amount: nextEffective }
+        );
         await settleImmediate("push");
       } else if (playerBJ) {
         const win = Math.floor((betAmount as number) * 1.5);
         const plain = `Blackjack! Du vinner ${fmt(win)} (3:2).`;
-        setMsg(plain, plain);
+        setMsg(
+          <p>
+            Blackjack! Du vinner <strong>{fmt(win)}</strong> (3:2).
+          </p>,
+          plain,
+          { kind: "win", amount: win }
+        );
         await settleImmediate("playerBJ");
       } else {
         const plain = `Dealer har Blackjack. Du tapte ${fmt(nextEffective)}.`;
-        setMsg(plain, plain);
+        setMsg(
+          <p>
+            Dealer har Blackjack. Du tapte <strong>{fmt(nextEffective)}</strong>
+            .
+          </p>,
+          plain,
+          { kind: "lose", amount: nextEffective }
+        );
         await settleImmediate("dealerBJ");
       }
       return;
@@ -504,8 +572,9 @@ const BlackJack = () => {
     setPhase("player");
     setMessageType("info");
     setMsg(
+      <p>Din tur: Trekk kort / Stå / Doble innsats</p>,
       "Din tur: Trekk kort / Stå / Doble innsats",
-      "Din tur: Trekk kort / Stå / Doble innsats"
+      { kind: "info", text: "Din tur: Trekk kort / Stå / Doble innsats" }
     );
   };
 
@@ -519,6 +588,7 @@ const BlackJack = () => {
     let nextType: PersistedState["messageType"] = messageType;
     let plain = messageText;
     let node: React.ReactNode = message;
+    let shape = messageShape;
 
     const { total } = handValue(next);
     if (total > 21) {
@@ -530,10 +600,12 @@ const BlackJack = () => {
           <strong>{fmt(effectiveBet)}</strong>.
         </p>
       );
+      shape = { kind: "player_bust", amount: effectiveBet };
       nextPhase = "settled";
       setMessageType(nextType);
       setMessage(node);
       setMessageText(plain);
+      setMessageShape(shape);
       setPhase(nextPhase);
     }
 
@@ -541,6 +613,7 @@ const BlackJack = () => {
       playerHand: next,
       phase: nextPhase,
       message: plain,
+      messageShape: shape,
       messageType: nextType,
     });
   };
@@ -557,8 +630,9 @@ const BlackJack = () => {
     if (playerHand.length !== 2) {
       setMessageType("warning");
       setMsg(
+        <p>Du kan bare dobele på to kort.</p>,
         "Du kan bare dobele på to kort.",
-        "Du kan bare dobele på to kort."
+        { kind: "warning", text: "Du kan bare dobele på to kort." }
       );
       return;
     }
@@ -567,8 +641,9 @@ const BlackJack = () => {
     if (userMoney < (betAmount as number)) {
       setMessageType("warning");
       setMsg(
+        <p>Du har ikke nok penger til å doble.</p>,
         "Du har ikke nok penger til å doble.",
-        "Du har ikke nok penger til å doble."
+        { kind: "warning", text: "Du har ikke nok penger til å doble." }
       );
       return;
     }
@@ -576,8 +651,9 @@ const BlackJack = () => {
     if (!debited) {
       setMessageType("failure");
       setMsg(
+        <p>Klarte ikke å reservere doblingsbeløpet.</p>,
         "Klarte ikke å reservere doblingsbeløpet.",
-        "Klarte ikke å reservere doblingsbeløpet."
+        { kind: "plain", text: "Klarte ikke å reservere doblingsbeløpet." }
       );
       return;
     }
@@ -593,6 +669,7 @@ const BlackJack = () => {
     let nextType: PersistedState["messageType"] = messageType;
     let plain = messageText;
     let node: React.ReactNode = message;
+    let shape = messageShape;
 
     const { total } = handValue(next);
     if (total > 21) {
@@ -605,10 +682,12 @@ const BlackJack = () => {
           <strong>{fmt(nextEffective)}</strong>.
         </p>
       );
+      shape = { kind: "player_bust", amount: nextEffective };
       nextPhase = "settled";
       setMessageType(nextType);
       setMessage(node);
       setMessageText(plain);
+      setMessageShape(shape);
       setPhase(nextPhase);
     } else {
       setPhase("dealer");
@@ -619,6 +698,7 @@ const BlackJack = () => {
       playerHand: next,
       phase: nextPhase,
       message: plain,
+      messageShape: shape,
       messageType: nextType,
     });
 
@@ -635,9 +715,7 @@ const BlackJack = () => {
       if (hv.total < 17) {
         const [c] = drawFromShoe(1);
         d = [...d, c];
-      } else {
-        break;
-      }
+      } else break;
     }
     setDealerHand(d);
 
@@ -646,10 +724,9 @@ const BlackJack = () => {
 
     let nextPhase: Phase = "settled";
     let nextType: PersistedState["messageType"] = "info";
-
-    // Two parallel message forms: node for UI, plain for storage
     let nextMsgNode: React.ReactNode = "";
     let nextMsgPlain = "";
+    let nextShape: MessageShape = { kind: "plain", text: "" };
 
     if (!characterRef) {
       setPhase(nextPhase);
@@ -660,53 +737,39 @@ const BlackJack = () => {
     if (dv > 21) {
       await credit(effectiveBet * 2);
       nextType = "success";
+      nextShape = { kind: "dealer_bust", amount: effectiveBet };
       nextMsgPlain = `Dealer bust! Du vant ${fmt(effectiveBet)}!`;
-      nextMsgNode = (
-        <p>
-          Dealer bust! Du vant <i className="fa-solid fa-dollar-sign"></i>{" "}
-          <strong>{fmt(effectiveBet)}</strong>!
-        </p>
-      );
+      nextMsgNode = renderMessageFromShape(nextShape);
     } else if (p > dv) {
       await credit(effectiveBet * 2);
       nextType = "success";
+      nextShape = { kind: "win", amount: effectiveBet };
       nextMsgPlain = `Du vant ${fmt(effectiveBet)}!`;
-      nextMsgNode = (
-        <p>
-          Du vant <i className="fa-solid fa-dollar-sign"></i>{" "}
-          <strong>{fmt(effectiveBet)}</strong>!
-        </p>
-      );
+      nextMsgNode = renderMessageFromShape(nextShape);
     } else if (p < dv) {
       nextType = "failure";
+      nextShape = { kind: "lose", amount: effectiveBet };
       nextMsgPlain = `Du tapte ${fmt(effectiveBet)}.`;
-      nextMsgNode = (
-        <p>
-          Du tapte <i className="fa-solid fa-dollar-sign"></i>{" "}
-          <strong>{fmt(effectiveBet)}</strong>.
-        </p>
-      );
+      nextMsgNode = renderMessageFromShape(nextShape);
     } else {
       await credit(effectiveBet);
       nextType = "info";
+      nextShape = { kind: "push", amount: effectiveBet };
       nextMsgPlain = `Uavgjort – du fikk ${fmt(effectiveBet)} tilbake.`;
-      nextMsgNode = (
-        <p>
-          Uavgjort – du fikk <i className="fa-solid fa-dollar-sign"></i>{" "}
-          <strong>{fmt(effectiveBet)}</strong> tilbake.
-        </p>
-      );
+      nextMsgNode = renderMessageFromShape(nextShape);
     }
 
     setMessageType(nextType);
     setMessage(nextMsgNode);
     setMessageText(nextMsgPlain);
+    setMessageShape(nextShape);
     setPhase(nextPhase);
 
     persistNow({
       dealerHand: d,
       phase: nextPhase,
-      message: nextMsgPlain, // persist plain text
+      message: nextMsgPlain,
+      messageShape: nextShape,
       messageType: nextType,
     });
   };
@@ -714,7 +777,6 @@ const BlackJack = () => {
   const canDouble = phase === "player" && playerHand.length === 2;
   const canDeal = phase === "betting";
   const canAct = phase === "player";
-
   const playerVal = handValue(playerHand).total;
 
   return (
@@ -723,7 +785,6 @@ const BlackJack = () => {
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
-      {/* Table */}
       <div className="rounded border border-neutral-700 p-4 bg-neutral-900">
         {dealerHand.length !== 0 && (
           <div>
@@ -759,7 +820,8 @@ const BlackJack = () => {
             </div>
           </div>
         )}
-        {/* Bet input (only editable in betting phase) */}
+
+        {/* Bet input */}
         {phase === "betting" && (
           <div>
             <H3>Hvor mye vil du satse?</H3>
