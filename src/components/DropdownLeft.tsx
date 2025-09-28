@@ -141,6 +141,10 @@ const DropdownLeft = () => {
             Produksjon
           </DropdownOption>
 
+          <DropdownOption to="hacking" icon="laptop" onClick={toggleActions}>
+            Hacking
+          </DropdownOption>
+
           <hr className="border-neutral-700 my-2 sm:hidden" />
 
           <DropdownOption

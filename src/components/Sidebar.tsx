@@ -122,6 +122,10 @@ const Sidebar = () => {
         <SidebarLink to="produksjon" icon="industry">
           Produksjon
         </SidebarLink>
+
+        <SidebarLink to="hacking" icon="laptop">
+          Hacking
+        </SidebarLink>
         <hr className="border-neutral-600" />
 
         <SidebarLink to="fengsel" icon="handcuffs">

@@ -65,6 +65,7 @@ import Dead from "./Pages/Dead.tsx";
 // City specific
 import StreetRacing from "./Pages/StreetRacing.tsx";
 import Production from "./Pages/Production/Production.tsx";
+import Hacking from "./Pages/Hacking.tsx";
 
 // Protected routes
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
@@ -347,6 +348,15 @@ function App() {
                             element={
                               <ProtectedRoute>
                                 <Production />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="/hacking"
+                            element={
+                              <ProtectedRoute>
+                                <Hacking />
                               </ProtectedRoute>
                             }
                           />
