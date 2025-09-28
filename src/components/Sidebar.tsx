@@ -118,6 +118,10 @@ const Sidebar = () => {
         <SidebarLink to="streetracing" icon="flag-checkered">
           Streetracing
         </SidebarLink>
+
+        <SidebarLink to="produksjon" icon="industry">
+          Produksjon
+        </SidebarLink>
         <hr className="border-neutral-600" />
 
         <SidebarLink to="fengsel" icon="handcuffs">

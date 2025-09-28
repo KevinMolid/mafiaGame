@@ -133,6 +133,14 @@ const DropdownLeft = () => {
             Streetracing
           </DropdownOption>
 
+          <DropdownOption
+            to="produksjon"
+            icon="industry"
+            onClick={toggleActions}
+          >
+            Produksjon
+          </DropdownOption>
+
           <hr className="border-neutral-700 my-2 sm:hidden" />
 
           <DropdownOption

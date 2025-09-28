@@ -1,6 +1,7 @@
 // Components
 import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
+import H2 from "../../components/Typography/H2";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
@@ -99,42 +100,52 @@ const Travel = () => {
           <strong className="text-white">{targetLocation}</strong>?
         </p>
       )}
-      <div className="relative my-4 max-w-[800px]">
-        <img src="WorldMap3.png" alt="World Map" className="w-full h-auto" />
-        {locations.map((location) => (
-          <div
-            key={location.name}
-            style={{
-              position: "absolute",
-              top: location.coordinates.top,
-              left: location.coordinates.left,
-              width: "16px",
-              height: "16px",
-              borderRadius: "50%",
-              backgroundColor:
-                userCharacter.location === location.name
-                  ? "#40b3d2"
-                  : targetLocation === location.name
-                  ? "#7fff00"
-                  : hoveredLocation === location.name
-                  ? "#ffffff"
-                  : "#cccccc",
-              cursor: "pointer",
-              zIndex: 1,
-              transform: "translate(-50%, -50%)",
-              transition: "background-color 0.3s ease",
-            }}
-            onMouseEnter={() => setHoveredLocation(location.name)}
-            onMouseLeave={() => setHoveredLocation(null)}
-            title={location.name}
-            onClick={() => {
-              if (userCharacter.location !== location.name) {
-                setTargetLocation(location.name);
-              }
-            }}
-          />
-        ))}
+
+      <div className="flex flex-wrap gap-8">
+        {/* Map */}
+        <div className="relative my-4 max-w-[800px]">
+          <img src="WorldMap3.png" alt="World Map" className="w-full h-auto" />
+          {locations.map((location) => (
+            <div
+              key={location.name}
+              style={{
+                position: "absolute",
+                top: location.coordinates.top,
+                left: location.coordinates.left,
+                width: "16px",
+                height: "16px",
+                borderRadius: "50%",
+                backgroundColor:
+                  userCharacter.location === location.name
+                    ? "#40b3d2"
+                    : targetLocation === location.name
+                    ? "#7fff00"
+                    : hoveredLocation === location.name
+                    ? "#ffffff"
+                    : "#cccccc",
+                cursor: "pointer",
+                zIndex: 1,
+                transform: "translate(-50%, -50%)",
+                transition: "background-color 0.3s ease",
+              }}
+              onMouseEnter={() => setHoveredLocation(location.name)}
+              onMouseLeave={() => setHoveredLocation(null)}
+              title={location.name}
+              onClick={() => {
+                if (userCharacter.location !== location.name) {
+                  setTargetLocation(location.name);
+                }
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Privatfly */}
+        <div>
+          <H2>Privatfly</H2>
+        </div>
       </div>
+
       {targetLocation && (
         <div className="flex items-center gap-4">
           <Button onClick={handleTravel}>

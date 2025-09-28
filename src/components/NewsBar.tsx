@@ -29,7 +29,7 @@ const NewsBar = () => {
     const q = query(
       collection(db, "GameEvents"),
       orderBy("timestamp", "desc"),
-      limit(3)
+      limit(10)
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -199,7 +199,7 @@ const NewsBar = () => {
   };
 
   return (
-    <div className="news-bar py-1 border-b bg-neutral-900 border-neutral-600 text-stone-400 text-sm">
+    <div className="news-bar py-1 border-b bg-neutral-900 border-neutral-600 text-stone-400 text-xs">
       {renderEventList(events)}
       {/* Duplicate the list for seamless scrolling */}
       {renderEventList(events, true)}
