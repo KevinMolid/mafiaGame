@@ -83,11 +83,11 @@ const DropdownLeft = () => {
           >
             <div>Kriminalitet</div>
             {cooldowns["crime"] > 0 ? (
-              <div className="text-neutral-200 font-medium pr-2">
+              <div className="text-neutral-200 font-medium pr-4">
                 {cooldowns["crime"]}
               </div>
             ) : (
-              <div className="text-green-400 pr-2">
+              <div className="text-green-400 pr-4">
                 <i className="fa-solid fa-check"></i>
               </div>
             )}
@@ -96,11 +96,11 @@ const DropdownLeft = () => {
           <DropdownOption to="/biltyveri" icon="car" onClick={toggleActions}>
             <div>Biltyveri</div>
             {cooldowns["gta"] > 0 ? (
-              <div className="text-neutral-200 font-medium pr-2">
+              <div className="text-neutral-200 font-medium pr-4">
                 {cooldowns["gta"]}
               </div>
             ) : (
-              <div className="text-green-400 pr-2">
+              <div className="text-green-400 pr-4">
                 <i className="fa-solid fa-check"></i>
               </div>
             )}
@@ -109,11 +109,11 @@ const DropdownLeft = () => {
           <DropdownOption to="/ran" icon="sack-dollar" onClick={toggleActions}>
             <div>Ran spiller</div>
             {cooldowns["robbery"] > 0 ? (
-              <div className="text-neutral-200 font-medium pr-2">
+              <div className="text-neutral-200 font-medium pr-4">
                 {cooldowns["robbery"]}
               </div>
             ) : (
-              <div className="text-green-400 pr-2">
+              <div className="text-green-400 pr-4">
                 <i className="fa-solid fa-check"></i>
               </div>
             )}
