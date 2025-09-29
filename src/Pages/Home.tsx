@@ -5,7 +5,8 @@ import H2 from "../components/Typography/H2";
 import Equipment from "../components/Equipment";
 import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
-import Box from "../components/Box";
+
+import NewsFeed from "../components/NewsFeed";
 
 import { getCurrentRank } from "../Functions/RankFunctions";
 
@@ -57,59 +58,60 @@ const Home = () => {
   return (
     <Main img="MafiaBg">
       <H1>Hovedkvarter</H1>
-
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
-
-      <div className="flex gap-4 mb-2">
-        <Link to={`/profil/${userCharacter.id}`}>
-          <img
-            className="size-[160px] object-cover mb-2 hover:cursor-pointer"
-            src={userCharacter.img || "/default.jpg"}
-            alt="Profile picture"
-          />
-        </Link>
-        <div>
-          <p>
-            <Username character={userCharacter} />
-          </p>
-          <Link to="/spillguide">
-            <p>{getCurrentRank(userCharacter.stats.xp)}</p>
+      {/* Flexbox with wrap*/}
+      <div className="flex flex-wrap items-end gap-x-6 gap-y-4 mb-6">
+        {/* Profile picture and user info */}
+        <div className="flex items-end gap-4 mr-2">
+          <Link to={`/profil/${userCharacter.id}`}>
+            <img
+              className="size-[160px] object-cover hover:cursor-pointer "
+              src={userCharacter.img || "/default.jpg"}
+              alt="Profile picture"
+            />
           </Link>
-          <Link to="/bank">
+          <div>
             <p>
-              Penger: <i className="fa-solid fa-dollar-sign"></i>{" "}
-              {userCharacter.stats.money.toLocaleString("nb-NO")}
+              <Username character={userCharacter} />
             </p>
-          </Link>
-          <Link to="/bank">
+            <Link to="/spillguide">
+              <p>{getCurrentRank(userCharacter.stats.xp)}</p>
+            </Link>
+            <Link to="/bank">
+              <p>
+                Penger: <i className="fa-solid fa-dollar-sign"></i>{" "}
+                {userCharacter.stats.money.toLocaleString("nb-NO")}
+              </p>
+            </Link>
+            <Link to="/bank">
+              <p>
+                Bank: <i className="fa-solid fa-dollar-sign"></i>{" "}
+                {userCharacter.stats.bank
+                  ? userCharacter.stats.bank.toLocaleString("nb-NO")
+                  : "0"}
+              </p>
+            </Link>
             <p>
-              Bank: <i className="fa-solid fa-dollar-sign"></i>{" "}
-              {userCharacter.stats.bank
-                ? userCharacter.stats.bank.toLocaleString("nb-NO")
-                : "0"}
+              Familie:{" "}
+              {userCharacter.familyName ? (
+                <Link to={`familie/profil/${userCharacter.familyId}`}>
+                  <strong className="text-neutral-200 hover:underline">
+                    {userCharacter.familyName}
+                  </strong>
+                </Link>
+              ) : (
+                <Link to="/familie">Ingen familie</Link>
+              )}
             </p>
-          </Link>
-          <p>
-            Familie:{" "}
-            {userCharacter.familyName ? (
-              <Link to={`familie/profil/${userCharacter.familyId}`}>
-                <strong className="text-neutral-200 hover:underline">
-                  {userCharacter.familyName}
-                </strong>
-              </Link>
-            ) : (
-              <Link to="/familie">Ingen familie</Link>
-            )}
-          </p>
+          </div>
         </div>
-      </div>
 
-      {userCharacter ? (
-        <div className="flex gap-4 flex-wrap">
-          {/* Stats */}
-          <Box>
-            <H2>Status</H2>
-            <div className="flex flex-col lg:flex-row flex-wrap gap-4">
+        {/* Stats */}
+        <div>
+          <H2>Status</H2>
+          <div className="flex flex-col flex-wrap gap-4">
+            {/* Status bars */}
+            <div className="flex flex-row flex-wrap gap-2">
               <div className="flex flex-col gap-1">
                 <p>
                   Helse:{" "}
@@ -117,7 +119,7 @@ const Home = () => {
                     {healthPercentage}%
                   </strong>
                 </p>
-                <div className="h-5 min-w-52 w-full bg-neutral-700 grid grid-cols-1">
+                <div className="h-5 min-w-48 w-full bg-neutral-700 grid grid-cols-1">
                   <div
                     className="h-5 bg-green-500 transition-all duration-300 flex justify-center items-center col-start-1 row-start-1"
                     style={{ width: `${healthPercentage}%` }}
@@ -137,7 +139,7 @@ const Home = () => {
                     {progress.toFixed(2)}%
                   </strong>
                 </p>
-                <div className="bg-neutral-700 h-5 min-w-52 w-full grid grid-cols-1">
+                <div className="bg-neutral-700 h-5 min-w-48 w-full grid grid-cols-1">
                   <div
                     className="h-5 bg-slate-400 transition-all duration-300 col-start-1 row-start-1"
                     style={{ width: `${progress}%` }}
@@ -157,7 +159,7 @@ const Home = () => {
                     {heatPercentage}%
                   </strong>
                 </p>
-                <div className="bg-neutral-700 h-5 min-w-52 w-full grid grid-cols-1">
+                <div className="bg-neutral-700 h-5 min-w-48 w-full grid grid-cols-1">
                   <div
                     className={
                       "h-5 transition-all duration-300 col-start-1 row-start-1 " +
@@ -176,18 +178,27 @@ const Home = () => {
                   </div>
                 </div>
               </div>
-
-              <p className="w-full">
-                Ranket i dag:{" "}
-                <strong className="text-neutral-200">
-                  {dailyXp.xpToday.toLocaleString("nb-NO")} xp
-                </strong>
-              </p>
             </div>
-          </Box>
 
-          {/* Reputation */}
-          {/*<Box>
+            <p className="w-full">
+              Ranket i dag:{" "}
+              <strong className="text-neutral-200">
+                {dailyXp.xpToday.toLocaleString("nb-NO")} xp
+              </strong>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <H2>Nyheter</H2>
+        <NewsFeed />
+      </div>
+
+      {/* Equipment and stash */}
+      <div className="flex flex-wrap gap-x-6 gap-y-4">
+        {/* Reputation */}
+        {/*<Box>
             <H2>Innflytelse</H2>
             <div className="flex gap-x-4 flex-wrap">
               <p>
@@ -217,33 +228,30 @@ const Home = () => {
             </div>
           </Box>*/}
 
-          {/* Equipment */}
-          <div className="border border-neutral-500 mb-4 grid grid-cols-1 w-fit">
-            <div className="col-start-1 row-start-1 z-10 p-4">
-              <H2>Utstyr</H2>
-            </div>
-            <div className="col-start-1 row-start-1">
-              <Equipment />
-            </div>
+        {/* Equipment */}
+        <div className="border border-neutral-500 grid grid-cols-1 w-fit">
+          <div className="col-start-1 row-start-1 z-10 p-4">
+            <H2>Utstyr</H2>
           </div>
-
-          {/* Bags */}
-          <Box>
-            <H2>Eiendeler</H2>
-            <ul className="flex gap-1 flex-wrap">
-              {bags.map((bag, index) => {
-                return (
-                  <li key={bag + index}>
-                    <div className="w-14 h-14 border-2 border-neutral-600 rounded-xl"></div>
-                  </li>
-                );
-              })}
-            </ul>
-          </Box>
+          <div className="col-start-1 row-start-1">
+            <Equipment />
+          </div>
         </div>
-      ) : (
-        <p>Ingen spiller funnet.</p>
-      )}
+
+        {/* Bags */}
+        <div>
+          <H2>Eiendeler</H2>
+          <ul className="grid grid-cols-4 gap-1 ">
+            {bags.map((bag, index) => {
+              return (
+                <li key={bag + index}>
+                  <div className="w-14 h-14 border border-neutral-600 rounded-xl"></div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
     </Main>
   );
 };
