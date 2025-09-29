@@ -1,7 +1,8 @@
 import Username from "./Typography/Username";
 import Familyname from "./Typography/Familyname";
+import ScrollArea from "./ScrollArea";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   getFirestore,
   collection,
@@ -19,10 +20,19 @@ type EventType = {
   victimName: string;
   eventType: string;
   timestamp: any;
+  // Optional fields for specific events:
+  resetById?: string;
+  resetByName?: string;
+  leaderId?: string;
+  leaderName?: string;
+  familyId?: string;
+  familyName?: string;
 };
 
 const NewsFeed = () => {
   const [events, setEvents] = useState<EventType[]>([]);
+  const listRef = useRef<HTMLUListElement>(null);
+  const firstLoadRef = useRef(true);
 
   useEffect(() => {
     const q = query(
@@ -32,21 +42,9 @@ const NewsFeed = () => {
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const eventList: Array<{
-        id: string;
-        victimId: string;
-        victimName: string;
-        eventType: string;
-        timestamp: any;
-      }> = [];
+      const eventList: EventType[] = [];
       querySnapshot.forEach((doc) => {
-        eventList.push({ id: doc.id, ...doc.data() } as {
-          id: string;
-          victimId: string;
-          victimName: string;
-          eventType: string;
-          timestamp: any;
-        });
+        eventList.push({ id: doc.id, ...doc.data() } as EventType);
       });
       setEvents(eventList);
     });
@@ -54,11 +52,37 @@ const NewsFeed = () => {
     return () => unsubscribe();
   }, []);
 
-  // Helper function to render the event list
+  const scrollToBottom = (behavior: ScrollBehavior = "auto") => {
+    const el = listRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior });
+  };
+
+  const isNearBottom = () => {
+    const el = listRef.current;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 40; // px threshold
+  };
+
+  // Scroll to bottom on first data paint; afterward, only if user is near bottom
+  useEffect(() => {
+    if (events.length === 0) return;
+
+    if (firstLoadRef.current) {
+      firstLoadRef.current = false;
+      requestAnimationFrame(() => scrollToBottom("auto"));
+      return;
+    }
+
+    if (isNearBottom()) {
+      requestAnimationFrame(() => scrollToBottom("smooth"));
+    }
+  }, [events.length]);
+
   const renderEventList = (events: EventType[]) => {
     return (
-      <ul className="max-h-24 overflow-auto w-max pr-4">
-        {events.map((event: any) => {
+      <ScrollArea className="max-h-24 w-max" contentClassName="max-h-24">
+        {events.map((event) => {
           // Handle missing or invalid timestamp cases
           let formattedTime = "Ukjent tid";
           if (event.timestamp && typeof event.timestamp.toDate === "function") {
@@ -132,8 +156,8 @@ const NewsFeed = () => {
                   Spillet ble restartet av{" "}
                   <Username
                     character={{
-                      id: event.resetById,
-                      username: event.resetByName,
+                      id: event.resetById || "",
+                      username: event.resetByName || "Ukjent",
                     }}
                   />
                 </small>
@@ -148,15 +172,15 @@ const NewsFeed = () => {
                 <small className="mr-1 lg:mr-4 text-xs lg:text-sm">
                   <Username
                     character={{
-                      id: event.leaderId,
-                      username: event.leaderName,
+                      id: event.leaderId || "",
+                      username: event.leaderName || "Ukjent",
                     }}
                   />{" "}
                   opprettet familien{" "}
                   <Familyname
                     family={{
-                      id: event.familyId,
-                      name: event.familyName,
+                      id: event.familyId || "",
+                      name: event.familyName || "Ukjent",
                     }}
                   />
                 </small>
@@ -171,15 +195,15 @@ const NewsFeed = () => {
                 <small className="mr-1 lg:mr-4 text-xs lg:text-sm">
                   <Username
                     character={{
-                      id: event.leaderId,
-                      username: event.leaderName,
+                      id: event.leaderId || "",
+                      username: event.leaderName || "Ukjent",
                     }}
                   />{" "}
                   la ned familien{" "}
                   <Familyname
                     family={{
-                      id: event.familyId,
-                      name: event.familyName,
+                      id: event.familyId || "",
+                      name: event.familyName || "Ukjent",
                     }}
                   />
                 </small>
@@ -188,13 +212,15 @@ const NewsFeed = () => {
                 </small>
               </li>
             );
-          } else return null;
+          } else {
+            return null;
+          }
         })}
-      </ul>
+      </ScrollArea>
     );
   };
 
-  return <div className="">{renderEventList(events)}</div>;
+  return <div>{renderEventList(events)}</div>;
 };
 
 export default NewsFeed;
