@@ -8,7 +8,7 @@ import InfoBox from "../components/InfoBox";
 
 import { useCharacter } from "../CharacterContext";
 
-import { format } from "date-fns";
+import timeAgo from "../Functions/TimeFunctions";
 
 // React
 import { useEffect, useRef, useState } from "react";
@@ -319,11 +319,10 @@ const Forum = () => {
                       <small>
                         <i className="fa-regular fa-clock"></i>{" "}
                         {thread.createdAt
-                          ? format(
+                          ? timeAgo(
                               typeof thread.createdAt === "string"
                                 ? new Date(thread.createdAt)
-                                : thread.createdAt.toDate(),
-                              "dd.MM.yyyy - HH:mm"
+                                : thread.createdAt.toDate()
                             )
                           : "Sending..."}
                       </small>
@@ -352,9 +351,10 @@ const Forum = () => {
                             }}
                           />{" "}
                           {lastReplies[thread.id]?.createdAt
-                            ? format(
-                                lastReplies[thread.id].createdAt.toDate(),
-                                "dd.MM.yyyy - HH:mm"
+                            ? timeAgo(
+                                typeof thread.createdAt === "string"
+                                  ? new Date(thread.createdAt).getTime()
+                                  : thread.createdAt.toDate().getTime()
                               )
                             : "No replies"}
                         </small>
@@ -401,7 +401,7 @@ const Forum = () => {
                 value={newThreadContent}
                 spellCheck={false}
                 onChange={(e) => setNewThreadContent(e.target.value)}
-                className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none"
+                className="bg-transparent text-white placeholder-neutral-400 w-full resize-none"
                 maxLength={MAX_CONTENT}
               />
 

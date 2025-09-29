@@ -13,6 +13,8 @@ import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 
 import { useCharacter } from "../CharacterContext";
 
+import timeAgo from "../Functions/TimeFunctions";
+
 import {
   getFirestore,
   doc,
@@ -34,8 +36,6 @@ import firebaseConfig from "../firebaseConfig";
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
-import { format } from "date-fns";
 
 // Lokale grenser (ikke importer fra Forum.tsx)
 const MAX_TITLE = 120;
@@ -641,36 +641,33 @@ const ForumThread = () => {
           <div className="flex justify-between text-sm">
             <small>
               {thread.createdAt
-                ? format(
+                ? timeAgo(
                     typeof thread.createdAt === "string"
                       ? new Date(thread.createdAt)
-                      : thread.createdAt.toDate(),
-                    "dd.MM.yyyy - HH:mm"
+                      : thread.createdAt.toDate()
                   )
                 : "Sending..."}
               {thread.editedAt && (
                 <>
                   {" "}
                   • Redigert{" "}
-                  {format(thread.editedAt.toDate(), "dd.MM.yyyy - HH:mm")}
+                  {timeAgo(thread.editedAt.toDate())}
                 </>
               )}
             </small>
 
             {isAuthor && !editing && (
               <div className="flex gap-1 flex-wrap">
-                <Button onClick={startEditing} size="small" style="secondary">
-                  <i className="fa-solid fa-pen mr-2" />
-                  Endre
+                <Button onClick={startEditing} size="small-square" style="secondary">
+                  <i className="fa-solid fa-pen" />
                 </Button>
                 <Button
                   onClick={deleteThread}
-                  size="small"
+                  size="small-square"
                   style="danger"
                   disabled={deleting}
                 >
-                  <i className="fa-solid fa-trash mr-2" />
-                  {deleting ? "Sletter…" : "Slett"}
+                  <i className="fa-solid fa-trash" />
                 </Button>
               </div>
             )}
@@ -751,14 +748,14 @@ const ForumThread = () => {
                 maxLength={MAX_CONTENT}
                 rows={8}
                 spellCheck={false}
-                className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none"
+                className="bg-neutral-900 text-white placeholder-neutral-400 resize-none"
                 placeholder="Innhold (minst 10 tegn)"
               />
-              <div className="flex gap-2">
-                <Button onClick={saveEdit} disabled={saving}>
+              <div className="flex flex-wrap gap-1">
+                <Button size="small" onClick={saveEdit} disabled={saving}>
                   {saving ? "Lagrer…" : "Lagre"}
                 </Button>
-                <Button onClick={cancelEditing} style="secondary">
+                <Button size="small" onClick={cancelEditing} style="secondary">
                   Avbryt
                 </Button>
               </div>
@@ -817,18 +814,16 @@ const ForumThread = () => {
                     <p>
                       <small>
                         {reply.createdAt && (reply as any).createdAt?.toDate
-                          ? format(
+                          ? timeAgo(
                               (reply as any).createdAt.toDate(),
-                              "dd.MM.yyyy - HH:mm"
                             )
                           : "Sender..."}
                         {reply.editedAt && (reply as any).editedAt?.toDate && (
                           <>
                             {" "}
                             • Redigert{" "}
-                            {format(
-                              (reply as any).editedAt.toDate(),
-                              "dd.MM.yyyy - HH:mm"
+                            {timeAgo(
+                              (reply as any).editedAt.toDate()
                             )}
                           </>
                         )}
@@ -838,12 +833,11 @@ const ForumThread = () => {
 
                   {isOwnReply && !isEditingThis && (
                     <Button
-                      size="small"
+                      size="small-square"
                       style="secondary"
                       onClick={() => startEditReply(reply)}
                     >
-                      <i className="fa-solid fa-pen mr-2" />
-                      Endre
+                      <i className="fa-solid fa-pen" />
                     </Button>
                   )}
                 </div>
@@ -912,17 +906,17 @@ const ForumThread = () => {
                       maxLength={MAX_CONTENT}
                       rows={6}
                       spellCheck={false}
-                      className="bg-neutral-900 py-2 border border-neutral-600 px-4 text-white placeholder-neutral-400 w-full resize-none"
-                      placeholder="Skriv svaret ditt…"
+                      className="bg-transparent text-white placeholder-neutral-400 w-full resize-none"
+                      placeholder="Svar"
                     />
                     <div className="flex gap-2">
-                      <Button
+                      <Button size="small"
                         onClick={() => saveEditReply(reply.id)}
                         disabled={savingReplyId === reply.id}
                       >
                         {savingReplyId === reply.id ? "Lagrer…" : "Lagre"}
                       </Button>
-                      <Button onClick={cancelEditReply} style="secondary">
+                      <Button size="small" onClick={cancelEditReply} style="secondary">
                         Avbryt
                       </Button>
                     </div>
