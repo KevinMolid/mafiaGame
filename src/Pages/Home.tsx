@@ -7,6 +7,7 @@ import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
 
 import NewsFeed from "../components/NewsFeed";
+import UpdateFeed from "../components/UpdateFeed";
 
 import { getCurrentRank } from "../Functions/RankFunctions";
 
@@ -190,9 +191,16 @@ const Home = () => {
         </div>
       </div>
 
-      <div className="mb-6">
-        <H2>Nyheter</H2>
-        <NewsFeed />
+      <div className="flex flex-wrap gap-x-6 gap-y-4 mb-8">
+        <div>
+          <H2>Nyheter</H2>
+          <NewsFeed />
+        </div>
+
+        <div>
+          <H2>Oppdateringer</H2>
+          <UpdateFeed />
+        </div>
       </div>
 
       {/* Equipment and stash */}

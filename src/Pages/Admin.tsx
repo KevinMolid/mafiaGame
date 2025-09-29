@@ -5,6 +5,7 @@ import H2 from "../components/Typography/H2";
 import H3 from "../components/Typography/H3";
 import CharacterList from "../components/CharacterList";
 import Button from "../components/Button";
+import InfoBox from "./../components/InfoBox";
 
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
@@ -18,6 +19,7 @@ import {
   setDoc,
   deleteDoc,
   serverTimestamp,
+  addDoc,
 } from "firebase/firestore";
 import { useState } from "react";
 
@@ -28,6 +30,46 @@ const Admin = () => {
   const { userData } = useAuth();
   const { userCharacter } = useCharacter();
   const [loading, setLoading] = useState(false);
+  const [newUpdateText, setNewUpdateText] = useState("");
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [message, setMessage] = useState<React.ReactNode>("");
+  const [messageType, setMessageType] = useState<
+    "success" | "warning" | "info" | "failure"
+  >("info");
+
+  const handleUpdateTextInputChange = (e: any) => {
+    setNewUpdateText(e.target.value);
+  };
+
+  async function handlePublishUpdate() {
+    const text = newUpdateText.trim();
+    if (!text) {
+      setMessageType("warning");
+      setMessage("Skriv en oppdatering først.");
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      await addDoc(collection(db, "Updates"), {
+        text,
+        authorId: userCharacter?.id || userData?.uid || "",
+        authorName:
+          userCharacter?.username || userData?.displayName || "Ukjent",
+        createdAt: serverTimestamp(),
+      });
+      setNewUpdateText(""); // clear input on success
+      setMessageType("success");
+      setMessage("Oppdatering publisert!");
+    } catch (err) {
+      console.error("Kunne ikke publisere oppdatering:", err);
+      alert("En feil oppsto ved publisering.");
+      setMessageType("failure");
+      setMessage("Oppdatering publisert!");
+    } finally {
+      setIsPublishing(false);
+    }
+  }
 
   const handleResetGame = async () => {
     setLoading(true);
@@ -161,6 +203,9 @@ const Admin = () => {
       <H1>
         <i className="text-yellow-400 fa-solid fa-gears"></i> Kontrollpanel
       </H1>
+
+      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
       <div className="border p-4 border-neutral-600 mb-4 gap-2">
         <H2>Handlinger</H2>
         <H3>Egen konto</H3>
@@ -180,14 +225,35 @@ const Admin = () => {
         </div>
 
         <H3>Globalt</H3>
-        <Button style="danger" onClick={handleResetGame} disabled={loading}>
-          {loading ? (
-            <i className="fa-solid fa-spinner fa-spin"></i>
-          ) : (
-            <i className="fa-solid fa-arrow-rotate-left"></i>
-          )}{" "}
-          Resett spillet
-        </Button>
+        <input
+          className="bg-transparent w-full mb-4 border-b border-neutral-600 py-1 text-sm font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+          type="text"
+          placeholder="Oppdatering"
+          spellCheck={false}
+          value={newUpdateText}
+          onChange={handleUpdateTextInputChange}
+        />
+        <div className="flex gap-1">
+          <Button
+            onClick={handlePublishUpdate}
+            disabled={isPublishing || loading}
+          >
+            {isPublishing ? (
+              <i className="fa-solid fa-spinner fa-spin"></i>
+            ) : (
+              <i className="fa-solid fa-paper-plane"></i>
+            )}{" "}
+            Publiser
+          </Button>
+          <Button style="danger" onClick={handleResetGame} disabled={loading}>
+            {loading ? (
+              <i className="fa-solid fa-spinner fa-spin"></i>
+            ) : (
+              <i className="fa-solid fa-arrow-rotate-left"></i>
+            )}{" "}
+            Resett spillet
+          </Button>
+        </div>
       </div>
 
       <H2>Spillere</H2>
