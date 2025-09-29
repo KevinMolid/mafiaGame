@@ -25,6 +25,8 @@ import {
   updateDoc,
   increment,
   runTransaction,
+  getDocs,
+  writeBatch,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
@@ -243,6 +245,8 @@ const ForumThread = () => {
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
 
+  const [deleting, setDeleting] = useState(false);
+
   const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
   const [editReplyContent, setEditReplyContent] = useState<string>("");
   const [savingReplyId, setSavingReplyId] = useState<string | null>(null);
@@ -402,6 +406,58 @@ const ForumThread = () => {
       setMessage("Kunne ikke oppdatere tråden. Prøv igjen.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const deleteThread = async () => {
+    if (!postId || !thread) return;
+    if (!isAuthor) {
+      setMessageType("warning");
+      setMessage("Du kan ikke slette en tråd du ikke eier.");
+      return;
+    }
+
+    if (!confirm("Er du sikker på at du vil slette denne tråden og alle svar? Dette kan ikke angres.")) {
+      return;
+    }
+
+    setDeleting(true);
+    setMessage("");
+    try {
+      // 1) load replies
+      const repliesCol = collection(db, "ForumThreads", postId, "Replies");
+      const repliesSnap = await getDocs(repliesCol);
+
+      // 2) delete in batches (max 500 ops per batch). We'll do chunks of 400 for safety.
+      const docsToDelete = repliesSnap.docs.map((d) => d.ref);
+      // append the thread doc ref at the end
+      const threadRef = doc(db, "ForumThreads", postId);
+
+      const chunkSize = 400;
+      for (let i = 0; i < docsToDelete.length; i += chunkSize) {
+        const batch = writeBatch(db);
+        const chunk = docsToDelete.slice(i, i + chunkSize);
+        chunk.forEach((ref) => batch.delete(ref));
+        await batch.commit();
+      }
+
+      // finally delete the thread doc itself (separate batch)
+      {
+        const batch = writeBatch(db);
+        batch.delete(threadRef);
+        await batch.commit();
+      }
+
+      // navigate back to forum (preserve category if provided)
+      const params = new URLSearchParams(location.search);
+      const cat = params.get("cat") || thread?.categoryId;
+      navigate(cat ? `/forum?cat=${cat}` : "/forum");
+    } catch (err) {
+      console.error("Failed to delete thread:", err);
+      setMessageType("failure");
+      setMessage("Kunne ikke slette tråden. Prøv igjen.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -581,40 +637,47 @@ const ForumThread = () => {
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
       <div className="grid grid-cols-[auto_max-content] gap-4 mb-2 lg:mb-4 bg-neutral-900 border p-4 border-neutral-600">
-        <div>
-          <div className="flex justify-between">
-            <p>
-              <small>
-                {thread.createdAt
-                  ? format(
-                      typeof thread.createdAt === "string"
-                        ? new Date(thread.createdAt)
-                        : thread.createdAt.toDate(),
-                      "dd.MM.yyyy - HH:mm"
-                    )
-                  : "Sending..."}
-                {thread.editedAt && (
-                  <>
-                    {" "}
-                    • Redigert{" "}
-                    {format(thread.editedAt.toDate(), "dd.MM.yyyy - HH:mm")}
-                  </>
-                )}
-              </small>
-            </p>
+        <div className="flex flex-col">
+          <div className="flex justify-between text-sm">
+            <small>
+              {thread.createdAt
+                ? format(
+                    typeof thread.createdAt === "string"
+                      ? new Date(thread.createdAt)
+                      : thread.createdAt.toDate(),
+                    "dd.MM.yyyy - HH:mm"
+                  )
+                : "Sending..."}
+              {thread.editedAt && (
+                <>
+                  {" "}
+                  • Redigert{" "}
+                  {format(thread.editedAt.toDate(), "dd.MM.yyyy - HH:mm")}
+                </>
+              )}
+            </small>
 
             {isAuthor && !editing && (
-              <div>
+              <div className="flex gap-1 flex-wrap">
                 <Button onClick={startEditing} size="small" style="secondary">
                   <i className="fa-solid fa-pen mr-2" />
                   Endre
+                </Button>
+                <Button
+                  onClick={deleteThread}
+                  size="small"
+                  style="danger"
+                  disabled={deleting}
+                >
+                  <i className="fa-solid fa-trash mr-2" />
+                  {deleting ? "Sletter…" : "Slett"}
                 </Button>
               </div>
             )}
           </div>
 
           {!editing ? (
-            <>
+            <div className="flex flex-1 flex-col">
               <div>
                 <H1>{thread.title}</H1>
               </div>
@@ -630,9 +693,9 @@ const ForumThread = () => {
               </div>
 
               {/* Reactions: counts (hide 0) + chosen highlight + conditionally show "+" */}
-              <div className="flex gap-3 items-center text-neutral-200 font-medium">
+              <div className="flex flex-1 items-end text-neutral-200 font-medium">
                 {thread.reactions && (
-                  <div className="flex items-center gap-3 text-sm text-neutral-300">
+                  <div className="flex items-center text-sm text-neutral-300">
                     <ReactionChip
                       icon="👍"
                       label="Liker"
@@ -671,7 +734,7 @@ const ForumThread = () => {
                   <ReactionMenu onReact={(r) => addReactionToThread(r)} />
                 )}
               </div>
-            </>
+            </div>
           ) : (
             <div className="flex flex-col gap-2 my-2">
               <input
@@ -747,7 +810,7 @@ const ForumThread = () => {
               className="grid grid-cols-[auto_max-content] gap-4 bg-neutral-900 border border-neutral-600 px-4 pt-2 pb-4 mb-2"
             >
               {/* Left: reply content */}
-              <div>
+              <div className="flex flex-col">
                 {/* Header-linje med tidspunkt + Endre-knapp */}
                 <div className="text-sm flex justify-between items-start mb-2">
                   <div className="flex gap-2 items-center flex-wrap">
@@ -787,7 +850,7 @@ const ForumThread = () => {
 
                 {/* Innhold / Redigering */}
                 {!isEditingThis ? (
-                  <>
+                  <div className="flex flex-col flex-1">
                     <div className="pb-4">
                       {reply.content.split("\n").map((line, index) => (
                         <Fragment key={index}>
@@ -797,9 +860,9 @@ const ForumThread = () => {
                       ))}
                     </div>
                     {/* Reactions: counts (hide 0) + chosen highlight + conditionally show "+" */}
-                    <div className="flex items-center gap-3 text-neutral-200 font-medium h-full">
+                    <div className="flex flex-1 items-end text-neutral-200 font-medium">
                       {reply.reactions && (
-                        <div className="flex items-center gap-3 text-sm text-neutral-300">
+                        <div className="flex items-center text-sm text-neutral-300">
                           <ReactionChip
                             icon="👍"
                             label="Liker"
@@ -840,7 +903,7 @@ const ForumThread = () => {
                         />
                       )}
                     </div>
-                  </>
+                  </div>
                 ) : (
                   <div className="flex flex-col gap-2 my-2">
                     <textarea
