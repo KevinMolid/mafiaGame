@@ -19,7 +19,7 @@ const Username = ({ character, useParentColor = false, className }: UsernameProp
 
   const nameClasses = [
     "hover:underline",
-    useParentColor ? "" : "text-white",
+    useParentColor ? "" : isAdmin ? "text-sky-400" : "text-white",
     className,
   ]
     .filter(Boolean)
@@ -28,8 +28,8 @@ const Username = ({ character, useParentColor = false, className }: UsernameProp
   return (
     <Link to={`/profil/${character.id}`}>
       {isAdmin ? (
-        <span className="text-yellow-400">
-          <i className="fa-solid fa-chess-king"></i>{" "}
+        <span className="text-sky-400">
+          <i className="fa-solid fa-gear"></i>{" "}
         </span>
       ) : userCharacter && character.id === userCharacter.id ? (
         <span className="text-sky-400">

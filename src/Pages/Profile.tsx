@@ -11,6 +11,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
 import { useCharacter } from "../CharacterContext";
+import Username from "../components/Typography/Username";
 
 // Firebase
 import {
@@ -86,7 +87,7 @@ const Profile = () => {
       charRef,
       (snap) => {
         if (snap.exists()) {
-          setCharacterData(snap.data());
+          setCharacterData({ id: snap.id, ...(snap.data() as Record<string, any>) });
           setError(null);
         } else {
           setError("Fant ikke spilleren!");
@@ -311,7 +312,7 @@ const Profile = () => {
           <ul className="grid grid-cols-[min-content_max-content] gap-x-4">
             <li className="text-stone-400">Navn</li>
             <li>
-              <p className="text-white font-bold">{characterData.username}</p>
+              <Username character={{id:characterData.id, username:characterData.username}}/>
             </li>
 
             <li className="text-stone-400">Status</li>
