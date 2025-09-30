@@ -22,6 +22,9 @@ import {
   updateDoc,
   deleteField,
   serverTimestamp,
+  onSnapshot,
+  arrayUnion,
+  Timestamp,
 } from "firebase/firestore";
 
 const db = getFirestore();
@@ -40,6 +43,19 @@ interface NoFamilyInterface {
   >;
 }
 
+// Local type for invites
+type Invite = {
+  id: string;
+  familyId: string;
+  familyName: string;
+  invitedId: string;
+  invitedName: string;
+  inviterId: string;
+  inviterName: string;
+  status: "pending" | "accepted" | "declined" | "revoked";
+  createdAt?: Timestamp;
+};
+
 const NoFamily = ({
   family,
   setFamily,
@@ -54,6 +70,11 @@ const NoFamily = ({
   const [applyingTo, setApplyingTo] = useState<string | null>(null);
   const [applicationText, setApplicationText] = useState<string>("");
 
+  // NEW: invites state
+  const [invites, setInvites] = useState<Invite[]>([]);
+  const [invitesLoading, setInvitesLoading] = useState<boolean>(true);
+  const [invitesError, setInvitesError] = useState<string | null>(null);
+
   // Fetch all families from Firestore
   useEffect(() => {
     if (!userCharacter || family) return;
@@ -61,10 +82,12 @@ const NoFamily = ({
     const fetchFamilies = async () => {
       try {
         const familiesSnapshot = await getDocs(collection(db, "Families"));
-        const familiesData: FamilyData[] = familiesSnapshot.docs.map((docSnap) => ({
-          id: docSnap.id,
-          ...(docSnap.data() as Omit<FamilyData, "id">),
-        }));
+        const familiesData: FamilyData[] = familiesSnapshot.docs.map(
+          (docSnap) => ({
+            id: docSnap.id,
+            ...(docSnap.data() as Omit<FamilyData, "id">),
+          })
+        );
         setFamilies(familiesData);
       } catch (error) {
         console.error("fetchFamilies error:", error);
@@ -77,10 +100,45 @@ const NoFamily = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Subscribe to pending invites for this user (only when not in a family)
+  useEffect(() => {
+    if (!userCharacter?.id || family) return;
+
+    setInvitesLoading(true);
+    setInvitesError(null);
+
+    const qInv = query(
+      collection(db, "FamilyInvites"),
+      where("invitedId", "==", userCharacter.id),
+      where("status", "==", "pending")
+      // no orderBy to avoid composite index requirement
+    );
+
+    const unsub = onSnapshot(
+      qInv,
+      (snap) => {
+        const rows: Invite[] = snap.docs
+          .map((d) => ({ id: d.id, ...(d.data() as Omit<Invite, "id">) }))
+          .sort((a, b) => {
+            const ta = a.createdAt?.toMillis?.() ?? 0;
+            const tb = b.createdAt?.toMillis?.() ?? 0;
+            return tb - ta; // newest first
+          });
+        setInvites(rows);
+        setInvitesLoading(false);
+      },
+      (err) => {
+        console.error("Invites listener error:", err);
+        setInvitesError("Kunne ikke hente invitasjoner.");
+        setInvites([]);
+        setInvitesLoading(false);
+      }
+    );
+
+    return unsub;
+  }, [family, userCharacter?.id]);
+
   const isValidFamilyName = (name: string): boolean => {
-    // Check if the name is between 3 and 30 characters and matches the required format:
-    // - No leading or trailing spaces
-    // - No multiple consecutive spaces
     const regex = /^(?! )[A-Za-z0-9 æÆøØåÅ]{3,30}(?<! )$/u;
     return regex.test(name) && !/ {2,}/.test(name);
   };
@@ -96,7 +154,6 @@ const NoFamily = ({
       return;
     }
 
-    // Validate the family name
     if (!isValidFamilyName(familyName)) {
       setMessageType("warning");
       setMessage(
@@ -105,7 +162,6 @@ const NoFamily = ({
       return;
     }
 
-    // Check if player has enough money
     const cost = 250_000_000;
     if (userCharacter.stats.money < cost) {
       setMessageType("warning");
@@ -114,7 +170,6 @@ const NoFamily = ({
     }
 
     try {
-      // Check if a family with the same name (case-insensitive) already exists
       const lowerCaseName = familyName.toLowerCase();
       const existingFamily = families.find(
         (fam) => fam.name.toLowerCase() === lowerCaseName
@@ -126,7 +181,6 @@ const NoFamily = ({
         return;
       }
 
-      // 1) Create the family document (no inline events; createdAt is server time)
       const familyDocRef = await addDoc(collection(db, "Families"), {
         name: familyName,
         leaderName: userCharacter.username,
@@ -147,7 +201,6 @@ const NoFamily = ({
 
       const familyId = familyDocRef.id;
 
-      // 2) Add the first event in a subcollection with server timestamp
       await addDoc(collection(familyDocRef, "Events"), {
         type: "created",
         characterId: userCharacter.id,
@@ -155,7 +208,6 @@ const NoFamily = ({
         timestamp: serverTimestamp(),
       });
 
-      // 3) Deduct the creation cost and update character with family info
       const newMoneyValue = userCharacter.stats.money - cost;
       const characterRef = doc(db, "Characters", userCharacter.id);
       await setDoc(
@@ -163,14 +215,11 @@ const NoFamily = ({
         {
           familyId: familyId,
           familyName: familyName,
-          stats: {
-            money: newMoneyValue,
-          },
+          stats: { money: newMoneyValue },
         },
         { merge: true }
       );
 
-      // 4) Log a global game event
       await addDoc(collection(db, "GameEvents"), {
         eventType: "newFamily",
         familyId: familyId,
@@ -180,7 +229,6 @@ const NoFamily = ({
         timestamp: serverTimestamp(),
       });
 
-      // 5) Optimistic local state (no events on the family object; Family.tsx can fetch Events)
       setFamily({
         id: familyId,
         name: familyName,
@@ -189,12 +237,11 @@ const NoFamily = ({
         members: [
           { id: userCharacter.id, name: userCharacter.username, rank: "Boss" },
         ],
-        createdAt: new Date(), // temporary local date; onSnapshot will replace
+        createdAt: new Date(),
         rules: "",
         img: "",
         profileText: "",
         wealth: 0,
-        // events intentionally omitted or set to [] because Events live in a subcollection now
         events: [],
       } as FamilyData);
 
@@ -212,7 +259,6 @@ const NoFamily = ({
     setApplicationText(e.target.value);
   };
 
-  // Function to add application to the family's "Applications" subcollection
   const sendApplication = async (familyName: string) => {
     if (!userCharacter || !familyName) return;
 
@@ -240,7 +286,6 @@ const NoFamily = ({
         appliedAt: new Date(),
       });
 
-      // Update character document with activeFamilyApplication
       const characterRef = doc(db, "Characters", userCharacter.id);
       await setDoc(
         characterRef,
@@ -266,7 +311,6 @@ const NoFamily = ({
     }
   };
 
-  // Function to cancel the application
   const cancelApplication = async () => {
     if (!userCharacter) return;
     if (!userCharacter.activeFamilyApplication) return;
@@ -274,7 +318,6 @@ const NoFamily = ({
     try {
       const { familyId, applicationId } = userCharacter.activeFamilyApplication;
 
-      // Delete the application document using the stored applicationId
       const applicationDocRef = doc(
         db,
         "Families",
@@ -284,7 +327,6 @@ const NoFamily = ({
       );
       await deleteDoc(applicationDocRef);
 
-      // Delete activeFamilyApplication from character document
       const characterRef = doc(db, "Characters", userCharacter.id);
       await updateDoc(characterRef, {
         activeFamilyApplication: deleteField(),
@@ -296,6 +338,97 @@ const NoFamily = ({
       console.error("Error cancelling application:", error);
       setMessageType("failure");
       setMessage("Feil ved avbryting av søknad.");
+    }
+  };
+
+  // Helpers
+  const fmt = (ts?: Timestamp) =>
+    ts
+      ? ts
+          .toDate()
+          .toLocaleString("no-NO", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+          .replace(" kl.", " kl.")
+      : "-";
+
+  // Actions: accept / decline invite
+  const acceptInvite = async (invite: Invite) => {
+    if (!userCharacter) return;
+
+    try {
+      // 1) Add to family members + event
+      const familyRef = doc(db, "Families", invite.familyId);
+      await updateDoc(familyRef, {
+        members: arrayUnion({
+          id: userCharacter.id,
+          name: userCharacter.username,
+          rank: "Member",
+        }),
+      });
+      await addDoc(collection(familyRef, "Events"), {
+        type: "newMember",
+        characterId: userCharacter.id,
+        characterName: userCharacter.username,
+        timestamp: serverTimestamp(),
+      });
+
+      // 2) Update character with family
+      const characterRef = doc(db, "Characters", userCharacter.id);
+      await updateDoc(characterRef, {
+        familyId: invite.familyId,
+        familyName: invite.familyName,
+        activeFamilyApplication: deleteField(),
+      });
+
+      // 3) Remove (or mark) invite
+      await deleteDoc(doc(db, "FamilyInvites", invite.id));
+
+      setMessageType("success");
+      setMessage(`Du ble med i ${invite.familyName}.`);
+      // Optional: Optimistic setFamily to immediately hide this screen
+      setFamily({
+        id: invite.familyId,
+        name: invite.familyName,
+        leaderId: "", // will be filled by Family screen fetch
+        leaderName: "",
+        members: [], // Family screen can load full members list
+        createdAt: new Date(),
+        rules: "",
+        img: "",
+        profileText: "",
+        wealth: 0,
+        events: [],
+      } as FamilyData);
+    } catch (e) {
+      console.error("acceptInvite error:", e);
+      setMessageType("failure");
+      setMessage("Klarte ikke å godta invitasjonen.");
+    }
+  };
+
+  const declineInvite = async (invite: Invite) => {
+    try {
+      await deleteDoc(doc(db, "FamilyInvites", invite.id));
+      // Optional: log to family events
+      await addDoc(collection(doc(db, "Families", invite.familyId), "Events"), {
+        type: "inviteDeclined",
+        characterId: invite.invitedId,
+        characterName: invite.invitedName,
+        inviterId: invite.inviterId,
+        inviterName: invite.inviterName,
+        timestamp: serverTimestamp(),
+      });
+      setMessageType("info");
+      setMessage(`Du avslo invitasjonen fra ${invite.familyName}.`);
+    } catch (e) {
+      console.error("declineInvite error:", e);
+      setMessageType("failure");
+      setMessage("Klarte ikke å avslå invitasjonen.");
     }
   };
 
@@ -315,14 +448,17 @@ const NoFamily = ({
             <p className="mb-2">
               Kostnad: <strong className="text-yellow-400">$250,000,000</strong>
             </p>
-            <form action="" onSubmit={createFamily} className="flex flex-col gap-2">
+            <form
+              action=""
+              onSubmit={createFamily}
+              className="flex flex-col gap-2"
+            >
               <input
                 className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
                 type="text"
                 value={familyName}
                 onChange={(e) => {
                   const v = e.target.value;
-                  // Limit to 30 characters and match regex
                   if (v.length <= 30 && /^[A-Za-z0-9 æÆøØåÅ]*$/u.test(v)) {
                     setFamilyName(v);
                   }
@@ -376,27 +512,79 @@ const NoFamily = ({
           </Box>
         )}
 
+        {/* NEW: Invites box (right below “Bli med i en familie”) */}
+        {!applyingTo && !userCharacter?.activeFamilyApplication && (
+          <Box>
+            <H2>Invitasjoner</H2>
+            {invitesLoading ? (
+              <p>Laster invitasjoner…</p>
+            ) : invitesError ? (
+              <InfoBox type="failure">{invitesError}</InfoBox>
+            ) : invites.length === 0 ? (
+              <p>Du har ingen invitasjoner.</p>
+            ) : (
+              <ul className="mt-2">
+                {invites.map((inv) => (
+                  <li
+                    key={inv.id}
+                    className="mb-4 flex justify-between items-start gap-4"
+                  >
+                    <div>
+                      <p className="mb-1">
+                        <span className="opacity-80">Familie: </span>
+                        <Familyname
+                          family={{ id: inv.familyId, name: inv.familyName }}
+                        />
+                      </p>
+                      <p className="mb-1">
+                        <span className="opacity-80">Invitert av: </span>
+                        <Username
+                          character={{
+                            id: inv.inviterId,
+                            username: inv.inviterName,
+                          }}
+                        />
+                      </p>
+                      <small className="opacity-70">
+                        Sendt {fmt(inv.createdAt)}
+                      </small>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <Button onClick={() => acceptInvite(inv)}>
+                        <i className="fa-solid fa-check"></i> Godta
+                      </Button>
+                      <Button style="danger" onClick={() => declineInvite(inv)}>
+                        <i className="fa-solid fa-ban"></i> Avslå
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Box>
+        )}
+
         {/* Application */}
         {applyingTo && (
           <Box>
             <div className="flex justify-between items-baseline mb-2">
               <H2>Søknad til {applyingTo}</H2>
               <button
-                className="size-10 bg-neutral-700 rounded-lg text-xl hover:bg-neutral-600 hover:text-neutral-200"
+                className="flex justify-center items-center gap-1  hover:text-neutral-200 px-2 py-1"
                 onClick={() => setApplyingTo(null)}
               >
-                <i className="fa-solid fa-x"></i>
+                <i className="fa-solid fa-xmark"></i> Avbryt
               </button>
             </div>
             <form action="" className="flex flex-col gap-2">
               <textarea
                 rows={8}
-                name=""
                 id="profileTxt"
-                className="bg-neutral-800 px-2 py-1 resize-none"
+                placeholder="Søknadstekst"
+                className="bg-transparent text-white placeholder-neutral-400 w-full resize-none"
                 value={applicationText}
                 onChange={handleApplicationTextChange}
-              ></textarea>
+              />
               <div className="flex justify-end">
                 <Button onClick={() => sendApplication(applyingTo)}>
                   Send søknad

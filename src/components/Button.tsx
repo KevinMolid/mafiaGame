@@ -10,6 +10,7 @@ interface ButtonInterface {
     | "black"
     | "help"
     | "helpActive"
+    | "accept"
     | "danger"
     | "realistic"
     | "exit";
@@ -49,6 +50,8 @@ const Button = ({
       ? "bg-neutral-900 border-2 border-yellow-400 text-neutral-200 hover:border-yellow-500"
       : style === "exit"
       ? "bg-neutral-800 hover:bg-neutral-700 text-neutral-500 hover:text-neutral-400"
+      : style === "accept"
+      ? "bg-neutral-900 border-2 border-green-400 text-neutral-200 hover:border-green-500"
       : style === "danger"
       ? "bg-neutral-900 border-2 border-red-400 text-neutral-200 hover:border-red-500"
       : // primary (default)

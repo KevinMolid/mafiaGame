@@ -400,6 +400,7 @@ const Forum = () => {
                 rows={8}
                 value={newThreadContent}
                 spellCheck={false}
+                placeholder="Innhold (Minst 10 tegn)"
                 onChange={(e) => setNewThreadContent(e.target.value)}
                 className="bg-transparent text-white placeholder-neutral-400 w-full resize-none"
                 maxLength={MAX_CONTENT}
