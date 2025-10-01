@@ -72,9 +72,6 @@ import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
 import ProtectedAdminRoute from "./Routes/ProtectedAdminRoute.tsx";
 import NewsBar from "./components/NewsBar.tsx";
 
-// Testing
-import Styles from "./Pages/Testing/Styles.tsx";
-
 import NotFound from "./Pages/NotFound.tsx";
 
 function App() {
@@ -137,16 +134,6 @@ function App() {
                             element={
                               <ProtectedAdminRoute>
                                 <Admin />
-                              </ProtectedAdminRoute>
-                            }
-                          />
-
-                          {/* Protected Admin Routes */}
-                          <Route
-                            path="/styles"
-                            element={
-                              <ProtectedAdminRoute>
-                                <Styles />
                               </ProtectedAdminRoute>
                             }
                           />

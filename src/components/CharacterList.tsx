@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   getFirestore,
   collection,
@@ -51,6 +51,7 @@ const CharacterList = ({
         id: doc.id,
         username: doc.data().username,
         familyId: doc.data().familyId,
+        role: doc.data().role,
         familyName: doc.data().familyName,
         xp: doc.data().stats.xp,
         money: doc.data().stats.money,
@@ -72,15 +73,21 @@ const CharacterList = ({
   }, []);
 
   // Function to sort characters
-  const sortedCharacters = characters.sort((a, b) => {
-    if (sortBy === "xp") {
-      return b.xp - a.xp; // Sort by XP
-    } else if (sortBy === "money") {
-      return b.money + b.bank - (a.money + a.bank); // Sort by money
-    } else {
-      return a.username.localeCompare(b.username); // Sort alphabetically
-    }
-  });
+  const sortedCharacters = useMemo(() => {
+    const arr = [...characters];
+    if (sortBy === "xp") return arr.sort((a, b) => b.xp - a.xp);
+    if (sortBy === "money")
+      return arr.sort((a, b) => b.money + b.bank - (a.money + a.bank));
+    return arr.sort((a, b) => a.username.localeCompare(b.username));
+  }, [characters, sortBy]);
+
+  const rankedCharacters = useMemo(
+    () =>
+      type === "rank"
+        ? sortedCharacters.filter((c) => (c.role || "") !== "admin")
+        : sortedCharacters,
+    [type, sortedCharacters]
+  );
 
   const sanitizeInt = (s: string) => s.replace(/[^\d]/g, "");
 
@@ -121,7 +128,7 @@ const CharacterList = ({
     try {
       const characterRef = doc(db, "Characters", character.id);
 
-      // Update the money in Firebase
+      // Update the role in Firebase
       await updateDoc(characterRef, {
         role: "admin",
       });
@@ -140,30 +147,26 @@ const CharacterList = ({
     }
   };
 
-  const setMoney = async (character: any, newValue: number) => {
+  const removeAdmin = async (character: any) => {
     try {
       const characterRef = doc(db, "Characters", character.id);
 
-      // Update the money in Firebase
+      // Update the role in Firebase
       await updateDoc(characterRef, {
-        "stats.money": newValue,
+        role: "",
       });
 
       // Update the local state
       setCharacters((prevCharacters) =>
         prevCharacters.map((char) =>
-          char.id === character.id ? { ...char, money: newValue } : char
+          char.id === character.id ? { ...char, role: "" } : char
         )
       );
 
       setMessageType("success");
-      setMessage(
-        `Penger oppdatert for ${
-          character.username
-        } til $${newValue.toLocaleString()}.`
-      );
+      setMessage(`${character.username} ble fjernet som admin.`);
     } catch (error) {
-      console.error("Feil ved oppdatering av penger:", error);
+      console.error("Feil ved oppdatering av admin-rolle:", error);
     }
   };
 
@@ -194,6 +197,70 @@ const CharacterList = ({
     }
   };
 
+  const setMoney = async (character: any, newValue: number) => {
+    try {
+      const characterRef = doc(db, "Characters", character.id);
+
+      // Update the money in Firebase
+      await updateDoc(characterRef, {
+        "stats.money": newValue,
+      });
+
+      // Update the local state
+      setCharacters((prevCharacters) =>
+        prevCharacters.map((char) =>
+          char.id === character.id ? { ...char, money: newValue } : char
+        )
+      );
+
+      setMessageType("success");
+      setMessage(
+        `Penger oppdatert for ${
+          character.username
+        } til $${newValue.toLocaleString()}.`
+      );
+    } catch (error) {
+      console.error("Feil ved oppdatering av penger:", error);
+    }
+  };
+
+  const setBank = async (character: any, newValue: number) => {
+    try {
+      const characterRef = doc(db, "Characters", character.id);
+
+      // Update the money in Firebase
+      await updateDoc(characterRef, {
+        "stats.bank": newValue,
+      });
+
+      // Update the local state
+      setCharacters((prevCharacters) =>
+        prevCharacters.map((char) =>
+          char.id === character.id ? { ...char, bank: newValue } : char
+        )
+      );
+
+      setMessageType("success");
+      setMessage(
+        `Bank oppdatert for ${
+          character.username
+        } til $${newValue.toLocaleString()}.`
+      );
+    } catch (error) {
+      console.error("Feil ved oppdatering av bank:", error);
+    }
+  };
+
+  const handleSetXp = (character: any) => {
+    if (newValue === "") {
+      setMessageType("warning");
+      setMessage("Du må skrive inn en verdi.");
+    } else {
+      setXp(character, newValue);
+      setNewValue("");
+    }
+  };
+
   const handleSetMoney = (character: any) => {
     if (newValue === "") {
       setMessageType("warning");
@@ -204,12 +271,12 @@ const CharacterList = ({
     }
   };
 
-  const handleSetXp = (character: any) => {
+  const handleSetBank = (character: any) => {
     if (newValue === "") {
       setMessageType("warning");
       setMessage("Du må skrive inn en verdi.");
     } else {
-      setXp(character, newValue);
+      setBank(character, newValue);
       setNewValue("");
     }
   };
@@ -232,7 +299,7 @@ const CharacterList = ({
             <p>Spiller</p>
             <p>Rank</p>
           </li>
-          {sortedCharacters.map((character, index) => (
+          {rankedCharacters.map((character, index) => (
             <li key={character.id} className="grid grid-cols-[40px_120px_auto]">
               <p
                 className={
@@ -326,8 +393,14 @@ const CharacterList = ({
                       )}
                     </p>
                     <p>Xp: {character.xp}</p>
-                    <p>Penger: ${character.money.toLocaleString()}</p>
-                    <p>Bank: ${character.bank.toLocaleString()}</p>
+                    <p>
+                      Penger: <i className="fa-solid fa-dollar-sign"></i>{" "}
+                      {character.money.toLocaleString("nb-NO")}
+                    </p>
+                    <p>
+                      Bank: <i className="fa-solid fa-dollar-sign"></i>{" "}
+                      {character.bank.toLocaleString("nb-NO")}
+                    </p>
                     <p>Lokasjon: {character.location}</p>
                   </div>
                   {/* Actions */}
@@ -343,21 +416,39 @@ const CharacterList = ({
                       onChange={handleAdminNumberChange}
                       className="bg-transparent border-b border-neutral-600 py-0.5 text-md w-32 font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
                     />
+                    <Button size="small" onClick={() => handleSetXp(character)}>
+                      Sett <strong>XP</strong>
+                    </Button>
                     <Button
                       size="small"
                       onClick={() => handleSetMoney(character)}
                     >
                       Sett <i className="fa-solid fa-dollar-sign"></i>
                     </Button>
-                    <Button size="small" onClick={() => handleSetXp(character)}>
-                      Sett <strong>XP</strong>
+                    <Button
+                      size="small"
+                      onClick={() => handleSetBank(character)}
+                    >
+                      Sett <strong>Bank</strong>
                     </Button>
 
-                    <Button size="small" onClick={() => makeAdmin(character)}>
-                      <p>
-                        <i className="fa-solid fa-crown"></i> Sett som Admin
-                      </p>
-                    </Button>
+                    {character.role === "admin" ? (
+                      <Button
+                        size="small"
+                        style="danger"
+                        onClick={() => removeAdmin(character)}
+                      >
+                        <p>
+                          <i className="fa-solid fa-cancel"></i> Fjern Admin
+                        </p>
+                      </Button>
+                    ) : (
+                      <Button size="small" onClick={() => makeAdmin(character)}>
+                        <p>
+                          <i className="fa-solid fa-gear"></i> Sett Admin
+                        </p>
+                      </Button>
+                    )}
                     {character.status === "alive" && (
                       <div>
                         <Button

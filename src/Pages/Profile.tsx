@@ -87,7 +87,10 @@ const Profile = () => {
       charRef,
       (snap) => {
         if (snap.exists()) {
-          setCharacterData({ id: snap.id, ...(snap.data() as Record<string, any>) });
+          setCharacterData({
+            id: snap.id,
+            ...(snap.data() as Record<string, any>),
+          });
           setError(null);
         } else {
           setError("Fant ikke spilleren!");
@@ -312,7 +315,13 @@ const Profile = () => {
           <ul className="grid grid-cols-[min-content_max-content] gap-x-4">
             <li className="text-stone-400">Navn</li>
             <li>
-              <Username character={{id:characterData.id, username:characterData.username}}/>
+              <Username
+                character={{
+                  id: characterData.id,
+                  username: characterData.username,
+                  role: characterData.role,
+                }}
+              />
             </li>
 
             <li className="text-stone-400">Status</li>
