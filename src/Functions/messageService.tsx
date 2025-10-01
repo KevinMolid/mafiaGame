@@ -8,14 +8,15 @@ import {
 
 const db = getFirestore();
 
-export interface Message {
+export type Message = {
   id: string;
   senderId: string;
   senderName: string;
   text: string;
   timestamp: any;
+  isOwn?: boolean;
   isRead?: boolean;
-}
+};
 
 export const sendMessage = async (
   channelId: string,

@@ -19,6 +19,8 @@ import {
   query,
   where,
   addDoc,
+  doc,
+  writeBatch,
   serverTimestamp,
 } from "firebase/firestore";
 
@@ -74,6 +76,25 @@ const Chat = () => {
     adjustTextareaHeight();
   };
 
+  // Mark all incoming unread messages in this conversation as read
+  const markConversationAsRead = async (
+    convId: string,
+    currentUserId: string
+  ) => {
+    // You already have the messages in state; use those to avoid refetching
+    const unreadIncoming = messages.filter(
+      (m) => m.senderId !== currentUserId && !m.isRead
+    );
+    if (unreadIncoming.length === 0) return;
+
+    const batch = writeBatch(db);
+    unreadIncoming.forEach((m) => {
+      const msgRef = doc(db, "Conversations", convId, "Messages", m.id);
+      batch.update(msgRef, { isRead: true });
+    });
+    await batch.commit();
+  };
+
   // ---- Conversation helpers ----
   const selectConversationByObject = (conv: Conversation) => {
     if (!conv) return;
@@ -82,6 +103,7 @@ const Chat = () => {
     setConversationId(conv.id);
     setReceiver(other);
     localStorage.setItem(LS_KEY, JSON.stringify({ id: conv.id, other }));
+    markConversationAsRead(conv.id, userCharacter.id);
   };
 
   const handleNewChatClick = () => {
@@ -216,6 +238,17 @@ const Chat = () => {
     }
   };
 
+  // Mark unread incoming messages as read whenever the active conversation's
+  // messages change (i.e., after onSnapshot delivers them).
+  useEffect(() => {
+    if (!conversationId) return;
+    // don't await; fire-and-forget is fine here
+    markConversationAsRead(conversationId, userCharacter.id).catch(
+      console.error
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId, messages, userCharacter.id]);
+
   // ---- Subscribe to selected conversation's messages ----
   useEffect(() => {
     if (!conversationId) {
@@ -261,6 +294,7 @@ const Chat = () => {
             senderName: userCharacter.username,
             text: newMessage,
             timestamp: serverTimestamp(),
+            isRead: false,
           }
         );
       } else {
@@ -296,6 +330,7 @@ const Chat = () => {
             senderName: userCharacter.username,
             text: newMessage,
             timestamp: serverTimestamp(),
+            isRead: false,
           }
         );
       }
@@ -387,7 +422,9 @@ const Chat = () => {
                     senderId={message.senderId}
                     senderName={message.senderName}
                     timestamp={message.timestamp}
-                    messageText={message.text}
+                    text={message.text}
+                    isRead={!!message.isRead}
+                    isOwn={message.senderId === userCharacter.id}
                   />
                 ))}
               </ul>

@@ -1,33 +1,27 @@
 import Username from "./Typography/Username";
 import { Fragment } from "react/jsx-runtime";
-import type { Timestamp as FsTimestamp } from "firebase/firestore";
 import { useCharacter } from "../CharacterContext";
 import { timeAgo } from "../Functions/TimeFunctions";
 
-interface MessageProps {
-  id: string;
-  senderId: string;
-  senderName: string;
-  // Be flexible on timestamp input shape
-  timestamp?: FsTimestamp | Date | string | number | null;
-  messageText: string;
-}
+import { Message } from "../Functions/messageService";
 
 const ChatMessage = ({
   id,
   senderId,
   senderName,
   timestamp,
-  messageText,
-}: MessageProps) => {
+  text,
+  isOwn = false,
+  isRead = false,
+}: Message) => {
   const { userCharacter } = useCharacter();
+
   if (!userCharacter) return null;
 
   // Normalize to epoch milliseconds for timeAgo()
-  const toEpochMs = (t: MessageProps["timestamp"]): number | null => {
+  const toEpochMs = (t: Message["timestamp"]): number | null => {
     if (t === null || t === undefined) return null;
     // Firestore Timestamp
-    // @ts-expect-error runtime check for Firestore Timestamp
     if (typeof t?.toDate === "function") return (t as any).toDate().getTime();
     if (t instanceof Date) return t.getTime();
     if (typeof t === "number") return t; // assume already ms
@@ -47,9 +41,18 @@ const ChatMessage = ({
         <p>
           <small>{pretty}</small>
         </p>
+        {isOwn && (
+          <span className="ml-1" title={isRead ? "Lest" : "Sendt"}>
+            {isRead ? (
+              <i className="fa-solid fa-check-double"></i>
+            ) : (
+              <i className="fa-solid fa-check"></i>
+            )}
+          </span>
+        )}
       </div>
       <div className="text-neutral-200 mb-2">
-        {messageText.split("\n").map((line, index) => (
+        {text.split("\n").map((line, index) => (
           <Fragment key={index}>
             {line}
             <br />
