@@ -74,6 +74,9 @@ import NewsBar from "./components/NewsBar.tsx";
 
 import NotFound from "./Pages/NotFound.tsx";
 
+// Version control
+import VersionWatcher from "./components/VersionWatcher";
+
 function App() {
   return (
     <AuthProvider>
@@ -97,6 +100,9 @@ function App() {
                       <Infobar />
                       <NewsBar />
                     </div>
+
+                    <VersionWatcher />
+
                     <div className="relative flex flex-col flex-grow">
                       <Layout>
                         <ErrorBoundary>
