@@ -1,28 +1,35 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
-  getFirestore,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
   doc,
   onSnapshot,
   updateDoc,
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
+import { onValue, ref as rtdbRef } from "firebase/database";
 import { useCharacter } from "./CharacterContext";
+import { db, rtdb } from "./firebase"; // <-- use your shared instances
 
-/** Map cooldown type -> duration in seconds (centralize here) */
+/** Central cooldown durations (seconds) */
 const COOLDOWN_SECONDS: Record<string, number> = {
   crime: 90,
   gta: 130,
   robbery: 150,
-  // add more...
 };
 
 type CooldownContextType = {
-  /** remaining seconds for the ACTIVE character */
+  /** Remaining whole seconds per cooldown type (for the ACTIVE character) */
   cooldowns: Record<string, number>;
-  /** start a cooldown for the active character (writes serverTimestamp) */
+  /** Start a cooldown for the active character */
   startCooldown: (cooldownType: string) => Promise<void>;
-  /** kept for backward-compat; safe no-op now */
+  /** Legacy no-op */
   fetchCooldown: (
     cooldownType: string,
     duration: number,
@@ -37,57 +44,81 @@ const CooldownContext = createContext<CooldownContextType | undefined>(
 export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const db = getFirestore();
-  const { userCharacter } = useCharacter(); // CooldownProvider is inside CharacterProvider in your tree
+  const { userCharacter } = useCharacter();
   const activeCharacterId = userCharacter?.id || null;
 
-  /** internal: per-type expiry time (ms since epoch) for current character */
+  /** Absolute expiries (ms, in *server* time) */
   const [expiresAt, setExpiresAt] = useState<Record<string, number>>({});
-  /** public: remaining seconds (rounded down, never negative) */
+  /** Public remaining seconds (whole) */
   const [cooldowns, setCooldowns] = useState<Record<string, number>>({});
 
-  // helper: compute remaining seconds now from expiresAt
-  const computeRemaining = (expMs: number) =>
-    Math.max(0, Math.ceil((expMs - Date.now()) / 1000));
+  /** serverTime - localTime (ms), from RTDB special path */
+  const [serverOffsetMs, setServerOffsetMs] = useState<number>(0);
+  const prevOffsetRef = useRef<number>(0);
+  const [offsetReady, setOffsetReady] = useState(false);
 
-  // On character change, reset and attach a real-time listener to that character’s doc
+  const serverNowMs = () => Date.now() + serverOffsetMs;
+  const remainingFromExp = (expMs: number) =>
+    Math.max(0, Math.ceil((expMs - serverNowMs()) / 1000));
+
+  // 1) Subscribe once to server-time offset
+  useEffect(() => {
+    const offRef = rtdbRef(rtdb, ".info/serverTimeOffset");
+    const unsub = onValue(offRef, (snap) => {
+      const next = typeof snap.val() === "number" ? snap.val() : 0;
+
+      // If offset changes, shift our stored expiries by delta so they stay in server scale
+      const delta = next - prevOffsetRef.current;
+      if (delta !== 0) {
+        setExpiresAt((prev) => {
+          if (!prev || Object.keys(prev).length === 0) return prev;
+          const shifted: Record<string, number> = {};
+          for (const [k, v] of Object.entries(prev)) shifted[k] = v + delta;
+          return shifted;
+        });
+      }
+
+      prevOffsetRef.current = next;
+      setServerOffsetMs(next);
+      setOffsetReady(true); // mark ready after first offset arrives
+    });
+    return () => unsub();
+  }, []);
+
+  // 2) Listen to the active character's doc (only after offset is ready)
   useEffect(() => {
     setExpiresAt({});
     setCooldowns({});
 
-    if (!activeCharacterId) return;
+    if (!activeCharacterId || !offsetReady) return;
 
     const ref = doc(db, "Characters", activeCharacterId);
-
     const unsub = onSnapshot(
       ref,
       (snap) => {
         const data = snap.data() || {};
+        const nextExp: Record<string, number> = {};
 
-        // For each known cooldown type, derive an expiry based on lastXTimestamp + duration
-        const nextExpires: Record<string, number> = {};
+        // Derive absolute expiries from lastXTimestamp + duration
         for (const [type, sec] of Object.entries(COOLDOWN_SECONDS)) {
           const field =
-            "last" + type.charAt(0).toUpperCase() + type.slice(1) + "Timestamp"; // e.g. lastCrimeTimestamp
-
+            "last" + type.charAt(0).toUpperCase() + type.slice(1) + "Timestamp"; // e.g., lastCrimeTimestamp
           const ts = data[field] as Timestamp | Date | undefined;
           if (!ts) continue;
 
           const last = ts instanceof Timestamp ? ts.toDate() : new Date(ts);
           const exp = last.getTime() + sec * 1000;
-          // Only set if in the future; if already expired we won’t carry it
-          if (exp > Date.now()) {
-            nextExpires[type] = exp;
-          }
+          if (exp > serverNowMs()) nextExp[type] = exp;
         }
 
-        setExpiresAt(nextExpires);
-        // also update visible remaining immediately (no need to wait for the interval tick)
-        const nextRemaining: Record<string, number> = {};
-        for (const [type, exp] of Object.entries(nextExpires)) {
-          nextRemaining[type] = computeRemaining(exp);
+        setExpiresAt(nextExp);
+
+        // Update visible seconds immediately (no need to wait for tick)
+        const vis: Record<string, number> = {};
+        for (const [type, exp] of Object.entries(nextExp)) {
+          vis[type] = remainingFromExp(exp);
         }
-        setCooldowns(nextRemaining);
+        setCooldowns(vis);
       },
       (err) => {
         console.error("Cooldown onSnapshot error:", err);
@@ -97,28 +128,30 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
     );
 
     return () => unsub();
-  }, [db, activeCharacterId]);
+  }, [activeCharacterId, offsetReady, db, serverOffsetMs]); // serverOffsetMs in deps is OK; we recompute remaining immediately anyway
 
-  // A single interval to tick down remaining seconds derived from expiresAt
+  // 3) Single ticking interval to update remaining seconds
   useEffect(() => {
+    if (!offsetReady) return;
+
     const id = setInterval(() => {
       setCooldowns((prev) => {
         if (!Object.keys(expiresAt).length) return {};
         const next: Record<string, number> = {};
         let changed = false;
         for (const [type, exp] of Object.entries(expiresAt)) {
-          const v = computeRemaining(exp);
+          const v = remainingFromExp(exp);
           next[type] = v;
           if (prev[type] !== v) changed = true;
         }
-        // If every value stayed the same, avoid triggering renders
         return changed ? next : prev;
       });
     }, 1000);
-    return () => clearInterval(id);
-  }, [expiresAt]);
 
-  // Start cooldown: write serverTimestamp; also optimistic local expiry so the UI feels snappy
+    return () => clearInterval(id);
+  }, [expiresAt, offsetReady, serverOffsetMs]);
+
+  // 4) Start cooldown
   const startCooldown = async (cooldownType: string) => {
     if (!activeCharacterId) return;
 
@@ -134,22 +167,28 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
       cooldownType.slice(1) +
       "Timestamp";
 
-    // optimistic local update
-    const optimisticExp = Date.now() + duration * 1000;
-    setExpiresAt((prev) => ({ ...prev, [cooldownType]: optimisticExp }));
-    setCooldowns((prev) => ({ ...prev, [cooldownType]: duration }));
+    // IMPORTANT: if the server offset isn't ready, don't do an optimistic start.
+    // Let the serverTimestamp write + onSnapshot set the correct absolute expiry,
+    // which prevents starting at 83/84 instead of 90.
+    if (offsetReady) {
+      // optimistic expiry using *server* time
+      const optimisticExp = serverNowMs() + duration * 1000;
+      setExpiresAt((prev) => ({ ...prev, [cooldownType]: optimisticExp }));
+      setCooldowns((prev) => ({ ...prev, [cooldownType]: duration }));
+    }
 
-    // server-authoritative write so all tabs update through onSnapshot
+    // Authoritative write so all tabs/devices sync via onSnapshot
     await updateDoc(doc(db, "Characters", activeCharacterId), {
       [field]: serverTimestamp(),
       lastActive: serverTimestamp(),
     });
+
+    // If we skipped the optimistic path (offset not ready), the snapshot above
+    // will set the correct value as soon as the server timestamp is written.
   };
 
-  // Backwards-compat shim — you can remove all external calls to this
-  const fetchCooldown = () => {
-    /* no-op, listener keeps everything in sync */
-  };
+  // Legacy no-op
+  const fetchCooldown = () => {};
 
   const value: CooldownContextType = useMemo(
     () => ({ cooldowns, startCooldown, fetchCooldown }),
