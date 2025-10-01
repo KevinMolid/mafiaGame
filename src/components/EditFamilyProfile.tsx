@@ -118,6 +118,7 @@ const EditFamilyProfile = () => {
             id="profileTxt"
             className="bg-neutral-800 px-2 py-1 resize-none"
             value={profileTxt}
+            spellCheck={false}
             onChange={handleProfileTxtChange}
           />
         </div>

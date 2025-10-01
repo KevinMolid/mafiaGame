@@ -3,8 +3,11 @@ import Main from "../components/Main";
 import Username from "../components/Typography/Username";
 import H3 from "../components/Typography/H3";
 
-import { useState, useEffect } from "react";
+// Functions
+import { bbcodeToHtml } from "../Functions/bbcode";
 
+// React
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
 // Firebase
@@ -112,8 +115,22 @@ const FamilyProfile = () => {
           </ul>
         </div>
       </div>
-      {/* Profiltekst */}
-      <div className="py-6">{familyData.profileText}</div>
+
+      {/* Profiletext */}
+      <div className="py-6">
+        <div className="bg-neutral-900 border border-neutral-700 rounded-md p-4 break-words">
+          {familyData?.profileText?.length ? (
+            <div
+              className="whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{
+                __html: bbcodeToHtml(familyData.profileText),
+              }}
+            />
+          ) : (
+            <span className="text-neutral-500">Ingen profiltekst ennå.</span>
+          )}
+        </div>
+      </div>
     </Main>
   );
 };

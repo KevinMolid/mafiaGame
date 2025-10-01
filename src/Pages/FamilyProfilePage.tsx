@@ -2,6 +2,9 @@
 import Username from "../components/Typography/Username";
 import H3 from "../components/Typography/H3";
 
+// Functions
+import { bbcodeToHtml } from "../Functions/bbcode";
+
 // Types
 import { FamilyData } from "../Interfaces/Types";
 
@@ -61,8 +64,21 @@ const FamilyProfile = ({ family }: FamilyProfileProps) => {
         </div>
       </div>
 
-      {/* Profiltekst */}
-      <div className="py-6">{family.profileText}</div>
+      {/* Profiletext */}
+      <div className="py-6">
+        <div className="bg-neutral-900 border border-neutral-700 rounded-md p-4 break-words">
+          {family?.profileText?.length ? (
+            <div
+              className="whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{
+                __html: bbcodeToHtml(family.profileText),
+              }}
+            />
+          ) : (
+            <span className="text-neutral-500">Ingen profiltekst ennå.</span>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

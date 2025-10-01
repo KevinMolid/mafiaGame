@@ -6,6 +6,9 @@ import EditProfile from "./EditProfile";
 import Tab from "../components/Tab";
 import InfoBox from "../components/InfoBox";
 
+// Functions
+import { bbcodeToHtml } from "../Functions/bbcode";
+
 // React
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
@@ -418,9 +421,14 @@ const Profile = () => {
       {/* Views */}
       {view === "profile" && (
         <div className="py-6">
-          <div className="bg-neutral-900 border border-neutral-700 rounded-md p-4 whitespace-pre-wrap break-words">
+          <div className="bg-neutral-900 border border-neutral-700 rounded-md p-4 break-words">
             {characterData?.profileText?.length ? (
-              characterData.profileText
+              <div
+                className="whitespace-pre-wrap"
+                dangerouslySetInnerHTML={{
+                  __html: bbcodeToHtml(characterData.profileText),
+                }}
+              />
             ) : (
               <span className="text-neutral-500">Ingen profiltekst ennå.</span>
             )}
