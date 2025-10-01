@@ -188,9 +188,9 @@ const CharacterList = ({
 
       setMessageType("success");
       setMessage(
-        `Xp oppdatert for ${
-          character.username
-        } til ${newValue.toLocaleString()}.`
+        `Xp oppdatert for ${character.username} til ${newValue.toLocaleString(
+          "nb-NO"
+        )}.`
       );
     } catch (error) {
       console.error("Feil ved oppdatering av Xp:", error);
@@ -217,7 +217,7 @@ const CharacterList = ({
       setMessage(
         `Penger oppdatert for ${
           character.username
-        } til $${newValue.toLocaleString()}.`
+        } til $${newValue.toLocaleString("nb-NO")}.`
       );
     } catch (error) {
       console.error("Feil ved oppdatering av penger:", error);
@@ -244,7 +244,7 @@ const CharacterList = ({
       setMessage(
         `Bank oppdatert for ${
           character.username
-        } til $${newValue.toLocaleString()}.`
+        } til $${newValue.toLocaleString("nb-NO")}.`
       );
     } catch (error) {
       console.error("Feil ved oppdatering av bank:", error);
