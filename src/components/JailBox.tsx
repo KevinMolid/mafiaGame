@@ -170,7 +170,7 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
                       senderId={message.senderId}
                       senderName={message.senderName}
                       timestamp={message.timestamp}
-                      messageText={message.text}
+                      text={message.text}
                     />
                   ))}
                 </ul>
