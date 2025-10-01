@@ -32,6 +32,8 @@ const DropdownRight = () => {
   const { menuOpen, toggleMenu } = useMenuContext();
   const [unreadAlertCount, setUnreadAlertCount] = useState(0);
   const [hasUnreadAlerts, setHasUnreadAlerts] = useState(false);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const auth = getAuth();
   const navigate = useNavigate();
 
@@ -75,6 +77,91 @@ const DropdownRight = () => {
     // Clean up the listener on component unmount
     return () => unsubscribe();
   }, [userCharacter]);
+
+  useEffect(() => {
+    if (!userCharacter?.username || !userCharacter?.id) return;
+
+    // 1) Listen to conversations the user participates in
+    const convQ = query(
+      collection(db, "Conversations"),
+      where("participants", "array-contains", userCharacter.username)
+    );
+
+    const perConvCounts: Record<string, number> = {};
+    const msgUnsubs = new Map<string, () => void>();
+
+    const unsubConvs = onSnapshot(
+      convQ,
+      (convSnap) => {
+        // remove message listeners for conversations that vanished
+        const currentIds = new Set(convSnap.docs.map((d) => d.id));
+        for (const [convId, unsub] of msgUnsubs) {
+          if (!currentIds.has(convId)) {
+            unsub();
+            msgUnsubs.delete(convId);
+            delete perConvCounts[convId];
+          }
+        }
+
+        // add listeners for new conversations
+        convSnap.docs.forEach((convDoc) => {
+          const convId = convDoc.id;
+          if (msgUnsubs.has(convId)) return;
+
+          // 2) Listen to unread messages in this conversation
+          const msgQ = query(
+            collection(db, "Conversations", convId, "Messages"),
+            where("isRead", "==", false)
+          );
+
+          const unsub = onSnapshot(
+            msgQ,
+            (msgSnap) => {
+              // count only incoming (not sent by me)
+              const cnt = msgSnap.docs.reduce((acc, d) => {
+                const m = d.data() as any;
+                return m.senderId !== userCharacter.id ? acc + 1 : acc;
+              }, 0);
+              perConvCounts[convId] = cnt;
+
+              const total = Object.values(perConvCounts).reduce(
+                (a, b) => a + b,
+                0
+              );
+              setUnreadMessageCount(total);
+              setHasUnreadMessages(total > 0);
+            },
+            (err) => {
+              console.error("Unread messages listener error:", err);
+              perConvCounts[convId] = 0;
+              const total = Object.values(perConvCounts).reduce(
+                (a, b) => a + b,
+                0
+              );
+              setUnreadMessageCount(total);
+              setHasUnreadMessages(total > 0);
+            }
+          );
+
+          msgUnsubs.set(convId, unsub);
+        });
+      },
+      (err) => {
+        console.error("Conversations listener error:", err);
+        for (const [, unsub] of msgUnsubs) unsub();
+        msgUnsubs.clear();
+        setUnreadMessageCount(0);
+        setHasUnreadMessages(false);
+      }
+    );
+
+    // cleanup
+    return () => {
+      unsubConvs();
+      for (const [, unsub] of msgUnsubs) unsub();
+      msgUnsubs.clear();
+    };
+  }, [userCharacter?.username, userCharacter?.id]);
 
   // Sign out
   function logOut() {
@@ -147,22 +234,34 @@ const DropdownRight = () => {
           {userData && hasUnreadAlerts && (
             <DropdownOption
               to="/varsler"
-              icon="bell fa-shake text-yellow-400"
+              icon="bell fa-bounce text-yellow-400"
               onClick={toggleMenu}
               color="yellow"
             >
               <p>Varsler</p>
-              <p>{unreadAlertCount}</p>
+              <p className="font-bold">{unreadAlertCount}</p>
             </DropdownOption>
           )}
 
-          {userData && (
+          {userData && !hasUnreadMessages && (
             <DropdownOption
               to="/meldinger"
               icon="comment-dots"
               onClick={toggleMenu}
             >
-              Meldinger
+              <p>Meldinger</p>
+            </DropdownOption>
+          )}
+
+          {userData && hasUnreadMessages && (
+            <DropdownOption
+              to="/meldinger"
+              icon="comment-dots fa-bounce text-sky-400"
+              onClick={toggleMenu}
+              color="sky"
+            >
+              <p>Meldinger</p>
+              <p className="font-bold">{unreadMessageCount}</p>
             </DropdownOption>
           )}
 

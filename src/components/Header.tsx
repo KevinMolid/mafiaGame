@@ -31,6 +31,7 @@ const Header = () => {
   const { playing, setPlaying, volume, setVolume, audioElement } =
     useMusicContext();
   const [unreadAlertCount, setUnreadAlertCount] = useState(0);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0); // <-- NEW
 
   useEffect(() => {
     if (!userCharacter || !userCharacter.id) return;
@@ -47,6 +48,92 @@ const Header = () => {
     // Clean up the listener on component unmount
     return () => unsubscribe();
   }, [userCharacter]);
+
+  // Unread messages across all conversations
+  useEffect(() => {
+    if (!userCharacter?.username || !userCharacter?.id) return;
+
+    // 1) Listen to conversations the user participates in
+    const convQ = query(
+      collection(db, "Conversations"),
+      where("participants", "array-contains", userCharacter.username)
+    );
+
+    // Keep track of per-conversation unread counts and message unsubscribers
+    const perConvCounts: Record<string, number> = {};
+    const msgUnsubs = new Map<string, () => void>();
+
+    const unsubConvs = onSnapshot(
+      convQ,
+      (convSnap) => {
+        // Clean up listeners that no longer exist
+        const currentIds = new Set(convSnap.docs.map((d) => d.id));
+        for (const [convId, unsub] of msgUnsubs) {
+          if (!currentIds.has(convId)) {
+            unsub();
+            msgUnsubs.delete(convId);
+            delete perConvCounts[convId];
+          }
+        }
+
+        // Ensure there is a listener per conversation
+        convSnap.docs.forEach((convDoc) => {
+          const convId = convDoc.id;
+          if (msgUnsubs.has(convId)) return;
+
+          // 2) For each conversation, listen to unread messages (isRead == false)
+          // We’ll filter out our own sent messages on the client.
+          const msgQ = query(
+            collection(db, "Conversations", convId, "Messages"),
+            where("isRead", "==", false)
+          );
+
+          const unsub = onSnapshot(
+            msgQ,
+            (msgSnap) => {
+              // Count only incoming unread messages
+              const cnt = msgSnap.docs.reduce((acc, d) => {
+                const data = d.data() as any;
+                return data.senderId !== userCharacter.id ? acc + 1 : acc;
+              }, 0);
+              perConvCounts[convId] = cnt;
+              // Sum all convs
+              const total = Object.values(perConvCounts).reduce(
+                (a, b) => a + b,
+                0
+              );
+              setUnreadMessageCount(total);
+            },
+            (err) => {
+              console.error("Messages listener error:", err);
+              perConvCounts[convId] = 0;
+              const total = Object.values(perConvCounts).reduce(
+                (a, b) => a + b,
+                0
+              );
+              setUnreadMessageCount(total);
+            }
+          );
+
+          msgUnsubs.set(convId, unsub);
+        });
+      },
+      (err) => {
+        console.error("Conversations listener error:", err);
+        // On error, clear counts
+        for (const [, unsub] of msgUnsubs) unsub();
+        msgUnsubs.clear();
+        setUnreadMessageCount(0);
+      }
+    );
+
+    // Cleanup everything on unmount/user change
+    return () => {
+      unsubConvs();
+      for (const [, unsub] of msgUnsubs) unsub();
+      msgUnsubs.clear();
+    };
+  }, [userCharacter?.username, userCharacter?.id]);
 
   // Fetch cooldowns
   useEffect(() => {
@@ -169,9 +256,17 @@ const Header = () => {
         onClick={toggleMenu}
       >
         <i className="text-3xl fa-solid fa-bars pointer-events-none"></i>
+        {/* Unread alerts (top-right, yellow) */}
         {unreadAlertCount > 0 && (
-          <span className="absolute top-0 right-0 bg-yellow-400 -translate-y-1 translate-x-1 text-neutral-900 text-xs font-bold rounded-full w-4 h-4 flex justify-center items-center">
+          <span className="absolute top-0 right-0 bg-neutral-600 -translate-y-2 translate-x-2 text-yellow-400 text-s font-bold rounded-full w-5 h-5 flex justify-center items-center">
             {unreadAlertCount}
+          </span>
+        )}
+
+        {/* Unread messages (bottom-right, sky-400) */}
+        {unreadMessageCount > 0 && (
+          <span className="absolute bottom-0 right-0 bg-neutral-600 translate-x-2 translate-y-2 text-sky-400 text-s font-bold rounded-full w-5 h-5 flex justify-center items-center">
+            {unreadMessageCount}
           </span>
         )}
       </button>

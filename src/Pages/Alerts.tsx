@@ -79,7 +79,12 @@ const Alerts = () => {
 
       try {
         // Query the alerts sub-collection for the user's character
-        const alertsRef = collection(db, "Characters", userCharacter.id, "alerts");
+        const alertsRef = collection(
+          db,
+          "Characters",
+          userCharacter.id,
+          "alerts"
+        );
         const alertsQuery = query(alertsRef);
         const alertsSnapshot = await getDocs(alertsQuery);
 
@@ -107,7 +112,9 @@ const Alerts = () => {
         });
 
         // Sort alerts by timestamp in descending order (newest first)
-        fetchedAlerts.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+        fetchedAlerts.sort(
+          (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+        );
 
         // Mark unread alerts as read
         const unreadAlerts = fetchedAlerts.filter((alert) => !alert.read);
@@ -188,7 +195,8 @@ const Alerts = () => {
                   />{" "}
                   og mistet{" "}
                   <span className="text-neutral-200">
-                    ${alert.amountLost.toLocaleString()}
+                    <i className="fa-solid fa-dollar-sign"></i>{" "}
+                    <strong>{alert.amountLost.toLocaleString("nb-NO")}</strong>
                   </span>
                   .
                 </small>

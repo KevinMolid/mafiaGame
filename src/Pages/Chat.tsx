@@ -47,6 +47,7 @@ const Chat = () => {
   const [receiver, setReceiver] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [unreadByConv, setUnreadByConv] = useState<Record<string, number>>({});
 
   if (!userCharacter) return null;
 
@@ -75,6 +76,76 @@ const Chat = () => {
     setNewMessage(e.target.value);
     adjustTextareaHeight();
   };
+
+  useEffect(() => {
+    if (!userCharacter?.username || !userCharacter?.id) return;
+
+    const convQ = query(
+      collection(db, "Conversations"),
+      where("participants", "array-contains", userCharacter.username)
+    );
+
+    const perConvCounts: Record<string, number> = {};
+    const msgUnsubs = new Map<string, () => void>();
+
+    const unsubConvs = onSnapshot(
+      convQ,
+      (convSnap) => {
+        // remove listeners for deleted conversations
+        const existing = new Set(convSnap.docs.map((d) => d.id));
+        for (const [cid, unsub] of msgUnsubs) {
+          if (!existing.has(cid)) {
+            unsub();
+            msgUnsubs.delete(cid);
+            delete perConvCounts[cid];
+          }
+        }
+
+        // add listeners for new conversations
+        convSnap.docs.forEach((convDoc) => {
+          const cid = convDoc.id;
+          if (msgUnsubs.has(cid)) return;
+
+          const msgQ = query(
+            collection(db, "Conversations", cid, "Messages"),
+            where("isRead", "==", false)
+          );
+
+          const unsub = onSnapshot(
+            msgQ,
+            (msgSnap) => {
+              const cnt = msgSnap.docs.reduce((acc, d) => {
+                const m = d.data() as any;
+                return m.senderId !== userCharacter.id ? acc + 1 : acc;
+              }, 0);
+              perConvCounts[cid] = cnt;
+              // push a new object to trigger render
+              setUnreadByConv({ ...perConvCounts });
+            },
+            (err) => {
+              console.error("Unread messages listener error:", err);
+              perConvCounts[cid] = 0;
+              setUnreadByConv({ ...perConvCounts });
+            }
+          );
+
+          msgUnsubs.set(cid, unsub);
+        });
+      },
+      (err) => {
+        console.error("Conversations listener error:", err);
+        for (const [, unsub] of msgUnsubs) unsub();
+        msgUnsubs.clear();
+        setUnreadByConv({});
+      }
+    );
+
+    return () => {
+      unsubConvs();
+      for (const [, unsub] of msgUnsubs) unsub();
+      msgUnsubs.clear();
+    };
+  }, [userCharacter?.username, userCharacter?.id]);
 
   // Mark all incoming unread messages in this conversation as read
   const markConversationAsRead = async (
@@ -370,10 +441,12 @@ const Chat = () => {
                 conversation.id === conversationId ||
                 (receiver && otherParticipant === receiver);
 
+              const unread = unreadByConv[conversation.id] || 0;
+
               return (
                 <li key={conversation.id}>
                   <button
-                    className={`min-h-8 font-medium hover:text-white w-full text-left ${
+                    className={`flex items-center px-2 min-h-8 font-medium hover:text-white w-full text-left ${
                       isActive
                         ? "bg-neutral-700/50 text-neutral-200 border-l-4 border-sky-500 pl-2"
                         : "text-neutral-400 pl-2"
@@ -381,6 +454,11 @@ const Chat = () => {
                     onClick={() => selectConversationByObject(conversation)}
                   >
                     {otherParticipant}
+                    {unread > 0 && (
+                      <span className="ml-auto text-sky-400 font-bold">
+                        {unread}
+                      </span>
+                    )}
                   </button>
                 </li>
               );
