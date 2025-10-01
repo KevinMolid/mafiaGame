@@ -140,7 +140,7 @@ const StreetCrime = () => {
     await batch.commit();
 
     // Start the cooldown after a crime
-    startCooldown(90, "crime", userData.activeCharacter);
+    startCooldown("crime");
   };
 
   // Crime options array
@@ -152,7 +152,6 @@ const StreetCrime = () => {
       xpReward: 3,
       minMoneyReward: 10,
       maxMoneyReward: 500,
-      cooldownTime: 500,
     },
     {
       id: "Herverk",

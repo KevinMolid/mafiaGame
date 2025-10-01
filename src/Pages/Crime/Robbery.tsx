@@ -57,7 +57,6 @@ const Robbery = () => {
   const { userData } = useAuth();
   const { userCharacter } = useCharacter();
   const { cooldowns, startCooldown } = useCooldown();
-  const cooldownTime = 150;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -256,7 +255,7 @@ const Robbery = () => {
           "failure"
         );
         increaseHeat(userCharacter, userCharacter.id, 1);
-        startCooldown(cooldownTime, "robbery", userCharacter.id);
+        startCooldown("robbery");
         return;
       }
 
@@ -268,7 +267,7 @@ const Robbery = () => {
       }
 
       increaseHeat(userCharacter, userCharacter.id, 1);
-      startCooldown(cooldownTime, "robbery", userCharacter.id);
+      startCooldown("robbery");
     } catch (error) {
       console.error(error);
       displayMessage(

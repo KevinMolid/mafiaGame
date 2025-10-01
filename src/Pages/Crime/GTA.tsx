@@ -167,13 +167,13 @@ const GTA = () => {
           </p>
         );
 
-        startCooldown(130, "gta", userCharacter.id);
+        startCooldown("gta");
       } else {
         setMessage(
           "Du prøvde å stjele en bil, men feilet. Bedre lykke neste gang!"
         );
         setMessageType("failure");
-        startCooldown(130, "gta", userCharacter.id);
+        startCooldown("gta");
 
         const jailChance = userCharacter.stats.heat;
         if (
