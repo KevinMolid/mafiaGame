@@ -16,6 +16,7 @@ interface ButtonInterface {
     | "exit";
   size?: "small" | "normal" | "square" | "small-square";
   disabled?: boolean;
+  title?: string;
 }
 
 const Button = ({

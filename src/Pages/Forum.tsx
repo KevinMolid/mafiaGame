@@ -4,6 +4,7 @@ import H1 from "../components/Typography/H1";
 import H3 from "../components/Typography/H3";
 import Username from "../components/Typography/Username";
 import Button from "../components/Button";
+import Label from "../components/Label";
 import InfoBox from "../components/InfoBox";
 
 import { useCharacter } from "../CharacterContext";
@@ -43,6 +44,8 @@ type ThreadDoc = {
   createdAt: string | Timestamp;
   authorId: string;
   authorName: string;
+  isSticky?: boolean;
+  isClosed?: boolean;
 };
 
 type LastReply = {
@@ -190,13 +193,18 @@ const Forum = () => {
 
     // sort threads by last activity (last reply time OR createdAt)
     const sorted = [...fetchedThreads].sort((a, b) => {
+      const aSticky = !!a.isSticky ? 1 : 0;
+      const bSticky = !!b.isSticky ? 1 : 0;
+      if (aSticky !== bSticky) return bSticky - aSticky; // pinned first
+
       const aLast = lastRepliesObj[a.id]
         ? getMs(lastRepliesObj[a.id].createdAt)
         : getMs(a.createdAt);
       const bLast = lastRepliesObj[b.id]
         ? getMs(lastRepliesObj[b.id].createdAt)
         : getMs(b.createdAt);
-      return bLast - aLast; // descending
+
+      return bLast - aLast; // newest activity first inside each group
     });
 
     setThreads(sorted);
@@ -428,10 +436,18 @@ const Forum = () => {
                       role="button"
                       aria-label={`Åpne tråd: ${thread.title}`}
                     >
-                      {/* Title */}
-                      <p className="text-stone-200 font-bold text-lg underline-offset-2">
-                        {thread.title}
-                      </p>
+                      {/* Title + Labels */}
+                      <div className="flex items-center gap-2">
+                        {(thread.isSticky || thread.isClosed) && (
+                          <div className="flex gap-1">
+                            {thread.isSticky && <Label type="pinned" />}
+                            {thread.isClosed && <Label type="closed" />}
+                          </div>
+                        )}
+                        <p className="text-white font-bold text-lg underline-offset-2">
+                          {thread.title}
+                        </p>
+                      </div>
 
                       {/* Started by + time (moved here) */}
                       <div className="text-sm text-stone-400 mt-0.5 mb-1.5">

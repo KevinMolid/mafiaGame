@@ -4,12 +4,14 @@ import H2 from "../components/Typography/H2";
 import Username from "../components/Typography/Username";
 import Familyname from "../components/Typography/Familyname";
 import Button from "../components/Button";
+import Label from "../components/Label";
 import InfoBox from "../components/InfoBox";
 import defaultImg from "/default.jpg";
 
 import { useEffect, useState, Fragment, useRef } from "react";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 
+import { useAuth } from "../AuthContext";
 import { useCharacter } from "../CharacterContext";
 
 import timeAgo from "../Functions/TimeFunctions";
@@ -42,7 +44,6 @@ const MAX_CONTENT = 10_000;
 
 type ReactionKey = "like" | "dislike" | "heart" | "fire" | "poop";
 
-// Define the type for a thread
 interface Thread {
   id: string;
   title: string;
@@ -54,6 +55,8 @@ interface Thread {
   editedAt?: any;
   reactions?: Partial<Record<ReactionKey, number>>;
   reactionsByUser?: Record<string, ReactionKey>;
+  isSticky?: boolean;
+  isClosed?: boolean;
 }
 
 interface Reply {
@@ -229,6 +232,7 @@ function ReactionChip({
 }
 
 const ForumThread = () => {
+  const { userData } = useAuth();
   const { postId } = useParams<{ postId: string }>();
   const [thread, setThread] = useState<Thread | null>(null);
   const [loading, setLoading] = useState(true);
@@ -355,6 +359,48 @@ const ForumThread = () => {
   };
 
   const isAuthor = !!userCharacter && thread?.authorId === userCharacter.id;
+  const isAdmin = userData?.type === "admin";
+
+  // --- Admin actions ---
+  const toggleSticky = async () => {
+    if (!postId || !isAdmin || !thread) return;
+    const next = !thread.isSticky;
+    try {
+      await updateDoc(doc(db, "ForumThreads", postId), {
+        isSticky: next,
+        ...(next
+          ? { stickyAt: serverTimestamp(), stickyBy: userCharacter?.id ?? null }
+          : { stickyAt: null, stickyBy: null }),
+      });
+      setMessageType("success");
+      setMessage(
+        next ? "Tråden er nå festet." : "Tråden er ikke lenger festet."
+      );
+    } catch (e) {
+      console.error(e);
+      setMessageType("failure");
+      setMessage("Kunne ikke oppdatere festing. Prøv igjen.");
+    }
+  };
+
+  const toggleClosed = async () => {
+    if (!postId || !isAdmin || !thread) return;
+    const next = !thread.isClosed;
+    try {
+      await updateDoc(doc(db, "ForumThreads", postId), {
+        isClosed: next,
+        ...(next
+          ? { closedAt: serverTimestamp(), closedBy: userCharacter?.id ?? null }
+          : { closedAt: null, closedBy: null }),
+      });
+      setMessageType("success");
+      setMessage(next ? "Tråden er nå stengt." : "Tråden er åpnet igjen.");
+    } catch (e) {
+      console.error(e);
+      setMessageType("failure");
+      setMessage("Kunne ikke oppdatere lukking. Prøv igjen.");
+    }
+  };
 
   const startEditing = () => {
     if (!thread) return;
@@ -410,13 +456,17 @@ const ForumThread = () => {
 
   const deleteThread = async () => {
     if (!postId || !thread) return;
-    if (!isAuthor) {
+    if (!isAuthor && !isAdmin) {
       setMessageType("warning");
-      setMessage("Du kan ikke slette en tråd du ikke eier.");
+      setMessage("Du har ikke tilgang til å slette denne tråden.");
       return;
     }
 
-    if (!confirm("Er du sikker på at du vil slette denne tråden og alle svar? Dette kan ikke angres.")) {
+    if (
+      !confirm(
+        "Er du sikker på at du vil slette denne tråden og alle svar? Dette kan ikke angres."
+      )
+    ) {
       return;
     }
 
@@ -639,46 +689,105 @@ const ForumThread = () => {
         <div className="flex flex-col">
           <div className="flex justify-between text-sm">
             <small>
-              Skrevet {thread.createdAt
+              Skrevet{" "}
+              {thread.createdAt
                 ? timeAgo(
                     typeof thread.createdAt === "string"
                       ? new Date(thread.createdAt)
                       : thread.createdAt.toDate()
                   )
-                : "Sending..."} siden
+                : "Sending..."}{" "}
+              siden
               {thread.editedAt && (
-                <>
-                  {" "}
-                  • Redigert{" "}
-                  {timeAgo(thread.editedAt.toDate())} siden
-                </>
+                <> • Redigert {timeAgo(thread.editedAt.toDate())} siden</>
               )}
             </small>
-
-            {isAuthor && !editing && (
-              <div className="flex gap-1 flex-wrap">
-                <Button onClick={startEditing} size="small-square" style="secondary">
-                  <i className="fa-solid fa-pen" />
-                </Button>
-                <Button
-                  onClick={deleteThread}
-                  size="small-square"
-                  style="danger"
-                  disabled={deleting}
-                >
-                  <i className="fa-solid fa-trash" />
-                </Button>
-              </div>
-            )}
           </div>
 
           {!editing ? (
             <div className="flex flex-1 flex-col">
-              <div>
-                <H2>{thread.title}</H2>
+              <div className="flex justify-between">
+                <div className="flex gap-2 items-center mb-2">
+                  {(thread.isSticky || thread.isClosed) && (
+                    <div className="flex gap-1">
+                      {thread.isSticky && <Label type="pinned" />}
+                      {thread.isClosed && <Label type="closed" />}
+                    </div>
+                  )}
+                  <h2 className="font-medium text-white text-xl sm:text-2xl">
+                    {thread.title}
+                  </h2>
+                </div>
+                <div className="flex gap-1 flex-wrap">
+                  {isAuthor && !editing && !thread.isClosed && (
+                    <Button
+                      onClick={startEditing}
+                      size="small-square"
+                      style="secondary"
+                      title="Rediger tråd"
+                    >
+                      <i className="fa-solid fa-pen" />
+                    </Button>
+                  )}
+                  {isAuthor && !editing && (
+                    <Button
+                      onClick={deleteThread}
+                      size="small-square"
+                      style="danger"
+                      disabled={deleting}
+                      title="Slett tråd"
+                    >
+                      <i className="fa-solid fa-trash" />
+                    </Button>
+                  )}
+                  {isAdmin && (
+                    <>
+                      <Button
+                        onClick={toggleSticky}
+                        size="small-square"
+                        // give a subtle visual toggle as well
+                        style="helpActive"
+                        title={thread?.isSticky ? "Løsne tråd" : "Fest tråd"}
+                      >
+                        {/* different icon when toggled on */}
+                        <i
+                          className={`fa-solid ${
+                            thread?.isSticky
+                              ? "fa-thumbtack-slash"
+                              : "fa-thumbtack"
+                          }`}
+                        />
+                      </Button>
+
+                      <Button
+                        onClick={toggleClosed}
+                        size="small-square"
+                        style="helpActive"
+                        title={thread?.isClosed ? "Åpne tråd" : "Steng tråd"}
+                      >
+                        {/* lock when closed, unlock when open */}
+                        <i
+                          className={`fa-solid ${
+                            thread?.isClosed ? "fa-unlock" : "fa-lock"
+                          }`}
+                        />
+                      </Button>
+
+                      <Button
+                        onClick={deleteThread}
+                        size="small-square"
+                        style="helpActive"
+                        disabled={deleting}
+                        title="Slett tråd"
+                      >
+                        <i className="fa-solid fa-trash" />
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {/* Thread */}
+              {/* Thread content */}
               <div className=" pb-4 text-stone-300">
                 {thread.content.split("\n").map((line, index) => (
                   <Fragment key={index}>
@@ -812,25 +921,23 @@ const ForumThread = () => {
                   <div className="flex gap-2 items-center flex-wrap">
                     <p>
                       <small>
-                        Skrevet {reply.createdAt && (reply as any).createdAt?.toDate
-                          ? timeAgo(
-                              (reply as any).createdAt.toDate(),
-                            )
-                          : "Sender..."} siden
+                        Skrevet{" "}
+                        {reply.createdAt && (reply as any).createdAt?.toDate
+                          ? timeAgo((reply as any).createdAt.toDate())
+                          : "Sender..."}{" "}
+                        siden
                         {reply.editedAt && (reply as any).editedAt?.toDate && (
                           <>
                             {" "}
                             • Redigert{" "}
-                            {timeAgo(
-                              (reply as any).editedAt.toDate()
-                            )} siden
+                            {timeAgo((reply as any).editedAt.toDate())} siden
                           </>
                         )}
                       </small>
                     </p>
                   </div>
 
-                  {isOwnReply && !isEditingThis && (
+                  {isOwnReply && !isEditingThis && !thread.isClosed && (
                     <Button
                       size="small-square"
                       style="secondary"
@@ -909,13 +1016,18 @@ const ForumThread = () => {
                       placeholder="Svar"
                     />
                     <div className="flex gap-2">
-                      <Button size="small"
+                      <Button
+                        size="small"
                         onClick={() => saveEditReply(reply.id)}
                         disabled={savingReplyId === reply.id}
                       >
                         {savingReplyId === reply.id ? "Lagrer…" : "Lagre"}
                       </Button>
-                      <Button size="small" onClick={cancelEditReply} style="secondary">
+                      <Button
+                        size="small"
+                        onClick={cancelEditReply}
+                        style="secondary"
+                      >
                         Avbryt
                       </Button>
                     </div>
@@ -934,21 +1046,29 @@ const ForumThread = () => {
       </div>
 
       {/* Form to reply */}
-      <H2>Svar</H2>
-      <form action="" onSubmit={handleSubmit} className="flex flex-col gap-2">
-        <textarea
-          className="bg-neutral-900 border border-neutral-600 py-2 px-4 text-white placeholder-neutral-400 w-full resize-none"
-          name="reply"
-          id="reply"
-          rows={6}
-          spellCheck={false}
-          onChange={handleReplyChange}
-          value={newReply}
-        ></textarea>
-        <div>
-          <Button type="submit">Post</Button>
-        </div>
-      </form>
+      {!thread.isClosed && (
+        <>
+          <H2>Svar</H2>
+          <form
+            action=""
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-2"
+          >
+            <textarea
+              className="bg-neutral-900 border border-neutral-600 py-2 px-4 text-white placeholder-neutral-400 w-full resize-none"
+              name="reply"
+              id="reply"
+              rows={6}
+              spellCheck={false}
+              onChange={handleReplyChange}
+              value={newReply}
+            ></textarea>
+            <div>
+              <Button type="submit">Post</Button>
+            </div>
+          </form>
+        </>
+      )}
     </Main>
   );
 };
