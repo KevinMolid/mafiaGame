@@ -96,7 +96,9 @@ const Robbery = () => {
 
     const potentialTargets = charactersSnapshot.docs
       .map((doc) => ({ id: doc.id, ...(doc.data() as Target) }))
-      .filter((char) => char.id !== userCharacter.id);
+      .filter(
+        (char) => char.id !== userCharacter.id && (char as any).role !== "admin"
+      );
 
     if (potentialTargets.length === 0) {
       displayMessage("Det er ingen å rane i denne byen.", "warning");
@@ -129,6 +131,11 @@ const Robbery = () => {
     };
     if (target.id === userCharacter.id) {
       displayMessage("Du kan ikke rane deg selv.", "failure");
+      return null;
+    }
+    if ((target as any).role === "admin") {
+      // Warn and block
+      displayMessage("Du kan ikke rane en administrator.", "warning");
       return null;
     }
     return target;
