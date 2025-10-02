@@ -91,6 +91,9 @@ const Forum = () => {
     return Number.isFinite(p) && p > 0 ? p : 1;
   }, [location.search]);
 
+  const isInsideInteractive = (el: EventTarget | null) =>
+    el instanceof HTMLElement && !!el.closest("a,button");
+
   /* Fetch Forum Categories */
   useEffect(() => {
     const fetchCategories = async () => {
@@ -235,7 +238,10 @@ const Forum = () => {
     try {
       const docRef = await addDoc(collection(db, "ForumThreads"), newThread);
       // optimistically insert; it’ll get resorted on next fetch if needed
-      setThreads((prev) => [{ ...newThread, id: docRef.id } as ThreadDoc, ...prev]);
+      setThreads((prev) => [
+        { ...newThread, id: docRef.id } as ThreadDoc,
+        ...prev,
+      ]);
       setMessage("Tråden ble opprettet.");
       setMessageType("success");
 
@@ -288,6 +294,12 @@ const Forum = () => {
     navigate(`/forum?${params.toString()}`, { replace: true });
   };
 
+  // helper to build a 50-char preview from content
+  const buildPreview = (s: string) => {
+    const clean = (s || "").replace(/\s+/g, " ").trim();
+    return clean.length > 100 ? clean.slice(0, 50) + "…" : clean;
+  };
+
   if (loading) {
     return <p>Laster kategorier...</p>;
   }
@@ -307,7 +319,9 @@ const Forum = () => {
                     "bg-neutral-800 border-white")
                 }
                 onClick={() =>
-                  navigate(`/forum?cat=${category.id}&page=1`, { replace: true })
+                  navigate(`/forum?cat=${category.id}&page=1`, {
+                    replace: true,
+                  })
                 }
               >
                 <p className="text-neutral-200 font-medium">{category.title}</p>
@@ -340,40 +354,46 @@ const Forum = () => {
           <p>{selectedCategoryDescription}</p>
 
           {/* Pagination header */}
-          {threads.length > 10 && !creatingNew && <div className="bg-neutral-900 p-4 flex gap-3 items-center flex-wrap mt-3">
-            <button
-              className="hover:underline disabled:opacity-40"
-              onClick={() => goToPage(safePage - 1)}
-              disabled={safePage <= 1}
-            >
-              Forrige
-            </button>
-            <ul className="flex gap-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <li key={p}>
-                  <button
-                    className={
-                      "px-2 py-1 rounded " +
-                      (p === safePage
-                        ? "bg-neutral-800 text-white"
-                        : "hover:bg-neutral-800")
-                    }
-                    onClick={() => goToPage(p)}
-                  >
-                    {p}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <button
-              className="hover:underline disabled:opacity-40"
-              onClick={() => goToPage(safePage + 1)}
-              disabled={safePage >= totalPages}
-            >
-              Neste
-            </button>
-            <p className="ml-auto">Side {safePage} av {totalPages}</p>
-          </div>}
+          {threads.length > PAGE_SIZE && !creatingNew && (
+            <div className="bg-neutral-900 p-4 flex gap-3 items-center flex-wrap mt-3">
+              <button
+                className="hover:underline disabled:opacity-40"
+                onClick={() => goToPage(safePage - 1)}
+                disabled={safePage <= 1}
+              >
+                Forrige
+              </button>
+              <ul className="flex gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (p) => (
+                    <li key={p}>
+                      <button
+                        className={
+                          "px-2 py-1 rounded " +
+                          (p === safePage
+                            ? "bg-neutral-800 text-white"
+                            : "hover:bg-neutral-800")
+                        }
+                        onClick={() => goToPage(p)}
+                      >
+                        {p}
+                      </button>
+                    </li>
+                  )
+                )}
+              </ul>
+              <button
+                className="hover:underline disabled:opacity-40"
+                onClick={() => goToPage(safePage + 1)}
+                disabled={safePage >= totalPages}
+              >
+                Neste
+              </button>
+              <p className="ml-auto">
+                Side {safePage} av {totalPages}
+              </p>
+            </div>
+          )}
 
           {/* Threads */}
           {!creatingNew && (
@@ -387,34 +407,51 @@ const Forum = () => {
                       ? new Date(thread.createdAt).getTime()
                       : (thread.createdAt as Timestamp).toDate().getTime();
 
+                  // whole <li> clickable + keyboard accessible
+                  const onKey = (e: React.KeyboardEvent<HTMLLIElement>) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleThreadClick(thread.id);
+                    }
+                  };
+
                   return (
                     <li
-                      className="border-b border-neutral-700 pt-4 pb-2"
                       key={thread.id}
+                      className="border-b border-neutral-700 pt-4 pb-3 cursor-pointer hover:bg-neutral-800/40 focus:bg-neutral-800/40 outline-none"
+                      onClick={(e) => {
+                        if (isInsideInteractive(e.target)) return; // let <a> clicks work (Username)
+                        handleThreadClick(thread.id);
+                      }}
+                      tabIndex={0}
+                      onKeyDown={onKey}
+                      role="button"
+                      aria-label={`Åpne tråd: ${thread.title}`}
                     >
-                      <div className="grid grid-cols-[auto_max-content]">
-                        <small>
-                          <Username
-                            character={{
-                              id: thread.authorId,
-                              username: thread.authorName,
-                            }}
-                          />
-                        </small>
-                        <small>
-                          <i className="fa-regular fa-clock"></i>{" "}
-                          {timeAgo(createdAtMs)}
-                        </small>
-                      </div>
-
-                      <p
-                        className="text-stone-200 font-bold text-lg hover:underline cursor-pointer"
-                        onClick={() => handleThreadClick(thread.id)}
-                      >
+                      {/* Title */}
+                      <p className="text-stone-200 font-bold text-lg underline-offset-2">
                         {thread.title}
                       </p>
 
-                      <div className="flex gap-2">
+                      {/* Started by + time (moved here) */}
+                      <div className="text-sm text-stone-400 mt-0.5 mb-1.5">
+                        Startet av{" "}
+                        <Username
+                          character={{
+                            id: thread.authorId,
+                            username: thread.authorName,
+                          }}
+                        />{" "}
+                        {timeAgo(createdAtMs)} siden
+                      </div>
+
+                      {/* 50-char content preview */}
+                      <p className="text-stone-300">
+                        {buildPreview(thread.content)}
+                      </p>
+
+                      {/* Replies info (kept below preview) */}
+                      <div className="flex gap-2 mt-1">
                         {hasReplies && (
                           <small>
                             <strong>{repliesCount[thread.id]} svar</strong>
@@ -422,7 +459,7 @@ const Forum = () => {
                         )}
 
                         {last && (
-                          <small>
+                          <small className="text-stone-400">
                             Sist besvart av{" "}
                             <Username
                               character={{
@@ -430,7 +467,7 @@ const Forum = () => {
                                 username: last.authorName,
                               }}
                             />{" "}
-                            {timeAgo(last.createdAt.toDate().getTime())}
+                            {timeAgo(last.createdAt.toDate().getTime())} siden
                           </small>
                         )}
                       </div>
@@ -443,8 +480,8 @@ const Forum = () => {
             </ul>
           )}
 
-          {/* Pagination footer (duplicate controls for convenience) */}
-          {threads.length > 10 && !creatingNew && (
+          {/* Pagination footer */}
+          {threads.length > PAGE_SIZE && !creatingNew && (
             <div className="bg-neutral-900 p-4 flex gap-3 items-center flex-wrap">
               <button
                 className="hover:underline disabled:opacity-40"
@@ -454,21 +491,23 @@ const Forum = () => {
                 Forrige
               </button>
               <ul className="flex gap-2">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <li key={p}>
-                    <button
-                      className={
-                        "px-2 py-1 rounded " +
-                        (p === safePage
-                          ? "bg-neutral-800 text-white"
-                          : "hover:bg-neutral-800")
-                      }
-                      onClick={() => goToPage(p)}
-                    >
-                      {p}
-                    </button>
-                  </li>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (p) => (
+                    <li key={p}>
+                      <button
+                        className={
+                          "px-2 py-1 rounded " +
+                          (p === safePage
+                            ? "bg-neutral-800 text-white"
+                            : "hover:bg-neutral-800")
+                        }
+                        onClick={() => goToPage(p)}
+                      >
+                        {p}
+                      </button>
+                    </li>
+                  )
+                )}
               </ul>
               <button
                 className="hover:underline disabled:opacity-40"
@@ -477,7 +516,9 @@ const Forum = () => {
               >
                 Neste
               </button>
-              <p className="ml-auto">Side {safePage} av {totalPages}</p>
+              <p className="ml-auto">
+                Side {safePage} av {totalPages}
+              </p>
             </div>
           )}
 

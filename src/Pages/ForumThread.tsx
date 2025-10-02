@@ -1,6 +1,5 @@
 // Components
 import Main from "../components/Main";
-import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import Username from "../components/Typography/Username";
 import Familyname from "../components/Typography/Familyname";
@@ -640,18 +639,18 @@ const ForumThread = () => {
         <div className="flex flex-col">
           <div className="flex justify-between text-sm">
             <small>
-              {thread.createdAt
+              Skrevet {thread.createdAt
                 ? timeAgo(
                     typeof thread.createdAt === "string"
                       ? new Date(thread.createdAt)
                       : thread.createdAt.toDate()
                   )
-                : "Sending..."}
+                : "Sending..."} siden
               {thread.editedAt && (
                 <>
                   {" "}
                   • Redigert{" "}
-                  {timeAgo(thread.editedAt.toDate())}
+                  {timeAgo(thread.editedAt.toDate())} siden
                 </>
               )}
             </small>
@@ -676,11 +675,11 @@ const ForumThread = () => {
           {!editing ? (
             <div className="flex flex-1 flex-col">
               <div>
-                <H1>{thread.title}</H1>
+                <H2>{thread.title}</H2>
               </div>
 
               {/* Thread */}
-              <div className=" pb-4">
+              <div className=" pb-4 text-stone-300">
                 {thread.content.split("\n").map((line, index) => (
                   <Fragment key={index}>
                     {line}
@@ -813,18 +812,18 @@ const ForumThread = () => {
                   <div className="flex gap-2 items-center flex-wrap">
                     <p>
                       <small>
-                        {reply.createdAt && (reply as any).createdAt?.toDate
+                        Skrevet {reply.createdAt && (reply as any).createdAt?.toDate
                           ? timeAgo(
                               (reply as any).createdAt.toDate(),
                             )
-                          : "Sender..."}
+                          : "Sender..."} siden
                         {reply.editedAt && (reply as any).editedAt?.toDate && (
                           <>
                             {" "}
                             • Redigert{" "}
                             {timeAgo(
                               (reply as any).editedAt.toDate()
-                            )}
+                            )} siden
                           </>
                         )}
                       </small>
@@ -845,7 +844,7 @@ const ForumThread = () => {
                 {/* Innhold / Redigering */}
                 {!isEditingThis ? (
                   <div className="flex flex-col flex-1">
-                    <div className="pb-4">
+                    <div className="pb-4 text-stone-300">
                       {reply.content.split("\n").map((line, index) => (
                         <Fragment key={index}>
                           {line}
