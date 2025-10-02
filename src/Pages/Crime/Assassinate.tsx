@@ -95,8 +95,8 @@ const Assassinate = () => {
 
       setMessage(
         <p>
-          Dusøren ble fjernet, og <strong>${formatMoney(refundAmount)}</strong>{" "}
-          ble refundert.
+          Dusøren ble fjernet, og <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{formatMoney(refundAmount)}</strong> ble refundert.
         </p>
       );
       setMessageType("success");
@@ -134,7 +134,12 @@ const Assassinate = () => {
       const targetDocId = targetDoc.id;
 
       if (userCharacter?.username === playerData.username) {
-        setMessage(`Du kan ikke drepe deg selv!`);
+        setMessage(`Du kan ikke drepe deg selv.`);
+        setMessageType("warning");
+        return;
+      }
+      if ((playerData.role || "") === "admin") {
+        setMessage("Du kan ikke drepe en administrator.");
         setMessageType("warning");
         return;
       }
@@ -195,7 +200,7 @@ const Assassinate = () => {
         });
       }
 
-      // 3) Feedback + logs (always)
+      // 3) Feedback
       setMessage(
         totalBountyAmount > 0 ? (
           <p>
@@ -270,6 +275,17 @@ const Assassinate = () => {
 
       const playerData = querySnapshot.docs[0].data() as any;
       const wantedPlayerId = querySnapshot.docs[0].id;
+
+      if (userCharacter?.username === playerData.username) {
+        setMessage(`Du kan ikke utlove dusør på deg selv.`);
+        setMessageType("warning");
+        return;
+      }
+      if ((playerData.role || "") === "admin") {
+        setMessage("Du kan ikke utlove dusør på en administrator.");
+        setMessageType("warning");
+        return;
+      }
 
       await addDoc(collection(db, "Bounty"), {
         WantedId: wantedPlayerId,
