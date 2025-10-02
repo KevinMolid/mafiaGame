@@ -112,6 +112,7 @@ const Parking = () => {
         [`stats.money`]: newMoney,
       });
 
+      setUpgrading(false);
       setParking(newParkingIndex);
       setMessageType("success");
       setMessage(
@@ -147,22 +148,22 @@ const Parking = () => {
   }, [cars, sortKey, sortDir]);
 
   // Sell a single car: delete doc + add money
-  const sellCar = async (carId: string, carValue: number) => {
+  const sellCar = async (car: Car & { id: string }) => {
     const characterRef = fsDoc(db, "Characters", userCharacter.id);
-    const carRef = fsDoc(db, "Characters", userCharacter.id, "cars", carId);
+    const carRef = fsDoc(db, "Characters", userCharacter.id, "cars", car.id);
 
     try {
       await deleteDoc(carRef);
       await updateDoc(characterRef, {
-        "stats.money": (userCharacter.stats.money || 0) + (carValue || 0),
+        "stats.money": (userCharacter.stats.money || 0) + (car.value || 0),
       });
 
       setMessageType("success");
       setMessage(
         <p>
-          Du solgte en <strong>bil</strong> for{" "}
+          Du solgte <Item name={car.name} tier={car.tier} /> for{" "}
           <i className="fa-solid fa-dollar-sign"></i>{" "}
-          <strong>{(carValue || 0).toLocaleString("nb-NO")}</strong>.
+          <strong>{(car.value || 0).toLocaleString("nb-NO")}</strong>.
         </p>
       );
     } catch (err) {
@@ -248,7 +249,7 @@ const Parking = () => {
               <div className="flex justify-end flex-grow">
                 <Button style="black" size="small" onClick={toggleUpgrading}>
                   <p>
-                    Oppgrader <i className="fa-solid fa-circle-up"></i>
+                    Oppgrader <i className="fa-solid fa-arrow-up"></i>
                   </p>
                 </Button>
               </div>
@@ -338,7 +339,7 @@ const Parking = () => {
                     )
                   }
                 >
-                  Oppgrader <i className="fa-solid fa-circle-up"></i>{" "}
+                  Oppgrader <i className="fa-solid fa-arrow-up"></i>{" "}
                   <strong className="text-yellow-400">
                     <i className="fa-solid fa-dollar-sign"></i>{" "}
                     {ParkingTypes[parking + 1].price.toLocaleString("nb-NO")}
@@ -444,7 +445,7 @@ const Parking = () => {
                       </td>
                       <td className="px-2 py-1">
                         <button
-                          onClick={() => sellCar(car.id, car.value)}
+                          onClick={() => sellCar(car)}
                           className="font-medium text-neutral-200 hover:text-white"
                         >
                           Selg
