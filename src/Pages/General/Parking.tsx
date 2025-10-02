@@ -214,6 +214,7 @@ const Parking = () => {
   };
 
   const toggleUpgrading = () => {
+    if (!canUpgrade) return;
     setUpgrading(!upgrading);
   };
 

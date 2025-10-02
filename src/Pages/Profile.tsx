@@ -10,7 +10,7 @@ import InfoBox from "../components/InfoBox";
 import { bbcodeToHtml } from "../Functions/bbcode";
 
 // React
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
 import { useCharacter } from "../CharacterContext";
@@ -31,11 +31,22 @@ import firebaseConfig from "../firebaseConfig";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Functions
+// More functions
 import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
 import timeAgo from "../Functions/TimeFunctions";
 
 type ViewKey = "profile" | "notebook" | "blacklist" | "edit";
+const VIEW_STORAGE_KEY = "profile:view";
+
+const readSavedView = (): ViewKey => {
+  const v = localStorage.getItem(VIEW_STORAGE_KEY);
+  return v === "profile" ||
+    v === "notebook" ||
+    v === "blacklist" ||
+    v === "edit"
+    ? (v as ViewKey)
+    : "profile";
+};
 
 const Profile = () => {
   const { spillerID } = useParams<{ spillerID: string }>();
@@ -44,48 +55,44 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Persist the selected tab per character id
-  const storageKey = useMemo(
-    () => (spillerID ? `profile:view:${spillerID}` : "profile:view"),
-    [spillerID]
-  );
-
-  const [view, setView] = useState<ViewKey>(() => {
-    const saved = (
-      spillerID
-        ? localStorage.getItem(`profile:view:${spillerID}`)
-        : localStorage.getItem("profile:view")
-    ) as ViewKey | null;
-    return saved ?? "profile";
-  });
-
-  // When spillerID (and thus storageKey) changes, refresh view from storage
-  useEffect(() => {
-    const saved = localStorage.getItem(storageKey) as ViewKey | null;
-    setView(saved ?? "profile");
-  }, [storageKey]);
-
-  // keep localStorage in sync when tab changes
-  useEffect(() => {
-    localStorage.setItem(storageKey, view);
-  }, [view, storageKey]);
+  // Global tab state (we'll choose the right value via effects below)
+  const [view, setView] = useState<ViewKey>("profile");
 
   const [message, setMessage] = useState<string>("");
   const [messageType, setMessageType] = useState<
     "info" | "success" | "warning" | "failure"
   >("info");
 
+  const viewingOwnProfile =
+    !!userCharacter && !!spillerID && spillerID === userCharacter.id;
+
+  // One-time hydration guard so we don't flip-flop on reload
+  const hydratedOnceRef = useRef(false);
+
+  // Clean up any old per-character keys like "profile:view:<id>"
+  useEffect(() => {
+    try {
+      const toRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith("profile:view:")) toRemove.push(k);
+      }
+      toRemove.forEach((k) => localStorage.removeItem(k));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // Realtime character document
   useEffect(() => {
     if (!spillerID) {
       setError("Character ID is missing.");
       setLoading(false);
       return;
     }
-
     setLoading(true);
-    const charRef = doc(db, "Characters", spillerID);
 
-    // Realtime listener
+    const charRef = doc(db, "Characters", spillerID);
     const unsubscribe = onSnapshot(
       charRef,
       (snap) => {
@@ -111,6 +118,32 @@ const Profile = () => {
     return () => unsubscribe();
   }, [spillerID]);
 
+  // Decide which tab to show:
+  // - If it's NOT your own profile => always "profile"
+  // - If it's your own profile => hydrate once from storage (then persist changes below)
+  useEffect(() => {
+    if (!viewingOwnProfile) {
+      setView("profile");
+      hydratedOnceRef.current = false; // reset guard when leaving own profile
+      return;
+    }
+    if (!hydratedOnceRef.current) {
+      setView(readSavedView());
+      hydratedOnceRef.current = true;
+    }
+  }, [viewingOwnProfile]);
+
+  // Persist current tab ONLY when viewing own profile
+  useEffect(() => {
+    if (viewingOwnProfile) {
+      try {
+        localStorage.setItem(VIEW_STORAGE_KEY, view);
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [view, viewingOwnProfile]);
+
   // ---- NOTES: debounced saver that updates Characters/{id}.notes ----
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveNotes = (value: string) => {
@@ -128,120 +161,95 @@ const Profile = () => {
   };
 
   const addFriend = async () => {
-    if (!spillerID || !characterData || !userCharacter) {
-      console.error("Mangler nødvendig data for å legge til venn.");
-      return;
-    }
-
+    if (!spillerID || !characterData || !userCharacter) return;
     const newFriend = { id: spillerID, name: characterData.username };
     const userDocRef = doc(db, "Characters", userCharacter.id);
 
     try {
       const userDocSnap = await getDoc(userDocRef);
+      if (!userDocSnap.exists()) return;
 
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        const currentFriends = Array.isArray(userData.friends)
-          ? userData.friends
-          : [];
-        const isAlreadyFriend = currentFriends.some(
-          (friend: any) => friend.id === spillerID
-        );
+      const userData = userDocSnap.data();
+      const currentFriends = Array.isArray(userData.friends)
+        ? userData.friends
+        : [];
+      const currentBlacklist = Array.isArray(userData.blacklist)
+        ? userData.blacklist
+        : [];
 
-        const currentBlacklist = Array.isArray(userData.blacklist)
-          ? userData.blacklist
-          : [];
-        const isAlreadyBlacklist = currentBlacklist.some(
-          (player: any) => player.id === spillerID
-        );
+      const isAlreadyFriend = currentFriends.some(
+        (f: any) => f.id === spillerID
+      );
+      const isAlreadyBlacklist = currentBlacklist.some(
+        (p: any) => p.id === spillerID
+      );
 
-        if (isAlreadyFriend) {
-          setMessageType("warning");
-          setMessage(
-            `${characterData.username} er allerede lagt til som venn.`
-          );
-          return;
-        }
-
-        const updatedFriends = [...currentFriends, newFriend];
-        const updatedBlacklist = currentBlacklist.filter(
-          (player: any) => player.id !== spillerID
-        );
-
-        await updateDoc(userDocRef, {
-          friends: updatedFriends,
-          blacklist: updatedBlacklist,
-        });
-
-        setMessageType("success");
-        setMessage(
-          isAlreadyBlacklist
-            ? `La ${characterData.username} til som venn. ${characterData.username} ble fjernet fra svartelisten.`
-            : `La ${characterData.username} til som venn.`
-        );
-      } else {
-        console.error("Brukeren finnes ikke.");
+      if (isAlreadyFriend) {
+        setMessageType("warning");
+        setMessage(`${characterData.username} er allerede lagt til som venn.`);
+        return;
       }
+
+      await updateDoc(userDocRef, {
+        friends: [...currentFriends, newFriend],
+        blacklist: currentBlacklist.filter((p: any) => p.id !== spillerID),
+      });
+
+      setMessageType("success");
+      setMessage(
+        isAlreadyBlacklist
+          ? `La ${characterData.username} til som venn. ${characterData.username} ble fjernet fra svartelisten.`
+          : `La ${characterData.username} til som venn.`
+      );
     } catch (err) {
       console.error("En feil oppstod da du prøvde å legge til en venn:", err);
     }
   };
 
   const addToBlacklist = async () => {
-    if (!spillerID || !characterData || !userCharacter) {
-      console.error("Missing necessary data to add a friend.");
-      return;
-    }
+    if (!spillerID || !characterData || !userCharacter) return;
 
     const newBlacklist = { id: spillerID, name: characterData.username };
     const userDocRef = doc(db, "Characters", userCharacter.id);
 
     try {
       const userDocSnap = await getDoc(userDocRef);
+      if (!userDocSnap.exists()) return;
 
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        const currentFriends = Array.isArray(userData.friends)
-          ? userData.friends
-          : [];
-        const isAlreadyFriend = currentFriends.some(
-          (friend: any) => friend.id === spillerID
-        );
+      const userData = userDocSnap.data();
+      const currentFriends = Array.isArray(userData.friends)
+        ? userData.friends
+        : [];
+      const currentBlacklist = Array.isArray(userData.blacklist)
+        ? userData.blacklist
+        : [];
 
-        const currentBlacklist = Array.isArray(userData.blacklist)
-          ? userData.blacklist
-          : [];
-        const isAlreadyBlacklist = currentBlacklist.some(
-          (player: any) => player.id === spillerID
-        );
+      const isAlreadyFriend = currentFriends.some(
+        (f: any) => f.id === spillerID
+      );
+      const isAlreadyBlacklist = currentBlacklist.some(
+        (p: any) => p.id === spillerID
+      );
 
-        if (isAlreadyBlacklist) {
-          setMessageType("warning");
-          setMessage(
-            `${characterData.username} er allerede lagt til på svartelisten.`
-          );
-          return;
-        }
-
-        const updatedBlacklist = [...currentBlacklist, newBlacklist];
-        const updatedFriends = currentFriends.filter(
-          (friend: any) => friend.id !== spillerID
-        );
-
-        await updateDoc(userDocRef, {
-          friends: updatedFriends,
-          blacklist: updatedBlacklist,
-        });
-
-        setMessageType("success");
+      if (isAlreadyBlacklist) {
+        setMessageType("warning");
         setMessage(
-          isAlreadyFriend
-            ? `La ${characterData.username} til på svartelisten. ${characterData.username} ble fjernet fra venner.`
-            : `La ${characterData.username} til på svartelisten.`
+          `${characterData.username} er allerede lagt til på svartelisten.`
         );
-      } else {
-        console.error("Brukeren finnes ikke.");
+        return;
       }
+
+      await updateDoc(userDocRef, {
+        friends: currentFriends.filter((f: any) => f.id !== spillerID),
+        blacklist: [...currentBlacklist, newBlacklist],
+      });
+
+      setMessageType("success");
+      setMessage(
+        isAlreadyFriend
+          ? `La ${characterData.username} til på svartelisten. ${characterData.username} ble fjernet fra venner.`
+          : `La ${characterData.username} til på svartelisten.`
+      );
     } catch (err) {
       console.error(
         "En feil oppstod da du prøvde å legge til en spiller på svartelisten:",
@@ -258,8 +266,6 @@ const Profile = () => {
   const isRecentlyActive = characterData.lastActive
     ? Date.now() - characterData.lastActive.seconds * 1000 <= 5 * 60 * 1000
     : false;
-
-  const viewingOwnProfile = spillerID === userCharacter.id;
 
   return (
     <Main>
@@ -361,6 +367,7 @@ const Profile = () => {
                 "Ingen familie"
               )}
             </li>
+
             <li className="text-stone-400">Sist aktiv</li>
             <li
               className={isRecentlyActive ? "text-green-400" : "text-stone-400"}
@@ -379,6 +386,7 @@ const Profile = () => {
                   })
                 : "N/A"}
             </li>
+
             <li className="text-stone-400">Registrert</li>
             <li className="text-stone-400">
               {characterData.createdAt
@@ -439,8 +447,8 @@ const Profile = () => {
       {view === "notebook" && (
         <div className="py-6">
           <Notebook
-            notes={characterData.notes ?? ""} // instant from same snapshot
-            onChangeNotes={saveNotes} // debounced saver
+            notes={characterData.notes ?? ""}
+            onChangeNotes={saveNotes}
           />
         </div>
       )}
