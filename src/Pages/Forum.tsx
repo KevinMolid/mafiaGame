@@ -302,10 +302,10 @@ const Forum = () => {
     navigate(`/forum?${params.toString()}`, { replace: true });
   };
 
-  // helper to build a 50-char preview from content
+  // helper to build a 100-char preview from content
   const buildPreview = (s: string) => {
     const clean = (s || "").replace(/\s+/g, " ").trim();
-    return clean.length > 100 ? clean.slice(0, 50) + "…" : clean;
+    return clean.length > 100 ? clean.slice(0, 100) + "…" : clean;
   };
 
   if (loading) {
