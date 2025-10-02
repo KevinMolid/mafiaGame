@@ -117,7 +117,7 @@ const Parking = () => {
       setMessageType("success");
       setMessage(
         <p>
-          Du kjøpte <strong>{upgradeName}</strong> for{" "}
+          Du oppgraderte til <strong>{upgradeName}</strong> for{" "}
           <i className="fa-solid fa-dollar-sign"></i>{" "}
           <strong>{upgradePrice.toLocaleString("nb-NO")}</strong>.
         </p>
@@ -247,11 +247,19 @@ const Parking = () => {
               </H2>
 
               <div className="flex justify-end flex-grow">
-                <Button style="black" size="small" onClick={toggleUpgrading}>
-                  <p>
-                    Oppgrader <i className="fa-solid fa-arrow-up"></i>
-                  </p>
-                </Button>
+                {canUpgrade && (
+                  <div className="flex justify-end flex-grow">
+                    <Button
+                      style="black"
+                      size="small"
+                      onClick={toggleUpgrading}
+                    >
+                      <p>
+                        Oppgrader <i className="fa-solid fa-arrow-up"></i>
+                      </p>
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
