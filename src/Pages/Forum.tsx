@@ -11,7 +11,7 @@ import { useCharacter } from "../CharacterContext";
 import timeAgo from "../Functions/TimeFunctions";
 
 // React
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import {
@@ -35,6 +35,24 @@ const db = getFirestore(app);
 export const MAX_TITLE = 120;
 export const MAX_CONTENT = 10_000;
 
+type ThreadDoc = {
+  id: string;
+  title: string;
+  content: string;
+  categoryId: string;
+  createdAt: string | Timestamp;
+  authorId: string;
+  authorName: string;
+};
+
+type LastReply = {
+  authorId: string;
+  authorName: string;
+  createdAt: Timestamp;
+};
+
+const PAGE_SIZE = 10;
+
 const Forum = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -45,17 +63,9 @@ const Forum = () => {
   const [selectedCategoryDescription, setSelectedCategoryDescription] =
     useState<string>("");
 
-  const [threads, setThreads] = useState<any[]>([]);
-  const [repliesCount, setRepliesCount] = useState<{ [key: string]: number }>(
-    {}
-  );
-  const [lastReplies, setLastReplies] = useState<{
-    [key: string]: {
-      authorId: string;
-      authorName: string;
-      createdAt: Timestamp;
-    };
-  }>({});
+  const [threads, setThreads] = useState<ThreadDoc[]>([]);
+  const [repliesCount, setRepliesCount] = useState<Record<string, number>>({});
+  const [lastReplies, setLastReplies] = useState<Record<string, LastReply>>({});
 
   const [creatingNew, setCreatingNew] = useState<boolean>(false);
   const [newThreadTitle, setNewThreadTitle] = useState<string>("");
@@ -74,6 +84,13 @@ const Forum = () => {
   const location = useLocation();
   const fetchIdRef = useRef(0);
 
+  // current page from query (defaults to 1)
+  const currentPage = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const p = parseInt(params.get("page") || "1", 10);
+    return Number.isFinite(p) && p > 0 ? p : 1;
+  }, [location.search]);
+
   /* Fetch Forum Categories */
   useEffect(() => {
     const fetchCategories = async () => {
@@ -89,14 +106,13 @@ const Forum = () => {
     fetchCategories();
   }, []);
 
-  // Når categories eller ?cat endres, velg riktig fane
+  // pick category based on ?cat (else “Generelt”, else first)
   useEffect(() => {
     if (!categories.length) return;
 
     const params = new URLSearchParams(location.search);
     const catId = params.get("cat");
 
-    // bruk ?cat hvis gyldig, ellers "Generelt", ellers første
     const chosen =
       (catId && categories.find((c) => c.id === catId)) ||
       categories.find((c) => c.title === "Generelt") ||
@@ -104,11 +120,24 @@ const Forum = () => {
 
     if (!chosen) return;
 
-    // unngå unødvendig refetch hvis samme kategori allerede er valgt
     if (selectedCategory === chosen.id) return;
 
+    // when switching category, normalize to page 1
+    const newParams = new URLSearchParams(location.search);
+    newParams.set("cat", chosen.id);
+    newParams.set("page", "1");
+    navigate(`/forum?${newParams.toString()}`, { replace: true });
+
     fetchThreads(chosen.id, chosen.title, chosen.description);
-  }, [categories, location.search]); // <- viktig
+  }, [categories, location.search]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const getMs = (t: string | Timestamp | Date): number => {
+    if (!t) return 0;
+    if (t instanceof Timestamp) return t.toDate().getTime();
+    if (t instanceof Date) return t.getTime();
+    if (typeof t === "string") return new Date(t).getTime();
+    return 0;
+  };
 
   const fetchThreads = async (
     categoryId: string,
@@ -117,7 +146,6 @@ const Forum = () => {
   ) => {
     const myFetchId = ++fetchIdRef.current;
 
-    // hent tråder
     const qThreads = query(
       collection(db, "ForumThreads"),
       where("categoryId", "==", categoryId),
@@ -125,11 +153,12 @@ const Forum = () => {
     );
     const thSnap = await getDocs(qThreads);
 
-    // bygg lokal liste
-    const fetchedThreads: any[] = [];
-    thSnap.forEach((d) => fetchedThreads.push({ id: d.id, ...d.data() }));
+    const fetchedThreads: ThreadDoc[] = [];
+    thSnap.forEach((d) =>
+      fetchedThreads.push({ id: d.id, ...(d.data() as any) })
+    );
 
-    // hent stats for hver tråd parallelt (count + siste svar)
+    // fetch stats (count + last reply)
     const stats = await Promise.all(
       fetchedThreads.map(async (t) => {
         const repliesRef = collection(db, "ForumThreads", t.id, "Replies");
@@ -141,33 +170,33 @@ const Forum = () => {
         return {
           id: t.id,
           count: allSnap.size,
-          last: lastSnap.empty ? null : lastSnap.docs[0].data(),
+          last: lastSnap.empty ? null : (lastSnap.docs[0].data() as LastReply),
         };
       })
     );
 
-    // hvis en nyere fetch har startet, dropp resultatet
     if (myFetchId !== fetchIdRef.current) return;
 
-    // bygg objekter for state
     const repliesCountObj: Record<string, number> = {};
-    const lastRepliesObj: Record<
-      string,
-      { authorId: string; authorName: string; createdAt: Timestamp }
-    > = {};
+    const lastRepliesObj: Record<string, LastReply> = {};
 
     for (const s of stats) {
       repliesCountObj[s.id] = s.count;
-      if (s.last) {
-        const { authorId, authorName, createdAt } = s.last as any;
-        if (authorId && authorName && createdAt) {
-          lastRepliesObj[s.id] = { authorId, authorName, createdAt };
-        }
-      }
+      if (s.last) lastRepliesObj[s.id] = s.last;
     }
 
-    // sett alt atomisk (i riktig rekkefølge)
-    setThreads(fetchedThreads);
+    // sort threads by last activity (last reply time OR createdAt)
+    const sorted = [...fetchedThreads].sort((a, b) => {
+      const aLast = lastRepliesObj[a.id]
+        ? getMs(lastRepliesObj[a.id].createdAt)
+        : getMs(a.createdAt);
+      const bLast = lastRepliesObj[b.id]
+        ? getMs(lastRepliesObj[b.id].createdAt)
+        : getMs(b.createdAt);
+      return bLast - aLast; // descending
+    });
+
+    setThreads(sorted);
     setSelectedCategory(categoryId);
     setSelectedCategoryTitle(categoryTitle);
     setSelectedCategoryDescription(categoryDescription);
@@ -183,10 +212,7 @@ const Forum = () => {
     if (errors.length) {
       setMessage(errors.join(" "));
       setMessageType("warning");
-
-      // focus the first invalid field
       if (!selectedCategory) {
-        // nothing to focus here; next checks:
         if (newThreadTitle.trim().length < 3) titleRef.current?.focus();
         else contentRef.current?.focus();
       } else if (newThreadTitle.trim().length < 3) {
@@ -201,15 +227,15 @@ const Forum = () => {
       title: newThreadTitle.trim(),
       content: newThreadContent.trim(),
       categoryId: selectedCategory,
-      createdAt: new Date().toISOString(), // keep your existing format
+      createdAt: new Date().toISOString(),
       authorId: userCharacter?.id,
       authorName: userCharacter?.username,
     };
 
     try {
       const docRef = await addDoc(collection(db, "ForumThreads"), newThread);
-
-      setThreads((prev) => [{ ...newThread, id: docRef.id }, ...prev]); // show on top
+      // optimistically insert; it’ll get resorted on next fetch if needed
+      setThreads((prev) => [{ ...newThread, id: docRef.id } as ThreadDoc, ...prev]);
       setMessage("Tråden ble opprettet.");
       setMessageType("success");
 
@@ -223,7 +249,6 @@ const Forum = () => {
     }
   };
 
-  // Validate new thread
   const validateNew = () => {
     const errs: string[] = [];
     if (!selectedCategory) errs.push("Velg en kategori.");
@@ -244,7 +269,23 @@ const Forum = () => {
   };
 
   const handleThreadClick = (threadId: string) => {
-    navigate(`/forum/post/${threadId}?cat=${selectedCategory}`);
+    const params = new URLSearchParams(location.search);
+    const cat = params.get("cat") || selectedCategory || "";
+    navigate(`/forum/post/${threadId}?cat=${cat}`);
+  };
+
+  // Pagination — derive visible slice
+  const totalPages = Math.max(1, Math.ceil(threads.length / PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIdx = (safePage - 1) * PAGE_SIZE;
+  const visibleThreads = threads.slice(startIdx, startIdx + PAGE_SIZE);
+
+  const goToPage = (p: number) => {
+    const next = Math.min(Math.max(1, p), totalPages);
+    const params = new URLSearchParams(location.search);
+    if (selectedCategory) params.set("cat", selectedCategory);
+    params.set("page", String(next));
+    navigate(`/forum?${params.toString()}`, { replace: true });
   };
 
   if (loading) {
@@ -266,7 +307,7 @@ const Forum = () => {
                     "bg-neutral-800 border-white")
                 }
                 onClick={() =>
-                  navigate(`/forum?cat=${category.id}`, { replace: true })
+                  navigate(`/forum?cat=${category.id}&page=1`, { replace: true })
                 }
               >
                 <p className="text-neutral-200 font-medium">{category.title}</p>
@@ -298,74 +339,146 @@ const Forum = () => {
           </div>
           <p>{selectedCategoryDescription}</p>
 
+          {/* Pagination header */}
+          {threads.length > 10 && !creatingNew && <div className="bg-neutral-900 p-4 flex gap-3 items-center flex-wrap mt-3">
+            <button
+              className="hover:underline disabled:opacity-40"
+              onClick={() => goToPage(safePage - 1)}
+              disabled={safePage <= 1}
+            >
+              Forrige
+            </button>
+            <ul className="flex gap-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <li key={p}>
+                  <button
+                    className={
+                      "px-2 py-1 rounded " +
+                      (p === safePage
+                        ? "bg-neutral-800 text-white"
+                        : "hover:bg-neutral-800")
+                    }
+                    onClick={() => goToPage(p)}
+                  >
+                    {p}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button
+              className="hover:underline disabled:opacity-40"
+              onClick={() => goToPage(safePage + 1)}
+              disabled={safePage >= totalPages}
+            >
+              Neste
+            </button>
+            <p className="ml-auto">Side {safePage} av {totalPages}</p>
+          </div>}
+
           {/* Threads */}
           {!creatingNew && (
             <ul className="mt-2 mb-4">
-              {threads.length > 0 ? (
-                threads.map((thread) => (
-                  <li
-                    className="border-b border-neutral-700 pt-4 pb-2"
-                    key={thread.id || "new"}
-                  >
-                    <div className="grid grid-cols-[auto_max-content]">
-                      <small>
-                        <Username
-                          character={{
-                            id: thread.authorId,
-                            username: thread.authorName,
-                          }}
-                        ></Username>{" "}
-                      </small>
-                      <small>
-                        <i className="fa-regular fa-clock"></i>{" "}
-                        {thread.createdAt
-                          ? timeAgo(
-                              typeof thread.createdAt === "string"
-                                ? new Date(thread.createdAt)
-                                : thread.createdAt.toDate()
-                            )
-                          : "Sending..."}
-                      </small>
-                    </div>
+              {visibleThreads.length > 0 ? (
+                visibleThreads.map((thread) => {
+                  const hasReplies = repliesCount[thread.id] > 0;
+                  const last = lastReplies[thread.id];
+                  const createdAtMs =
+                    typeof thread.createdAt === "string"
+                      ? new Date(thread.createdAt).getTime()
+                      : (thread.createdAt as Timestamp).toDate().getTime();
 
-                    <p
-                      className="text-stone-200 font-bold text-lg hover:underline cursor-pointer"
-                      onClick={() => handleThreadClick(thread.id)}
+                  return (
+                    <li
+                      className="border-b border-neutral-700 pt-4 pb-2"
+                      key={thread.id}
                     >
-                      {thread.title}
-                    </p>
-                    <div className="flex gap-2">
-                      {repliesCount[thread.id] > 0 && (
+                      <div className="grid grid-cols-[auto_max-content]">
                         <small>
-                          <strong>{repliesCount[thread.id]} svar</strong>
-                        </small>
-                      )}
-
-                      {lastReplies[thread.id] && (
-                        <small>
-                          Sist besvart av{" "}
                           <Username
                             character={{
-                              id: lastReplies[thread.id].authorId,
-                              username: lastReplies[thread.id].authorName,
+                              id: thread.authorId,
+                              username: thread.authorName,
                             }}
-                          />{" "}
-                          {lastReplies[thread.id]?.createdAt
-                            ? timeAgo(
-                                typeof thread.createdAt === "string"
-                                  ? new Date(thread.createdAt).getTime()
-                                  : thread.createdAt.toDate().getTime()
-                              )
-                            : "No replies"}
+                          />
                         </small>
-                      )}
-                    </div>
-                  </li>
-                ))
+                        <small>
+                          <i className="fa-regular fa-clock"></i>{" "}
+                          {timeAgo(createdAtMs)}
+                        </small>
+                      </div>
+
+                      <p
+                        className="text-stone-200 font-bold text-lg hover:underline cursor-pointer"
+                        onClick={() => handleThreadClick(thread.id)}
+                      >
+                        {thread.title}
+                      </p>
+
+                      <div className="flex gap-2">
+                        {hasReplies && (
+                          <small>
+                            <strong>{repliesCount[thread.id]} svar</strong>
+                          </small>
+                        )}
+
+                        {last && (
+                          <small>
+                            Sist besvart av{" "}
+                            <Username
+                              character={{
+                                id: last.authorId,
+                                username: last.authorName,
+                              }}
+                            />{" "}
+                            {timeAgo(last.createdAt.toDate().getTime())}
+                          </small>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })
               ) : (
                 <p>Det er ingen tråder i denne kategorien.</p>
               )}
             </ul>
+          )}
+
+          {/* Pagination footer (duplicate controls for convenience) */}
+          {threads.length > 10 && !creatingNew && (
+            <div className="bg-neutral-900 p-4 flex gap-3 items-center flex-wrap">
+              <button
+                className="hover:underline disabled:opacity-40"
+                onClick={() => goToPage(safePage - 1)}
+                disabled={safePage <= 1}
+              >
+                Forrige
+              </button>
+              <ul className="flex gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <li key={p}>
+                    <button
+                      className={
+                        "px-2 py-1 rounded " +
+                        (p === safePage
+                          ? "bg-neutral-800 text-white"
+                          : "hover:bg-neutral-800")
+                      }
+                      onClick={() => goToPage(p)}
+                    >
+                      {p}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button
+                className="hover:underline disabled:opacity-40"
+                onClick={() => goToPage(safePage + 1)}
+                disabled={safePage >= totalPages}
+              >
+                Neste
+              </button>
+              <p className="ml-auto">Side {safePage} av {totalPages}</p>
+            </div>
           )}
 
           {/* New Thread Form */}
@@ -377,6 +490,7 @@ const Forum = () => {
                   <button
                     className="flex justify-center items-center gap-1  hover:text-neutral-200 px-2 py-1"
                     onClick={handleCancelNew}
+                    type="button"
                   >
                     <i className="fa-solid fa-xmark"></i> Avbryt
                   </button>
