@@ -2,6 +2,7 @@ import Box from "./Box";
 import H2 from "./Typography/H2";
 import Button from "./Button";
 import Main from "./Main";
+import CharacterList from "./CharacterList";
 
 import ChatMessage from "./ChatMessage";
 
@@ -154,7 +155,7 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
         {error && <p>Feil: {error}</p>}
 
         {!loading && !error && (
-          <div className="mb-4">
+          <div className="mb-4 flex flex-col gap-4">
             <Box>
               <H2>Fengselschatten</H2>
               {/* Messages */}
@@ -209,6 +210,11 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
                   </Button>
                 </form>
               </div>
+            </Box>
+
+            <Box>
+              <H2>Spillere i fengsel</H2>
+              <CharacterList type="jail" />
             </Box>
           </div>
         )}

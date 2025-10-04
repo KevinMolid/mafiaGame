@@ -69,7 +69,7 @@ async function logGameEvent(
 }
 
 interface CharacterListProps {
-  type?: "rank" | "admin" | "chat" | "";
+  type?: "rank" | "admin" | "chat" | "jail" | "";
   sortBy?: "username" | "xp" | "money";
   onClick?: (receiver: string) => void;
 }
@@ -104,6 +104,8 @@ const CharacterList = ({
         bank: doc.data().stats.bank,
         status: doc.data().status,
         location: doc.data().location,
+        // NEW: needed for jail filtering
+        jailReleaseTime: doc.data().jailReleaseTime || null,
       }));
 
       setCharacters(characterData);
@@ -134,6 +136,20 @@ const CharacterList = ({
         : sortedCharacters,
     [type, sortedCharacters]
   );
+
+  // NEW: players in same city and still serving jail time
+  const jailedHere = useMemo(() => {
+    const now = Date.now();
+    const here = userCharacter?.location;
+    return sortedCharacters.filter((c) => {
+      if (!here || !c.location || c.location !== here) return false;
+      const ts = c.jailReleaseTime;
+      // expect Firestore Timestamp: ts?.toMillis()
+      const releaseMs =
+        ts && typeof ts.toMillis === "function" ? ts.toMillis() : null;
+      return !!releaseMs && releaseMs > now;
+    });
+  }, [sortedCharacters, userCharacter?.location]);
 
   const sanitizeInt = (s: string) => s.replace(/[^\d]/g, "");
 
@@ -652,6 +668,34 @@ const CharacterList = ({
             </li>
           ))}
         </ul>
+      </section>
+    );
+  }
+
+  // Type == "jail"  (FILTERED)
+  if (type === "jail") {
+    return (
+      <section>
+        <ul>
+          {jailedHere.map((character) => (
+            <li key={character.id}>
+              {onClick && (
+                <button onClick={() => onClick(character.username)}>
+                  {character.username}
+                </button>
+              )}
+              {!onClick && <Username character={character}></Username>}
+              <Button size="small" style="text">
+                Bryt ut
+              </Button>
+            </li>
+          ))}
+        </ul>
+        {jailedHere.length === 0 && (
+          <p className="text-sm text-neutral-400 mt-1">
+            Ingen innsatte i {userCharacter?.location ?? "byen"} akkurat nå.
+          </p>
+        )}
       </section>
     );
   }

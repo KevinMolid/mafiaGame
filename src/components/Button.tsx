@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 
 interface ButtonInterface {
   children: ReactNode;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>; // <-- accept event
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
   type?: "button" | "submit" | "reset";
   style?:
     | "primary"
@@ -13,7 +13,8 @@ interface ButtonInterface {
     | "accept"
     | "danger"
     | "realistic"
-    | "exit";
+    | "exit"
+    | "text";
   size?: "small" | "normal" | "square" | "small-square";
   disabled?: boolean;
   title?: string;
@@ -55,6 +56,8 @@ const Button = ({
       ? "bg-neutral-900 border-2 border-green-400 text-neutral-200 hover:border-green-500"
       : style === "danger"
       ? "bg-neutral-900 border-2 border-red-400 text-neutral-200 hover:border-red-500"
+      : style === "text"
+      ? "text-neutral-400 hover:text-neutral-200"
       : // primary (default)
         "bg-neutral-900 border-2 border-sky-400 text-neutral-200 hover:border-sky-500";
 

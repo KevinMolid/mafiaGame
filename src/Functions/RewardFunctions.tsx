@@ -131,7 +131,7 @@ export const resetHeat = async (characterID: string) => {
 export const arrest = async (character: any) => {
   try {
     const characterRef = doc(db, "Characters", character.id);
-    const jailDuration = character.stats.heat * 10 * 1000; // heat * 10 seconds in milliseconds
+    const jailDuration = 20000 + character.stats.heat * 10 * 1000; // 20 sec + heat * 10 seconds in milliseconds
     const jailReleaseTime = new Date().getTime() + jailDuration;
     await updateDoc(characterRef, {
       inJail: true,
