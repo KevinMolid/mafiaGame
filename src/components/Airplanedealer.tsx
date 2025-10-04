@@ -80,8 +80,9 @@ const Airplanedealer = () => {
       setMessage(
         <>
           Du kjøpte <strong>{plane.name}</strong> for{" "}
-          <strong>${plane.value.toLocaleString()}</strong>. Dette er nå ditt
-          aktive privatfly.
+          <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{plane.value.toLocaleString("nb-NO")}</strong>. Dette er nå
+          ditt aktive privatfly.
         </>
       );
       setSelectedPlane(null);
@@ -187,13 +188,14 @@ const Airplanedealer = () => {
                       <p>
                         Max lastevekt:{" "}
                         <span className="text-white">
-                          {plane.maxCargoLoad.toLocaleString()} kg
+                          {plane.maxCargoLoad.toLocaleString("nb-NO")} kg
                         </span>
                       </p>
                       <p>
                         Brukskostnad:{" "}
+                        <i className="fa-solid fa-dollar-sign"></i>{" "}
                         <span className="text-white">
-                          ${plane.flightCost.toLocaleString()}
+                          {plane.flightCost.toLocaleString("nb-NO")}
                         </span>
                       </p>
                     </div>
@@ -217,7 +219,8 @@ const Airplanedealer = () => {
                       <>
                         Kjøp{" "}
                         <strong className="text-yellow-400">
-                          ${plane.value.toLocaleString()}
+                          <i className="fa-solid fa-dollar-sign"></i>{" "}
+                          {plane.value.toLocaleString("nb-NO")}
                         </strong>
                       </>
                     )}
