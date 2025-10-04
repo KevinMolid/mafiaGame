@@ -255,7 +255,7 @@ const Travel = () => {
         </div>
 
         {/* Privatfly */}
-        <div className="min-w-[300px]">
+        <div className="min-w-[300px] mb-6">
           <H2>Privatfly</H2>
 
           {!plane ? (
@@ -367,14 +367,17 @@ const Travel = () => {
       </div>
 
       {targetLocation && (
-        <div className="flex items-center gap-4">
-          <Button onClick={handleTravel}>
-            Fly til {targetLocation} <i className="fa-solid fa-plane"></i>{" "}
-            <span className="text-yellow-400">
-              <i className="fa-solid fa-dollar-sign"></i>{" "}
-              {priceToTravel.toLocaleString("nb-NO")}
-            </span>
-          </Button>
+        <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start flex-wrap gap-x-4 gap-y-2">
+          <div>
+            <Button onClick={handleTravel}>
+              Fly til {targetLocation} <i className="fa-solid fa-plane"></i>{" "}
+              <span className="text-yellow-400">
+                <i className="fa-solid fa-dollar-sign"></i>{" "}
+                {priceToTravel.toLocaleString("nb-NO")}
+              </span>
+            </Button>
+          </div>
+
           <span className="text-sm text-neutral-400">
             {usePrivatePlane && plane
               ? "Reiser med privatfly"
