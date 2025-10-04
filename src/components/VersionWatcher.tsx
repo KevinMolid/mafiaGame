@@ -1,7 +1,7 @@
 import useAppVersionWatcher from "../hooks/useAppVersionWatcher";
 
 const VersionWatcher = () => {
-  useAppVersionWatcher({ docPath: ["Meta", "App"], autoReload: true });
+  useAppVersionWatcher({ docPath: ["Config", "app"], autoReload: true });
   return null; // no UI
 };
 

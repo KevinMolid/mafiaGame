@@ -1,51 +1,58 @@
+// useAppVersionWatcher.ts
 import { useEffect, useRef } from "react";
 import { getFirestore, doc, onSnapshot } from "firebase/firestore";
 import { CURRENT_APP_VERSION } from "../config/version";
 
-// Optional: avoid reload loop if Firestore briefly lags during a deploy
 const RELOAD_FLAG = "version-reloaded-for";
+
+// Normalize: coerce -> trim -> strip leading "v"
+const normalize = (v: unknown) =>
+  String(v ?? "").trim().replace(/^v/i, "");
 
 export default function useAppVersionWatcher(
   opts: { docPath?: [string, string]; autoReload?: boolean } = {}
 ) {
-  const { docPath = ["Meta", "App"], autoReload = true } = opts;
+  const { docPath = ["Config", "app"], autoReload = true } = opts;
   const db = getFirestore();
   const reloadedRef = useRef(false);
 
   useEffect(() => {
-    const ref = doc(db, ...docPath); // e.g. Meta/App -> { version: "1.2.3" }
-    const unsub = onSnapshot(ref, (snap) => {
-      const remote = (snap.data()?.version as string) || "dev";
-      const local = CURRENT_APP_VERSION;
-      if (!autoReload) return;
-      if (reloadedRef.current) return;
+    const ref = doc(db, ...docPath);
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        const data = snap.data() || {};
+        // support either "version" or "appVersion"
+        const remoteRaw = (data as any).version ?? (data as any).appVersion;
+        const remote = normalize(remoteRaw);
+        const local = normalize(CURRENT_APP_VERSION);
 
-      // If versions mismatch, reload when tab is visible
-      if (remote && local && remote !== local) {
-        // Prevent loops (in case it still mismatches on first boot after reload)
-        const alreadyFor = sessionStorage.getItem(RELOAD_FLAG);
-        if (alreadyFor === remote) return;
-        sessionStorage.setItem(RELOAD_FLAG, remote);
+        if (!autoReload || reloadedRef.current) return;
+        if (!remote || !local) return; // nothing to compare
 
-        const doReload = () => {
-          // Simple, cache-safe enough for Vite assets with hashed file names
-          window.location.reload();
-        };
+        if (remote !== local) {
+          const alreadyFor = sessionStorage.getItem(RELOAD_FLAG);
+          if (alreadyFor === remote) return;
+          sessionStorage.setItem(RELOAD_FLAG, remote);
 
-        if (document.visibilityState === "visible") {
-          reloadedRef.current = true;
-          doReload();
-        } else {
-          const onVis = () => {
-            if (reloadedRef.current) return;
+          const doReload = () => {
             reloadedRef.current = true;
-            document.removeEventListener("visibilitychange", onVis);
-            doReload();
+            window.location.reload();
           };
-          document.addEventListener("visibilitychange", onVis);
+
+          if (document.visibilityState === "visible") {
+            doReload();
+          } else {
+            const onVis = () => {
+              if (!reloadedRef.current) doReload();
+              document.removeEventListener("visibilitychange", onVis);
+            };
+            document.addEventListener("visibilitychange", onVis);
+          }
         }
-      }
-    }, console.error);
+      },
+      console.error
+    );
 
     return () => unsub();
   }, [db, docPath, autoReload]);
