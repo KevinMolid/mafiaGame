@@ -359,11 +359,14 @@ const ForumThread = () => {
   };
 
   const isAuthor = !!userCharacter && thread?.authorId === userCharacter.id;
-  const isAdmin = userData?.type === "admin";
+  const isStaff =
+    userData?.type === "admin" ||
+    userCharacter?.role === "admin" ||
+    userCharacter?.role === "moderator";
 
   // --- Admin actions ---
   const toggleSticky = async () => {
-    if (!postId || !isAdmin || !thread) return;
+    if (!postId || !isStaff || !thread) return;
     const next = !thread.isSticky;
     try {
       await updateDoc(doc(db, "ForumThreads", postId), {
@@ -384,7 +387,7 @@ const ForumThread = () => {
   };
 
   const toggleClosed = async () => {
-    if (!postId || !isAdmin || !thread) return;
+    if (!postId || !isStaff || !thread) return;
     const next = !thread.isClosed;
     try {
       await updateDoc(doc(db, "ForumThreads", postId), {
@@ -456,7 +459,7 @@ const ForumThread = () => {
 
   const deleteThread = async () => {
     if (!postId || !thread) return;
-    if (!isAuthor && !isAdmin) {
+    if (!isAuthor && !isStaff) {
       setMessageType("warning");
       setMessage("Du har ikke tilgang til å slette denne tråden.");
       return;
@@ -729,7 +732,7 @@ const ForumThread = () => {
                       <i className="fa-solid fa-pen" />
                     </Button>
                   )}
-                  {isAuthor && !editing && (
+                  {isAuthor && !editing && !isStaff && (
                     <Button
                       onClick={deleteThread}
                       size="small-square"
@@ -740,7 +743,7 @@ const ForumThread = () => {
                       <i className="fa-solid fa-trash" />
                     </Button>
                   )}
-                  {isAdmin && (
+                  {isStaff && (
                     <>
                       <Button
                         onClick={toggleSticky}

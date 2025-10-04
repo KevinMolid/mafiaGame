@@ -272,7 +272,15 @@ const Alerts = () => {
               {alert.type === "newRole" && (
                 <small>
                   Din rolle ble endret til{" "}
-                  <strong className="capitalize text-sky-400">
+                  <strong
+                    className={
+                      (alert.newRole === "admin"
+                        ? "text-sky-400"
+                        : alert.newRole === "moderator"
+                        ? "text-green-400"
+                        : "") + " capitalize"
+                    }
+                  >
                     {alert.newRole}
                   </strong>{" "}
                   av{" "}
@@ -290,7 +298,15 @@ const Alerts = () => {
               {alert.type === "removeRole" && (
                 <small>
                   Din rolle som{" "}
-                  <strong className="capitalize text-sky-400">
+                  <strong
+                    className={
+                      (alert.removedRole === "admin"
+                        ? "text-sky-400"
+                        : alert.removedRole === "moderator"
+                        ? "text-green-400"
+                        : "") + " capitalize"
+                    }
+                  >
                     {alert.removedRole}
                   </strong>{" "}
                   ble fjernet av{" "}
