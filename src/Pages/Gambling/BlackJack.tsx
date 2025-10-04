@@ -168,8 +168,11 @@ type MessageShape =
   | { kind: "warning"; text: string }
   | { kind: "win"; amount: number }
   | { kind: "lose"; amount: number }
+  | { kind: "double_win"; amount: number }
+  | { kind: "double_lose"; amount: number }
   | { kind: "push"; amount: number }
   | { kind: "dealer_bust"; amount: number }
+  | { kind: "dealer_bust_double"; amount: number }
   | { kind: "player_bust"; amount: number };
 
 function renderMessageFromShape(shape: MessageShape): React.ReactNode {
@@ -183,10 +186,16 @@ function renderMessageFromShape(shape: MessageShape): React.ReactNode {
       return <p>Du vant {$(shape.amount)}!</p>;
     case "lose":
       return <p>Du tapte {$(shape.amount)}.</p>;
+    case "double_win":
+      return <p>Du doblet og vant {$(shape.amount)}!</p>;
+    case "double_lose":
+      return <p>Du doblet og tapte {$(shape.amount)}.</p>;
     case "push":
       return <p>Uavgjort – du fikk {$(shape.amount)} tilbake.</p>;
     case "dealer_bust":
       return <p>Dealer bust! Du vant {$(shape.amount)}!</p>;
+    case "dealer_bust_double":
+      return <p>Dealer bust! Du doblet og vant {$(shape.amount)}!</p>;
     case "player_bust":
       return <p>Bust! Du tapte {$(shape.amount)}.</p>;
     case "warning":
@@ -872,20 +881,41 @@ const BlackJack = () => {
       return;
     }
 
+    // Was this hand doubled?
+    const didDouble =
+      betAmount !== "" && typeof betAmount === "number"
+        ? eff > betAmount
+        : false;
+
     if (dv > 21) {
       await credit(eff * 2);
       nextType = "success";
-      nextShape = { kind: "dealer_bust", amount: eff };
-      nextMsgPlain = `Dealer bust! Du vant ${fmt(eff)}!`;
+      if (didDouble) {
+        nextShape = { kind: "dealer_bust_double", amount: eff };
+        nextMsgPlain = `Dealer bust! Du doblet og vant ${fmt(eff)}!`;
+      } else {
+        nextShape = { kind: "dealer_bust", amount: eff };
+        nextMsgPlain = `Dealer bust! Du vant ${fmt(eff)}!`;
+      }
     } else if (p > dv) {
       await credit(eff * 2);
       nextType = "success";
-      nextShape = { kind: "win", amount: eff };
-      nextMsgPlain = `Du vant ${fmt(eff)}!`;
+      if (didDouble) {
+        nextShape = { kind: "double_win", amount: eff };
+        nextMsgPlain = `Du doblet og vant ${fmt(eff)}!`;
+      } else {
+        nextShape = { kind: "win", amount: eff };
+        nextMsgPlain = `Du vant ${fmt(eff)}!`;
+      }
     } else if (p < dv) {
       nextType = "failure";
-      nextShape = { kind: "lose", amount: eff };
-      nextMsgPlain = `Du tapte ${fmt(eff)}.`;
+      if (didDouble) {
+        nextShape = { kind: "double_lose", amount: eff };
+        nextMsgPlain = `Du doblet og tapte ${fmt(eff)}.`;
+      } else {
+        nextShape = { kind: "lose", amount: eff };
+        nextMsgPlain = `Du tapte ${fmt(eff)}.`;
+      }
     } else {
       await credit(eff);
       nextType = "info";

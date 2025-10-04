@@ -1,5 +1,6 @@
 // Components
 import DropdownOption from "./DropdownOption";
+import Username from "./Typography/Username";
 
 // React
 import { Link, useNavigate } from "react-router-dom";
@@ -196,9 +197,12 @@ const DropdownRight = () => {
                     alt="Profile picture"
                   />
                   <div className="text-stone-400">
-                    <p className="text-white font-bold">
-                      {userCharacter.username}
-                    </p>
+                    <Username
+                      character={{
+                        id: userCharacter.id,
+                        username: userCharacter.username,
+                      }}
+                    />
                     <p>{getCurrentRank(userCharacter.stats.xp)}</p>
                   </div>
                 </div>
