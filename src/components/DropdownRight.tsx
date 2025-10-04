@@ -189,24 +189,24 @@ const DropdownRight = () => {
         >
           {userCharacter ? (
             <div>
-              <Link to={`/profil/${userCharacter.id}`} onClick={toggleMenu}>
-                <div className="px-4 py-2 mt-2 flex sm:hidden gap-2 items-center hover:bg-neutral-900">
+              <div className="px-4 py-2 mt-2 flex sm:hidden gap-2 items-center hover:bg-neutral-900">
+                <Link to={`/profil/${userCharacter.id}`} onClick={toggleMenu}>
                   <img
                     className="border border-neutral-500 w-[60px] h-[60px] object-cover hover:cursor-pointer"
                     src={userCharacter.img || "/default.jpg"}
                     alt="Profile picture"
                   />
-                  <div className="text-stone-400">
-                    <Username
-                      character={{
-                        id: userCharacter.id,
-                        username: userCharacter.username,
-                      }}
-                    />
-                    <p>{getCurrentRank(userCharacter.stats.xp)}</p>
-                  </div>
+                </Link>
+                <div className="text-stone-400">
+                  <Username
+                    character={{
+                      id: userCharacter.id,
+                      username: userCharacter.username,
+                    }}
+                  />
+                  <p>{getCurrentRank(userCharacter.stats.xp)}</p>
                 </div>
-              </Link>
+              </div>
 
               <hr className="border-neutral-700 my-2 sm:hidden" />
               <div className="hidden sm:flex p-2"></div>

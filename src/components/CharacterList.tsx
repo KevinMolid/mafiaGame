@@ -7,6 +7,9 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
+  onSnapshot,
+  query,
+  where,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 
@@ -89,38 +92,88 @@ const CharacterList = ({
   >("info");
   const [loading, setLoading] = useState(true);
 
-  const fetchCharacters = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(db, "Characters"));
-
-      const characterData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        username: doc.data().username,
-        familyId: doc.data().familyId,
-        role: doc.data().role,
-        familyName: doc.data().familyName,
-        xp: doc.data().stats.xp,
-        money: doc.data().stats.money,
-        bank: doc.data().stats.bank,
-        status: doc.data().status,
-        location: doc.data().location,
-        // NEW: needed for jail filtering
-        jailReleaseTime: doc.data().jailReleaseTime || null,
-      }));
-
-      setCharacters(characterData);
-      setLoading(false);
-    } catch (error) {
-      console.error("Feil ved lasting av spillere:", error);
-      setLoading(false);
-    }
-  };
-
+  // ----- Data loading -----
   useEffect(() => {
-    fetchCharacters();
-  }, []);
+    // Real-time jail list in same city
+    if (type === "jail") {
+      // Wait until we know the user's city
+      if (!userCharacter?.location) {
+        setCharacters([]);
+        setLoading(false);
+        return;
+      }
 
-  // Function to sort characters
+      setLoading(true);
+      const qRef = query(
+        collection(db, "Characters"),
+        where("location", "==", userCharacter.location),
+        where("inJail", "==", true)
+      );
+
+      const unsub = onSnapshot(
+        qRef,
+        (snap) => {
+          const data = snap.docs.map((d) => {
+            const v = d.data() as any;
+            return {
+              id: d.id,
+              username: v.username,
+              familyId: v.familyId,
+              role: v.role,
+              familyName: v.familyName,
+              xp: v.stats?.xp ?? 0,
+              money: v.stats?.money ?? 0,
+              bank: v.stats?.bank ?? 0,
+              status: v.status,
+              location: v.location,
+              inJail: v.inJail === true,
+              jailReleaseTime: v.jailReleaseTime || null, // optional (not used for filtering now)
+            };
+          });
+          setCharacters(data);
+          setLoading(false);
+        },
+        (err) => {
+          console.error("onSnapshot(jail) failed:", err);
+          setCharacters([]);
+          setLoading(false);
+        }
+      );
+
+      return () => unsub();
+    }
+
+    // Default: one-time fetch for other views (rank/admin/chat/default)
+    const fetchCharacters = async () => {
+      try {
+        setLoading(true);
+        const querySnapshot = await getDocs(collection(db, "Characters"));
+        const characterData = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          username: doc.data().username,
+          familyId: doc.data().familyId,
+          role: doc.data().role,
+          familyName: doc.data().familyName,
+          xp: doc.data().stats?.xp ?? 0,
+          money: doc.data().stats?.money ?? 0,
+          bank: doc.data().stats?.bank ?? 0,
+          status: doc.data().status,
+          location: doc.data().location,
+          inJail: doc.data().inJail === true,
+          jailReleaseTime: doc.data().jailReleaseTime || null,
+        }));
+        setCharacters(characterData);
+      } catch (error) {
+        console.error("Feil ved lasting av spillere:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCharacters();
+  }, [type, userCharacter?.location]);
+
+  // ----- Sorting / derived lists -----
   const sortedCharacters = useMemo(() => {
     const arr = [...characters];
     if (sortBy === "xp") return arr.sort((a, b) => b.xp - a.xp);
@@ -136,20 +189,6 @@ const CharacterList = ({
         : sortedCharacters,
     [type, sortedCharacters]
   );
-
-  // NEW: players in same city and still serving jail time
-  const jailedHere = useMemo(() => {
-    const now = Date.now();
-    const here = userCharacter?.location;
-    return sortedCharacters.filter((c) => {
-      if (!here || !c.location || c.location !== here) return false;
-      const ts = c.jailReleaseTime;
-      // expect Firestore Timestamp: ts?.toMillis()
-      const releaseMs =
-        ts && typeof ts.toMillis === "function" ? ts.toMillis() : null;
-      return !!releaseMs && releaseMs > now;
-    });
-  }, [sortedCharacters, userCharacter?.location]);
 
   const sanitizeInt = (s: string) => s.replace(/[^\d]/g, "");
 
@@ -324,12 +363,10 @@ const CharacterList = ({
     try {
       const characterRef = doc(db, "Characters", character.id);
 
-      // Update the money in Firebase
       await updateDoc(characterRef, {
         "stats.xp": newValue,
       });
 
-      // Update the local state
       setCharacters((prevCharacters) =>
         prevCharacters.map((char) =>
           char.id === character.id ? { ...char, xp: newValue } : char
@@ -351,12 +388,10 @@ const CharacterList = ({
     try {
       const characterRef = doc(db, "Characters", character.id);
 
-      // Update the money in Firebase
       await updateDoc(characterRef, {
         "stats.money": newValue,
       });
 
-      // Update the local state
       setCharacters((prevCharacters) =>
         prevCharacters.map((char) =>
           char.id === character.id ? { ...char, money: newValue } : char
@@ -378,12 +413,10 @@ const CharacterList = ({
     try {
       const characterRef = doc(db, "Characters", character.id);
 
-      // Update the money in Firebase
       await updateDoc(characterRef, {
         "stats.bank": newValue,
       });
 
-      // Update the local state
       setCharacters((prevCharacters) =>
         prevCharacters.map((char) =>
           char.id === character.id ? { ...char, bank: newValue } : char
@@ -431,11 +464,12 @@ const CharacterList = ({
     }
   };
 
+  // ----- Loading / empty states -----
   if (loading) {
     return <p>Laster spillere...</p>;
   }
 
-  if (characters.length === 0) {
+  if (characters.length === 0 && type !== "jail") {
     return <p>Ingen spillere funnet.</p>;
   }
 
@@ -672,12 +706,12 @@ const CharacterList = ({
     );
   }
 
-  // Type == "jail"  (FILTERED)
+  // Type == "jail" (already filtered by query)
   if (type === "jail") {
     return (
       <section>
         <ul>
-          {jailedHere.map((character) => (
+          {characters.map((character) => (
             <li key={character.id}>
               {onClick && (
                 <button onClick={() => onClick(character.username)}>
@@ -691,7 +725,7 @@ const CharacterList = ({
             </li>
           ))}
         </ul>
-        {jailedHere.length === 0 && (
+        {characters.length === 0 && (
           <p className="text-sm text-neutral-400 mt-1">
             Ingen innsatte i {userCharacter?.location ?? "byen"} akkurat nå.
           </p>
