@@ -3,6 +3,7 @@ import H1 from "../components/Typography/H1";
 import Button from "../components/Button";
 import InfoBox from "../components/InfoBox";
 import { useState } from "react";
+import { useCharacter } from "../CharacterContext";
 
 import { initializeApp, getApps } from "firebase/app";
 import {
@@ -18,27 +19,13 @@ import firebaseConfig from "../firebaseConfig";
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-type CategoryValue =
-  | "bug"
-  | "account"
-  | "purchase"
-  | "report"
-  | "balance"
-  | "other";
-
-const CATEGORIES: { value: CategoryValue; label: string }[] = [
-  { value: "bug", label: "Feil & krasj" },
-  { value: "account", label: "Konto & innlogging" },
-  { value: "purchase", label: "Kjøp & betaling" },
-  { value: "report", label: "Rapporter spiller / Juks" },
-  { value: "balance", label: "Balanse & spillinnhold" },
-  { value: "other", label: "Annet" },
-];
+import { CATEGORIES, CategoryValue } from "../constants/support";
 
 type MessageKind = "success" | "failure" | "important" | "warning" | "info";
 type MessageState = { kind: MessageKind; text: string } | null;
 
 const Support = () => {
+  const { userCharacter } = useCharacter();
   const [category, setCategory] = useState<CategoryValue | "">("");
   const [topic, setTopic] = useState("");
   const [content, setContent] = useState("");
@@ -78,22 +65,34 @@ const Support = () => {
     setMessage(null);
 
     try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-
       await addDoc(collection(db, "SupportTickets"), {
         category,
         topic: topic.trim(),
         content: content.trim(),
         status: "open",
         createdAt: serverTimestamp(),
-        user: user
+
+        // who is logged-in (Firebase Auth)
+        user: (() => {
+          const auth = getAuth();
+          const u = auth.currentUser;
+          return u
+            ? {
+                uid: u.uid,
+                displayName: u.displayName || null,
+                email: u.email || null,
+              }
+            : null;
+        })(),
+
+        // active character (from your game context)
+        character: userCharacter
           ? {
-              uid: user.uid,
-              displayName: user.displayName || null,
-              email: user.email || null,
+              id: userCharacter.id ?? null,
+              name: userCharacter.username ?? null,
             }
           : null,
+
         client: {
           ua: typeof navigator !== "undefined" ? navigator.userAgent : null,
           tzOffsetMin: new Date().getTimezoneOffset(),
