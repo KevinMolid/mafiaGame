@@ -70,7 +70,7 @@ import Hacking from "./Pages/Hacking.tsx";
 // Protected routes
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
 import ProtectedAdminRoute from "./Routes/ProtectedAdminRoute.tsx";
-import NewsBar from "./components/NewsBar.tsx";
+import NewsBar from "./components/News/NewsBar.tsx";
 
 import NotFound from "./Pages/NotFound.tsx";
 

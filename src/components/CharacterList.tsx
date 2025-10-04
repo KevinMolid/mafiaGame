@@ -29,6 +29,7 @@ const db = getFirestore(app);
 // Helpers
 type RoleName = "admin" | "moderator";
 type RoleAlertType = "newRole" | "removeRole";
+type GameEventType = "newRole" | "removeRole";
 
 /** Write a role alert to /Characters/{targetId}/alerts */
 async function addRoleAlert(
@@ -45,6 +46,25 @@ async function addRoleAlert(
     timestamp: serverTimestamp(),
     type,
     ...(type === "newRole" ? { newRole: role } : { removedRole: role }),
+  });
+}
+
+async function logGameEvent(
+  userId: string,
+  userName: string,
+  actorId: string,
+  actorName: string,
+  eventType: GameEventType,
+  role: RoleName
+) {
+  await addDoc(collection(db, "GameEvents"), {
+    userId,
+    userName,
+    actorId,
+    actorName,
+    eventType,
+    role,
+    timestamp: serverTimestamp(),
   });
 }
 
@@ -159,6 +179,14 @@ const CharacterList = ({
       const characterRef = doc(db, "Characters", character.id);
 
       await updateDoc(characterRef, { role: "admin" });
+      await logGameEvent(
+        character.id,
+        character.username,
+        actorId,
+        actorName,
+        "newRole",
+        "admin"
+      );
       await addRoleAlert(character.id, actorId, actorName, "newRole", "admin");
 
       setCharacters((prev) =>
@@ -179,6 +207,14 @@ const CharacterList = ({
       const characterRef = doc(db, "Characters", character.id);
 
       await updateDoc(characterRef, { role: "" });
+      await logGameEvent(
+        character.id,
+        character.username,
+        actorId,
+        actorName,
+        "removeRole",
+        "admin"
+      );
       await addRoleAlert(
         character.id,
         actorId,
@@ -205,6 +241,14 @@ const CharacterList = ({
       const characterRef = doc(db, "Characters", character.id);
 
       await updateDoc(characterRef, { role: "moderator" });
+      await logGameEvent(
+        character.id,
+        character.username,
+        actorId,
+        actorName,
+        "newRole",
+        "moderator"
+      );
       await addRoleAlert(
         character.id,
         actorId,
@@ -231,6 +275,14 @@ const CharacterList = ({
       const characterRef = doc(db, "Characters", character.id);
 
       await updateDoc(characterRef, { role: "" });
+      await logGameEvent(
+        character.id,
+        character.username,
+        actorId,
+        actorName,
+        "removeRole",
+        "moderator"
+      );
       await addRoleAlert(
         character.id,
         actorId,

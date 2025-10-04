@@ -6,7 +6,7 @@ import Equipment from "../components/Equipment";
 import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
 
-import NewsFeed from "../components/NewsFeed";
+import NewsFeed from "../components/News/NewsFeed";
 import UpdateFeed from "../components/UpdateFeed";
 
 import { getCurrentRank } from "../Functions/RankFunctions";
