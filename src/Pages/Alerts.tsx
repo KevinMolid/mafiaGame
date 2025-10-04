@@ -38,6 +38,10 @@ interface AlertItem {
   bountyAmount: number;
   killedPlayerId: string;
   killedPlayerName: string;
+  newRole: string;
+  removedRole: string;
+  userId: string;
+  userName: string;
   timestamp: Date;
   read: boolean;
 }
@@ -107,6 +111,10 @@ const Alerts = () => {
             bountyAmount: data.bountyAmount || 0,
             killedPlayerId: data.killedPlayerId || "",
             killedPlayerName: data.killedPlayerName || "",
+            newRole: data.newRole || "",
+            removedRole: data.removedRole || "",
+            userId: data.userId || "",
+            userName: data.userName || "",
             read: data.read || false,
           };
         });
@@ -254,6 +262,42 @@ const Alerts = () => {
                     family={{
                       id: alert.familyId,
                       name: alert.familyName,
+                    }}
+                  />
+                  .
+                </small>
+              )}
+
+              {/* New Role alert */}
+              {alert.type === "newRole" && (
+                <small>
+                  Din rolle ble endret til{" "}
+                  <strong className="capitalize text-sky-400">
+                    {alert.newRole}
+                  </strong>{" "}
+                  av{" "}
+                  <Username
+                    character={{
+                      id: alert.userId,
+                      username: alert.userName,
+                    }}
+                  />
+                  .
+                </small>
+              )}
+
+              {/* Removed Role alert */}
+              {alert.type === "removeRole" && (
+                <small>
+                  Din rolle som{" "}
+                  <strong className="capitalize text-sky-400">
+                    {alert.removedRole}
+                  </strong>{" "}
+                  ble fjernet av{" "}
+                  <Username
+                    character={{
+                      id: alert.userId,
+                      username: alert.userName,
                     }}
                   />
                   .

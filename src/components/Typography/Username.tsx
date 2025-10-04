@@ -40,9 +40,19 @@ const Username = ({
     role === "admin" ||
     (userCharacter?.id === character.id && userCharacter?.role === "admin");
 
+  const isModerator =
+    role === "moderator" ||
+    (userCharacter?.id === character.id && userCharacter?.role === "moderator");
+
   const nameClasses = [
     "hover:underline",
-    useParentColor ? "" : isAdmin ? "text-sky-400" : "text-white",
+    useParentColor
+      ? ""
+      : isAdmin
+      ? "text-sky-400"
+      : isModerator
+      ? "text-green-400"
+      : "text-white",
     className,
   ]
     .filter(Boolean)
@@ -51,6 +61,10 @@ const Username = ({
   const prefixIcon = isAdmin ? (
     <span className="text-sky-400">
       <i className="fa-solid fa-gear"></i>{" "}
+    </span>
+  ) : isModerator ? (
+    <span className="text-green-400">
+      <i className="fa-solid fa-shield"></i>{" "}
     </span>
   ) : userCharacter && character.id === userCharacter.id ? (
     <span className="text-sky-400">

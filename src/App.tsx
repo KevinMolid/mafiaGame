@@ -76,7 +76,6 @@ import NotFound from "./Pages/NotFound.tsx";
 
 // Version control
 import VersionWatcher from "./components/VersionWatcher";
-import VersionPanel from "./components/VersionPanel.tsx";
 
 function App() {
   return (
@@ -103,7 +102,6 @@ function App() {
                     </div>
 
                     <VersionWatcher />
-                    <VersionPanel />
 
                     <div className="relative flex flex-col flex-grow">
                       <Layout>

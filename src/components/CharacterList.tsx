@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import {
   getFirestore,
   collection,
+  addDoc,
   getDocs,
   doc,
   updateDoc,
@@ -11,6 +12,8 @@ import { initializeApp } from "firebase/app";
 
 import firebaseConfig from "../firebaseConfig";
 
+import { useCharacter } from "../CharacterContext";
+
 // Components
 import Username from "./Typography/Username";
 import InfoBox from "./InfoBox";
@@ -19,6 +22,31 @@ import Button from "./Button";
 
 // Functions
 import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Helpers
+type RoleName = "admin" | "moderator";
+type RoleAlertType = "newRole" | "removeRole";
+
+/** Write a role alert to /Characters/{targetId}/alerts */
+async function addRoleAlert(
+  targetCharacterId: string,
+  actorId: string,
+  actorName: string,
+  type: RoleAlertType,
+  role: RoleName
+) {
+  await addDoc(collection(db, "Characters", targetCharacterId, "alerts"), {
+    read: false,
+    userId: actorId,
+    userName: actorName,
+    timestamp: serverTimestamp(),
+    type,
+    ...(type === "newRole" ? { newRole: role } : { removedRole: role }),
+  });
+}
 
 interface CharacterListProps {
   type?: "rank" | "admin" | "chat" | "";
@@ -32,6 +60,7 @@ const CharacterList = ({
   onClick,
 }: CharacterListProps) => {
   const [characters, setCharacters] = useState<Array<any>>([]);
+  const { userCharacter } = useCharacter();
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>("");
   const [newValue, setNewValue] = useState<number | "">("");
   const [message, setMessage] = useState<string>("");
@@ -39,9 +68,6 @@ const CharacterList = ({
     "success" | "warning" | "info"
   >("info");
   const [loading, setLoading] = useState(true);
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
 
   const fetchCharacters = async () => {
     try {
@@ -124,18 +150,19 @@ const CharacterList = ({
     );
   };
 
+  // Make sure you have the acting user's name available (adjust as needed)
+  const actorId = userCharacter?.id ?? "oBeIZgsM33Kieq4HdotP";
+  const actorName = userCharacter?.username ?? "System";
+
   const makeAdmin = async (character: any) => {
     try {
       const characterRef = doc(db, "Characters", character.id);
 
-      // Update the role in Firebase
-      await updateDoc(characterRef, {
-        role: "admin",
-      });
+      await updateDoc(characterRef, { role: "admin" });
+      await addRoleAlert(character.id, actorId, actorName, "newRole", "admin");
 
-      // Update the local state
-      setCharacters((prevCharacters) =>
-        prevCharacters.map((char) =>
+      setCharacters((prev) =>
+        prev.map((char) =>
           char.id === character.id ? { ...char, role: "admin" } : char
         )
       );
@@ -151,14 +178,17 @@ const CharacterList = ({
     try {
       const characterRef = doc(db, "Characters", character.id);
 
-      // Update the role in Firebase
-      await updateDoc(characterRef, {
-        role: "",
-      });
+      await updateDoc(characterRef, { role: "" });
+      await addRoleAlert(
+        character.id,
+        actorId,
+        actorName,
+        "removeRole",
+        "admin"
+      );
 
-      // Update the local state
-      setCharacters((prevCharacters) =>
-        prevCharacters.map((char) =>
+      setCharacters((prev) =>
+        prev.map((char) =>
           char.id === character.id ? { ...char, role: "" } : char
         )
       );
@@ -167,6 +197,58 @@ const CharacterList = ({
       setMessage(`${character.username} ble fjernet som admin.`);
     } catch (error) {
       console.error("Feil ved oppdatering av admin-rolle:", error);
+    }
+  };
+
+  const makeModerator = async (character: any) => {
+    try {
+      const characterRef = doc(db, "Characters", character.id);
+
+      await updateDoc(characterRef, { role: "moderator" });
+      await addRoleAlert(
+        character.id,
+        actorId,
+        actorName,
+        "newRole",
+        "moderator"
+      );
+
+      setCharacters((prev) =>
+        prev.map((char) =>
+          char.id === character.id ? { ...char, role: "moderator" } : char
+        )
+      );
+
+      setMessageType("success");
+      setMessage(`${character.username} ble satt som moderator.`);
+    } catch (error) {
+      console.error("Feil ved oppdatering av moderator-rolle:", error);
+    }
+  };
+
+  const removeModerator = async (character: any) => {
+    try {
+      const characterRef = doc(db, "Characters", character.id);
+
+      await updateDoc(characterRef, { role: "" });
+      await addRoleAlert(
+        character.id,
+        actorId,
+        actorName,
+        "removeRole",
+        "moderator"
+      );
+
+      setCharacters((prev) =>
+        prev.map((char) =>
+          char.id === character.id ? { ...char, role: "" } : char
+        )
+      );
+
+      setMessageType("success");
+      setMessage(`${character.username} ble fjernet som moderator.`);
+    } catch (error) {
+      console.error("Feil ved oppdatering av moderator-rolle:", error);
     }
   };
 
@@ -449,6 +531,28 @@ const CharacterList = ({
                         </p>
                       </Button>
                     )}
+
+                    {character.role === "moderator" ? (
+                      <Button
+                        size="small"
+                        style="danger"
+                        onClick={() => removeModerator(character)}
+                      >
+                        <p>
+                          <i className="fa-solid fa-cancel"></i> Fjern Moderator
+                        </p>
+                      </Button>
+                    ) : (
+                      <Button
+                        size="small"
+                        onClick={() => makeModerator(character)}
+                      >
+                        <p>
+                          <i className="fa-solid fa-shield"></i> Sett Moderator
+                        </p>
+                      </Button>
+                    )}
+
                     {character.status === "alive" && (
                       <div>
                         <Button
