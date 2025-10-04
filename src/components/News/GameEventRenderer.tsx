@@ -170,14 +170,8 @@ export function renderGameEvent(ev: GameEvent) {
               }
             >
               {ev.role}
-            </strong>{" "}
-            av{" "}
-            <Username
-              character={{
-                id: ev.actorId || "",
-                username: ev.actorName || "Ukjent",
-              }}
-            />
+            </strong>
+            .
           </small>
           <small className="ml-auto text-xs lg:text-sm">{formattedTime}</small>
         </li>
