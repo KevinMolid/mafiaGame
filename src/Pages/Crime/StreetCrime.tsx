@@ -116,6 +116,10 @@ const StreetCrime = () => {
       );
       setMessageType("success");
     } else {
+      batch.update(characterRef, {
+        "stats.heat": userCharacter.stats.heat + 1,
+      });
+
       setMessage(
         `Du prøvde å utføre ${crime.name}, men feilet. Bedre lykke neste gang!`
       );

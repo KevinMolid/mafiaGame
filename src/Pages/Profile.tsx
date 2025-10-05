@@ -58,7 +58,7 @@ const Profile = () => {
   // Global tab state (we'll choose the right value via effects below)
   const [view, setView] = useState<ViewKey>("profile");
 
-  const [message, setMessage] = useState<string>("");
+  const [message, setMessage] = useState<React.ReactNode>("");
   const [messageType, setMessageType] = useState<
     "info" | "success" | "warning" | "failure"
   >("info");
@@ -186,7 +186,18 @@ const Profile = () => {
 
       if (isAlreadyFriend) {
         setMessageType("warning");
-        setMessage(`${characterData.username} er allerede lagt til som venn.`);
+        setMessage(
+          <>
+            <Username
+              useParentColor
+              character={{
+                id: characterData.id,
+                username: characterData.username,
+              }}
+            />{" "}
+            er allerede lagt til som venn.
+          </>
+        );
         return;
       }
 
@@ -197,9 +208,31 @@ const Profile = () => {
 
       setMessageType("success");
       setMessage(
-        isAlreadyBlacklist
-          ? `La ${characterData.username} til som venn. ${characterData.username} ble fjernet fra svartelisten.`
-          : `La ${characterData.username} til som venn.`
+        isAlreadyBlacklist ? (
+          <>
+            Flyttet{" "}
+            <Username
+              useParentColor
+              character={{
+                id: characterData.id,
+                username: characterData.username,
+              }}
+            />{" "}
+            fra svarteliste til venner.
+          </>
+        ) : (
+          <>
+            La{" "}
+            <Username
+              useParentColor
+              character={{
+                id: characterData.id,
+                username: characterData.username,
+              }}
+            />{" "}
+            til som venn.
+          </>
+        )
       );
     } catch (err) {
       console.error("En feil oppstod da du prøvde å legge til en venn:", err);
@@ -234,7 +267,16 @@ const Profile = () => {
       if (isAlreadyBlacklist) {
         setMessageType("warning");
         setMessage(
-          `${characterData.username} er allerede lagt til på svartelisten.`
+          <>
+            <Username
+              useParentColor
+              character={{
+                id: characterData.id,
+                username: characterData.username,
+              }}
+            />{" "}
+            er allerede lagt til på svartelisten.
+          </>
         );
         return;
       }
@@ -246,15 +288,111 @@ const Profile = () => {
 
       setMessageType("success");
       setMessage(
-        isAlreadyFriend
-          ? `La ${characterData.username} til på svartelisten. ${characterData.username} ble fjernet fra venner.`
-          : `La ${characterData.username} til på svartelisten.`
+        isAlreadyFriend ? (
+          <>
+            Flyttet{" "}
+            <Username
+              useParentColor
+              character={{
+                id: characterData.id,
+                username: characterData.username,
+              }}
+            />{" "}
+            fra venner til svarteliste.
+          </>
+        ) : (
+          <>
+            La{" "}
+            <Username
+              useParentColor
+              character={{
+                id: characterData.id,
+                username: characterData.username,
+              }}
+            />{" "}
+            til på svartelisten.
+          </>
+        )
       );
     } catch (err) {
       console.error(
         "En feil oppstod da du prøvde å legge til en spiller på svartelisten:",
         err
       );
+    }
+  };
+
+  // Is the viewed player your friend / on your blacklist?
+  const isFriend = !!userCharacter?.friends?.some(
+    (f: any) => f.id === spillerID
+  );
+  const isBlacklisted = !!userCharacter?.blacklist?.some(
+    (p: any) => p.id === spillerID
+  );
+
+  const removeFriend = async () => {
+    if (!spillerID || !userCharacter) return;
+    const userRef = doc(db, "Characters", userCharacter.id);
+    try {
+      const snap = await getDoc(userRef);
+      if (!snap.exists()) return;
+      const data = snap.data();
+      const currentFriends = Array.isArray(data.friends) ? data.friends : [];
+      await updateDoc(userRef, {
+        friends: currentFriends.filter((f: any) => f.id !== spillerID),
+      });
+      setMessageType("success");
+      setMessage(
+        <>
+          Fjernet{" "}
+          <Username
+            useParentColor
+            character={{
+              id: characterData.id,
+              username: characterData.username,
+            }}
+          />{" "}
+          fra venner.
+        </>
+      );
+    } catch (e) {
+      console.error("Kunne ikke fjerne venn:", e);
+      setMessageType("failure");
+      setMessage("Kunne ikke fjerne venn. Prøv igjen.");
+    }
+  };
+
+  const removeFromBlacklist = async () => {
+    if (!spillerID || !userCharacter) return;
+    const userRef = doc(db, "Characters", userCharacter.id);
+    try {
+      const snap = await getDoc(userRef);
+      if (!snap.exists()) return;
+      const data = snap.data();
+      const currentBlacklist = Array.isArray(data.blacklist)
+        ? data.blacklist
+        : [];
+      await updateDoc(userRef, {
+        blacklist: currentBlacklist.filter((p: any) => p.id !== spillerID),
+      });
+      setMessageType("success");
+      setMessage(
+        <>
+          Fjernet{" "}
+          <Username
+            useParentColor
+            character={{
+              id: characterData.id,
+              username: characterData.username,
+            }}
+          />{" "}
+          fra svartelisten.
+        </>
+      );
+    } catch (e) {
+      console.error("Kunne ikke fjerne fra svarteliste:", e);
+      setMessageType("failure");
+      setMessage("Kunne ikke fjerne fra svarteliste. Prøv igjen.");
     }
   };
 
@@ -293,18 +431,32 @@ const Profile = () => {
                 </div>
               </Link>
 
+              {/* Friend toggle */}
               <button
-                onClick={addFriend}
-                className="hover:text-white"
-                title={`Sett ${characterData.username} som venn`}
+                onClick={isFriend ? removeFriend : addFriend}
+                className={`hover:text-white ${
+                  isFriend ? "text-green-400" : ""
+                }`}
+                title={
+                  isFriend
+                    ? `Fjern ${characterData.username} som venn`
+                    : `Sett ${characterData.username} som venn`
+                }
               >
-                <i className="fa-solid fa-user-group"></i>{" "}
+                <i className="fa-solid fa-user-group"></i>
               </button>
 
+              {/* Blacklist toggle */}
               <button
-                onClick={addToBlacklist}
-                className="hover:text-white"
-                title={`Svartelist ${characterData.username}`}
+                onClick={isBlacklisted ? removeFromBlacklist : addToBlacklist}
+                className={`hover:text-white ${
+                  isBlacklisted ? "text-red-400" : ""
+                }`}
+                title={
+                  isBlacklisted
+                    ? `Fjern fra svarteliste`
+                    : `Svartelist ${characterData.username}`
+                }
               >
                 <i className="fa-solid fa-skull-crossbones"></i>
               </button>
@@ -325,6 +477,7 @@ const Profile = () => {
             <li className="text-stone-400">Navn</li>
             <li>
               <Username
+                useParentColor
                 character={{
                   id: characterData.id,
                   username: characterData.username,

@@ -175,11 +175,11 @@ const GTA = () => {
         setMessageType("failure");
         startCooldown("gta");
 
-        const jailChance = userCharacter.stats.heat;
-        if (
-          userCharacter.stats.heat >= 50 ||
-          Math.random() * 100 < jailChance
-        ) {
+        increaseHeat(userCharacter, userCharacter.id, 1);
+        const newHeat = userCharacter.stats.heat + 1;
+        const jailChance = newHeat;
+
+        if (newHeat >= 50 || Math.random() * 100 < jailChance) {
           arrest(userCharacter);
           setMessage("Du prøvde å stjele en bil, men ble arrestert!");
           setMessageType("failure");
