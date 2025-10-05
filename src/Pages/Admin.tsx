@@ -48,6 +48,8 @@ type SupportTicket = {
   createdAt?: Timestamp | null;
   status?: string;
   topic?: string;
+  reportedId?: string | null;
+  reportedUsername?: string | null;
   user?: { uid?: string; email?: string; displayName?: string };
   client?: { ua?: string; tzOffsetMin?: number };
   ua?: string; // sometimes stored at root
@@ -484,6 +486,7 @@ const Admin = () => {
                 const ua = t.ua ?? t.client?.ua ?? "Ukjent UA";
                 const tz = t.tzOffsetMin ?? t.client?.tzOffsetMin;
                 const isActive = activeTicketId === t.id;
+                const isReport = (t.category as CategoryValue) === "report";
 
                 return (
                   <li
@@ -509,7 +512,24 @@ const Admin = () => {
                           {statusLabel(t.status)}
                         </span>
                         <span className="text-sm text-neutral-300">
-                          <strong>{t.topic || "(uten emne)"}</strong>
+                          <strong>
+                            {isReport ? (
+                              t.reportedId || t.reportedUsername ? (
+                                <Username
+                                  character={{
+                                    id: String(t.reportedId ?? ""),
+                                    username: String(
+                                      t.reportedUsername ?? t.topic ?? "Ukjent"
+                                    ),
+                                  }}
+                                />
+                              ) : (
+                                t.topic || "(uten emne)"
+                              )
+                            ) : (
+                              t.topic || "(uten emne)"
+                            )}
+                          </strong>
                           {t.category ? (
                             <span className="text-neutral-500">
                               {" "}

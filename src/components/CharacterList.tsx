@@ -4,6 +4,7 @@ import {
   collection,
   addDoc,
   getDocs,
+  getDoc,
   doc,
   updateDoc,
   serverTimestamp,
@@ -27,21 +28,23 @@ import Button from "./Button";
 // Functions
 import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
 import { serverNow } from "../Functions/serverTime";
+import { arrest } from "../Functions/RewardFunctions";
+
+// ---- Simple tunables for prison actions ----
+const BRIBE_COST = 10_000; // fast pris
+const CHANCE_BRIBE = 0.6; // 60% sjanse
+const CHANCE_BREAKOUT = 0.35; // 35% sjanse
 
 function normalizeTs(val: any): Timestamp | null {
   if (!val) return null;
-  // Already a Firestore Timestamp
   if (typeof val.toMillis === "function") return val as Timestamp;
-  // From plain seconds/nanoseconds object
   if (typeof val.seconds === "number" && typeof val.nanoseconds === "number") {
     return new Timestamp(val.seconds, val.nanoseconds);
   }
-  // From number (ms since epoch)
   if (typeof val === "number") return Timestamp.fromMillis(val);
-  // From Date or ISO string
   const d = val instanceof Date ? val : new Date(val);
   if (!isNaN(d.getTime())) return Timestamp.fromDate(d);
-  return null; // unknown shape
+  return null;
 }
 
 function useSecondTicker() {
@@ -69,15 +72,17 @@ function mmss(totalSeconds: number) {
 function JailList({
   characters,
   location,
-  onBreakOut,
+  onBribe,
+  onBreakout,
   onClick,
 }: {
   characters: JailCharacter[];
   location?: string;
-  onBreakOut?: (id: string) => void;
+  onBribe?: (id: string) => void;
+  onBreakout?: (id: string) => void;
   onClick?: (username: string) => void;
 }) {
-  useSecondTicker(); // ✅ safe: always called when JailList renders
+  useSecondTicker();
 
   const jailedSorted = useMemo(() => {
     const now = serverNow();
@@ -90,8 +95,8 @@ function JailList({
 
   if (jailedSorted.length === 0) {
     return (
-      <p className="text-sm text-neutral-400 mt-1">
-        Ingen innsatte i {location ?? "byen"} akkurat nå.
+      <p className="text-neutral-400">
+        Det er for øyeblikket ingen innsatte i {location ?? "byen"}.
       </p>
     );
   }
@@ -105,20 +110,33 @@ function JailList({
           Math.ceil((endMs - serverNow()) / 1000)
         );
         return (
-          <li key={c.id} className="flex items-center gap-2">
+          <li key={c.id} className="flex items-center gap-4">
             {onClick ? (
               <button onClick={() => onClick(c.username)}>{c.username}</button>
             ) : (
               <Username character={c as any} />
             )}
-            <span className="text-red-300 text-sm">
-              i fengsel {mmss(remainingSec)}
+            <span className="text-neutral-200 font-medium">
+              {mmss(remainingSec)}
             </span>
+
+            {/* Bestikk vakter */}
             <Button
-              size="small"
+              size="text"
               style="text"
               disabled={remainingSec <= 0}
-              onClick={() => onBreakOut?.(c.id)}
+              onClick={() => onBribe?.(c.id)}
+              title={`Koster ${BRIBE_COST.toLocaleString("nb-NO")} kr`}
+            >
+              Bestikk vakter
+            </Button>
+
+            {/* Bryt ut */}
+            <Button
+              size="text"
+              style="text"
+              disabled={remainingSec <= 0}
+              onClick={() => onBreakout?.(c.id)}
             >
               Bryt ut
             </Button>
@@ -191,7 +209,7 @@ const CharacterList = ({
   const [newValue, setNewValue] = useState<number | "">("");
   const [message, setMessage] = useState<string>("");
   const [messageType, setMessageType] = useState<
-    "success" | "warning" | "info"
+    "success" | "warning" | "info" | "failure"
   >("info");
   const [loading, setLoading] = useState(true);
 
@@ -199,7 +217,6 @@ const CharacterList = ({
   useEffect(() => {
     // Real-time jail list in same city
     if (type === "jail") {
-      // Wait until we know the user's city
       if (!userCharacter?.location) {
         setCharacters([]);
         setLoading(false);
@@ -570,6 +587,106 @@ const CharacterList = ({
     }
   };
 
+  // ---------- Jail actions ----------
+  async function freeTarget(targetId: string) {
+    await updateDoc(doc(db, "Characters", targetId), {
+      inJail: false,
+      jailReleaseTime: null,
+    });
+  }
+
+  // Ensure target still in jail right now
+  async function isStillJailed(targetId: string) {
+    const snap = await getDoc(doc(db, "Characters", targetId));
+    if (!snap.exists()) return false;
+    const v = snap.data() as any;
+    if (!v.inJail) return false;
+    const ts = normalizeTs(v.jailReleaseTime);
+    if (!ts) return false;
+    return ts.toMillis() > serverNow();
+  }
+
+  const fmtKr = (n: number) => n.toLocaleString("nb-NO");
+
+  const handleBribe = async (targetId: string) => {
+    if (!userCharacter) {
+      setMessageType("warning");
+      setMessage("Du må være innlogget med en spillkarakter.");
+      return;
+    }
+    try {
+      // Check target state
+      const jailed = await isStillJailed(targetId);
+      if (!jailed) {
+        setMessageType("info");
+        setMessage("Spilleren er ikke lenger i fengsel.");
+        return;
+      }
+
+      // Money check
+      const money = userCharacter.stats?.money ?? 0;
+      if (money < BRIBE_COST) {
+        setMessageType("warning");
+        setMessage(`Du har ikke nok penger. Pris: ${fmtKr(BRIBE_COST)} kr.`);
+        return;
+      }
+
+      // Charge immediately
+      await updateDoc(doc(db, "Characters", userCharacter.id), {
+        "stats.money": Math.max(0, money - BRIBE_COST),
+      });
+
+      const success = Math.random() < CHANCE_BRIBE;
+
+      if (success) {
+        await freeTarget(targetId);
+        setMessageType("success");
+        setMessage(`Du bestakk vaktene og frigjorde spilleren!`);
+      } else {
+        // Fail → rescuer goes to jail
+        await arrest(userCharacter);
+        setMessageType("failure");
+        setMessage(`Bestikkelsen mislyktes. Du ble tatt og satt i fengsel.`);
+      }
+    } catch (err) {
+      console.error("Bribe failed:", err);
+      setMessageType("failure");
+      setMessage("Noe gikk galt. Prøv igjen.");
+    }
+  };
+
+  const handleBreakout = async (targetId: string) => {
+    if (!userCharacter) {
+      setMessageType("warning");
+      setMessage("Du må være innlogget med en spillkarakter.");
+      return;
+    }
+    try {
+      const jailed = await isStillJailed(targetId);
+      if (!jailed) {
+        setMessageType("info");
+        setMessage("Spilleren er ikke lenger i fengsel.");
+        return;
+      }
+
+      const success = Math.random() < CHANCE_BREAKOUT;
+
+      if (success) {
+        await freeTarget(targetId);
+        setMessageType("success");
+        setMessage(`Du brøt spilleren ut av fengsel!`);
+      } else {
+        await arrest(userCharacter);
+        setMessageType("failure");
+        setMessage(`Utbruddsforsøket mislyktes. Du ble satt i fengsel.`);
+      }
+    } catch (err) {
+      console.error("Breakout failed:", err);
+      setMessageType("failure");
+      setMessage("Noe gikk galt. Prøv igjen.");
+    }
+  };
+
   // ----- Loading / empty states -----
   if (loading) {
     return <p>Laster spillere...</p>;
@@ -816,11 +933,20 @@ const CharacterList = ({
   if (type === "jail") {
     return (
       <section>
+        {message && <InfoBox type={messageType}>{message}</InfoBox>}
         <JailList
           characters={characters}
           location={userCharacter?.location}
           onClick={onClick}
+          onBribe={handleBribe}
+          onBreakout={handleBreakout}
         />
+        <p className="text-xs text-neutral-500 mt-2">
+          Sjanser: Bestikk {Math.round(CHANCE_BRIBE * 100)}%, Bryt ut{" "}
+          {Math.round(CHANCE_BREAKOUT * 100)}%. Bestikkelse koster{" "}
+          <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{BRIBE_COST.toLocaleString("nb-NO")}</strong>.
+        </p>
       </section>
     );
   }

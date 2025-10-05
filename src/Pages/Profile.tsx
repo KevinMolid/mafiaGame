@@ -11,7 +11,7 @@ import { bbcodeToHtml } from "../Functions/bbcode";
 
 // React
 import { useEffect, useRef, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 
 import { useCharacter } from "../CharacterContext";
 import Username from "../components/Typography/Username";
@@ -62,6 +62,8 @@ const Profile = () => {
   const [messageType, setMessageType] = useState<
     "info" | "success" | "warning" | "failure"
   >("info");
+
+  const navigate = useNavigate();
 
   const viewingOwnProfile =
     !!userCharacter && !!spillerID && spillerID === userCharacter.id;
@@ -396,6 +398,16 @@ const Profile = () => {
     }
   };
 
+  const reportPlayer = () => {
+    if (!characterData) return;
+    navigate("/support", {
+      state: {
+        presetCategoryLabel: "Rapporter spiller / Juks",
+        presetUsername: characterData.username,
+      },
+    });
+  };
+
   if (loading) return <div>Laster...</div>;
   if (error) return <div>{error}</div>;
   if (!characterData) return <div>Ingen spillerdata tilgjengelig.</div>;
@@ -462,10 +474,11 @@ const Profile = () => {
               </button>
 
               <button
+                onClick={reportPlayer}
                 className="hover:text-white"
                 title={`Rapporter ${characterData.username}`}
               >
-                <i className="fa-solid fa-triangle-exclamation"></i>{" "}
+                <i className="fa-solid fa-triangle-exclamation"></i>
               </button>
             </div>
           ) : (
@@ -477,7 +490,6 @@ const Profile = () => {
             <li className="text-stone-400">Navn</li>
             <li>
               <Username
-                useParentColor
                 character={{
                   id: characterData.id,
                   username: characterData.username,

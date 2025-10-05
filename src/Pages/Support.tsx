@@ -2,7 +2,7 @@ import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
 import Button from "../components/Button";
 import InfoBox from "../components/InfoBox";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCharacter } from "../CharacterContext";
 
 import { initializeApp, getApps } from "firebase/app";
@@ -12,8 +12,12 @@ import {
   collection,
   serverTimestamp,
 } from "firebase/firestore";
+import { getDocs, where, query as fsQuery } from "firebase/firestore";
+
 import { getAuth } from "firebase/auth";
 import firebaseConfig from "../firebaseConfig";
+
+import { useLocation } from "react-router-dom";
 
 // trygg init ved HMR
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
@@ -32,6 +36,28 @@ const Support = () => {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<MessageState>(null);
 
+  const location = useLocation();
+  const preset = (location.state ?? {}) as {
+    presetCategoryLabel?: string;
+    presetUsername?: string;
+  };
+
+  const [useUsernameField, setUseUsernameField] = useState(false);
+
+  useEffect(() => {
+    if (preset.presetCategoryLabel) {
+      const match = CATEGORIES.find(
+        (c) => c.label === preset.presetCategoryLabel
+      );
+      if (match) setCategory(match.value);
+    }
+    if (preset.presetUsername) {
+      setTopic(preset.presetUsername);
+      setUseUsernameField(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleTopicChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setTopic(e.target.value);
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) =>
@@ -42,7 +68,12 @@ const Support = () => {
   const validate = () => {
     const errors: string[] = [];
     if (!category) errors.push("Velg en kategori.");
-    if (topic.trim().length < 3) errors.push("Emne må ha minst 3 tegn.");
+    if (topic.trim().length < 3)
+      errors.push(
+        useUsernameField
+          ? "Brukernavn må ha minst 3 tegn."
+          : "Emne må ha minst 3 tegn."
+      );
     if (content.trim().length < 10)
       errors.push("Beskrivelse må ha minst 10 tegn.");
     return errors;
@@ -64,6 +95,35 @@ const Support = () => {
     setSubmitting(true);
     setMessage(null);
 
+    if (submitting) return;
+    setSubmitting(true);
+    setMessage(null);
+
+    // NEW: if reporting a player, verify the username exists and capture ID+username
+    let reportedId: string | null = null;
+    let reportedUsername: string | null = null;
+
+    if (useUsernameField) {
+      const lowered = topic.trim().toLowerCase();
+      const snap = await getDocs(
+        fsQuery(
+          collection(db, "Characters"),
+          where("username_lowercase", "==", lowered)
+        )
+      );
+      if (snap.empty) {
+        setMessage({
+          kind: "failure",
+          text: `Fant ingen spiller med brukernavn "${topic.trim()}".`,
+        });
+        setSubmitting(false);
+        return;
+      }
+      const docSnap = snap.docs[0];
+      reportedId = docSnap.id;
+      reportedUsername = (docSnap.data().username as string) || topic.trim();
+    }
+
     try {
       await addDoc(collection(db, "SupportTickets"), {
         category,
@@ -71,6 +131,8 @@ const Support = () => {
         content: content.trim(),
         status: "open",
         createdAt: serverTimestamp(),
+        reportedId,
+        reportedUsername,
 
         // who is logged-in (Firebase Auth)
         user: (() => {
@@ -145,8 +207,12 @@ const Support = () => {
 
         <input
           className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-          id="title"
-          placeholder="Emne (minst 3 tegn)"
+          id={useUsernameField ? "username" : "title"}
+          placeholder={
+            useUsernameField
+              ? "Brukernavn (minst 3 tegn)"
+              : "Emne (minst 3 tegn)"
+          }
           value={topic}
           type="text"
           onChange={handleTopicChange}
