@@ -10,6 +10,7 @@ import {
   onSnapshot,
   query,
   where,
+  Timestamp,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 
@@ -25,6 +26,108 @@ import Button from "./Button";
 
 // Functions
 import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
+import { serverNow } from "../Functions/serverTime";
+
+function normalizeTs(val: any): Timestamp | null {
+  if (!val) return null;
+  // Already a Firestore Timestamp
+  if (typeof val.toMillis === "function") return val as Timestamp;
+  // From plain seconds/nanoseconds object
+  if (typeof val.seconds === "number" && typeof val.nanoseconds === "number") {
+    return new Timestamp(val.seconds, val.nanoseconds);
+  }
+  // From number (ms since epoch)
+  if (typeof val === "number") return Timestamp.fromMillis(val);
+  // From Date or ISO string
+  const d = val instanceof Date ? val : new Date(val);
+  if (!isNaN(d.getTime())) return Timestamp.fromDate(d);
+  return null; // unknown shape
+}
+
+function useSecondTicker() {
+  const [, force] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => force((x) => x + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+}
+
+type JailCharacter = {
+  id: string;
+  username: string;
+  jailReleaseTime: Timestamp | null;
+};
+
+function mmss(totalSeconds: number) {
+  const m = Math.floor(totalSeconds / 60)
+    .toString()
+    .padStart(2, "0");
+  const s = (totalSeconds % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+function JailList({
+  characters,
+  location,
+  onBreakOut,
+  onClick,
+}: {
+  characters: JailCharacter[];
+  location?: string;
+  onBreakOut?: (id: string) => void;
+  onClick?: (username: string) => void;
+}) {
+  useSecondTicker(); // ✅ safe: always called when JailList renders
+
+  const jailedSorted = useMemo(() => {
+    const now = serverNow();
+    return characters
+      .filter((c) => c.jailReleaseTime && c.jailReleaseTime.toMillis() > now)
+      .sort(
+        (a, b) => a.jailReleaseTime!.toMillis() - b.jailReleaseTime!.toMillis()
+      );
+  }, [characters]);
+
+  if (jailedSorted.length === 0) {
+    return (
+      <p className="text-sm text-neutral-400 mt-1">
+        Ingen innsatte i {location ?? "byen"} akkurat nå.
+      </p>
+    );
+  }
+
+  return (
+    <ul className="flex flex-col gap-1">
+      {jailedSorted.map((c) => {
+        const endMs = c.jailReleaseTime!.toMillis();
+        const remainingSec = Math.max(
+          0,
+          Math.ceil((endMs - serverNow()) / 1000)
+        );
+        return (
+          <li key={c.id} className="flex items-center gap-2">
+            {onClick ? (
+              <button onClick={() => onClick(c.username)}>{c.username}</button>
+            ) : (
+              <Username character={c as any} />
+            )}
+            <span className="text-red-300 text-sm">
+              i fengsel {mmss(remainingSec)}
+            </span>
+            <Button
+              size="small"
+              style="text"
+              disabled={remainingSec <= 0}
+              onClick={() => onBreakOut?.(c.id)}
+            >
+              Bryt ut
+            </Button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -127,7 +230,7 @@ const CharacterList = ({
               status: v.status,
               location: v.location,
               inJail: v.inJail === true,
-              jailReleaseTime: v.jailReleaseTime || null, // optional (not used for filtering now)
+              jailReleaseTime: normalizeTs(v.jailReleaseTime),
             };
           });
           setCharacters(data);
@@ -148,20 +251,23 @@ const CharacterList = ({
       try {
         setLoading(true);
         const querySnapshot = await getDocs(collection(db, "Characters"));
-        const characterData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          username: doc.data().username,
-          familyId: doc.data().familyId,
-          role: doc.data().role,
-          familyName: doc.data().familyName,
-          xp: doc.data().stats?.xp ?? 0,
-          money: doc.data().stats?.money ?? 0,
-          bank: doc.data().stats?.bank ?? 0,
-          status: doc.data().status,
-          location: doc.data().location,
-          inJail: doc.data().inJail === true,
-          jailReleaseTime: doc.data().jailReleaseTime || null,
-        }));
+        const characterData = querySnapshot.docs.map((doc) => {
+          const v = doc.data() as any;
+          return {
+            id: doc.id,
+            username: v.username,
+            familyId: v.familyId,
+            role: v.role,
+            familyName: v.familyName,
+            xp: v.stats?.xp ?? 0,
+            money: v.stats?.money ?? 0,
+            bank: v.stats?.bank ?? 0,
+            status: v.status,
+            location: v.location,
+            inJail: v.inJail === true,
+            jailReleaseTime: normalizeTs(v.jailReleaseTime),
+          };
+        });
         setCharacters(characterData);
       } catch (error) {
         console.error("Feil ved lasting av spillere:", error);
@@ -710,26 +816,11 @@ const CharacterList = ({
   if (type === "jail") {
     return (
       <section>
-        <ul>
-          {characters.map((character) => (
-            <li key={character.id}>
-              {onClick && (
-                <button onClick={() => onClick(character.username)}>
-                  {character.username}
-                </button>
-              )}
-              {!onClick && <Username character={character}></Username>}
-              <Button size="small" style="text">
-                Bryt ut
-              </Button>
-            </li>
-          ))}
-        </ul>
-        {characters.length === 0 && (
-          <p className="text-sm text-neutral-400 mt-1">
-            Ingen innsatte i {userCharacter?.location ?? "byen"} akkurat nå.
-          </p>
-        )}
+        <JailList
+          characters={characters}
+          location={userCharacter?.location}
+          onClick={onClick}
+        />
       </section>
     );
   }

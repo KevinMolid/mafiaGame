@@ -1,6 +1,7 @@
-import { getFirestore, doc, updateDoc } from "firebase/firestore";
+import { getFirestore, doc, updateDoc, Timestamp } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
+import { serverNow, serverTimeReady } from "./serverTime";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -130,12 +131,15 @@ export const resetHeat = async (characterID: string) => {
 
 export const arrest = async (character: any) => {
   try {
+    await serverTimeReady; // ensure we have the offset at least once
+
     const characterRef = doc(db, "Characters", character.id);
-    const jailDuration = 20000 + character.stats.heat * 10 * 1000; // 20 sec + heat * 10 seconds in milliseconds
-    const jailReleaseTime = new Date().getTime() + jailDuration;
+    const jailDurationMs = 20_000 + character.stats.heat * 10_000; // 20s + 10s*heat
+    const releaseMs = serverNow() + jailDurationMs;
+
     await updateDoc(characterRef, {
       inJail: true,
-      jailReleaseTime: jailReleaseTime,
+      jailReleaseTime: Timestamp.fromMillis(releaseMs),
       "stats.heat": 0,
     });
   } catch (error) {

@@ -331,25 +331,55 @@ const BlackJack = () => {
   useEffect(() => {
     const raw = localStorage.getItem(storageKey);
     const loaded = safeParseState(raw);
-    if (loaded) {
-      shoeRef.current = loaded.shoe.length ? loaded.shoe : buildShoe(6);
-      setPhase(loaded.phase);
-      setBetAmount(loaded.betAmount);
-      setEffectiveBet(loaded.effectiveBet);
-      setPlayerHand(loaded.playerHand);
-      setDealerHand(loaded.dealerHand);
 
-      // Only rebuild a message node when the shape is not empty
-      if (isEmptyMessageShape(loaded.messageShape)) {
-        setMessage("");
-      } else {
-        setMessage(renderMessageFromShape(loaded.messageShape));
-      }
+    if (!loaded) return;
 
-      setMessageText(loaded.message);
-      setMessageShape(loaded.messageShape);
-      setMessageType(loaded.messageType);
+    // Always keep the saved shoe (or build a fresh one if missing)
+    shoeRef.current = loaded.shoe?.length ? loaded.shoe : buildShoe(6);
+
+    // If last round was already settled, start a fresh betting state on reload
+    if (loaded.phase === "settled") {
+      setBetAmount("");
+      setEffectiveBet(0);
+      setPlayerHand([]);
+      setDealerHand([]);
+      setMessage("");
+      setMessageText("");
+      setMessageShape({ kind: "plain", text: "" });
+      setMessageType("info");
+      setPhase("betting");
+
+      // Persist the fresh-between-rounds snapshot right away
+      persistNow({
+        betAmount: "",
+        effectiveBet: 0,
+        playerHand: [],
+        dealerHand: [],
+        message: "",
+        messageShape: { kind: "plain", text: "" },
+        messageType: "info",
+        phase: "betting",
+        shoe: shoeRef.current,
+      });
+      return;
     }
+
+    // Otherwise, restore the saved (in-progress) round as before
+    setPhase(loaded.phase);
+    setBetAmount(loaded.betAmount);
+    setEffectiveBet(loaded.effectiveBet);
+    setPlayerHand(loaded.playerHand);
+    setDealerHand(loaded.dealerHand);
+
+    if (isEmptyMessageShape(loaded.messageShape)) {
+      setMessage("");
+    } else {
+      setMessage(renderMessageFromShape(loaded.messageShape));
+    }
+
+    setMessageText(loaded.message);
+    setMessageShape(loaded.messageShape);
+    setMessageType(loaded.messageType);
   }, [storageKey]);
 
   // Persist helper
