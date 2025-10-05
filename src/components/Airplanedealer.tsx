@@ -97,9 +97,7 @@ const Airplanedealer = () => {
 
   return (
     <>
-      <H2>
-        <i className="fa-solid fa-plane-up"></i> Kjøp privatfly
-      </H2>
+      <H2>Flyforhandler</H2>
 
       <p className="mb-4">
         Privatfly kan brukes fra{" "}

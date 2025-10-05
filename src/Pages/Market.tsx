@@ -6,6 +6,7 @@ import Tab from "../components/Tab";
 import Suitcases from "../components/Suitcases";
 import Cardealer from "../components/Cardealer";
 import Airplanedealer from "../components/Airplanedealer";
+import BlackMarket from "../components/BlackMarket";
 
 type Panel = "suitcases" | "cars" | "airplanes" | "diamonds" | "blackMarket";
 
@@ -74,7 +75,7 @@ const Market = () => {
       {activePanel === "suitcases" && <Suitcases />}
       {activePanel === "cars" && <Cardealer />}
       {activePanel === "airplanes" && <Airplanedealer />}
-      {/* Render placeholders or components for the other tabs when ready */}
+      {activePanel === "blackMarket" && <BlackMarket />}
     </Main>
   );
 };

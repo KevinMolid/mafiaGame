@@ -316,7 +316,7 @@ const Forum = () => {
     <Main>
       {/* Categories Section */}
       <div>
-        <ul className="mb-8 flex">
+        <ul className="mb-8 flex flex-wrap">
           {categories.length > 0 ? (
             categories.map((category) => (
               <li

@@ -396,7 +396,7 @@ const Admin = () => {
         <Box>
           <H2>Handlinger</H2>
           <H3>Egen konto</H3>
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-x-2 gap-y-1 mb-4 mt-2">
             <Link to="/velgspiller">
               <div className="flex gap-2 items-center bg-neutral-800 hover:bg-neutral-700 px-4 py-2 rounded-lg w-[max-content]">
                 <i className="fa-solid fa-user-group"></i>
@@ -447,7 +447,7 @@ const Admin = () => {
           <H2>Rapporter</H2>
 
           {/* Category Tabs */}
-          <ul className="mt-2 flex items-stretch gap-1 border-b border-neutral-700">
+          <ul className="mt-2 flex flex-wrap items-stretch gap-1 border-b border-neutral-700">
             <Tab
               active={activeTab === "all"}
               onClick={() => setActiveTab("all")}

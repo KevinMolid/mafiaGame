@@ -165,9 +165,7 @@ const Suitcases = () => {
 
   return (
     <>
-      <H2>
-        <i className="fa-solid fa-briefcase"></i> Kofferter
-      </H2>
+      <H2>Kofferter</H2>
       <p className="mb-4">
         Kofferter inneholder utstyr du kan bruke for å forbedre spillkarakteren
         din.

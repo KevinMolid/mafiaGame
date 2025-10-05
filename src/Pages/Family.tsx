@@ -8,6 +8,7 @@ import Username from "../components/Typography/Username";
 import Button from "../components/Button";
 import Tab from "../components/Tab";
 import Box from "../components/Box";
+import ScrollArea from "../components/ScrollArea";
 
 import FamilySettings from "../components/FamilySettings";
 import FamilyMembers from "../components/FamilyMembers";
@@ -107,20 +108,27 @@ const Family = () => {
     return unsub;
   }, [userCharacter?.familyId]);
 
-  // Subscribe to Events subcollection (ordered by timestamp desc)
+  // Subscribe to Events subcollection (ordered by timestamp asc)
   useEffect(() => {
     if (!userCharacter?.familyId) {
       setEvents([]);
       return;
     }
 
-    const eventsRef = collection(db, "Families", userCharacter.familyId, "Events");
-    const q = query(eventsRef, orderBy("timestamp", "desc"));
+    const eventsRef = collection(
+      db,
+      "Families",
+      userCharacter.familyId,
+      "Events"
+    );
+    const q = query(eventsRef, orderBy("timestamp", "asc"));
 
     const unsub = onSnapshot(
       q,
       (snap) => {
-        const items: FamilyEvent[] = snap.docs.map((d) => d.data() as FamilyEvent);
+        const items: FamilyEvent[] = snap.docs.map(
+          (d) => d.data() as FamilyEvent
+        );
         setEvents(items);
       },
       (err) => {
@@ -147,13 +155,15 @@ const Family = () => {
           "Applications"
         );
         const applicationsSnapshot = await getDocs(applicationsRef);
-        const applicationsList: Application[] = applicationsSnapshot.docs.map((doc) => ({
-          documentId: doc.id,
-          applicantId: doc.data().applicantId,
-          applicantUsername: doc.data().applicantUsername,
-          applicationText: doc.data().applicationText,
-          appliedAt: doc.data().appliedAt?.toDate(),
-        }));
+        const applicationsList: Application[] = applicationsSnapshot.docs.map(
+          (doc) => ({
+            documentId: doc.id,
+            applicantId: doc.data().applicantId,
+            applicantUsername: doc.data().applicantUsername,
+            applicationText: doc.data().applicationText,
+            appliedAt: doc.data().appliedAt?.toDate(),
+          })
+        );
         setApplications(applicationsList);
       } catch (err) {
         console.error("Error fetching applications:", err);
@@ -207,7 +217,9 @@ const Family = () => {
         );
 
         setMessageType("success");
-        setMessage(`Du donerte $${amount.toLocaleString()} til ${family.name}.`);
+        setMessage(
+          `Du donerte $${amount.toLocaleString()} til ${family.name}.`
+        );
         setAmount("");
       }
     } catch (err) {
@@ -253,10 +265,11 @@ const Family = () => {
     }
   };
 
-  // Already subscribed desc; keep a safe sort fallback if needed
+  // Already subscribed asc; keep a safe sort fallback if needed
   const sortedEvents = events.slice().sort((a, b) => {
-    const toMs = (t: any) => (t?.toDate ? t.toDate().getTime() : new Date(t ?? 0).getTime());
-    return toMs(b.timestamp) - toMs(a.timestamp);
+    const toMs = (t: any) =>
+      t?.toDate ? t.toDate().getTime() : new Date(t ?? 0).getTime();
+    return toMs(a.timestamp) - toMs(b.timestamp);
   });
 
   if (loading) {
@@ -317,11 +330,17 @@ const Family = () => {
 
           {/* Tabs */}
           <ul className="mb-8 flex flex-wrap">
-            <Tab active={activePanel === "hq"} onClick={() => setActivePanel("hq")}>
+            <Tab
+              active={activePanel === "hq"}
+              onClick={() => setActivePanel("hq")}
+            >
               Hovedkvarter
             </Tab>
 
-            <Tab active={activePanel === "chat"} onClick={() => setActivePanel("chat")}>
+            <Tab
+              active={activePanel === "chat"}
+              onClick={() => setActivePanel("chat")}
+            >
               Chat
             </Tab>
 
@@ -385,65 +404,72 @@ const Family = () => {
               </div>
 
               <div className="flex-grow">
-                <Box>
-                  <H3>Hendelser</H3>
+                <H3>Hendelser</H3>
 
-                  <ul className="mb-4">
+                <ScrollArea
+                  className="max-h-48 w-full max-w-full"
+                  contentClassName="max-h-48"
+                  stickToBottom
+                >
+                  <ul className="mb-2 w-full max-w-full min-w-0 break-words whitespace-normal pr-2">
                     {sortedEvents.map((familyEvent, index) => (
                       <li
                         key={"event" + index}
-                        className="flex justify-between gap-4 text-sm"
+                        className="flex justify-between gap-4 text-sm flex-wrap"
                       >
-                        {familyEvent.type === "created" ? (
-                          <p>
-                            Familien ble opprettet av{" "}
-                            <Username
-                              character={{
-                                id: familyEvent.characterId!,
-                                username: familyEvent.characterName!,
-                              }}
-                            />
-                            .
-                          </p>
-                        ) : familyEvent.type === "newMember" ? (
-                          <p>
-                            <Username
-                              character={{
-                                id: familyEvent.characterId!,
-                                username: familyEvent.characterName!,
-                              }}
-                            />{" "}
-                            ble medlem av familien.
-                          </p>
-                        ) : familyEvent.type === "kickedMember" ? (
-                          <p>
-                            <Username
-                              character={{
-                                id: familyEvent.characterId!,
-                                username: familyEvent.characterName!,
-                              }}
-                            />{" "}
-                            ble kastet ut av familien.
-                          </p>
-                        ) : familyEvent.type === "leftMember" ? (
-                          <p>
-                            <Username
-                              character={{
-                                id: familyEvent.characterId!,
-                                username: familyEvent.characterName!,
-                              }}
-                            />{" "}
-                            forlot familien.
-                          </p>
-                        ) : (
-                          <p>{familyEvent.type}</p>
-                        )}
-
-                        <p>{formatTimestamp(familyEvent.timestamp)}</p>
+                        <div className="flex-1 min-w-0">
+                          {familyEvent.type === "created" ? (
+                            <p>
+                              Familien ble opprettet av{" "}
+                              <Username
+                                character={{
+                                  id: familyEvent.characterId!,
+                                  username: familyEvent.characterName!,
+                                }}
+                              />
+                              .
+                            </p>
+                          ) : familyEvent.type === "newMember" ? (
+                            <p>
+                              <Username
+                                character={{
+                                  id: familyEvent.characterId!,
+                                  username: familyEvent.characterName!,
+                                }}
+                              />{" "}
+                              ble medlem av familien.
+                            </p>
+                          ) : familyEvent.type === "kickedMember" ? (
+                            <p>
+                              <Username
+                                character={{
+                                  id: familyEvent.characterId!,
+                                  username: familyEvent.characterName!,
+                                }}
+                              />{" "}
+                              ble kastet ut av familien.
+                            </p>
+                          ) : familyEvent.type === "leftMember" ? (
+                            <p>
+                              <Username
+                                character={{
+                                  id: familyEvent.characterId!,
+                                  username: familyEvent.characterName!,
+                                }}
+                              />{" "}
+                              forlot familien.
+                            </p>
+                          ) : (
+                            <p>{familyEvent.type}</p>
+                          )}
+                        </div>
+                        <small className="ml-2 shrink-0 text-xs lg:text-sm">
+                          {formatTimestamp(familyEvent.timestamp)}
+                        </small>
                       </li>
                     ))}
                   </ul>
-                </Box>
+                </ScrollArea>
               </div>
 
               <div className="flex-grow">
@@ -455,7 +481,9 @@ const Family = () => {
                       className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
                       type="text"
                       placeholder="Beløp"
-                      value={amount !== "" ? amount.toLocaleString("nb-NO") : ""}
+                      value={
+                        amount !== "" ? amount.toLocaleString("nb-NO") : ""
+                      }
                       onChange={handleInputChange}
                     />
                     <div className="flex gap-2">

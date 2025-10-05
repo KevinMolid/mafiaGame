@@ -58,8 +58,16 @@ const NewsFeed = () => {
   }, [events.length]);
 
   return (
-    <ScrollArea className="max-h-24 w-max" contentClassName="max-h-24">
-      <ul ref={listRef}>{events.map((ev) => renderGameEvent(ev))}</ul>
+    <ScrollArea
+      className="max-h-24 w-full max-w-full"
+      contentClassName="max-h-24 max-w-full"
+    >
+      <ul
+        ref={listRef}
+        className="w-full max-w-full min-w-0 break-words whitespace-normal pr-4"
+      >
+        {events.map((ev) => renderGameEvent(ev))}
+      </ul>
     </ScrollArea>
   );
 };

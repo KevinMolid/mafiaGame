@@ -240,9 +240,7 @@ const Cardealer = () => {
 
   return (
     <>
-      <H2>
-        <i className="fa-solid fa-car-side"></i> Bilforhandler
-      </H2>
+      <H2>Bilforhandler</H2>
       <p className="mb-2">
         Her kan du kjøpe biler. Hver dag legges det ut tre tilfeldige biler for
         salg. Typen bil er forskjellig fra spiller til spiller.

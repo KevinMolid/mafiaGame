@@ -25,7 +25,7 @@ const UpdateFeed = () => {
 
   useEffect(() => {
     const q = query(
-      collection(db, "Updates"), // or "Oppdateringer" if that's your collection name
+      collection(db, "Updates"),
       orderBy("createdAt", "asc"),
       limit(50)
     );
@@ -43,13 +43,12 @@ const UpdateFeed = () => {
 
   return (
     <ScrollArea
-      className="max-h-24 w-max"
+      className="max-h-24 w-full max-w-full"
       contentClassName="max-h-24"
-      stickToBottom // starts at bottom & stays there when new updates come in
+      stickToBottom
     >
       <ul className="pr-4">
         {updates.map((update) => {
-          // Format timestamp safely
           let formattedTime = "Ukjent tid";
           if (
             update.createdAt &&
@@ -97,9 +96,11 @@ const UpdateFeed = () => {
           }
 
           return (
-            <li key={update.id} className="news-item flex gap-2">
-              <small className="text-xs lg:text-sm">{update.text ?? ""}</small>
-              <small className="ml-auto text-xs lg:text-sm">
+            <li key={update.id} className="news-item flex gap-2 items-start">
+              <small className="text-xs lg:text-sm flex-1 min-w-0 break-words whitespace-normal">
+                {update.text ?? ""}
+              </small>
+              <small className="ml-2 shrink-0 text-xs lg:text-sm">
                 {formattedTime}
               </small>
             </li>

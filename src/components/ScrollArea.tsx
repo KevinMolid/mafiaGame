@@ -166,7 +166,7 @@ export default function ScrollArea({
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className={`overflow-auto pr-3 [scrollbar-width:none] [-ms-overflow-style:none] ${contentClassName}`}
+        className={`overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] ${contentClassName}`}
       >
         {/* hide webkit scrollbar */}
         <style>

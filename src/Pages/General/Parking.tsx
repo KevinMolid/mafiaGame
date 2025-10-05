@@ -444,18 +444,20 @@ const Parking = () => {
                       className="border bg-neutral-800 border-neutral-700"
                       key={car.id}
                     >
-                      <td className="px-2 py-1">
+                      <td className="px-2 py-1 text-sm sm:text-md">
                         <Item name={car.name} tier={car.tier} />
                       </td>
-                      <td className="px-2 py-1">{car.hp} hk</td>
-                      <td className="px-2 py-1">
+                      <td className="px-2 py-1 text-sm sm:text-md">
+                        {car.hp} hk
+                      </td>
+                      <td className="px-2 py-1 text-sm sm:text-md">
                         <i className="fa-solid fa-dollar-sign"></i>{" "}
                         {car.value.toLocaleString("nb-NO")}
                       </td>
                       <td className="px-2 py-1">
                         <button
                           onClick={() => sellCar(car)}
-                          className="font-medium text-neutral-200 hover:text-white"
+                          className="font-medium text-neutral-200 hover:text-white text-sm sm:text-md"
                         >
                           Selg
                         </button>

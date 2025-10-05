@@ -189,9 +189,9 @@ const Travel = () => {
         </p>
       )}
 
-      <div className="flex flex-wrap gap-8">
+      <div className="flex gap-x-8 flex-wrap">
         {/* Map */}
-        <div className="relative my-4 max-w-[800px]" ref={mapRef}>
+        <div className="relative my-2 max-w-[800px]" ref={mapRef}>
           <img
             ref={imgRef}
             src="WorldMap3.png"
