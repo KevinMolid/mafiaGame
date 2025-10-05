@@ -22,6 +22,7 @@ export default function CharacterListRank({
       xp: number;
       money: number;
       bank: number;
+      status: string;
     }[]
   >([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +42,7 @@ export default function CharacterListRank({
             xp: v.stats?.xp ?? 0,
             money: v.stats?.money ?? 0,
             bank: v.stats?.bank ?? 0,
+            status: v.status ?? "alive",
           };
         });
         setCharacters(data);
@@ -54,7 +56,10 @@ export default function CharacterListRank({
 
   // Sorting + filter (exclude admins exactly like original)
   const rankedCharacters = useMemo(() => {
-    const arr = characters.filter((c) => (c.role || "") !== "admin");
+    const arr = characters
+      .filter((c) => (c.role || "") !== "admin")
+      .filter((c) => (c.status ?? "alive") !== "dead");
+
     if (sortBy === "xp") return arr.sort((a, b) => b.xp - a.xp);
     if (sortBy === "money")
       return arr.sort((a, b) => b.money + b.bank - (a.money + a.bank));
