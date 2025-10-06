@@ -8,7 +8,7 @@ import Box from "../components/Box";
 import Button from "../components/Button";
 import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
-import Item from "../components/Typography/Item"; // ⬅️ use Item to color by tier
+import Item from "../components/Typography/Item";
 
 // Context
 import { useCharacter } from "../CharacterContext";
@@ -20,6 +20,10 @@ import {
   getFirestore,
   onSnapshot,
   serverTimestamp,
+  doc,
+  writeBatch,
+  query,
+  where,
 } from "firebase/firestore";
 
 const db = getFirestore();
@@ -119,55 +123,109 @@ const BlackMarket = () => {
     return () => unsub();
   }, [userCharacter?.id]);
 
+  // --- Subscribe to my Auctions ------------------------------------------------
+  useEffect(() => {
+    if (!userCharacter?.id) {
+      setMyListings([]);
+      return;
+    }
+
+    const q = query(
+      collection(db, "Auctions"),
+      where("sellerId", "==", userCharacter.id)
+    );
+
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const items: Listing[] = snap.docs
+          .map((d) => {
+            const v = d.data() as any;
+            return {
+              id: d.id,
+              category: (v.category || "cars") as Category,
+              itemType: v.itemType || "Car",
+              name: v.name || "Ukjent",
+              quantity: v.quantity ?? 1,
+              price: v.price ?? 0,
+              seller: { id: v.sellerId, username: v.sellerName },
+              createdAt: v.createdAt?.toMillis
+                ? v.createdAt.toMillis()
+                : Date.now(),
+              car: v.carId
+                ? { id: v.carId, tier: v.car?.tier ?? null }
+                : undefined,
+              location: v.location ?? null,
+            };
+          })
+          .sort((a, b) => b.createdAt - a.createdAt); // newest first
+
+        setMyListings(items);
+      },
+      (err) => {
+        console.error("Failed to subscribe to my auctions:", err);
+        setMyListings([]);
+      }
+    );
+
+    return () => unsub();
+  }, [userCharacter?.id]);
+
   // Cars filtered by current user's city
   const carsInMyCity = useMemo(() => {
     const city = userCharacter?.location;
     if (!city) return cars;
-    return cars.filter((c) => (c.city ? c.city === city : true)); // ⬅️ was c.location
+    return cars.filter((c) => (c.city ? c.city === city : true));
   }, [cars, userCharacter?.location]);
 
   // Seed mocked market list (remove once you read from Firestore)
   useEffect(() => {
-    const seed: Listing[] = [
-      {
-        id: "seed-1",
-        category: "cars",
-        itemType: "Car",
-        name: "Toyota Supra (T2)",
-        quantity: 1,
-        price: 250_000,
-        seller: { id: "A", username: "Maya" },
-        createdAt: Date.now() - 1000 * 60 * 15,
+    const qAll = query(
+      collection(db, "Auctions"),
+      where("status", "==", "active")
+    );
+
+    const unsub = onSnapshot(
+      qAll,
+      (snap) => {
+        const items: Listing[] = snap.docs
+          .map((d) => {
+            const v = d.data() as any;
+            return {
+              id: d.id,
+              category: (v.category || "items") as Category,
+              itemType: v.itemType || "Item",
+              name: v.name || "Ukjent",
+              quantity: v.quantity ?? 1,
+              price: v.price ?? 0,
+              seller: {
+                id: v.sellerId ?? "",
+                username: v.sellerName ?? "Ukjent",
+              },
+              createdAt: v.createdAt?.toMillis
+                ? v.createdAt.toMillis()
+                : Date.now(),
+              car: v.carId
+                ? { id: v.carId, tier: v.car?.tier ?? null }
+                : undefined,
+              location: v.location ?? null,
+            };
+          })
+          .sort((a, b) => b.createdAt - a.createdAt);
+
+        setAllListings(items);
       },
-      {
-        id: "seed-2",
-        category: "bullets",
-        itemType: "Ammo",
-        name: "9mm kuler",
-        quantity: 500,
-        price: 5_000,
-        seller: { id: "B", username: "Jonas" },
-        createdAt: Date.now() - 1000 * 60 * 60,
-      },
-      {
-        id: "seed-3",
-        category: "weapons",
-        itemType: "Gun",
-        name: "Uzi",
-        quantity: 1,
-        price: 90_000,
-        seller: { id: "C", username: "Nora" },
-        createdAt: Date.now() - 1000 * 60 * 5,
-      },
-    ];
-    setAllListings(seed);
+      (err) => {
+        console.error("Failed to subscribe to auctions:", err);
+        setAllListings([]);
+      }
+    );
+
+    return () => unsub();
   }, []);
 
   // Derived listing sets
-  const marketListings = useMemo(
-    () => allListings.filter((l) => l.seller.id !== userCharacter?.id),
-    [allListings, userCharacter?.id]
-  );
+  const marketListings = useMemo(() => allListings, [allListings]);
 
   const filteredMarket = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -200,25 +258,45 @@ const BlackMarket = () => {
       }
 
       const display = carBaseName(selectedCar);
+
       try {
-        const docRef = await addDoc(collection(db, "BlackMarketListings"), {
+        // Move car: Characters/{uid}/cars/{carId} -> Auctions/{newId}
+        const batch = writeBatch(db);
+
+        const carRef = doc(
+          db,
+          "Characters",
+          userCharacter.id,
+          "cars",
+          selectedCar.id
+        );
+
+        const auctionRef = doc(collection(db, "Auctions"));
+
+        batch.set(auctionRef, {
+          status: "active",
           category: "cars",
           itemType: "Car",
-          name: display,
-          quantity: 1,
+          name: display, // for quick listing display
           price,
-          seller: {
-            id: userCharacter.id,
-            username: userCharacter.username,
-          },
+          sellerId: userCharacter.id,
+          sellerName: userCharacter.username,
           createdAt: serverTimestamp(),
-          car: { id: selectedCar.id, tier: selectedCar.tier ?? null },
-          location: userCharacter.location ?? null,
+          location: selectedCar.city ?? userCharacter.location ?? null,
+
+          // keep a quick reference + ALL original car fields
+          carId: selectedCar.id,
+          car: { ...selectedCar },
         });
 
+        batch.delete(carRef);
+
+        await batch.commit();
+
+        // UI: add to local lists so it shows immediately
         const now = Date.now();
         const listing: Listing = {
-          id: docRef.id,
+          id: auctionRef.id,
           category: "cars",
           itemType: "Car",
           name: display,
@@ -227,21 +305,23 @@ const BlackMarket = () => {
           seller: { id: userCharacter.id, username: userCharacter.username },
           createdAt: now,
           car: { id: selectedCar.id, tier: selectedCar.tier ?? null },
-          location: userCharacter.location ?? null,
+          location: selectedCar.city ?? userCharacter.location ?? null,
         };
         setAllListings((prev) => [listing, ...prev]);
         setMyListings((prev) => [listing, ...prev]);
 
+        // Clear selection & price
         setSelectedCar(null);
         setPrice(0);
 
         setMessageType("success");
-        setMessage("Bilen ble lagt ut for salg.");
+        setMessage("Bilen ble lagt ut for salg og fjernet fra garasjen din.");
       } catch (e) {
-        console.error("Kunne ikke publisere bil-annonse:", e);
+        console.error("Kunne ikke flytte bilen til Auctions:", e);
         setMessageType("failure");
         setMessage("Noe gikk galt. Prøv igjen.");
       }
+
       return;
     }
 
@@ -658,7 +738,7 @@ const BlackMarket = () => {
                   return (
                     <li
                       key={l.id}
-                      className="rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 flex items-center justify-between"
+                      className="rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 flex gap-4 items-center justify-between"
                     >
                       <div className="flex flex-col">
                         <span className="text-neutral-100 font-semibold flex items-center gap-2">
@@ -670,8 +750,18 @@ const BlackMarket = () => {
                           ) : (
                             nameNoTier
                           )}
-                          <span className="text-neutral-400 font-normal">
-                            · {l.quantity} stk · {fmt(l.price)}
+                          <span className="text-neutral-200 font-normal">
+                            {isCar ? (
+                              <>
+                                <i className="fa-solid fa-dollar-sign"></i>{" "}
+                                <strong>{fmt(l.price)}</strong>
+                              </>
+                            ) : (
+                              <>
+                                · {l.quantity} stk ·{" "}
+                                <strong>{fmt(l.price)}</strong>
+                              </>
+                            )}
                           </span>
                         </span>
                         <span className="text-xs text-neutral-500">
