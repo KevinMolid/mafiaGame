@@ -152,6 +152,7 @@ export const breakOut = async (characterID: string) => {
     const characterRef = doc(db, "Characters", characterID);
     await updateDoc(characterRef, {
       inJail: false,
+      jailReleaseTime: Timestamp.fromMillis(Date.now() - 1000),
     });
   } catch (error) {
     console.error("Feil ved utbrytning:", error);

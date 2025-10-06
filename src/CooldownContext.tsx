@@ -15,7 +15,8 @@ import {
 } from "firebase/firestore";
 import { onValue, ref as rtdbRef } from "firebase/database";
 import { useCharacter } from "./CharacterContext";
-import { db, rtdb } from "./firebase"; // <-- use your shared instances
+import { db, rtdb } from "./firebase";
+import { breakOut } from "./Functions/RewardFunctions"; // ⬅️ auto free when timer hits 0
 
 /** Central cooldown durations (seconds) */
 const COOLDOWN_SECONDS: Record<string, number> = {
@@ -35,6 +36,9 @@ type CooldownContextType = {
     duration: number,
     activeCharacter: string
   ) => void;
+  /** Remaining jail time in whole seconds for the active character */
+  jailRemainingSeconds: number;
+  isInJail: boolean;
 };
 
 const CooldownContext = createContext<CooldownContextType | undefined>(
@@ -52,6 +56,11 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
   /** Public remaining seconds (whole) */
   const [cooldowns, setCooldowns] = useState<Record<string, number>>({});
 
+  /** Jail expiry (ms, server time) */
+  const [jailExpMs, setJailExpMs] = useState<number | null>(null);
+  const [jailRemainingSeconds, setJailRemainingSeconds] = useState<number>(0);
+  const [isInJail, setIsInJail] = useState(false);
+
   /** serverTime - localTime (ms), from RTDB special path */
   const [serverOffsetMs, setServerOffsetMs] = useState<number>(0);
   const prevOffsetRef = useRef<number>(0);
@@ -67,7 +76,7 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
     const unsub = onValue(offRef, (snap) => {
       const next = typeof snap.val() === "number" ? snap.val() : 0;
 
-      // If offset changes, shift our stored expiries by delta so they stay in server scale
+      // Shift stored expiries by delta so they stay in server scale
       const delta = next - prevOffsetRef.current;
       if (delta !== 0) {
         setExpiresAt((prev) => {
@@ -76,11 +85,12 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
           for (const [k, v] of Object.entries(prev)) shifted[k] = v + delta;
           return shifted;
         });
+        setJailExpMs((prev) => (prev == null ? prev : prev + delta));
       }
 
       prevOffsetRef.current = next;
       setServerOffsetMs(next);
-      setOffsetReady(true); // mark ready after first offset arrives
+      setOffsetReady(true);
     });
     return () => unsub();
   }, []);
@@ -89,6 +99,8 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     setExpiresAt({});
     setCooldowns({});
+    setJailExpMs(null);
+    setJailRemainingSeconds(0);
 
     if (!activeCharacterId || !offsetReady) return;
 
@@ -99,10 +111,10 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
         const data = snap.data() || {};
         const nextExp: Record<string, number> = {};
 
-        // Derive absolute expiries from lastXTimestamp + duration
+        // Cooldowns
         for (const [type, sec] of Object.entries(COOLDOWN_SECONDS)) {
           const field =
-            "last" + type.charAt(0).toUpperCase() + type.slice(1) + "Timestamp"; // e.g., lastCrimeTimestamp
+            "last" + type.charAt(0).toUpperCase() + type.slice(1) + "Timestamp";
           const ts = data[field] as Timestamp | Date | undefined;
           if (!ts) continue;
 
@@ -111,9 +123,30 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
           if (exp > serverNowMs()) nextExp[type] = exp;
         }
 
+        // Jail expiry
+        const inJailNow = data.inJail === true;
+        setIsInJail(inJailNow);
+
+        const jrt = data.jailReleaseTime as Timestamp | Date | undefined;
+        if (inJailNow && jrt) {
+          const jd = jrt instanceof Timestamp ? jrt.toDate() : new Date(jrt);
+          const exp = jd.getTime();
+          if (exp > serverNowMs()) {
+            setJailExpMs(exp);
+            setJailRemainingSeconds(remainingFromExp(exp));
+          } else {
+            setJailExpMs(null);
+            setJailRemainingSeconds(0);
+          }
+        } else {
+          // Not in jail (or no timestamp) → ensure timer stops
+          setJailExpMs(null);
+          setJailRemainingSeconds(0);
+        }
+
         setExpiresAt(nextExp);
 
-        // Update visible seconds immediately (no need to wait for tick)
+        // Visible seconds immediately
         const vis: Record<string, number> = {};
         for (const [type, exp] of Object.entries(nextExp)) {
           vis[type] = remainingFromExp(exp);
@@ -124,17 +157,20 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
         console.error("Cooldown onSnapshot error:", err);
         setExpiresAt({});
         setCooldowns({});
+        setJailExpMs(null);
+        setJailRemainingSeconds(0);
       }
     );
 
     return () => unsub();
-  }, [activeCharacterId, offsetReady, db, serverOffsetMs]); // serverOffsetMs in deps is OK; we recompute remaining immediately anyway
+  }, [activeCharacterId, offsetReady, db, serverOffsetMs]);
 
   // 3) Single ticking interval to update remaining seconds
   useEffect(() => {
     if (!offsetReady) return;
 
     const id = setInterval(() => {
+      // Cooldowns
       setCooldowns((prev) => {
         if (!Object.keys(expiresAt).length) return {};
         const next: Record<string, number> = {};
@@ -146,10 +182,30 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
         }
         return changed ? next : prev;
       });
+
+      // Jail
+      setJailRemainingSeconds((prev) => {
+        const v = isInJail && jailExpMs ? remainingFromExp(jailExpMs) : 0;
+
+        // Only auto-free if we *are* in jail and cross to 0
+        if (isInJail && prev > 0 && v === 0 && activeCharacterId) {
+          breakOut(activeCharacterId).catch((e) =>
+            console.error("Auto breakOut failed:", e)
+          );
+        }
+        return v;
+      });
     }, 1000);
 
     return () => clearInterval(id);
-  }, [expiresAt, offsetReady, serverOffsetMs]);
+  }, [
+    expiresAt,
+    offsetReady,
+    serverOffsetMs,
+    jailExpMs,
+    activeCharacterId,
+    isInJail,
+  ]);
 
   // 4) Start cooldown
   const startCooldown = async (cooldownType: string) => {
@@ -167,32 +223,32 @@ export const CooldownProvider: React.FC<{ children: React.ReactNode }> = ({
       cooldownType.slice(1) +
       "Timestamp";
 
-    // IMPORTANT: if the server offset isn't ready, don't do an optimistic start.
-    // Let the serverTimestamp write + onSnapshot set the correct absolute expiry,
-    // which prevents starting at 83/84 instead of 90.
+    // Optimistic (if offset ready)
     if (offsetReady) {
-      // optimistic expiry using *server* time
       const optimisticExp = serverNowMs() + duration * 1000;
       setExpiresAt((prev) => ({ ...prev, [cooldownType]: optimisticExp }));
       setCooldowns((prev) => ({ ...prev, [cooldownType]: duration }));
     }
 
-    // Authoritative write so all tabs/devices sync via onSnapshot
+    // Authoritative write
     await updateDoc(doc(db, "Characters", activeCharacterId), {
       [field]: serverTimestamp(),
       lastActive: serverTimestamp(),
     });
-
-    // If we skipped the optimistic path (offset not ready), the snapshot above
-    // will set the correct value as soon as the server timestamp is written.
   };
 
   // Legacy no-op
   const fetchCooldown = () => {};
 
   const value: CooldownContextType = useMemo(
-    () => ({ cooldowns, startCooldown, fetchCooldown }),
-    [cooldowns]
+    () => ({
+      cooldowns,
+      startCooldown,
+      fetchCooldown,
+      jailRemainingSeconds,
+      isInJail,
+    }),
+    [cooldowns, jailRemainingSeconds, isInJail]
   );
 
   return (

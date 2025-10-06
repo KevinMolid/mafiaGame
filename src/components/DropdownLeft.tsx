@@ -8,6 +8,7 @@ const DropdownLeft = () => {
   const { actionsOpen, toggleActions, closeMenus } = useMenuContext();
   const { cooldowns } = useCooldown();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { jailRemainingSeconds } = useCooldown();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -149,10 +150,23 @@ const DropdownLeft = () => {
 
           <DropdownOption
             to="/fengsel"
-            icon="handcuffs"
+            icon={`handcuffs ${jailRemainingSeconds > 0 && "text-red-400"}`}
             onClick={toggleActions}
           >
-            Fengsel
+            <div
+              className={
+                jailRemainingSeconds > 0 ? "font-bold text-red-400" : ""
+              }
+            >
+              Fengsel
+            </div>
+            {jailRemainingSeconds > 0 ? (
+              <div className="text-neutral-200 font-medium pr-4">
+                {jailRemainingSeconds}
+              </div>
+            ) : (
+              <></>
+            )}
           </DropdownOption>
 
           <DropdownOption

@@ -15,6 +15,7 @@ import { getCurrentRank } from "../Functions/RankFunctions";
 const Sidebar = () => {
   const { userCharacter } = useCharacter();
   const { cooldowns } = useCooldown();
+  const { jailRemainingSeconds } = useCooldown();
 
   if (!userCharacter || userCharacter.status === "dead") return;
 
@@ -128,8 +129,22 @@ const Sidebar = () => {
         </SidebarLink>
         <hr className="border-neutral-600" />
 
-        <SidebarLink to="fengsel" icon="handcuffs">
-          Fengsel
+        <SidebarLink
+          to="fengsel"
+          icon={`handcuffs ${jailRemainingSeconds > 0 && "text-red-400"}`}
+        >
+          <div
+            className={jailRemainingSeconds > 0 ? "font-bold text-red-400" : ""}
+          >
+            Fengsel
+          </div>
+          {jailRemainingSeconds > 0 ? (
+            <div className="text-neutral-200 font-medium">
+              {jailRemainingSeconds}
+            </div>
+          ) : (
+            <></>
+          )}
         </SidebarLink>
 
         <SidebarLink to="parkering" icon="square-parking">
