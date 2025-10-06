@@ -3,14 +3,26 @@ import { useEffect, useMemo, useState } from "react";
 
 // Components
 import H2 from "../components/Typography/H2";
-import H3 from "./Typography/H3";
+import H3 from "../components/Typography/H3";
 import Box from "../components/Box";
 import Button from "../components/Button";
 import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
+import Item from "../components/Typography/Item"; // ⬅️ use Item to color by tier
 
 // Context
 import { useCharacter } from "../CharacterContext";
+
+// Firestore
+import {
+  addDoc,
+  collection,
+  getFirestore,
+  onSnapshot,
+  serverTimestamp,
+} from "firebase/firestore";
+
+const db = getFirestore();
 
 // ---- Types ------------------------------------------------------------------
 type Category = "cars" | "bullets" | "weapons" | "items";
@@ -18,23 +30,40 @@ type Category = "cars" | "bullets" | "weapons" | "items";
 type Listing = {
   id: string;
   category: Category;
-  itemType: string; // e.g. "Car", "Ammo", "Gun", "Item"
-  name: string; // Item name shown to players
-  quantity: number; // For non-unique items
-  price: number; // price per item or total (we can decide later)
+  itemType: string;
+  name: string;
+  quantity: number;
+  price: number;
   seller: { id: string; username: string };
-  createdAt: number; // ms
-  expiresAt?: number; // optional
+  createdAt: number;
+  expiresAt?: number;
+  car?: { id: string; tier?: number | null };
+  location?: string | null;
 };
 
-// A tiny helper to format numbers with Norwegian locale
-const fmt = (n: number) => n.toLocaleString("nb-NO");
+type CarDoc = {
+  id: string;
+  name?: string;
+  brand?: string;
+  model?: string;
+  tier?: number;
+  city?: string;
+  [key: string]: any;
+};
 
-// -----------------------------------------------------------------------------
-// NOTE: This is a pure UI scaffold using local state. Next step:
-// - Read player's inventory to populate item selector
-// - Save/load listings to Firestore
-// - Add buy/cancel logic & validations
+// Helpers
+const fmt = (n: number) => n.toLocaleString("nb-NO");
+const carBaseName = (c: CarDoc) =>
+  c.name || [c.brand, c.model].filter(Boolean).join(" ") || "Bil";
+const stripTierSuffix = (s: string) => s.replace(/\s*\(T\d+\)\s*$/, "");
+
+function labelForCategory(c: Category) {
+  if (c === "cars") return "Biler";
+  if (c === "bullets") return "Kuler";
+  if (c === "weapons") return "Våpen";
+  return "Annet";
+}
+
 // -----------------------------------------------------------------------------
 
 const BlackMarket = () => {
@@ -49,10 +78,13 @@ const BlackMarket = () => {
   // New listing form state
   const [category, setCategory] = useState<Category>("cars");
   const [itemName, setItemName] = useState("");
-  const [itemType, setItemType] = useState("Car"); // just a label for now
+  const [itemType, setItemType] = useState("Car");
   const [quantity, setQuantity] = useState<number>(1);
   const [price, setPrice] = useState<number>(0);
-  const [durationHrs, setDurationHrs] = useState<number>(24);
+
+  // Cars owned by player (subcollection)
+  const [cars, setCars] = useState<CarDoc[]>([]);
+  const [selectedCar, setSelectedCar] = useState<CarDoc | null>(null);
 
   // Local listing data
   const [allListings, setAllListings] = useState<Listing[]>([]);
@@ -62,9 +94,40 @@ const BlackMarket = () => {
   const [filterCategory, setFilterCategory] = useState<"all" | Category>("all");
   const [search, setSearch] = useState("");
 
+  // --- Subscribe to the user's Cars subcollection ---------------------------
   useEffect(() => {
-    // Seed with a few mock listings so the page doesn't look empty at start.
-    // (Remove when wiring to Firestore)
+    if (!userCharacter?.id) {
+      setCars([]);
+      return;
+    }
+    // NOTE: use your exact subcollection name here ("Cars" vs "cars")
+    const carsRef = collection(db, "Characters", userCharacter.id, "cars");
+    const unsub = onSnapshot(
+      carsRef,
+      (snap) => {
+        const list: CarDoc[] = snap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as any),
+        }));
+        setCars(list);
+      },
+      (err) => {
+        console.error("Failed to subscribe to cars:", err);
+        setCars([]);
+      }
+    );
+    return () => unsub();
+  }, [userCharacter?.id]);
+
+  // Cars filtered by current user's city
+  const carsInMyCity = useMemo(() => {
+    const city = userCharacter?.location;
+    if (!city) return cars;
+    return cars.filter((c) => (c.city ? c.city === city : true)); // ⬅️ was c.location
+  }, [cars, userCharacter?.location]);
+
+  // Seed mocked market list (remove once you read from Firestore)
+  useEffect(() => {
     const seed: Listing[] = [
       {
         id: "seed-1",
@@ -101,9 +164,10 @@ const BlackMarket = () => {
   }, []);
 
   // Derived listing sets
-  const marketListings = useMemo(() => {
-    return allListings.filter((l) => l.seller.id !== userCharacter?.id);
-  }, [allListings, userCharacter?.id]);
+  const marketListings = useMemo(
+    () => allListings.filter((l) => l.seller.id !== userCharacter?.id),
+    [allListings, userCharacter?.id]
+  );
 
   const filteredMarket = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -115,12 +179,73 @@ const BlackMarket = () => {
       .sort((a, b) => b.createdAt - a.createdAt);
   }, [marketListings, filterCategory, search]);
 
-  const handlePostListing = () => {
+  // --- Post a listing --------------------------------------------------------
+  const handlePostListing = async () => {
     if (!userCharacter) {
       setMessageType("warning");
       setMessage("Du må være innlogget med en spillkarakter.");
       return;
     }
+
+    if (category === "cars") {
+      if (!selectedCar) {
+        setMessageType("warning");
+        setMessage("Velg en bil du vil selge.");
+        return;
+      }
+      if (price <= 0) {
+        setMessageType("warning");
+        setMessage("Du må skrive en pris.");
+        return;
+      }
+
+      const display = carBaseName(selectedCar);
+      try {
+        const docRef = await addDoc(collection(db, "BlackMarketListings"), {
+          category: "cars",
+          itemType: "Car",
+          name: display,
+          quantity: 1,
+          price,
+          seller: {
+            id: userCharacter.id,
+            username: userCharacter.username,
+          },
+          createdAt: serverTimestamp(),
+          car: { id: selectedCar.id, tier: selectedCar.tier ?? null },
+          location: userCharacter.location ?? null,
+        });
+
+        const now = Date.now();
+        const listing: Listing = {
+          id: docRef.id,
+          category: "cars",
+          itemType: "Car",
+          name: display,
+          quantity: 1,
+          price,
+          seller: { id: userCharacter.id, username: userCharacter.username },
+          createdAt: now,
+          car: { id: selectedCar.id, tier: selectedCar.tier ?? null },
+          location: userCharacter.location ?? null,
+        };
+        setAllListings((prev) => [listing, ...prev]);
+        setMyListings((prev) => [listing, ...prev]);
+
+        setSelectedCar(null);
+        setPrice(0);
+
+        setMessageType("success");
+        setMessage("Bilen ble lagt ut for salg.");
+      } catch (e) {
+        console.error("Kunne ikke publisere bil-annonse:", e);
+        setMessageType("failure");
+        setMessage("Noe gikk galt. Prøv igjen.");
+      }
+      return;
+    }
+
+    // Non-car categories
     if (!itemName.trim()) {
       setMessageType("warning");
       setMessage("Skriv inn et varenavn.");
@@ -133,36 +258,52 @@ const BlackMarket = () => {
     }
     if (price <= 0) {
       setMessageType("warning");
-      setMessage("Pris må være større enn 0.");
+      setMessage("Du må skrive en pris.");
       return;
     }
 
-    // (Later: validate against inventory)
-    const now = Date.now();
-    const listing: Listing = {
-      id: "temp-" + now, // (Later: use Firestore id)
-      category,
-      itemType,
-      name: itemName.trim(),
-      quantity,
-      price,
-      seller: { id: userCharacter.id, username: userCharacter.username },
-      createdAt: now,
-      expiresAt: now + durationHrs * 60 * 60 * 1000,
-    };
+    try {
+      const docRef = await addDoc(collection(db, "BlackMarketListings"), {
+        category,
+        itemType,
+        name: itemName.trim(),
+        quantity,
+        price,
+        seller: {
+          id: userCharacter.id,
+          username: userCharacter.username,
+        },
+        createdAt: serverTimestamp(),
+        location: userCharacter.location ?? null,
+      });
 
-    // Update local state (simulate success)
-    setAllListings((prev) => [listing, ...prev]);
-    setMyListings((prev) => [listing, ...prev]);
+      const now = Date.now();
+      const listing: Listing = {
+        id: docRef.id,
+        category,
+        itemType,
+        name: itemName.trim(),
+        quantity,
+        price,
+        seller: { id: userCharacter.id, username: userCharacter.username },
+        createdAt: now,
+        location: userCharacter.location ?? null,
+      };
 
-    // Reset form & message
-    setItemName("");
-    setQuantity(1);
-    setPrice(0);
-    setDurationHrs(24);
+      setAllListings((prev) => [listing, ...prev]);
+      setMyListings((prev) => [listing, ...prev]);
 
-    setMessageType("success");
-    setMessage("Annonse publisert på svartemarkedet.");
+      setItemName("");
+      setQuantity(1);
+      setPrice(0);
+
+      setMessageType("success");
+      setMessage("Annonse publisert på svartebørsen.");
+    } catch (e) {
+      console.error("Kunne ikke publisere annonse:", e);
+      setMessageType("failure");
+      setMessage("Noe gikk galt. Prøv igjen.");
+    }
   };
 
   const handleCancelListing = (id: string) => {
@@ -172,15 +313,14 @@ const BlackMarket = () => {
     setMessage("Annonse fjernet.");
   };
 
-  const handleBuy = (id: string) => {
-    // Placeholder: later we’ll deduct money, transfer item, etc.
+  const handleBuy = (_id: string) => {
     setMessageType("info");
     setMessage("Kjøp-flyten kommer i neste steg.");
   };
 
   return (
     <>
-      <H2>Svartemarked</H2>
+      <H2>Svartebørs</H2>
       <p className="mb-4">
         Kjøp og selg gjenstander som biler, våpen, kuler og andre varer.
       </p>
@@ -245,36 +385,47 @@ const BlackMarket = () => {
             <p className="text-neutral-400 mt-3">Ingen treff.</p>
           ) : (
             <ul className="mt-3 flex flex-col gap-2">
-              {filteredMarket.map((l) => (
-                <li
-                  key={l.id}
-                  className="rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 flex items-center justify-between"
-                >
-                  <div className="flex flex-col">
-                    <span className="text-neutral-100 font-semibold">
-                      {l.name}{" "}
-                      <span className="text-neutral-400 font-normal">
-                        · {l.quantity} stk · {fmt(l.price)} kr
+              {filteredMarket.map((l) => {
+                const isCar = l.category === "cars";
+                const nameNoTier = stripTierSuffix(l.name);
+                return (
+                  <li
+                    key={l.id}
+                    className="rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 flex items-center justify-between"
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-neutral-100 font-semibold flex items-center gap-2">
+                        {isCar ? (
+                          <Item
+                            name={nameNoTier}
+                            tier={l.car?.tier ?? undefined}
+                          />
+                        ) : (
+                          nameNoTier
+                        )}
+                        <span className="text-neutral-400 font-normal">
+                          · {l.quantity} stk · {fmt(l.price)}
+                        </span>
                       </span>
-                    </span>
-                    <span className="text-xs text-neutral-500">
-                      Selger:{" "}
-                      <Username
-                        character={{
-                          id: l.seller.id,
-                          username: l.seller.username,
-                        }}
-                      />{" "}
-                      · {labelForCategory(l.category)} · {l.itemType}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button size="small" onClick={() => handleBuy(l.id)}>
-                      <i className="fa-solid fa-cart-shopping" /> Kjøp
-                    </Button>
-                  </div>
-                </li>
-              ))}
+                      <span className="text-xs text-neutral-500">
+                        Selger:{" "}
+                        <Username
+                          character={{
+                            id: l.seller.id,
+                            username: l.seller.username,
+                          }}
+                        />{" "}
+                        · {labelForCategory(l.category)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button size="small" onClick={() => handleBuy(l.id)}>
+                        Kjøp
+                      </Button>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </Box>
@@ -284,7 +435,6 @@ const BlackMarket = () => {
           <Box>
             <H3>Ny annonse</H3>
             <div className="flex flex-col gap-3 mt-2">
-              <label className="text-sm text-neutral-400">Kategori</label>
               <div className="flex flex-wrap gap-2">
                 <Button
                   size="small"
@@ -292,9 +442,10 @@ const BlackMarket = () => {
                   onClick={() => {
                     setCategory("cars");
                     setItemType("Car");
+                    setSelectedCar(null);
                   }}
                 >
-                  <i className="fa-solid fa-car-side" /> Biler
+                  Biler
                 </Button>
                 <Button
                   size="small"
@@ -302,9 +453,10 @@ const BlackMarket = () => {
                   onClick={() => {
                     setCategory("bullets");
                     setItemType("Ammo");
+                    setSelectedCar(null);
                   }}
                 >
-                  <i className="fa-solid fa-bullet" /> Kuler
+                  Kuler
                 </Button>
                 <Button
                   size="small"
@@ -312,9 +464,10 @@ const BlackMarket = () => {
                   onClick={() => {
                     setCategory("weapons");
                     setItemType("Gun");
+                    setSelectedCar(null);
                   }}
                 >
-                  <i className="fa-solid fa-gun" /> Våpen
+                  Våpen
                 </Button>
                 <Button
                   size="small"
@@ -322,96 +475,172 @@ const BlackMarket = () => {
                   onClick={() => {
                     setCategory("items");
                     setItemType("Item");
+                    setSelectedCar(null);
                   }}
                 >
-                  <i className="fa-solid fa-box" /> Annet
+                  Annet
                 </Button>
               </div>
 
-              {/* Item name (later: replace with inventory picker for each category) */}
-              <div className="grid gap-1">
-                <label htmlFor="bm-name" className="text-sm text-neutral-400">
-                  Varenavn
-                </label>
-                <input
-                  id="bm-name"
-                  className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-                  placeholder={
-                    category === "cars" ? "Eks: BMW M3" : "Eks: 9mm kuler"
-                  }
-                  value={itemName}
-                  onChange={(e) => setItemName(e.target.value)}
-                />
-              </div>
+              {/* Cars: list cars in same city; click to pick one; then show only price */}
+              {category === "cars" ? (
+                <div className="grid gap-2">
+                  {!selectedCar ? (
+                    <>
+                      {carsInMyCity.length === 0 ? (
+                        <p className="text-neutral-400">
+                          Du har ingen biler i denne byen.
+                        </p>
+                      ) : (
+                        <ul className="flex flex-col gap-1">
+                          {carsInMyCity.map((c) => (
+                            <li key={c.id}>
+                              <Button
+                                size="text"
+                                style="text"
+                                onClick={() => {
+                                  setSelectedCar(c);
+                                  setItemName(carBaseName(c)); // store base name
+                                }}
+                                title="Velg bil"
+                              >
+                                <Item name={carBaseName(c)} tier={c.tier} />
+                              </Button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <Item
+                          name={carBaseName(selectedCar)}
+                          tier={selectedCar.tier ?? undefined}
+                        />
+                        <Button
+                          size="text"
+                          style="text"
+                          onClick={() => {
+                            setSelectedCar(null);
+                            setPrice(0);
+                          }}
+                          title="Bytt bil"
+                        >
+                          Bytt
+                        </Button>
+                      </div>
 
-              {/* Quantity (for cars it's usually 1, for ammo/items can be higher) */}
-              <div className="grid gap-1">
-                <label htmlFor="bm-qty" className="text-sm text-neutral-400">
-                  Antall
-                </label>
-                <input
-                  id="bm-qty"
-                  inputMode="numeric"
-                  className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none w-28"
-                  value={quantity === 0 ? "" : quantity.toString()}
-                  placeholder="1"
-                  onChange={(e) => {
-                    const n = parseInt(
-                      e.target.value.replace(/[^\d]/g, ""),
-                      10
-                    );
-                    setQuantity(Number.isFinite(n) ? n : 0);
-                  }}
-                />
-              </div>
+                      {/* Price only (no Antall for cars) */}
+                      <div className="grid gap-1">
+                        <label
+                          htmlFor="bm-price"
+                          className="text-sm text-neutral-400"
+                        >
+                          Pris
+                        </label>
+                        <input
+                          id="bm-price"
+                          inputMode="numeric"
+                          className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none w-44"
+                          value={price === 0 ? "" : fmt(price)}
+                          placeholder="0"
+                          onChange={(e) => {
+                            const n = parseInt(
+                              e.target.value.replace(/[^\d]/g, ""),
+                              10
+                            );
+                            setPrice(Number.isFinite(n) ? n : 0);
+                          }}
+                        />
+                      </div>
 
-              {/* Price */}
-              <div className="grid gap-1">
-                <label htmlFor="bm-price" className="text-sm text-neutral-400">
-                  Pris (kr)
-                </label>
-                <input
-                  id="bm-price"
-                  inputMode="numeric"
-                  className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none w-44"
-                  value={price === 0 ? "" : fmt(price)}
-                  placeholder="0"
-                  onChange={(e) => {
-                    const n = parseInt(
-                      e.target.value.replace(/[^\d]/g, ""),
-                      10
-                    );
-                    setPrice(Number.isFinite(n) ? n : 0);
-                  }}
-                />
-              </div>
+                      <div className="flex gap-2 pt-2">
+                        <Button onClick={handlePostListing}>
+                          <i className="fa-solid fa-plus" /> Publiser
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                // Non-car categories: generic fields
+                <>
+                  <div className="grid gap-1">
+                    <label
+                      htmlFor="bm-name"
+                      className="text-sm text-neutral-400"
+                    >
+                      Varenavn
+                    </label>
+                    <input
+                      id="bm-name"
+                      className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+                      placeholder={
+                        category === "bullets"
+                          ? "Eks: 9mm kuler"
+                          : category === "weapons"
+                          ? "Eks: Uzi"
+                          : "Eks: Diamanter"
+                      }
+                      value={itemName}
+                      onChange={(e) => setItemName(e.target.value)}
+                    />
+                  </div>
 
-              {/* Duration */}
-              <div className="grid gap-1">
-                <label htmlFor="bm-dur" className="text-sm text-neutral-400">
-                  Varighet (timer)
-                </label>
-                <input
-                  id="bm-dur"
-                  inputMode="numeric"
-                  className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none w-44"
-                  value={durationHrs === 0 ? "" : durationHrs.toString()}
-                  placeholder="24"
-                  onChange={(e) => {
-                    const n = parseInt(
-                      e.target.value.replace(/[^\d]/g, ""),
-                      10
-                    );
-                    setDurationHrs(Number.isFinite(n) ? n : 0);
-                  }}
-                />
-              </div>
+                  <div className="grid gap-1">
+                    <label
+                      htmlFor="bm-qty"
+                      className="text-sm text-neutral-400"
+                    >
+                      Antall
+                    </label>
+                    <input
+                      id="bm-qty"
+                      inputMode="numeric"
+                      className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none w-28"
+                      value={quantity === 0 ? "" : quantity.toString()}
+                      placeholder="1"
+                      onChange={(e) => {
+                        const n = parseInt(
+                          e.target.value.replace(/[^\d]/g, ""),
+                          10
+                        );
+                        setQuantity(Number.isFinite(n) ? n : 0);
+                      }}
+                    />
+                  </div>
 
-              <div className="flex gap-2 pt-2">
-                <Button onClick={handlePostListing}>
-                  <i className="fa-solid fa-plus" /> Publiser
-                </Button>
-              </div>
+                  <div className="grid gap-1">
+                    <label
+                      htmlFor="bm-price"
+                      className="text-sm text-neutral-400"
+                    >
+                      Pris
+                    </label>
+                    <input
+                      id="bm-price"
+                      inputMode="numeric"
+                      className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none w-44"
+                      value={price === 0 ? "" : fmt(price)}
+                      placeholder="0"
+                      onChange={(e) => {
+                        const n = parseInt(
+                          e.target.value.replace(/[^\d]/g, ""),
+                          10
+                        );
+                        setPrice(Number.isFinite(n) ? n : 0);
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button onClick={handlePostListing}>
+                      <i className="fa-solid fa-plus" /> Publiser
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </Box>
 
@@ -423,33 +652,44 @@ const BlackMarket = () => {
               </p>
             ) : (
               <ul className="mt-2 flex flex-col gap-2">
-                {myListings.map((l) => (
-                  <li
-                    key={l.id}
-                    className="rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 flex items-center justify-between"
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-neutral-100 font-semibold">
-                        {l.name}{" "}
-                        <span className="text-neutral-400 font-normal">
-                          · {l.quantity} stk · {fmt(l.price)} kr
+                {myListings.map((l) => {
+                  const isCar = l.category === "cars";
+                  const nameNoTier = stripTierSuffix(l.name);
+                  return (
+                    <li
+                      key={l.id}
+                      className="rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 flex items-center justify-between"
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-neutral-100 font-semibold flex items-center gap-2">
+                          {isCar ? (
+                            <Item
+                              name={nameNoTier}
+                              tier={l.car?.tier ?? undefined}
+                            />
+                          ) : (
+                            nameNoTier
+                          )}
+                          <span className="text-neutral-400 font-normal">
+                            · {l.quantity} stk · {fmt(l.price)}
+                          </span>
                         </span>
-                      </span>
-                      <span className="text-xs text-neutral-500">
-                        Kategori: {labelForCategory(l.category)} · {l.itemType}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="small"
-                        style="danger"
-                        onClick={() => handleCancelListing(l.id)}
-                      >
-                        <i className="fa-solid fa-trash" /> Fjern
-                      </Button>
-                    </div>
-                  </li>
-                ))}
+                        <span className="text-xs text-neutral-500">
+                          Kategori: {labelForCategory(l.category)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="small"
+                          style="danger"
+                          onClick={() => handleCancelListing(l.id)}
+                        >
+                          <i className="fa-solid fa-trash" /> Fjern
+                        </Button>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </Box>
@@ -458,12 +698,5 @@ const BlackMarket = () => {
     </>
   );
 };
-
-function labelForCategory(c: Category) {
-  if (c === "cars") return "Biler";
-  if (c === "bullets") return "Kuler";
-  if (c === "weapons") return "Våpen";
-  return "Annet";
-}
 
 export default BlackMarket;
