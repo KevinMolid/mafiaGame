@@ -251,8 +251,8 @@ const Bank = () => {
         return;
       }
 
-      // Apply 5% fee to the transfer amount
-      const fee = transferAmount * 0.05;
+      // Apply 5% fee to the transfer amount (rounded up to nearest whole number)
+      const fee = Math.ceil(transferAmount * 0.05);
       const totalAmount = transferAmount + fee;
 
       // Check if the sender has enough money
