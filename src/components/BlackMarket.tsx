@@ -24,6 +24,9 @@ import {
   writeBatch,
   query,
   where,
+  getDoc,
+  deleteDoc,
+  runTransaction,
 } from "firebase/firestore";
 
 const db = getFirestore();
@@ -315,7 +318,15 @@ const BlackMarket = () => {
         setPrice(0);
 
         setMessageType("success");
-        setMessage("Bilen ble lagt ut for salg og fjernet fra garasjen din.");
+        setMessage(
+          <p>
+            <Item
+              name={selectedCar.name || "Bilen"}
+              tier={selectedCar.tier || 1}
+            />{" "}
+            ble lagt ut for salg.
+          </p>
+        );
       } catch (e) {
         console.error("Kunne ikke flytte bilen til Auctions:", e);
         setMessageType("failure");
@@ -386,16 +397,100 @@ const BlackMarket = () => {
     }
   };
 
-  const handleCancelListing = (id: string) => {
-    setAllListings((prev) => prev.filter((l) => l.id !== id));
-    setMyListings((prev) => prev.filter((l) => l.id !== id));
-    setMessageType("success");
-    setMessage("Annonse fjernet.");
+  const handleCancelListing = async (auctionId: string) => {
+    if (!userCharacter) {
+      setMessageType("warning");
+      setMessage("Du må være innlogget.");
+      return;
+    }
+
+    try {
+      const auctionRef = doc(db, "Auctions", auctionId);
+      const snap = await getDoc(auctionRef);
+      if (!snap.exists()) {
+        setMessageType("warning");
+        setMessage("Annonsen finnes ikke lenger.");
+        return;
+      }
+
+      const v = snap.data() as any;
+
+      // Only cars need to be moved back to the seller's garage
+      if (v.category === "cars" && v.carId && v.car) {
+        const batch = writeBatch(db);
+        const carRef = doc(db, "Characters", userCharacter.id, "cars", v.carId);
+        batch.set(carRef, v.car); // put car back
+        batch.delete(auctionRef); // remove auction
+        await batch.commit();
+      } else {
+        // Non-car: just remove the auction
+        await deleteDoc(auctionRef);
+      }
+
+      setMessageType("success");
+      setMessage("Annonsen ble fjernet.");
+    } catch (e) {
+      console.error("handleCancelListing failed:", e);
+      setMessageType("failure");
+      setMessage("Kunne ikke fjerne annonsen.");
+    }
   };
 
-  const handleBuy = (_id: string) => {
-    setMessageType("info");
-    setMessage("Kjøp-flyten kommer i neste steg.");
+  const handleBuy = async (auctionId: string) => {
+    if (!userCharacter) {
+      setMessageType("warning");
+      setMessage("Du må være innlogget.");
+      return;
+    }
+
+    try {
+      await runTransaction(db, async (tx) => {
+        const auctionRef = doc(db, "Auctions", auctionId);
+        const auctionSnap = await tx.get(auctionRef);
+        if (!auctionSnap.exists())
+          throw new Error("Annonsen finnes ikke lenger.");
+
+        const a = auctionSnap.data() as any;
+        if (a.status !== "active") throw new Error("Annonsen er ikke aktiv.");
+        if (a.category !== "cars" || !a.carId || !a.car)
+          throw new Error("Kjøp støttes kun for biler akkurat nå.");
+
+        const price: number = a.price ?? 0;
+        const buyerCharRef = doc(db, "Characters", userCharacter.id);
+        const buyerSnap = await tx.get(buyerCharRef);
+        if (!buyerSnap.exists()) throw new Error("Karakter ikke funnet.");
+
+        const buyer = buyerSnap.data() as any;
+        const money: number = buyer?.stats?.money ?? 0;
+        if (money < price) throw new Error("Du har ikke nok penger.");
+
+        // subtract money
+        tx.update(buyerCharRef, {
+          "stats.money": money - price,
+          lastActive: serverTimestamp(),
+        });
+
+        // move car to buyer's garage
+        const buyerCarRef = doc(
+          db,
+          "Characters",
+          userCharacter.id,
+          "cars",
+          a.carId
+        );
+        tx.set(buyerCarRef, a.car);
+
+        // delete the auction
+        tx.delete(auctionRef);
+      });
+
+      setMessageType("success");
+      setMessage("Kjøp fullført. Bilen er lagt i garasjen din.");
+    } catch (e: any) {
+      console.error("handleBuy failed:", e);
+      setMessageType("failure");
+      setMessage(e?.message || "Kunne ikke gjennomføre kjøpet.");
+    }
   };
 
   return (
@@ -483,12 +578,23 @@ const BlackMarket = () => {
                         ) : (
                           nameNoTier
                         )}
-                        <span className="text-neutral-400 font-normal">
-                          · {l.quantity} stk · {fmt(l.price)}
+                        <span className="text-neutral-200 font-normal">
+                          {isCar ? (
+                            <>
+                              <i className="fa-solid fa-dollar-sign"></i>{" "}
+                              <strong>{fmt(l.price)}</strong>
+                            </>
+                          ) : (
+                            <>
+                              · {l.quantity} stk ·{" "}
+                              <i className="fa-solid fa-dollar-sign"></i>{" "}
+                              <strong>{fmt(l.price)}</strong>
+                            </>
+                          )}
                         </span>
                       </span>
-                      <span className="text-xs text-neutral-500">
-                        Selger:{" "}
+                      <span className="text-sm text-neutral-400">
+                        Selgers av{" "}
                         <Username
                           character={{
                             id: l.seller.id,
@@ -759,13 +865,11 @@ const BlackMarket = () => {
                             ) : (
                               <>
                                 · {l.quantity} stk ·{" "}
+                                <i className="fa-solid fa-dollar-sign"></i>{" "}
                                 <strong>{fmt(l.price)}</strong>
                               </>
                             )}
                           </span>
-                        </span>
-                        <span className="text-xs text-neutral-500">
-                          Kategori: {labelForCategory(l.category)}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -774,7 +878,7 @@ const BlackMarket = () => {
                           style="danger"
                           onClick={() => handleCancelListing(l.id)}
                         >
-                          <i className="fa-solid fa-trash" /> Fjern
+                          Fjern
                         </Button>
                       </div>
                     </li>
