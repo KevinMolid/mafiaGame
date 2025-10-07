@@ -33,12 +33,8 @@ const Prison = () => {
       setBusy(true);
       // Let the shared function do all the Firestore updates (city, release time, flags, etc.)
       await arrest(userCharacter);
-      setMessageType("success");
-      setMessage(
-        `Du ble arrestert i ${
-          userCharacter.location ?? "byen"
-        } og satt i fengsel.`
-      );
+      setMessageType("failure");
+      setMessage(`Du ble arrestert og satt i fengsel.`);
     } catch (e) {
       console.error(e);
       setMessageType("failure");

@@ -186,7 +186,7 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
 
             <Box>
               <H2>Spillere i fengsel</H2>
-              <CharacterList type="jail" />
+              <CharacterList type="jail" inJail />
             </Box>
           </div>
         )}

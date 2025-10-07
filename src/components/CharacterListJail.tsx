@@ -72,12 +72,14 @@ function JailList({
   onBribe,
   onBreakout,
   onClick,
+  inJail,
 }: {
   characters: JailCharacter[];
   location?: string;
   onBribe?: (id: string) => void;
   onBreakout?: (id: string) => void;
   onClick?: (username: string) => void;
+  inJail?: boolean;
 }) {
   useSecondTicker();
 
@@ -117,26 +119,28 @@ function JailList({
               {mmss(remainingSec)}
             </span>
 
-            {/* Bestikk vakter */}
-            <Button
-              size="text"
-              style="text"
-              disabled={remainingSec <= 0}
-              onClick={() => onBribe?.(c.id)}
-              title={`Koster ${BRIBE_COST.toLocaleString("nb-NO")} kr`}
-            >
-              Bestikk vakter
-            </Button>
+            {!inJail && (
+              <>
+                <Button
+                  size="text"
+                  style="text"
+                  disabled={remainingSec <= 0}
+                  onClick={() => onBribe?.(c.id)}
+                  title={`Koster ${BRIBE_COST.toLocaleString("nb-NO")} kr`}
+                >
+                  Bestikk vakter
+                </Button>
 
-            {/* Bryt ut */}
-            <Button
-              size="text"
-              style="text"
-              disabled={remainingSec <= 0}
-              onClick={() => onBreakout?.(c.id)}
-            >
-              Bryt ut
-            </Button>
+                <Button
+                  size="text"
+                  style="text"
+                  disabled={remainingSec <= 0}
+                  onClick={() => onBreakout?.(c.id)}
+                >
+                  Bryt ut
+                </Button>
+              </>
+            )}
           </li>
         );
       })}
@@ -148,8 +152,10 @@ type MsgKind = "success" | "warning" | "info" | "failure";
 
 export default function CharacterListJail({
   onClick,
+  inJail = false,
 }: {
   onClick?: (receiver: string) => void;
+  inJail?: boolean;
 }) {
   const { userCharacter } = useCharacter();
   const [characters, setCharacters] = useState<JailCharacter[]>([]);
@@ -305,6 +311,7 @@ export default function CharacterListJail({
         onClick={onClick}
         onBribe={handleBribe}
         onBreakout={handleBreakout}
+        inJail={inJail}
       />
       <p className="text-xs text-neutral-500 mt-2">
         Sjanser: Bestikk {Math.round(CHANCE_BRIBE * 100)}%, Bryt ut{" "}
