@@ -72,10 +72,24 @@ const formatTimeAgo = (date: Date): string => {
   return days === 1 ? `${days} dag` : `${days} dager`;
 };
 
+const PAGE_SIZE = 15;
+
 const Alerts = () => {
   const { userCharacter } = useCharacter();
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // pagination
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(alerts.length / PAGE_SIZE));
+  const start = (page - 1) * PAGE_SIZE;
+  const end = start + PAGE_SIZE;
+  const pageAlerts = alerts.slice(start, end);
+
+  useEffect(() => {
+    // keep current page valid if alerts length changes
+    if (page > totalPages) setPage(totalPages);
+  }, [alerts.length, page, totalPages]);
 
   useEffect(() => {
     const fetchAlerts = async () => {
@@ -144,6 +158,7 @@ const Alerts = () => {
 
         setAlerts(fetchedAlerts);
         setLoading(false);
+        setPage(1); // reset to first page when (re)loading
       } catch (error) {
         console.error("Error fetching alerts:", error);
         setLoading(false);
@@ -152,6 +167,63 @@ const Alerts = () => {
 
     fetchAlerts();
   }, [userCharacter]);
+
+  const Pager = () => (
+    <div className="flex items-center justify-between py-2">
+      <div className="text-sm text-neutral-400">
+        Side <span className="text-neutral-200 font-semibold">{page}</span> av{" "}
+        <span className="text-neutral-200 font-semibold">{totalPages}</span>
+        {alerts.length > 0 && (
+          <>
+            {" "}
+            · Viser{" "}
+            <span className="text-neutral-200 font-semibold">{start + 1}</span>–
+            <span className="text-neutral-200 font-semibold">
+              {Math.min(end, alerts.length)}
+            </span>{" "}
+            av{" "}
+            <span className="text-neutral-200 font-semibold">
+              {alerts.length}
+            </span>
+          </>
+        )}
+      </div>
+      <div className="flex gap-1">
+        <button
+          className="px-2 py-1 text-sm rounded bg-neutral-800 border border-neutral-700 disabled:opacity-40"
+          onClick={() => setPage(1)}
+          disabled={page === 1}
+          title="Første side"
+        >
+          « Første
+        </button>
+        <button
+          className="px-2 py-1 text-sm rounded bg-neutral-800 border border-neutral-700 disabled:opacity-40"
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={page === 1}
+          title="Forrige side"
+        >
+          ‹ Forrige
+        </button>
+        <button
+          className="px-2 py-1 text-sm rounded bg-neutral-800 border border-neutral-700 disabled:opacity-40"
+          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          disabled={page === totalPages}
+          title="Neste side"
+        >
+          Neste ›
+        </button>
+        <button
+          className="px-2 py-1 text-sm rounded bg-neutral-800 border border-neutral-700 disabled:opacity-40"
+          onClick={() => setPage(totalPages)}
+          disabled={page === totalPages}
+          title="Siste side"
+        >
+          Siste »
+        </button>
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -169,161 +241,173 @@ const Alerts = () => {
       {alerts.length === 0 ? (
         <p>Du har ingen varsler.</p>
       ) : (
-        <div className="flex gap-1 md:gap-2 flex-col">
-          {alerts.map((alert) => (
-            <Alert key={alert.id} read={alert.read}>
-              {/* Rank alert */}
-              {alert.type === "xp" && (
-                <small>Du nådde ranken {alert.newRank}.</small>
-              )}
+        <>
+          <Pager />
 
-              {/* Bounty Reward alert */}
-              {alert.type === "bountyReward" && (
-                <small>
-                  Du mottok ${alert.bountyAmount?.toLocaleString()} for å drepe{" "}
-                  <Username
-                    character={{
-                      id: alert.killedPlayerId,
-                      username: alert.killedPlayerName,
-                    }}
-                  />
-                  .
-                </small>
-              )}
+          <div className="flex gap-1 md:gap-1 flex-col">
+            {pageAlerts.map((alert) => (
+              <Alert key={alert.id} read={alert.read}>
+                {/* Rank alert */}
+                {alert.type === "xp" && (
+                  <small>Du nådde ranken {alert.newRank}.</small>
+                )}
 
-              {/* Robbery alert */}
-              {alert.type === "robbery" && alert.amountLost && (
-                <small>
-                  Du ble ranet av{" "}
-                  <Username
-                    character={{
-                      id: alert.robberId,
-                      username: alert.robberName,
-                    }}
-                  />{" "}
-                  og mistet{" "}
-                  <span className="text-neutral-200">
-                    <i className="fa-solid fa-dollar-sign"></i>{" "}
-                    <strong>{alert.amountLost.toLocaleString("nb-NO")}</strong>
-                  </span>
-                  .
-                </small>
-              )}
+                {/* Bounty Reward alert */}
+                {alert.type === "bountyReward" && (
+                  <small>
+                    Du mottok ${alert.bountyAmount?.toLocaleString()} for å
+                    drepe{" "}
+                    <Username
+                      character={{
+                        id: alert.killedPlayerId,
+                        username: alert.killedPlayerName,
+                      }}
+                    />
+                    .
+                  </small>
+                )}
 
-              {/* Bank transfer alert */}
-              {alert.type === "banktransfer" && alert.amountSent && (
-                <small>
-                  <Username
-                    character={{
-                      id: alert.senderId,
-                      username: alert.senderName,
-                    }}
-                  />{" "}
-                  overførte{" "}
-                  <span className="text-neutral-200">
-                    ${alert.amountSent.toLocaleString()}
-                  </span>{" "}
-                  til din bankkonto.
-                </small>
-              )}
+                {/* Robbery alert */}
+                {alert.type === "robbery" && alert.amountLost && (
+                  <small>
+                    Du ble ranet av{" "}
+                    <Username
+                      character={{
+                        id: alert.robberId,
+                        username: alert.robberName,
+                      }}
+                    />{" "}
+                    og mistet{" "}
+                    <span className="text-neutral-200">
+                      <i className="fa-solid fa-dollar-sign"></i>{" "}
+                      <strong>
+                        {alert.amountLost.toLocaleString("nb-NO")}
+                      </strong>
+                    </span>
+                    .
+                  </small>
+                )}
 
-              {/* Family Application alert */}
-              {alert.type === "applicationAccepted" && (
-                <small>
-                  Søknaden din ble godkjent. Du er nå medlem av{" "}
-                  <Familyname
-                    family={{
-                      id: alert.familyId,
-                      name: alert.familyName,
-                    }}
-                  />
-                  !
-                </small>
-              )}
+                {/* Bank transfer alert */}
+                {alert.type === "banktransfer" && alert.amountSent && (
+                  <small>
+                    <Username
+                      character={{
+                        id: alert.senderId,
+                        username: alert.senderName,
+                      }}
+                    />{" "}
+                    overførte{" "}
+                    <span className="text-neutral-200">
+                      <i className="fa-solid fa-dollar-sign"></i>{" "}
+                      <strong>
+                        {alert.amountSent.toLocaleString("NO-nb")}
+                      </strong>
+                    </span>{" "}
+                    til din bankkonto.
+                  </small>
+                )}
 
-              {alert.type === "applicationDeclined" && (
-                <small>
-                  Din søknad til{" "}
-                  <Familyname
-                    family={{
-                      id: alert.familyId,
-                      name: alert.familyName,
-                    }}
-                  />{" "}
-                  ble avslått!
-                </small>
-              )}
+                {/* Family Application alert */}
+                {alert.type === "applicationAccepted" && (
+                  <small>
+                    Søknaden din ble godkjent. Du er nå medlem av{" "}
+                    <Familyname
+                      family={{
+                        id: alert.familyId,
+                        name: alert.familyName,
+                      }}
+                    />
+                    !
+                  </small>
+                )}
 
-              {/* Kicked from Family alert */}
-              {alert.type === "KickedFromFamily" && (
-                <small>
-                  Du ble kastet ut av familien{" "}
-                  <Familyname
-                    family={{
-                      id: alert.familyId,
-                      name: alert.familyName,
-                    }}
-                  />
-                  .
-                </small>
-              )}
+                {alert.type === "applicationDeclined" && (
+                  <small>
+                    Din søknad til{" "}
+                    <Familyname
+                      family={{
+                        id: alert.familyId,
+                        name: alert.familyName,
+                      }}
+                    />{" "}
+                    ble avslått!
+                  </small>
+                )}
 
-              {/* New Role alert */}
-              {alert.type === "newRole" && (
-                <small>
-                  Din rolle ble endret til{" "}
-                  <strong
-                    className={
-                      (alert.newRole === "admin"
-                        ? "text-sky-400"
-                        : alert.newRole === "moderator"
-                        ? "text-green-400"
-                        : "") + " capitalize"
-                    }
-                  >
-                    {alert.newRole}
-                  </strong>{" "}
-                  av{" "}
-                  <Username
-                    character={{
-                      id: alert.userId,
-                      username: alert.userName,
-                    }}
-                  />
-                  .
-                </small>
-              )}
+                {/* Kicked from Family alert */}
+                {alert.type === "KickedFromFamily" && (
+                  <small>
+                    Du ble kastet ut av familien{" "}
+                    <Familyname
+                      family={{
+                        id: alert.familyId,
+                        name: alert.familyName,
+                      }}
+                    />
+                    .
+                  </small>
+                )}
 
-              {/* Removed Role alert */}
-              {alert.type === "removeRole" && (
-                <small>
-                  Din rolle som{" "}
-                  <strong
-                    className={
-                      (alert.removedRole === "admin"
-                        ? "text-sky-400"
-                        : alert.removedRole === "moderator"
-                        ? "text-green-400"
-                        : "") + " capitalize"
-                    }
-                  >
-                    {alert.removedRole}
-                  </strong>{" "}
-                  ble fjernet av{" "}
-                  <Username
-                    character={{
-                      id: alert.userId,
-                      username: alert.userName,
-                    }}
-                  />
-                  .
-                </small>
-              )}
+                {/* New Role alert */}
+                {alert.type === "newRole" && (
+                  <small>
+                    Din rolle ble endret til{" "}
+                    <strong
+                      className={
+                        (alert.newRole === "admin"
+                          ? "text-sky-400"
+                          : alert.newRole === "moderator"
+                          ? "text-green-400"
+                          : "") + " capitalize"
+                      }
+                    >
+                      {alert.newRole}
+                    </strong>{" "}
+                    av{" "}
+                    <Username
+                      character={{
+                        id: alert.userId,
+                        username: alert.userName,
+                      }}
+                    />
+                    .
+                  </small>
+                )}
 
-              <small>{formatTimeAgo(alert.timestamp)}</small>
-            </Alert>
-          ))}
-        </div>
+                {/* Removed Role alert */}
+                {alert.type === "removeRole" && (
+                  <small>
+                    Din rolle som{" "}
+                    <strong
+                      className={
+                        (alert.removedRole === "admin"
+                          ? "text-sky-400"
+                          : alert.removedRole === "moderator"
+                          ? "text-green-400"
+                          : "") + " capitalize"
+                      }
+                    >
+                      {alert.removedRole}
+                    </strong>{" "}
+                    ble fjernet av{" "}
+                    <Username
+                      character={{
+                        id: alert.userId,
+                        username: alert.userName,
+                      }}
+                    />
+                    .
+                  </small>
+                )}
+
+                <small>{formatTimeAgo(alert.timestamp)}</small>
+              </Alert>
+            ))}
+          </div>
+
+          <Pager />
+        </>
       )}
     </Main>
   );
