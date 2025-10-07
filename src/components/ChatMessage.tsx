@@ -1,64 +1,73 @@
+// components/ChatMessage.tsx
 import Username from "./Typography/Username";
 import { Fragment } from "react/jsx-runtime";
 import { useCharacter } from "../CharacterContext";
-import { timeAgo } from "../Functions/TimeFunctions";
-
 import { Message } from "../Functions/messageService";
+
+type Props = Message & {
+  /** Only show name/meta on the first bubble in a sender group */
+  showMeta?: boolean;
+  /** Show a single status below the bubble for your own message */
+  statusBelow?: "sent" | "read" | null;
+};
 
 const ChatMessage = ({
   id,
   senderId,
   senderName,
-  timestamp,
   text,
   isOwn = false,
-  isRead = false,
-}: Message) => {
+  showMeta = true,
+  statusBelow = null,
+}: Props) => {
   const { userCharacter } = useCharacter();
-
   if (!userCharacter) return null;
 
-  // Normalize to epoch milliseconds for timeAgo()
-  const toEpochMs = (t: Message["timestamp"]): number | null => {
-    if (t === null || t === undefined) return null;
-    // Firestore Timestamp
-    if (typeof t?.toDate === "function") return (t as any).toDate().getTime();
-    if (t instanceof Date) return t.getTime();
-    if (typeof t === "number") return t; // assume already ms
-    // string -> Date parse
-    const d = new Date(t as string);
-    return isNaN(d.getTime()) ? null : d.getTime();
-  };
-
-  const epoch = toEpochMs(timestamp);
-  const pretty = epoch !== null ? timeAgo(epoch) : "Sender...";
+  const rowAlign = isOwn ? "items-end" : "items-start";
+  const bubbleAlign = isOwn ? "ml-auto" : "mr-auto";
+  const bubbleColor = isOwn
+    ? "bg-sky-600 text-white"
+    : "bg-neutral-800 text-neutral-100";
 
   return (
-    <li className="mb-2" id={id}>
-      {/* Sender and timestamp */}
-      <div className="flex gap-2 text-stone-400 text-xs sm:text-sm">
-        <Username character={{ id: senderId, username: senderName }} />
-        <p>
-          <small>{pretty}</small>
-        </p>
-        {isOwn && (
-          <span className="ml-1" title={isRead ? "Lest" : "Sendt"}>
-            {isRead ? (
-              <i className="fa-solid fa-check-double"></i>
+    <li id={id} className={`mb-2 flex flex-col ${rowAlign}`}>
+      {/* Group header: only the other user's name; no time/read here */}
+      {showMeta && !isOwn && (
+        <div className="flex items-center gap-2 text-stone-400 text-xs sm:text-sm mb-0.5">
+          <Username character={{ id: senderId, username: senderName }} />
+        </div>
+      )}
+
+      {/* Bubble */}
+      <div
+        className={`max-w-[90%] sm:max-w-[75%] ${bubbleAlign} ${bubbleColor} px-3 py-1 rounded-2xl`}
+        style={{
+          borderTopRightRadius: isOwn && !showMeta ? 6 : 16,
+          borderTopLeftRadius: !isOwn && !showMeta ? 6 : 16,
+        }}
+      >
+        <div className="whitespace-pre-wrap break-words">
+          {text.split("\n").map((line, idx, arr) => (
+            <Fragment key={idx}>
+              {line}
+              {idx < arr.length - 1 && <br />}
+            </Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* Single icon-only status BELOW the correct last own bubble */}
+      {isOwn && statusBelow && (
+        <div className="mt-1 text-xs text-stone-400 text-right">
+          <span title={statusBelow === "read" ? "Sett" : "Sendt"}>
+            {statusBelow === "read" ? (
+              <i className="fa-solid fa-check-double" />
             ) : (
-              <i className="fa-solid fa-check"></i>
+              <i className="fa-solid fa-check" />
             )}
           </span>
-        )}
-      </div>
-      <div className="text-neutral-200 mb-2">
-        {text.split("\n").map((line, index) => (
-          <Fragment key={index}>
-            {line}
-            <br />
-          </Fragment>
-        ))}
-      </div>
+        </div>
+      )}
     </li>
   );
 };

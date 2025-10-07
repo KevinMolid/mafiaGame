@@ -1,13 +1,14 @@
 // Components
-import H2 from "../components/Typography/H2";
+import H3 from "../components/Typography/H3";
 import Button from "../components/Button";
 import ChatMessage from "../components/ChatMessage";
+import ScrollArea from "../components/ScrollArea";
 
 // Types
 import { Message } from "../Functions/messageService";
 
 // React
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, Fragment } from "react";
 
 // Firebase
 import {
@@ -35,6 +36,27 @@ type Conversation = {
   participants: string[];
   createdAt?: any;
 };
+
+function tsToMs(t: any): number | null {
+  if (!t && t !== 0) return null;
+  if (typeof t?.toDate === "function") return t.toDate().getTime(); // Firestore TS
+  if (t instanceof Date) return t.getTime();
+  if (typeof t === "number") return t; // assume ms
+  const d = new Date(t);
+  return isNaN(d.getTime()) ? null : d.getTime();
+}
+
+const MIN_GAP_MS = 10 * 60 * 1000; // show a time divider when gap >= 10 min
+
+function isNewDay(currMs: number, prevMs: number) {
+  const a = new Date(prevMs);
+  const b = new Date(currMs);
+  return (
+    a.getFullYear() !== b.getFullYear() ||
+    a.getMonth() !== b.getMonth() ||
+    a.getDate() !== b.getDate()
+  );
+}
 
 const Chat = () => {
   const { userCharacter } = useCharacter();
@@ -146,6 +168,47 @@ const Chat = () => {
       msgUnsubs.clear();
     };
   }, [userCharacter?.username, userCharacter?.id]);
+
+  function ChatTimeDivider({ label }: { label: string }) {
+    return (
+      <li className="my-3 flex justify-center">
+        <span className="px-2 py-0.5 text-xs text-neutral-400 bg-neutral-800/70 rounded-full">
+          {label}
+        </span>
+      </li>
+    );
+  }
+
+  function fmtDividerLabel(ms: number) {
+    const d = new Date(ms);
+    const now = new Date();
+    const sameDay =
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth() &&
+      d.getDate() === now.getDate();
+
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday =
+      d.getFullYear() === yesterday.getFullYear() &&
+      d.getMonth() === yesterday.getMonth() &&
+      d.getDate() === yesterday.getDate();
+
+    const time = d.toLocaleTimeString("nb-NO", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    if (sameDay) return time; // “12:38”
+    if (isYesterday) return `I går · ${time}`;
+    // “12. mai · 18:03”
+    const date = d.toLocaleDateString("nb-NO", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    return `${date} · ${time}`;
+  }
 
   // Mark all incoming unread messages in this conversation as read
   const markConversationAsRead = async (
@@ -413,6 +476,21 @@ const Chat = () => {
     }
   };
 
+  const lastOwnIdx = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].senderId === userCharacter.id) return i;
+    }
+    return -1;
+  }, [messages, userCharacter.id]);
+
+  const lastReadOwnIdx = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m.senderId === userCharacter.id && m.isRead) return i;
+    }
+    return -1;
+  }, [messages, userCharacter.id]);
+
   if (loading) {
     return <p>Laster meldinger...</p>;
   }
@@ -467,12 +545,12 @@ const Chat = () => {
         </div>
 
         {/* Right panel */}
-        <div id="right_panel" className="flex flex-col px-4 pt-8 pb-16">
+        <div id="right_panel" className="flex flex-col px-4 pt-8 pb-16 min-h-0">
           <div
             id="right_panel_heading"
-            className="border-b border-neutral-600 mb-2"
+            className="border-b border-neutral-600 mb-2 max-w-[400px]"
           >
-            {isCreatingChat ? <H2>Velg spiller</H2> : <H2>{receiver}</H2>}
+            {isCreatingChat ? <H3>Velg spiller</H3> : <H3>{receiver}</H3>}
           </div>
 
           {/* Render list of all players if creating a chat */}
@@ -490,22 +568,54 @@ const Chat = () => {
               ))}
             </ul>
           ) : (
-            <div id="messages_div" className="mb-4 pb-2 h-auto overflow-hidden">
-              {/* Messages */}
-              <ul className="max-h-[400px] overflow-y-auto pr-[17px] w-[calc(100%+17px)]">
-                {messages.map((message) => (
-                  <ChatMessage
-                    key={message.id}
-                    id={message.id}
-                    senderId={message.senderId}
-                    senderName={message.senderName}
-                    timestamp={message.timestamp}
-                    text={message.text}
-                    isRead={!!message.isRead}
-                    isOwn={message.senderId === userCharacter.id}
-                  />
-                ))}
-              </ul>
+            <div id="messages_div" className="mb-4 mr-2 max-w-[400px]">
+              <ScrollArea
+                className="h-[400px]"
+                contentClassName="pr-4"
+                stickToBottom
+              >
+                <ul className="flex flex-col">
+                  {messages.map((m, i) => {
+                    const isOwn = m.senderId === userCharacter.id;
+
+                    // group header only if previous sender is different
+                    const prev = messages[i - 1];
+                    const showMeta = !prev || prev.senderId !== m.senderId;
+
+                    // time divider logic
+                    const curMs = tsToMs(m.timestamp);
+                    const prevMs = prev ? tsToMs(prev.timestamp) : null;
+                    const showTime =
+                      curMs !== null &&
+                      (!prev ||
+                        prevMs === null ||
+                        isNewDay(curMs, prevMs) ||
+                        curMs - prevMs >= MIN_GAP_MS);
+
+                    // Show exactly one "Lest" (on the last read own msg),
+                    // and one "Sendt" (on the very last own msg). If they coincide, "Lest" wins.
+                    let statusBelow: "sent" | "read" | null = null;
+                    if (isOwn) {
+                      if (i === lastReadOwnIdx) statusBelow = "read";
+                      else if (i === lastOwnIdx) statusBelow = "sent";
+                    }
+
+                    return (
+                      <Fragment key={m.id}>
+                        {showTime && curMs !== null && (
+                          <ChatTimeDivider label={fmtDividerLabel(curMs)} />
+                        )}
+                        <ChatMessage
+                          {...m}
+                          isOwn={isOwn}
+                          showMeta={showMeta}
+                          statusBelow={statusBelow}
+                        />
+                      </Fragment>
+                    );
+                  })}
+                </ul>
+              </ScrollArea>
             </div>
           )}
 
@@ -517,7 +627,7 @@ const Chat = () => {
               <form
                 action=""
                 onSubmit={submitNewMessage}
-                className="grid grid-cols-[auto_min-content] gap-2 pr-2"
+                className="grid grid-cols-[auto_min-content] gap-2 pr-2 max-w-[400px]"
               >
                 <textarea
                   ref={textareaRef}

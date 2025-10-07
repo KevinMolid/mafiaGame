@@ -165,17 +165,12 @@ export default function ScrollArea({
       {/* Scrollable content — hide native scrollbar */}
       <div
         ref={scrollRef}
+        data-scrollarea // ← move attribute here
         onScroll={onScroll}
-        className={`overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] ${contentClassName}`}
+        className={`h-full overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] ${contentClassName}`} // ← add h-full
       >
-        {/* hide webkit scrollbar */}
-        <style>
-          {`
-            /* Hide native scrollbars inside this ScrollArea instance */
-            [data-scrollarea]::-webkit-scrollbar { width: 0; height: 0; }
-          `}
-        </style>
-        <div data-scrollarea>{children}</div>
+        <style>{`[data-scrollarea]::-webkit-scrollbar { width: 0; height: 0; }`}</style>
+        {children}
       </div>
 
       {/* Custom track + thumb (2px wide) */}
