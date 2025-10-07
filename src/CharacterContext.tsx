@@ -20,6 +20,7 @@ import {
   where,
   getDocs,
   serverTimestamp,
+  runTransaction,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./firebaseConfig";
@@ -39,8 +40,6 @@ const getOsloYmd = (d: Date = new Date()): string => {
   }).format(d);
 };
 
-const baselineKey = (userId?: string) => `xp:baseline:${userId ?? "anon"}`;
-
 /* ---------- Context types ---------- */
 interface DailyXpState {
   baselineXp: number;
@@ -52,7 +51,7 @@ interface CharacterContextType {
   userCharacter: Character | null;
   setUserCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
   loading: boolean;
-  /** New: XP since Oslo midnight */
+  /** XP since Oslo midnight, shared across devices */
   dailyXp: DailyXpState;
 }
 
@@ -78,45 +77,44 @@ export const CharacterProvider = ({
   const [loading, setLoading] = useState(true);
   const alertAddedRef = useRef<boolean>(false); // Ref to track alert addition
 
-  // --- New: daily XP state ---
+  // --- Daily XP state (now sourced from Firestore) ---
   const [baselineXp, setBaselineXp] = useState<number>(0);
   const [xpToday, setXpToday] = useState<number>(0);
+  const [baselineDate, setBaselineDate] = useState<string>("");
 
-  // Ensure we have a baseline for the current Oslo day and compute xpToday
-  const ensureBaselineForToday = useCallback(
-    (currentXp: number, userId?: string) => {
-      const key = baselineKey(userId);
+  // Ensure a daily baseline exists in Firestore for the current Oslo day
+  const ensureDailyBaselineInDb = useCallback(
+    async (characterId: string, currentXp: number) => {
       const today = getOsloYmd();
-      try {
-        const raw = localStorage.getItem(key);
-        const obj = raw ? JSON.parse(raw) : null;
+      const ref = doc(db, "Characters", characterId);
 
-        if (!obj || obj.date !== today) {
-          // New day in Oslo → set a new baseline to current XP
-          const next = { date: today, baseline: currentXp };
-          localStorage.setItem(key, JSON.stringify(next));
-          setBaselineXp(currentXp);
-          setXpToday(0);
-        } else {
-          const base = typeof obj.baseline === "number" ? obj.baseline : 0;
-          setBaselineXp(base);
-          setXpToday(Math.max(0, currentXp - base));
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists()) return;
+        const v = snap.data() as any;
+        const start = v.dailyXpStart || {};
+        const date: string | undefined = start.date;
+        const baseline: number | undefined = start.baseline;
+
+        if (date !== today || typeof baseline !== "number") {
+          tx.update(ref, {
+            dailyXpStart: { date: today, baseline: currentXp },
+          });
         }
-      } catch {
-        const next = { date: today, baseline: currentXp };
-        localStorage.setItem(key, JSON.stringify(next));
-        setBaselineXp(currentXp);
-        setXpToday(0);
-      }
+      });
     },
     []
   );
 
-  // Optional helper to re-evaluate the baseline now
   const refreshDailyBaseline = useCallback(() => {
     if (!userCharacter) return;
-    ensureBaselineForToday(userCharacter.stats?.xp ?? 0, userCharacter.id);
-  }, [userCharacter, ensureBaselineForToday]);
+    const currentXp = userCharacter.stats?.xp ?? 0;
+    // Reset baseline to "now" for the current Oslo day (effects all devices)
+    ensureDailyBaselineInDb(userCharacter.id, currentXp);
+    setBaselineXp(currentXp);
+    setXpToday(0);
+    setBaselineDate(getOsloYmd());
+  }, [userCharacter, ensureDailyBaselineInDb]);
 
   useEffect(() => {
     if (userData && userData.activeCharacter) {
@@ -187,12 +185,12 @@ export const CharacterProvider = ({
 
             // Ensure currentRank is set to 1 in the database if it was not set
             if (typeof characterData.currentRank !== "number") {
-              const charDocRef = doc(db, "Characters", newCharacter.id);
-              await setDoc(charDocRef, { currentRank: 1 }, { merge: true });
+              const charDocRef2 = doc(db, "Characters", newCharacter.id);
+              await setDoc(charDocRef2, { currentRank: 1 }, { merge: true });
             }
 
             // Handle XP rank change logic
-            const currentXP = newCharacter.stats.xp;
+            const currentXP = newCharacter.stats?.xp ?? 0;
             const newRank = getCurrentRank(currentXP, "number");
             const newRankName = getCurrentRank(currentXP);
             if (
@@ -223,9 +221,9 @@ export const CharacterProvider = ({
                 });
 
                 // Update the character's current rank in the database
-                const charDocRef = doc(db, "Characters", newCharacter.id);
+                const charDocRef3 = doc(db, "Characters", newCharacter.id);
                 await setDoc(
-                  charDocRef,
+                  charDocRef3,
                   { currentRank: newRank },
                   { merge: true }
                 );
@@ -235,33 +233,47 @@ export const CharacterProvider = ({
               newRank < newCharacter.currentRank
             ) {
               // If the new rank is lower, update without adding an alert
-              const charDocRef = doc(db, "Characters", newCharacter.id);
+              const charDocRef4 = doc(db, "Characters", newCharacter.id);
               await setDoc(
-                charDocRef,
+                charDocRef4,
                 { currentRank: newRank },
                 { merge: true }
               );
             }
 
-            // Update character
+            // Update character first (so consumers have stats)
             setUserCharacter(newCharacter);
 
-            // --- New: compute daily XP vs Oslo midnight ---
-            ensureBaselineForToday(
-              newCharacter.stats?.xp ?? 0,
-              newCharacter.id
-            );
+            // --- Daily XP baseline from Firestore (shared across devices) ---
+            const start = (characterData.dailyXpStart as any) || {};
+            const startDate: string | undefined = start.date;
+            const startBaseline: number | undefined = start.baseline;
+            const today = getOsloYmd();
+
+            if (startDate !== today || typeof startBaseline !== "number") {
+              // First time today (or missing) → set baseline in DB
+              await ensureDailyBaselineInDb(newCharacter.id, currentXP);
+              setBaselineXp(currentXP);
+              setXpToday(0);
+              setBaselineDate(today);
+            } else {
+              setBaselineXp(startBaseline);
+              setXpToday(Math.max(0, currentXP - startBaseline));
+              setBaselineDate(startDate);
+            }
           } else {
             console.error("Spillerdata er ufullstendig eller mangler stats.");
             setUserCharacter(null);
             setBaselineXp(0);
             setXpToday(0);
+            setBaselineDate("");
           }
         } else {
           console.error("Ingen spillerdokumenter funnet!");
           setUserCharacter(null);
           setBaselineXp(0);
           setXpToday(0);
+          setBaselineDate("");
         }
 
         setLoading(false);
@@ -272,40 +284,33 @@ export const CharacterProvider = ({
       setUserCharacter(null);
       setBaselineXp(0);
       setXpToday(0);
+      setBaselineDate("");
       setLoading(false);
     }
-  }, [userData, ensureBaselineForToday]);
+  }, [userData, ensureDailyBaselineInDb]);
 
   // Watch for Oslo day rollover (e.g., tab left open) and for XP changes
   useEffect(() => {
     if (!userCharacter) return;
 
-    let lastOsloDate = getOsloYmd();
-    const interval = setInterval(() => {
-      const now = getOsloYmd();
+    const id = setInterval(() => {
+      const today = getOsloYmd();
       const currentXp = userCharacter.stats?.xp ?? 0;
 
-      if (now !== lastOsloDate) {
-        // New day in Oslo
-        lastOsloDate = now;
-        ensureBaselineForToday(currentXp, userCharacter.id);
-      } else {
-        // Same day: recompute xpToday if XP moved elsewhere in the app
-        try {
-          const key = baselineKey(userCharacter.id);
-          const raw = localStorage.getItem(key);
-          const obj = raw ? JSON.parse(raw) : null;
-          const base = obj?.baseline ?? baselineXp;
-          setXpToday(Math.max(0, currentXp - base));
-        } catch {
-          // If something odd in storage, reset baseline
-          ensureBaselineForToday(currentXp, userCharacter.id);
-        }
-      }
-    }, 60_000); // check each minute
+      // Recompute xpToday live within the same day
+      setXpToday(Math.max(0, currentXp - baselineXp));
 
-    return () => clearInterval(interval);
-  }, [userCharacter, baselineXp, ensureBaselineForToday]);
+      // New Oslo day while app is open → roll the baseline once (DB + local)
+      if (baselineDate && today !== baselineDate) {
+        ensureDailyBaselineInDb(userCharacter.id, currentXp);
+        setBaselineXp(currentXp);
+        setXpToday(0);
+        setBaselineDate(today);
+      }
+    }, 60_000); // every minute
+
+    return () => clearInterval(id);
+  }, [userCharacter, baselineXp, baselineDate, ensureDailyBaselineInDb]);
 
   const value = useMemo<CharacterContextType>(() => {
     return {
