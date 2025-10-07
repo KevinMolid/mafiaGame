@@ -68,7 +68,7 @@ const Market = () => {
           active={activePanel === "blackMarket"}
           onClick={() => setActivePanel("blackMarket")}
         >
-          Svartebørsen
+          Svartebørs
         </Tab>
       </ul>
 

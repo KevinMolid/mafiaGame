@@ -452,6 +452,9 @@ const BlackMarket = () => {
 
         const a = auctionSnap.data() as any;
         if (a.status !== "active") throw new Error("Annonsen er ikke aktiv.");
+        if (a.sellerId === userCharacter.id) {
+          throw new Error("Du kan ikke kjøpe fra deg selv");
+        }
         if (a.category !== "cars" || !a.carId || !a.car)
           throw new Error("Kjøp støttes kun for biler akkurat nå.");
 
@@ -497,7 +500,8 @@ const BlackMarket = () => {
     <>
       <H2>Svartebørs</H2>
       <p className="mb-4">
-        Kjøp og selg gjenstander som biler, våpen, kuler og andre varer.
+        Her kan du legge ut biler, våpen, kuler og andre varer for salg, eller
+        kjøpe fra andre spillere.
       </p>
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
