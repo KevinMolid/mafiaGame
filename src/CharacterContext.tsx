@@ -116,6 +116,25 @@ export const CharacterProvider = ({
     setBaselineDate(getOsloYmd());
   }, [userCharacter, ensureDailyBaselineInDb]);
 
+  // --- Remove old localStorage daily XP baselines (legacy cleanup) ---
+  const purgeLegacyDailyXpLocalStorage = () => {
+    try {
+      const prefix = "xp:baseline:";
+      const toDelete: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(prefix)) toDelete.push(k);
+      }
+      toDelete.forEach((k) => localStorage.removeItem(k));
+    } catch {
+      // ignore (SSR or restricted storage)
+    }
+  };
+
+  useEffect(() => {
+    purgeLegacyDailyXpLocalStorage();
+  }, []);
+
   useEffect(() => {
     if (userData && userData.activeCharacter) {
       setLoading(true);
