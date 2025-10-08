@@ -2,7 +2,7 @@ import React from "react";
 
 type ItemProps = React.HTMLAttributes<HTMLSpanElement> & {
   name: string;
-  tier?: number; // make it optional; default below
+  tier?: number;
 };
 
 const TIER_CLASSES: Record<number, string> = {

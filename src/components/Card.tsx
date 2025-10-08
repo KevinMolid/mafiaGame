@@ -38,7 +38,7 @@ const Card: React.FC<CardProps> = ({
   children,
   footer,
   bodyClassName = "p-4",
-  footerClassName = "h-16 flex items-center justify-center bg-neutral-900/50",
+  footerClassName = "h-[90px] flex items-center justify-center bg-neutral-900/50",
 }) => {
   return (
     <div

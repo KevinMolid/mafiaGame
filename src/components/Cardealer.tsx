@@ -1,6 +1,6 @@
 import H2 from "./Typography/H2";
 import Item from "./Typography/Item";
-import { useMemo, useState, useEffect } from "react";
+import Money from "./Typography/Money";
 import Button from "./Button";
 import InfoBox from "./InfoBox";
 
@@ -11,6 +11,7 @@ import { useCharacter } from "../CharacterContext";
 import { useAuth } from "../AuthContext";
 
 import { Link } from "react-router-dom";
+import { useMemo, useState, useEffect } from "react";
 
 import {
   getFirestore,
@@ -369,11 +370,7 @@ const Cardealer = () => {
                         "Kjøpt"
                       ) : (
                         <>
-                          Kjøp{" "}
-                          <strong className="text-yellow-400">
-                            <i className="fa-solid fa-dollar-sign"></i>{" "}
-                            {car.value.toLocaleString("nb-NO")}
-                          </strong>
+                          Kjøp <Money amount={car.value} />
                         </>
                       )}
                     </Button>

@@ -3,6 +3,7 @@ import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import Button from "../../components/Button";
 import Card from "../../components/Card";
+import FactoryCard from "../../components/FactoryCard";
 
 import guns from "/images/illustrations/guns3.png";
 import bullets from "/images/illustrations/bullets.png";
@@ -135,7 +136,7 @@ const Production: React.FC = () => {
         <>
           {/* No active factory — show buy cards */}
           {!activeFactory ? (
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Card
                 size="w-60 h-80"
                 imageSrc={guns}
@@ -146,7 +147,7 @@ const Production: React.FC = () => {
                     onClick={() => buyFactory("weapons")}
                     disabled={processing}
                   >
-                    {processing ? "Behandler..." : "Kjøp"}
+                    {processing ? "Behandler..." : "Bygg Våpenfabrikk"}
                   </Button>
                 }
               />
@@ -161,7 +162,7 @@ const Production: React.FC = () => {
                     onClick={() => buyFactory("bullets")}
                     disabled={processing}
                   >
-                    {processing ? "Behandler..." : "Kjøp"}
+                    {processing ? "Behandler..." : "Bygg Kulefabrikk"}
                   </Button>
                 }
               />
@@ -172,13 +173,56 @@ const Production: React.FC = () => {
                 title="Narkolab"
                 description="Produser narkotika som kan gi forskjellige fordeler i spillet."
                 footer={
-                  <Button
-                    onClick={() => buyFactory("narco")}
-                    disabled={processing}
-                  >
-                    {processing ? "Behandler..." : "Kjøp"}
-                  </Button>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      onClick={() => buyFactory("narco")}
+                      disabled={processing}
+                    >
+                      {processing ? "Behandler..." : "Bygg Narkolab"}
+                    </Button>
+                  </div>
                 }
+              />
+
+              <FactoryCard
+                title="Våpenfabrikk"
+                description={
+                  <>
+                    Produser våpen som kan benyttes til å angripe andre
+                    spillere.
+                  </>
+                }
+                price={1000000}
+                imgSrc={
+                  "https://purepng.com/public/uploads/large/purepng.com-assault-rifle-clipartassaultriflemetalgunwararmyclipart-4015201806205f2mw.png"
+                }
+                onBuy={() => buyFactory("weapons")}
+              />
+
+              <FactoryCard
+                title="Kulefabrikk"
+                description={
+                  <>
+                    Produser ammunisjon som kan benyttes til å angripe andre
+                    spillere.
+                  </>
+                }
+                price={1000000}
+                imgSrc={bullets}
+                onBuy={() => buyFactory("weapons")}
+              />
+
+              <FactoryCard
+                title="Narkolab"
+                description={
+                  <>
+                    Produser narkotika som kan gi forskjellige fordeler i
+                    spillet.
+                  </>
+                }
+                price={1000000}
+                imgSrc={narco}
+                onBuy={() => buyFactory("weapons")}
               />
             </div>
           ) : (
