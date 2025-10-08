@@ -28,6 +28,7 @@ import {
   addDoc,
   updateDoc,
   Timestamp,
+  writeBatch, // <-- added
 } from "firebase/firestore";
 
 import { useEffect, useMemo, useState } from "react";
@@ -225,19 +226,45 @@ const Admin = () => {
     }
   }
 
-  const handleResetGame = async () => {
+  // ---- helpers for batched deletes ----
+  async function deleteAllDocsInCollection(path: string[] | readonly string[]) {
+    // Join into a single "a/b/c" path so we avoid the spread-overload issue
+    const collRef = collection(db, path.join("/"));
+    const snap = await getDocs(collRef);
+
+    if (snap.empty) return;
+
+    let batch = writeBatch(db);
+    let count = 0;
+
+    for (const d of snap.docs) {
+      batch.delete(d.ref);
+      count++;
+      if (count >= 450) {
+        await batch.commit();
+        batch = writeBatch(db);
+        count = 0;
+      }
+    }
+    if (count > 0) await batch.commit();
+  }
+
+  async function handleResetGame() {
+    const ok = window.confirm(
+      "Er du sikker? Dette sletter auksjoner, invitasjoner, familier (inkl. underkolleksjoner), biler, alerts m.m., og resetter spillerdata."
+    );
+    if (!ok) return;
+
     setLoading(true);
 
     try {
-      // Get all character documents
+      // ----- Characters: reset fields, clear alerts and cars subcollection -----
       const characterCollectionRef = collection(db, "Characters");
       const characterDocs = await getDocs(characterCollectionRef);
 
-      // Iterate through each character document to reset data
       for (const charDoc of characterDocs.docs) {
         const charDocRef = doc(db, "Characters", charDoc.id);
 
-        // Update the character document with reset data
         await setDoc(
           charDocRef,
           {
@@ -253,7 +280,6 @@ const Admin = () => {
               bank: 0,
               protection: 0,
             },
-            cars: null,
             parkingFacilities: null,
             familyId: null,
             familyName: null,
@@ -264,73 +290,43 @@ const Admin = () => {
           { merge: true }
         );
 
-        // Delete all alerts in the subcollection 'alerts'
-        const alertsCollectionRef = collection(
-          db,
-          "Characters",
-          charDoc.id,
-          "alerts"
-        );
-        const alertDocs = await getDocs(alertsCollectionRef);
-        for (const alertDoc of alertDocs.docs) {
-          const alertDocRef = doc(
-            db,
-            "Characters",
-            charDoc.id,
-            "alerts",
-            alertDoc.id
-          );
-          await deleteDoc(alertDocRef);
-        }
+        // Delete alerts subcollection
+        await deleteAllDocsInCollection(["Characters", charDoc.id, "alerts"]);
+
+        // Delete cars subcollection  <-- NEW
+        await deleteAllDocsInCollection(["Characters", charDoc.id, "cars"]);
       }
 
-      // Delete all documents in the Bounty collection
-      const bountyCollectionRef = collection(db, "Bounty");
-      const bountyDocs = await getDocs(bountyCollectionRef);
-      for (const bountyDoc of bountyDocs.docs) {
-        const bountyDocRef = doc(db, "Bounty", bountyDoc.id);
-        await deleteDoc(bountyDocRef);
-      }
+      // ----- Root collections to clear -----
+      // Bounty
+      await deleteAllDocsInCollection(["Bounty"]);
 
-      // Delete all documents in the Families collection including subcollections
+      // Auctions (and legacy "Auction" if it exists)  <-- NEW
+      await deleteAllDocsInCollection(["Auctions"]);
+      await deleteAllDocsInCollection(["Auction"]);
+
+      // FamilyInvites  <-- NEW
+      await deleteAllDocsInCollection(["FamilyInvites"]);
+
+      // ----- Families: delete subcollections (Applications, Events), then doc -----
       const familiesCollectionRef = collection(db, "Families");
       const familiesDocs = await getDocs(familiesCollectionRef);
+
       for (const familyDoc of familiesDocs.docs) {
-        console.log(familyDoc.id);
-        const familyDocRef = doc(db, "Families", familyDoc.id);
+        const familyId = familyDoc.id;
+        const familyDocRef = doc(db, "Families", familyId);
 
-        // Delete all documents in the 'Applications' subcollection
-        const applicationsCollectionRef = collection(
-          db,
-          "Families",
-          familyDoc.id,
-          "Applications"
-        );
-        const applicationDocs = await getDocs(applicationsCollectionRef);
-        for (const applicationDoc of applicationDocs.docs) {
-          const applicationDocRef = doc(
-            db,
-            "Families",
-            familyDoc.id,
-            "Applications",
-            applicationDoc.id
-          );
-          await deleteDoc(applicationDocRef);
-        }
+        // Clear known subcollections so the doc doesn't linger as "has subcollections"
+        await deleteAllDocsInCollection(["Families", familyId, "Applications"]);
+        await deleteAllDocsInCollection(["Families", familyId, "Events"]);
 
-        // Delete the family document after its subcollections are cleared
+        // Finally delete the family doc
         await deleteDoc(familyDocRef);
       }
 
-      // Delete all documents in the GameEvents collection
-      const gameEventsCollectionRef = collection(db, "GameEvents");
-      const gameEventsDocs = await getDocs(gameEventsCollectionRef);
-      for (const gameEventDoc of gameEventsDocs.docs) {
-        const gameEventDocRef = doc(db, "GameEvents", gameEventDoc.id);
-        await deleteDoc(gameEventDocRef);
-      }
+      // ----- GameEvents: clear and add reset event -----
+      await deleteAllDocsInCollection(["GameEvents"]);
 
-      // Add a new GameReset event to the GameEvents collection
       const newGameEvent = {
         eventType: "GameReset",
         resetById: userCharacter?.id || "",
@@ -346,7 +342,7 @@ const Admin = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   // ---------- Tabs & filtering ----------
   const counts = useMemo(() => {

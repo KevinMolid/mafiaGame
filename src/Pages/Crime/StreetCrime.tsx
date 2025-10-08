@@ -5,6 +5,8 @@ import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
 
+import { arrest } from "../../Functions/RewardFunctions";
+
 // React
 import { useState, useEffect, ReactNode } from "react";
 
@@ -69,14 +71,15 @@ const StreetCrime = () => {
     const batch = writeBatch(db);
 
     // Determine rewards and crime success
-    const moneyReward = Math.floor(
-      crime.minMoneyReward +
-        Math.random() * (crime.maxMoneyReward - crime.minMoneyReward)
-    );
+
     const success = Math.random() < crime.successRate;
 
     if (success) {
       const xpReward = crime.xpReward || 0;
+      const moneyReward = Math.floor(
+        crime.minMoneyReward +
+          Math.random() * (crime.maxMoneyReward - crime.minMoneyReward)
+      );
 
       // Update XP, Money, and Heat in one batch
       batch.update(characterRef, {
@@ -116,34 +119,29 @@ const StreetCrime = () => {
       );
       setMessageType("success");
     } else {
-      batch.update(characterRef, {
-        "stats.heat": userCharacter.stats.heat + 1,
-      });
+      // Failed
+      const newHeat = userCharacter.stats.heat + 1;
+      const jailChancePct = newHeat;
+      const shouldJail = newHeat >= 50 || Math.random() * 100 < jailChancePct;
 
-      setMessage(
-        `Du prøvde å utføre ${crime.name}, men feilet. Bedre lykke neste gang!`
-      );
-      setMessageType("failure");
+      if (shouldJail) {
+        await arrest(userCharacter);
+        setMessage("Handlingen feilet, og du ble arrestert!");
+        setMessageType("failure");
+      } else {
+        // Failed but not jailed: just add heat
+        batch.update(characterRef, {
+          "stats.heat": newHeat,
+        });
+
+        setMessage(
+          `Du prøvde å utføre ${crime.name}, men feilet. Bedre lykke neste gang!`
+        );
+        setMessageType("failure");
+      }
     }
 
-    // Check for jail condition
-    const jailChance = userCharacter.stats.heat + 1;
-
-    if (userCharacter.stats.heat >= 50 || Math.random() * 100 < jailChance) {
-      batch.update(characterRef, {
-        inJail: true,
-        jailReleaseTime: new Date().getTime() + jailChance * 10 * 1000,
-        "stats.heat": 0,
-      });
-
-      setMessage("Handlingen feilet, og du ble arrestert!");
-      setMessageType("failure");
-    }
-
-    // Commit all updates at once
     await batch.commit();
-
-    // Start the cooldown after a crime
     startCooldown("crime");
   };
 
