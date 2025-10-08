@@ -22,12 +22,12 @@ export type GameEvent = {
   familyId?: string;
   familyName?: string;
 
-  // Role events (optional):
-  userId?: string; // target id
-  userName?: string; // target name
-  actorId?: string; // who performed it
-  actorName?: string; // actor name
+  userId?: string;
+  userName?: string;
+  actorId?: string;
+  actorName?: string;
   role?: "admin" | "moderator";
+  newRank?: string;
 };
 
 export function formatEventTime(ts?: FsTimestamp): string {
@@ -148,7 +148,7 @@ export function renderGameEvent(ev: GameEvent) {
         </li>
       );
 
-    // Optional: role-change events (since you’re logging them)
+    // Role change
     case "newRole":
       return (
         <li key={ev.id} className="news-item flex gap-1">
@@ -200,6 +200,23 @@ export function renderGameEvent(ev: GameEvent) {
               {ev.role}
             </strong>
             .
+          </small>
+          <small className="ml-auto text-xs lg:text-sm">{formattedTime}</small>
+        </li>
+      );
+
+    // Rank up
+    case "newRank":
+      return (
+        <li key={ev.id} className="news-item flex gap-1">
+          <small className="mr-1 lg:mr-4 text-xs lg:text-sm">
+            <Username
+              character={{
+                id: ev.userId || "",
+                username: ev.userName || "Ukjent",
+              }}
+            />{" "}
+            nådde ranken <strong className="text-white">{ev.newRank}</strong>.
           </small>
           <small className="ml-auto text-xs lg:text-sm">{formattedTime}</small>
         </li>

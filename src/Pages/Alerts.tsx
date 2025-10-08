@@ -3,6 +3,7 @@ import H1 from "../components/Typography/H1";
 import Alert from "../components/Alert";
 import Username from "../components/Typography/Username";
 import Familyname from "../components/Typography/Familyname";
+import { serverNow } from "../Functions/serverTime";
 
 import { useState, useEffect } from "react";
 import {
@@ -46,6 +47,15 @@ interface AlertItem {
   read: boolean;
 }
 
+const useServerNow = (intervalMs = 30000) => {
+  const [nowMs, setNowMs] = useState<number>(() => serverNow());
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(serverNow()), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return nowMs;
+};
+
 // --- helpers ---
 type RawTs = any; // Firestore Timestamp | string | number | Date | {seconds, nanoseconds}
 
@@ -60,9 +70,8 @@ const toDate = (ts: RawTs): Date => {
 };
 
 // Helper function to format the time difference
-const formatTimeAgo = (date: Date): string => {
-  const now = new Date();
-  const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
+const formatTimeAgo = (date: Date, nowMs: number): string => {
+  const diffSec = Math.max(0, Math.floor((nowMs - date.getTime()) / 1000));
   if (diffSec < 60) return `${diffSec} sek`;
   const min = Math.floor(diffSec / 60);
   if (min < 60) return `${min} min`;
@@ -78,6 +87,7 @@ const Alerts = () => {
   const { userCharacter } = useCharacter();
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const nowMs = useServerNow();
 
   // pagination
   const [page, setPage] = useState(1);
@@ -242,7 +252,7 @@ const Alerts = () => {
         <p>Du har ingen varsler.</p>
       ) : (
         <>
-          <Pager />
+          {alerts.length > 15 && <Pager />}
 
           <div className="flex gap-1 md:gap-1 flex-col">
             {pageAlerts.map((alert) => (
@@ -401,12 +411,12 @@ const Alerts = () => {
                   </small>
                 )}
 
-                <small>{formatTimeAgo(alert.timestamp)}</small>
+                <small>{formatTimeAgo(alert.timestamp, nowMs)}</small>
               </Alert>
             ))}
           </div>
 
-          <Pager />
+          {alerts.length > 15 && <Pager />}
         </>
       )}
     </Main>

@@ -239,6 +239,14 @@ export const CharacterProvider = ({
                   read: false,
                 });
 
+                await addDoc(collection(db, "GameEvents"), {
+                  eventType: "newRank",
+                  userId: newCharacter.id,
+                  userName: newCharacter.username,
+                  newRank: newRankName,
+                  timestamp: serverTimestamp(),
+                });
+
                 // Update the character's current rank in the database
                 const charDocRef3 = doc(db, "Characters", newCharacter.id);
                 await setDoc(

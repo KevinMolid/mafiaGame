@@ -41,8 +41,8 @@ export const giveReward = async (
 interface GainRewardParams {
   character: any;
   activeCharacter: string;
-  xpReward?: number; // Optional XP reward
-  moneyReward?: number; // Optional Money reward
+  xpReward?: number;
+  moneyReward?: number;
   successMessage: string;
   failureMessage: string;
   successRate: number;
