@@ -115,7 +115,17 @@ const GTA = () => {
         userCharacter.parkingFacilities?.[userCharacter.location];
       if (facilityType === undefined || facilityType === 0) {
         setMessageType("warning");
-        setMessage("Du har ingen parkeringsplass i denne byen.");
+        setMessage(
+          <span>
+            Du har ingen parkeringsplass i denne byen. Gå til{" "}
+            <strong>
+              <Link to="/parkering">
+                <i className="fa-solid fa-square-parking"></i> Parkering
+              </Link>
+            </strong>{" "}
+            for å kjøpe parkering.
+          </span>
+        );
         return;
       }
       const availableSlots = ParkingTypes[facilityType].slots;

@@ -28,7 +28,8 @@ import {
   addDoc,
   updateDoc,
   Timestamp,
-  writeBatch, // <-- added
+  writeBatch,
+  deleteField,
 } from "firebase/firestore";
 
 import { useEffect, useMemo, useState } from "react";
@@ -286,6 +287,9 @@ const Admin = () => {
             inJail: null,
             jailReleaseTime: null,
             activeFamilyApplication: null,
+            airplane: deleteField(),
+            dailyXpStart: deleteField(),
+            dealership: deleteField(),
           },
           { merge: true }
         );
