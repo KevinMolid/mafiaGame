@@ -47,6 +47,10 @@ type FamilyEvent = {
   type: "created" | "newMember" | "kickedMember" | "leftMember" | string;
   characterId?: string;
   characterName?: string;
+  invitedId?: string;
+  invitedName?: string;
+  inviterId?: string;
+  inviterName?: string;
   timestamp?: any; // Firestore Timestamp | Date
 };
 
@@ -459,6 +463,34 @@ const Family = () => {
                               />{" "}
                               forlot familien.
                             </p>
+                          ) : familyEvent.type === "inviteSent" ? (
+                            <p>
+                              <Username
+                                character={{
+                                  id: familyEvent.inviterId!,
+                                  username: familyEvent.inviterName!,
+                                }}
+                              />{" "}
+                              sendte en invitasjon til{" "}
+                              <Username
+                                character={{
+                                  id: familyEvent.invitedId!,
+                                  username: familyEvent.invitedName!,
+                                }}
+                              />
+                              .
+                            </p>
+                          ) : familyEvent.type === "inviteRevoked" ? (
+                            <p>
+                              Invitasjonen til{" "}
+                              <Username
+                                character={{
+                                  id: familyEvent.invitedId!,
+                                  username: familyEvent.invitedName!,
+                                }}
+                              />{" "}
+                              Ble trukket tilbake.
+                            </p>
                           ) : (
                             <p>{familyEvent.type}</p>
                           )}
@@ -474,8 +506,7 @@ const Family = () => {
 
               <div className="flex-grow">
                 <Box>
-                  <H3>Doner</H3>
-                  <p>Doner penger til familien.</p>
+                  <H3>Donasjoner</H3>
                   <form className="flex flex-col gap-2" action="">
                     <input
                       className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
@@ -487,7 +518,7 @@ const Family = () => {
                       onChange={handleInputChange}
                     />
                     <div className="flex gap-2">
-                      <Button onClick={deposit}>Doner</Button>
+                      <Button onClick={deposit}>Overfør</Button>
                       <Button onClick={withdraw}>Ta ut</Button>
                     </div>
                   </form>
