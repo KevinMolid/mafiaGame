@@ -27,6 +27,7 @@ import Chat from "./Pages/Chat.tsx";
 import Forum from "./Pages/Forum.tsx";
 import ForumThread from "./Pages/ForumThread.tsx";
 import Leaderboard from "./Pages/Leaderboard.tsx";
+import FindPlayer from "./Pages/FindPlayer.tsx";
 import Statistics from "./Pages/Statistics.tsx";
 
 // Left dropdown menu
@@ -125,6 +126,8 @@ function App() {
                           <Route path="/meldinger" element={<Chat />} />
 
                           <Route path="/toppliste" element={<Leaderboard />} />
+                          <Route path="/finnspiller" element={<FindPlayer />} />
+
                           <Route path="/statistikk" element={<Statistics />} />
                           <Route path="/registrer" element={<Signup />} />
                           <Route path="/logginn" element={<Login />} />

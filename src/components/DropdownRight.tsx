@@ -282,6 +282,14 @@ const DropdownRight = () => {
           </DropdownOption>
 
           <DropdownOption
+            to="/finnspiller"
+            icon="magnifying-glass"
+            onClick={toggleMenu}
+          >
+            Finn spiller
+          </DropdownOption>
+
+          <DropdownOption
             to="/statistikk"
             icon="chart-simple"
             onClick={toggleMenu}
