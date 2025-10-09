@@ -222,7 +222,10 @@ const Family = () => {
 
         setMessageType("success");
         setMessage(
-          `Du donerte $${amount.toLocaleString()} til ${family.name}.`
+          <p>
+            Du donerte <i className="fa-solid fa-dollar-sign"></i>{" "}
+            <strong>{amount.toLocaleString("NO-nb")}</strong> til familien.
+          </p>
         );
         setAmount("");
       }
@@ -261,7 +264,12 @@ const Family = () => {
         );
 
         setMessageType("success");
-        setMessage(`Du tok ut $${amount.toLocaleString()} fra ${family.name}.`);
+        setMessage(
+          <p>
+            Du tok ut <i className="fa-solid fa-dollar-sign"></i>{" "}
+            <strong>{amount.toLocaleString()}</strong> fra familien.
+          </p>
+        );
         setAmount("");
       }
     } catch (err) {
@@ -319,7 +327,8 @@ const Family = () => {
             <p>
               Formue:{" "}
               <strong className="text-neutral-200">
-                ${family.wealth.toLocaleString()}
+                <i className="fa-solid fa-dollar-sign"></i>{" "}
+                {family.wealth.toLocaleString("NO-nb")}
               </strong>
             </p>
           </div>

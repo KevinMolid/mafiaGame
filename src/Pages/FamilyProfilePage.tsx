@@ -75,7 +75,7 @@ const FamilyProfile = ({ family }: FamilyProfileProps) => {
               }}
             />
           ) : (
-            <span className="text-neutral-500">Ingen profiltekst ennå.</span>
+            <></>
           )}
         </div>
       </div>

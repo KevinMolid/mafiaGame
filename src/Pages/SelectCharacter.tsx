@@ -75,8 +75,8 @@ const SelectCharacter = () => {
 
   return (
     <Main>
-      <H1>Select Character</H1>
-      <div className="flex gap-4 flex-wrap">
+      <H1>Velg karakter</H1>
+      <div className="flex gap-2 flex-wrap">
         {availableCharacters.length === 0 ? (
           <p>You have no characters.</p>
         ) : (
@@ -113,7 +113,11 @@ const SelectCharacter = () => {
                   </p>
                   <p>Lokasjon: {availableCharacter.location}</p>
                   <p>
-                    Penger: ${availableCharacter.stats.money.toLocaleString()}
+                    Penger:{" "}
+                    <strong className="text-neutral-200">
+                      <i className="fa-solid fa-dollar-sign"></i>{" "}
+                      {availableCharacter.stats.money.toLocaleString("NO-nb")}
+                    </strong>
                   </p>
                 </div>
                 {userCharacter?.id !== availableCharacter.id ? (
