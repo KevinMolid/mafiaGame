@@ -30,10 +30,6 @@ import { Application } from "../Pages/Family";
 import { useCharacter } from "../CharacterContext";
 
 interface FamilyApplicationsInterface {
-  setMessage: React.Dispatch<React.SetStateAction<string>>;
-  setMessageType: React.Dispatch<
-    React.SetStateAction<"info" | "success" | "failure" | "warning">
-  >;
   applications: Application[];
   setApplications: React.Dispatch<React.SetStateAction<Application[]>>;
 }
@@ -51,8 +47,6 @@ type Invitation = {
 };
 
 const FamilyApplications = ({
-  setMessage,
-  setMessageType,
   applications,
   setApplications,
 }: FamilyApplicationsInterface) => {
@@ -64,7 +58,7 @@ const FamilyApplications = ({
   const [inviteUsername, setInviteUsername] = useState("");
   const [inviting, setInviting] = useState(false);
   const inviteInputRef = useRef<HTMLInputElement>(null);
-  const [inviteMsg, setInviteMsg] = useState("");
+  const [inviteMsg, setInviteMsg] = useState<React.ReactNode>("");
   const [inviteMsgType, setInviteMsgType] = useState<
     "info" | "success" | "failure" | "warning"
   >("info");
@@ -157,7 +151,7 @@ const FamilyApplications = ({
         snap = await getDocs(
           query(
             collection(db, "Characters"),
-            where("usernameLower", "==", uname.toLowerCase())
+            where("username_lowercase", "==", uname.toLowerCase())
           )
         );
       }
@@ -193,9 +187,17 @@ const FamilyApplications = ({
       if (hasPendingInState) {
         setInviteMsgType("info");
         setInviteMsg(
-          `Det finnes allerede en invitasjon til ${
-            invitedData.username || uname
-          }.`
+          <p>
+            Det finnes allerede en invitasjon til{" "}
+            <Username
+              useParentColor
+              character={{
+                id: invitedId,
+                username: invitedData.username || uname,
+              }}
+            />
+            .
+          </p>
         );
         return;
       }
@@ -243,7 +245,19 @@ const FamilyApplications = ({
       });
 
       setInviteMsgType("success");
-      setInviteMsg(`Invitasjon sendt til ${invitedData.username || uname}.`);
+      setInviteMsg(
+        <p>
+          Invitasjon sendt til{" "}
+          <Username
+            useParentColor
+            character={{
+              id: invitedId,
+              username: invitedData.username || uname,
+            }}
+          />
+          !
+        </p>
+      );
       setInviteUsername("");
     } catch (err) {
       console.error(err);
@@ -268,8 +282,17 @@ const FamilyApplications = ({
         inviterName: userCharacter.username,
         timestamp: serverTimestamp(),
       });
-      setMessageType("info");
-      setMessage(`Invitasjonen til ${invite.invitedName} ble trukket tilbake.`);
+      setInviteMsgType("info");
+      setInviteMsg(
+        <p>
+          Invitasjonen til{" "}
+          <Username
+            useParentColor
+            character={{ id: invite.invitedId, username: invite.invitedName }}
+          />{" "}
+          ble trukket tilbake.
+        </p>
+      );
     } catch (e) {
       console.error(e);
       setError("Kunne ikke trekke tilbake invitasjonen.");
@@ -344,9 +367,19 @@ const FamilyApplications = ({
         prev.filter((app) => app.documentId !== application.documentId)
       );
 
-      setMessageType("success");
-      setMessage(
-        `Søknaden ble godkjent. ${application.applicantUsername} er nå medlem av familien.`
+      setInviteMsgType("success");
+      setInviteMsg(
+        <p>
+          Søknaden ble godkjent.{" "}
+          <Username
+            useParentColor
+            character={{
+              id: application.applicantId,
+              username: application.applicantUsername,
+            }}
+          />{" "}
+          er nå medlem av familien.
+        </p>
       );
     } catch (error) {
       console.error("Feil ved godkjenning av søknad:", error);
@@ -405,6 +438,8 @@ const FamilyApplications = ({
     <div>
       <H2>Søknader</H2>
 
+      {inviteMsg && <InfoBox type={inviteMsgType}>{inviteMsg}</InfoBox>}
+
       {/* APPLICATIONS LIST */}
       {applications.length === 0 ? (
         <p className="mb-4">Familien har for øyeblikket ingen søknader.</p>
@@ -452,7 +487,6 @@ const FamilyApplications = ({
 
       {/* INVITER SPILLER */}
       <Box>
-        {inviteMsg && <InfoBox type={inviteMsgType}>{inviteMsg}</InfoBox>}
         <div className="flex flex-col gap-2">
           <H3>Inviter spiller</H3>
           <div className="flex gap-2">

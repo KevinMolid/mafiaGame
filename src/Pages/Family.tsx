@@ -62,7 +62,7 @@ const Family = () => {
   const [activePanel, setActivePanel] = useState<
     "members" | "hq" | "chat" | "profile" | "settings" | "applications"
   >("hq");
-  const [message, setMessage] = useState<string>("");
+  const [message, setMessage] = useState<React.ReactNode>("");
   const [messageType, setMessageType] = useState<
     "info" | "success" | "failure" | "warning"
   >("info");
@@ -506,8 +506,6 @@ const Family = () => {
           {/* Applications panel */}
           {activePanel === "applications" && (
             <FamilyApplications
-              setMessage={setMessage}
-              setMessageType={setMessageType}
               applications={applications}
               setApplications={setApplications}
             />

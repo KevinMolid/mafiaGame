@@ -35,8 +35,8 @@ import { FamilyData } from "../Interfaces/Types";
 interface NoFamilyInterface {
   family: FamilyData | null;
   setFamily: React.Dispatch<React.SetStateAction<FamilyData | null>>;
-  message: string;
-  setMessage: React.Dispatch<React.SetStateAction<string>>;
+  message: React.ReactNode;
+  setMessage: React.Dispatch<React.SetStateAction<React.ReactNode>>;
   messageType: "info" | "success" | "failure" | "warning";
   setMessageType: React.Dispatch<
     React.SetStateAction<"info" | "success" | "failure" | "warning">

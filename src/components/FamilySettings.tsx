@@ -28,7 +28,7 @@ interface FamilySettingsInterface {
   setError: React.Dispatch<React.SetStateAction<string | null>>;
   family: FamilyData;
   setFamily: React.Dispatch<React.SetStateAction<FamilyData | null>>;
-  setMessage: React.Dispatch<React.SetStateAction<string>>;
+  setMessage: React.Dispatch<React.SetStateAction<React.ReactNode>>;
   setMessageType: React.Dispatch<
     React.SetStateAction<"info" | "success" | "failure" | "warning">
   >;

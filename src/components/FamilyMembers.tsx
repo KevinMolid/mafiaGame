@@ -34,7 +34,7 @@ type FamilyData = {
 
 interface FamilyMembersInterface {
   family: FamilyData;
-  setMessage: React.Dispatch<React.SetStateAction<string>>;
+  setMessage: React.Dispatch<React.SetStateAction<React.ReactNode>>;
   setMessageType: React.Dispatch<
     React.SetStateAction<"info" | "success" | "failure" | "warning">
   >;

@@ -134,7 +134,7 @@ export const arrest = async (character: any) => {
     await serverTimeReady; // ensure we have the offset at least once
 
     const characterRef = doc(db, "Characters", character.id);
-    const jailDurationMs = 20_000 + character.stats.heat * 10_000; // 20s + 10s*heat
+    const jailDurationMs = 10_000 + character.stats.heat * 5_000; // 10s + 5s*heat
     const releaseMs = serverNow() + jailDurationMs;
 
     await updateDoc(characterRef, {
