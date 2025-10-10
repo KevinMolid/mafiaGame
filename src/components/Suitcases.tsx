@@ -31,10 +31,10 @@ const suitcaseBoxes = [
   },
 ];
 
-const suitcaseRarities: { [key: number]: string[] } = {
-  0: ["common", "uncommon", "rare"], // Sølv-koffert
-  1: ["uncommon", "rare", "epic"], // Gull-koffert
-  2: ["rare", "epic", "legendary"], // Krystall-koffert
+const suitcaseRarities: { [key: number]: number[] } = {
+  0: [1, 2, 3], // Sølv-koffert
+  1: [2, 3, 4], // Gull-koffert
+  2: [4, 5, 6], // Krystall-koffert
 };
 
 // Visually each slot ≈ 72px wide (your images are 56px + border/gap)
@@ -47,7 +47,7 @@ const Suitcases = () => {
   // how many items fit in the current container
   const [maxVisibleItems, setMaxVisibleItems] = useState(5);
 
-  // items filtered by selected suitcase rarity
+  // items filtered by selected suitcase tier
   const [filteredItems, setFilteredItems] = useState(
     Items.slice(0, maxVisibleItems)
   );
@@ -62,7 +62,7 @@ const Suitcases = () => {
   // Update filtered items when suitcase type changes
   useEffect(() => {
     const fi = Items.filter((item) =>
-      suitcaseRarities[wheelIndex].includes(item.rarity)
+      suitcaseRarities[wheelIndex].includes(item.tier)
     );
     setFilteredItems(fi);
 
@@ -194,15 +194,15 @@ const Suitcases = () => {
             <li
               key={`${item.name}-${index}`}
               className={`flex h-max border-2 rounded-xl cursor-pointer ${
-                item.rarity === "common"
+                item.tier === 1
                   ? "border-neutral-400 shadow-lg shadow-neutral-500/25"
-                  : item.rarity === "uncommon"
+                  : item.tier === 2
                   ? "border-green-400 shadow-lg shadow-neutral-500/25"
-                  : item.rarity === "rare"
+                  : item.tier === 3
                   ? "border-sky-400 shadow-lg shadow-sky-500/25"
-                  : item.rarity === "epic"
+                  : item.tier === 4
                   ? "border-purple-400 shadow-lg shadow-purple-500/25"
-                  : item.rarity === "legendary"
+                  : item.tier === 5
                   ? "border-yellow-400 shadow-lg shadow-yellow-500/25"
                   : ""
               }`}

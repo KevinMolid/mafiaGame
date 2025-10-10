@@ -487,7 +487,7 @@ const NoFamily = ({
                       <p>
                         <Familyname family={fam}></Familyname>
                       </p>
-                      <small>
+                      <p>
                         Leder:{" "}
                         <Username
                           character={{
@@ -495,7 +495,7 @@ const NoFamily = ({
                             username: fam.leaderName,
                           }}
                         />
-                      </small>
+                      </p>
                     </div>
 
                     <div>

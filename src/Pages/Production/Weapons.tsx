@@ -11,6 +11,8 @@ import {
   serverTimestamp,
   setDoc,
   getDocFromServer,
+  collection,
+  addDoc,
 } from "firebase/firestore";
 
 type Props = {
@@ -23,6 +25,8 @@ type Props = {
 };
 
 const db = getFirestore();
+
+import { getItemById } from "../../Data/Items";
 
 // Testing: 30s per slot. Real: 4 hours.
 const FOUR_HOURS_MS = 1 * 30 * 1000;
@@ -142,6 +146,7 @@ const Weapons: React.FC<Props> = ({
   const [nowLocal, setNowLocal] = useState<number>(Date.now());
 
   const [busyStart, setBusyStart] = useState(false);
+  const [busyGive, setBusyGive] = useState(false); // <-- added
 
   // Sync server time (one-shot + periodic resync). Gate progress until first sync completes.
   useEffect(() => {
@@ -262,6 +267,33 @@ const Weapons: React.FC<Props> = ({
     }
   }
 
+  // Functio to get weapon item
+  async function handleGetWeapon() {
+    if (!userCharacter?.id || busyGive) return;
+    setBusyGive(true);
+    try {
+      const weapon = getItemById("iw0001");
+      const payload = { ...weapon, aquiredAt: serverTimestamp() };
+
+      await addDoc(
+        collection(db, "Characters", userCharacter.id, "items"),
+        payload
+      );
+      onSetMessageType("success");
+      onSetMessage(
+        <>
+          Du fikk <strong>Simple knife</strong>.
+        </>
+      );
+    } catch (err) {
+      console.error("Kunne ikke legge til våpen:", err);
+      onSetMessageType("failure");
+      onSetMessage(<>Kunne ikke gi våpen. Prøv igjen.</>);
+    } finally {
+      setBusyGive(false);
+    }
+  }
+
   const buttonLabel = !active ? (
     <>Start</>
   ) : isComplete ? (
@@ -340,6 +372,8 @@ const Weapons: React.FC<Props> = ({
             buttonLabel
           )}
         </Button>
+
+        <Button onClick={handleGetWeapon}>Få våpen</Button>
       </div>
     </div>
   );
