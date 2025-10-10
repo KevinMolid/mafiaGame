@@ -11,6 +11,13 @@ import UpdateFeed from "../components/UpdateFeed";
 
 import { getCurrentRank } from "../Functions/RankFunctions";
 
+import {
+  getFirestore,
+  collection,
+  onSnapshot /*, orderBy, query */,
+} from "firebase/firestore";
+const db = getFirestore();
+
 // React
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -31,7 +38,8 @@ const Home = () => {
   // Local state for XP, initialized with the character's current XP
   const [xp, setXP] = useState<number>(userCharacter?.stats.xp || 0);
 
-  const bags = ["", "", "", "", "", "", "", "", "", "", "", ""];
+  type ItemDoc = { id: string } & Record<string, any>;
+  const [bags, setBags] = useState<ItemDoc[]>([]);
 
   // Sync the local XP state with character stats if character changes
   useEffect(() => {
@@ -43,6 +51,23 @@ const Home = () => {
   if (!userCharacter) {
     return null;
   }
+
+  // Fetch items
+  useEffect(() => {
+    if (!userCharacter?.id) {
+      setBags([]);
+      return;
+    }
+
+    const itemsRef = collection(db, "Characters", userCharacter.id, "items");
+
+    const unsubscribe = onSnapshot(itemsRef, (snap) => {
+      const items = snap.docs.map((item) => ({ id: item.id, ...item.data() }));
+      setBags(items);
+    });
+
+    return () => unsubscribe();
+  }, [userCharacter?.id]);
 
   const maxHealth = 100;
   const healthPercentage = userCharacter
@@ -258,13 +283,20 @@ const Home = () => {
         <div className="md:col-span-2 lg:col-span-4">
           <H2>Eiendeler</H2>
           <ul className="flex flex-wrap gap-1 max-w-[500px]">
-            {bags.map((bag, index) => {
-              return (
-                <li key={bag + index}>
-                  <div className="w-14 h-14 border border-neutral-600 rounded-xl"></div>
-                </li>
-              );
-            })}
+            {bags.map((item) => (
+              <li key={item.id}>
+                <div className="w-14 h-14 border border-neutral-600 rounded-xl overflow-hidden flex items-center justify-center">
+                  {/* optional: show image if present */}
+                  {item.img ? (
+                    <img
+                      src={item.img}
+                      alt={item.name ?? "Item"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : null}
+                </div>
+              </li>
+            ))}
           </ul>
         </div>
       </div>

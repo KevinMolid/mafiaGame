@@ -1,17 +1,17 @@
 interface EquipmentInterface {
-  letter: string;
+  icon: string;
   span?: 2;
 }
 
-const EquipmentBox = ({ letter, span }: EquipmentInterface) => {
+const EquipmentBox = ({ icon, span }: EquipmentInterface) => {
   return (
     <div
       className={
-        "border border-neutral-400 bg-neutral-900/90 text-sm flex justify-center items-center rounded-md " +
-        (span && "col-span-2 row-span-2")
+        "border border-neutral-500 bg-neutral-900 text-neutral-700 flex justify-center items-center rounded-md " +
+        (span ? "col-span-2 row-span-2 text-6xl" : "text-3xl")
       }
     >
-      {letter}
+      <i className={`fa-solid fa-${icon}`}></i>
     </div>
   );
 };
@@ -35,32 +35,32 @@ const Equipment = () => {
       <div></div>
       <div></div>
       {/* Top row*/}
-      <EquipmentBox letter="H"></EquipmentBox>
+      <EquipmentBox icon="hat-cowboy"></EquipmentBox>
       <div></div>
       <div></div>
       <div></div>
-      <EquipmentBox letter="R1"></EquipmentBox>
+      <EquipmentBox icon="glasses"></EquipmentBox>
       {/* 2. row */}
-      <EquipmentBox letter="T"></EquipmentBox>
+      <EquipmentBox icon="shirt"></EquipmentBox>
       <div></div>
       <div></div>
       <div></div>
-      <EquipmentBox letter="R2"></EquipmentBox>
+      <EquipmentBox icon="ribbon"></EquipmentBox>
       {/* 3. row */}
-      <EquipmentBox letter="C"></EquipmentBox>
+      <EquipmentBox icon="socks"></EquipmentBox>
       <div></div>
       <div></div>
       <div></div>
-      <EquipmentBox letter="G"></EquipmentBox>
+      <EquipmentBox icon="mitten"></EquipmentBox>
       {/* 4. row */}
-      <EquipmentBox letter="W" span={2}></EquipmentBox>
+      <EquipmentBox icon="gun" span={2}></EquipmentBox>
       <div></div>
       <div></div>
-      <EquipmentBox letter="L"></EquipmentBox>
+      <EquipmentBox icon="ring"></EquipmentBox>
       {/* 5. row */}
       <div></div>
       <div></div>
-      <EquipmentBox letter="F"></EquipmentBox>
+      <EquipmentBox icon="ring"></EquipmentBox>
     </section>
   );
 };
