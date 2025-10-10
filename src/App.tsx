@@ -12,6 +12,7 @@ import { MenuProvider } from "./MenuContext.tsx";
 // Components
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
+import SidebarRight from "./components/SidebarRight";
 import Layout from "./components/Layout";
 import Infobar from "./components/Infobar";
 import Footer from "./components/Footer";
@@ -88,11 +89,11 @@ function App() {
               <Router>
                 <div
                   id="page-container"
-                  className="flex flex-col relative min-h-dvh"
+                  className="flex flex-col relative min-h-dvh "
                 >
                   <div
                     id="content-wrap"
-                    className="flex flex-col flex-grow relative"
+                    className="flex flex-col flex-grow relative bg-neutral-900"
                   >
                     <div className="sticky z-30 top-0 left-0 h-[max-content] w-full">
                       <Header />
@@ -104,7 +105,7 @@ function App() {
 
                     <VersionWatcher />
 
-                    <div className="relative flex flex-col flex-grow">
+                    <div className="relative flex flex-col flex-grow items-center">
                       <Layout>
                         <ErrorBoundary>
                           <Sidebar />
@@ -360,6 +361,10 @@ function App() {
                           {/* 404 Route */}
                           <Route path="*" element={<NotFound />} />
                         </Routes>
+
+                        <ErrorBoundary>
+                          <SidebarRight />
+                        </ErrorBoundary>
                       </Layout>
                     </div>
                   </div>

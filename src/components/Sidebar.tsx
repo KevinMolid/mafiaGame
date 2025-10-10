@@ -20,7 +20,7 @@ const Sidebar = () => {
   if (!userCharacter || userCharacter.status === "dead") return;
 
   return (
-    <div className="hidden sm:block bg-neutral-800 px-4 py-8 text-sm leading-relaxed h-full pb-24">
+    <div className="hidden lg:block bg-neutral-900 px-4 py-8 text-sm leading-relaxed h-full pb-24 border-r border-neutral-700">
       <div className="mb-6">
         <div className="relative">
           <Link to={`/profil/${userCharacter.id}`}>

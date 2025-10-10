@@ -177,7 +177,7 @@ const DropdownRight = () => {
 
   return (
     <div
-      className={`fixed inset-x-0 top-16 sm:top-20 bottom-0 z-40
+      className={`xl:hidden fixed inset-x-0 top-16 sm:top-20 bottom-0 z-40
                   transition-opacity duration-300 ease-in-out
                   ${menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"}
                   bg-black/50`}
@@ -275,7 +275,7 @@ const DropdownRight = () => {
             </DropdownOption>
           )}
 
-          <hr className="border-neutral-700 my-2 sm:hidden" />
+          <hr className="border-neutral-700 my-2" />
 
           <DropdownOption to="/toppliste" icon="trophy" onClick={toggleMenu}>
             Toppliste

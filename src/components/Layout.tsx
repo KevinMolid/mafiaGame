@@ -12,13 +12,15 @@ const Layout = ({ children }: LayoutInterface) => {
 
   if (userData && userCharacter && userCharacter.status === "alive") {
     return (
-      <div className="flex flex-col sm:grid sm:grid-cols-[220px_auto] flex-grow">
+      <div className="flex flex-col lg:grid md:grid-cols-[220px_auto] xl:grid-cols-[220px_auto_220px] flex-grow max-w-[1440px] w-full">
         {children}
       </div>
     );
   }
   if (!userData || !userCharacter || userCharacter.status === "dead") {
-    return <div className="flex flex-grow">{children}</div>;
+    return (
+      <div className="flex flex-grow max-w-[1000px] w-full">{children}</div>
+    );
   }
 };
 

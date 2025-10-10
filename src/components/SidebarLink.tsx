@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 interface LinkProps {
-  to: string;
+  to?: string;
   icon: string;
   color?: string;
   children: ReactNode;
@@ -11,7 +11,7 @@ interface LinkProps {
 
 const SidebarLink = ({ to, icon, children, color, onClick }: LinkProps) => {
   return (
-    <Link to={to} onClick={onClick}>
+    <Link to={to || "#"} onClick={onClick}>
       <div
         className={
           color === "yellow"

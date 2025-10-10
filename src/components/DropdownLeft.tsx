@@ -33,7 +33,7 @@ const DropdownLeft = () => {
 
   return (
     <div
-      className={`fixed inset-x-0 top-16 sm:top-20 bottom-0 z-40
+      className={`lg:hidden fixed inset-x-0 top-16 sm:top-20 bottom-0 z-40
               transition-opacity duration-300 ease-in-out
               ${actionsOpen ? "opacity-100" : "opacity-0 pointer-events-none"}
               bg-black/50`}

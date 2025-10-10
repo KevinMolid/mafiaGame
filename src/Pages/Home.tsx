@@ -58,12 +58,16 @@ const Home = () => {
 
   return (
     <Main img="MafiaBg">
+      {/* Page title */}
       <H1>Hovedkvarter</H1>
+
+      {/* Message */}
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
-      {/* Flexbox with wrap*/}
-      <div className="flex flex-wrap items-end gap-x-6 gap-y-4 mb-6">
+
+      {/* Content */}
+      <div className="grid grid-cols-[auto] md:grid-cols-6 lg:grid-cols-8 items-start gap-x-8 gap-y-8 mb-6">
         {/* Profile picture and user info */}
-        <div className="flex items-end gap-4 mr-2">
+        <div className="flex items-end gap-4 mr-2 md:col-span-6 lg:col-span-4">
           <Link to={`/profil/${userCharacter.id}`}>
             <img
               className="size-[160px] object-cover hover:cursor-pointer "
@@ -80,16 +84,22 @@ const Home = () => {
             </Link>
             <Link to="/bank">
               <p>
-                Penger: <i className="fa-solid fa-dollar-sign"></i>{" "}
-                {userCharacter.stats.money.toLocaleString("nb-NO")}
+                Penger:{" "}
+                <strong className="text-neutral-200">
+                  <i className="fa-solid fa-dollar-sign"></i>{" "}
+                  {userCharacter.stats.money.toLocaleString("nb-NO")}
+                </strong>
               </p>
             </Link>
             <Link to="/bank">
               <p>
-                Bank: <i className="fa-solid fa-dollar-sign"></i>{" "}
-                {userCharacter.stats.bank
-                  ? userCharacter.stats.bank.toLocaleString("nb-NO")
-                  : "0"}
+                Bank:{" "}
+                <strong className="text-neutral-200">
+                  <i className="fa-solid fa-dollar-sign"></i>{" "}
+                  {userCharacter.stats.bank
+                    ? userCharacter.stats.bank.toLocaleString("nb-NO")
+                    : "0"}
+                </strong>
               </p>
             </Link>
             <p>
@@ -108,19 +118,19 @@ const Home = () => {
         </div>
 
         {/* Stats */}
-        <div>
-          <H2>Status</H2>
+        <div className="md:col-span-6 lg:col-span-4">
           <div className="flex flex-col flex-wrap gap-4">
             {/* Status bars */}
             <div className="flex flex-row flex-wrap gap-2">
-              <div className="flex flex-col gap-1">
+              {/* Health */}
+              <div className="flex flex-col gap-1 w-full max-w-96">
                 <p>
                   Helse:{" "}
                   <strong className="text-neutral-200">
                     {healthPercentage}%
                   </strong>
                 </p>
-                <div className="h-5 min-w-48 w-full bg-neutral-700 grid grid-cols-1">
+                <div className="h-5 min-w-48 bg-neutral-700 grid grid-cols-1">
                   <div
                     className="h-5 bg-green-500 transition-all duration-300 flex justify-center items-center col-start-1 row-start-1"
                     style={{ width: `${healthPercentage}%` }}
@@ -133,7 +143,8 @@ const Home = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1">
+              {/* Experience */}
+              <div className="flex flex-col gap-1 w-full max-w-96">
                 <p>
                   Erfaring:{" "}
                   <strong className="text-neutral-200">
@@ -153,7 +164,8 @@ const Home = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1">
+              {/* Heat */}
+              <div className="flex flex-col gap-1 w-full max-w-96">
                 <p>
                   Ettersøkt:{" "}
                   <strong className="text-neutral-200">
@@ -189,22 +201,18 @@ const Home = () => {
             </p>
           </div>
         </div>
-      </div>
 
-      <div className="flex flex-wrap gap-x-6 gap-y-4 mb-8">
-        <div>
+        <div className="max-w-[500px] md:col-span-6 lg:col-span-4">
           <H2>Nyheter</H2>
           <NewsFeed />
         </div>
 
-        <div>
+        <div className="max-w-[500px] md:col-span-6 lg:col-span-4">
           <H2>Oppdateringer</H2>
           <UpdateFeed />
         </div>
-      </div>
 
-      {/* Equipment and stash */}
-      <div className="flex flex-wrap gap-x-6 gap-y-4">
+        {/* Equipment and stash */}
         {/* Reputation */}
         {/*<Box>
             <H2>Innflytelse</H2>
@@ -237,7 +245,7 @@ const Home = () => {
           </Box>*/}
 
         {/* Equipment */}
-        <div className="border border-neutral-500 grid grid-cols-1 w-fit">
+        <div className="border border-neutral-500 grid grid-cols-1 w-fit md:col-span-4 lg:col-span-4">
           <div className="col-start-1 row-start-1 z-10 p-4">
             <H2>Utstyr</H2>
           </div>
@@ -247,9 +255,9 @@ const Home = () => {
         </div>
 
         {/* Bags */}
-        <div>
+        <div className="md:col-span-2 lg:col-span-4">
           <H2>Eiendeler</H2>
-          <ul className="grid grid-cols-4 gap-1 ">
+          <ul className="flex flex-wrap gap-1 max-w-[500px]">
             {bags.map((bag, index) => {
               return (
                 <li key={bag + index}>
