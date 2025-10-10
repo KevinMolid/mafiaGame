@@ -1029,6 +1029,19 @@ const BlackJack = () => {
                 }
                 onChange={handleBetChange}
                 disabled={!canDeal}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const ok =
+                      canDeal &&
+                      betAmount != "" &&
+                      (betAmount as number) >= 100 &&
+                      (betAmount as number) <= userMoney;
+
+                    if (ok) {
+                      void deal();
+                    }
+                  }
+                }}
               />
               {canDeal &&
                 betAmount !== "" &&
