@@ -971,6 +971,34 @@ const BlackJack = () => {
   const canAct = phase === "player";
   const playerVal = handValue(playerHand).total;
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Enter") return;
+
+      // If the hand is finished, Enter starts a new round
+      if (phase === "settled") {
+        e.preventDefault();
+        resetRound();
+        return;
+      }
+
+      // If we're betting, Enter deals (same conditions as the button)
+      const ok =
+        phase === "betting" &&
+        betAmount !== "" &&
+        (betAmount as number) >= 100 &&
+        (betAmount as number) <= userMoney;
+
+      if (ok) {
+        e.preventDefault();
+        void deal();
+      }
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [phase, betAmount, userMoney, resetRound, deal]);
+
   return (
     <div className="flex flex-col">
       <H2>BlackJack</H2>
@@ -1029,19 +1057,6 @@ const BlackJack = () => {
                 }
                 onChange={handleBetChange}
                 disabled={!canDeal}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const ok =
-                      canDeal &&
-                      betAmount != "" &&
-                      (betAmount as number) >= 100 &&
-                      (betAmount as number) <= userMoney;
-
-                    if (ok) {
-                      void deal();
-                    }
-                  }
-                }}
               />
               {canDeal &&
                 betAmount !== "" &&
