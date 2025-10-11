@@ -191,7 +191,7 @@ const DropdownRight = () => {
         >
           {userCharacter ? (
             <div>
-              <div className="px-4 py-2 mt-2 flex sm:hidden gap-2 items-center hover:bg-neutral-900">
+              <div className="px-4 py-2 mt-2 flex gap-2 items-center hover:bg-neutral-900">
                 <Link to={`/profil/${userCharacter.id}`} onClick={toggleMenu}>
                   <img
                     className="border border-neutral-500 w-[60px] h-[60px] object-cover hover:cursor-pointer"

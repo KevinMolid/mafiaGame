@@ -1,16 +1,9 @@
-// React
-import { Link } from "react-router-dom";
-
 // Context
 import { useCharacter } from "../CharacterContext";
 import { useCooldown } from "../CooldownContext";
 
 // Components
 import SidebarLink from "./SidebarLink";
-import Username from "./Typography/Username";
-
-// Functions
-import { getCurrentRank } from "../Functions/RankFunctions";
 
 const Sidebar = () => {
   const { userCharacter } = useCharacter();
@@ -20,30 +13,7 @@ const Sidebar = () => {
   if (!userCharacter || userCharacter.status === "dead") return;
 
   return (
-    <div className="hidden lg:block bg-neutral-900 px-4 py-8 text-sm leading-relaxed h-full pb-24 border-r border-neutral-700">
-      <div className="mb-6">
-        <div className="relative">
-          <Link to={`/profil/${userCharacter.id}`}>
-            <img
-              className="w-[160px] h-[160px] object-cover m-auto mb-2 hover:cursor-pointer"
-              src={userCharacter.img || "/default.jpg"}
-              alt="Profile picture"
-            />
-          </Link>
-        </div>
-
-        {userCharacter ? (
-          <div className="text-center text-stone-400">
-            <Username character={userCharacter} />
-            <p>{getCurrentRank(userCharacter.stats.xp)}</p>
-          </div>
-        ) : (
-          <Link to="/nyspiller">
-            <p className="text-center font-medium">Ny spiller</p>
-          </Link>
-        )}
-      </div>
-
+    <div className="hidden lg:block bg-neutral-900 px-4 py-8 leading-relaxed h-full pb-24 border-r border-neutral-700">
       {/* Navigation */}
       <nav className="flex flex-col gap-2">
         <SidebarLink to="/" icon="house">

@@ -3,8 +3,10 @@ import { useCharacter } from "../CharacterContext";
 import { useAuth } from "../AuthContext";
 import { getAuth, signOut } from "firebase/auth";
 import { useState, useEffect } from "react";
+import Username from "./Typography/Username";
+import { getCurrentRank } from "../Functions/RankFunctions";
 
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import {
   getFirestore,
@@ -142,10 +144,31 @@ const SidebarRight = () => {
   }
 
   if (!userData) return;
+  if (!userCharacter || userCharacter.status === "dead") return;
 
   return (
     userData && (
-      <div className="hidden xl:block bg-neutral-900 px-4 py-8 text-sm leading-relaxed h-full pb-24 border-l border-neutral-700">
+      <div className="hidden xl:block bg-neutral-900 px-4 py-8 leading-relaxed h-full pb-24 border-l border-neutral-700">
+        <div className="flex gap-2 items-end mb-6">
+          <Link to={`/profil/${userCharacter.id}`}>
+            <img
+              className="border border-neutral-500 w-[60px] h-[60px] object-cover hover:cursor-pointer"
+              src={userCharacter.img || "/default.jpg"}
+              alt="Profile picture"
+            />
+          </Link>
+          {userCharacter ? (
+            <div className="text-stone-400">
+              <Username character={userCharacter} />
+              <p>{getCurrentRank(userCharacter.stats.xp)}</p>
+            </div>
+          ) : (
+            <Link to="/nyspiller">
+              <p className="text-center font-medium">Ny spiller</p>
+            </Link>
+          )}
+        </div>
+
         {/* Navigation */}
         <nav className="flex flex-col gap-2">
           {userData?.type === "admin" && (
