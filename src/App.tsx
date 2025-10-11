@@ -14,6 +14,7 @@ import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import SidebarRight from "./components/SidebarRight";
 import Layout from "./components/Layout";
+import ContentWrap from "./components/ContentWrap";
 import Infobar from "./components/Infobar";
 import Footer from "./components/Footer";
 import DropdownLeft from "./components/DropdownLeft.tsx";
@@ -72,7 +73,6 @@ import Hacking from "./Pages/Hacking.tsx";
 // Protected routes
 import ProtectedRoute from "./Routes/ProtectedRoute.tsx";
 import ProtectedAdminRoute from "./Routes/ProtectedAdminRoute.tsx";
-import NewsBar from "./components/News/NewsBar.tsx";
 
 import NotFound from "./Pages/NotFound.tsx";
 
@@ -91,16 +91,12 @@ function App() {
                   id="page-container"
                   className="flex flex-col relative min-h-dvh "
                 >
-                  <div
-                    id="content-wrap"
-                    className="flex flex-col flex-grow relative bg-neutral-900"
-                  >
+                  <ContentWrap>
                     <div className="sticky z-30 top-0 left-0 h-[max-content] w-full">
                       <Header />
                       <DropdownLeft />
                       <DropdownRight />
                       <Infobar />
-                      <NewsBar />
                     </div>
 
                     <VersionWatcher />
@@ -367,7 +363,7 @@ function App() {
                         </ErrorBoundary>
                       </Layout>
                     </div>
-                  </div>
+                  </ContentWrap>
                   <Footer />
                 </div>
               </Router>

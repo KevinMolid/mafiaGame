@@ -284,8 +284,8 @@ const Home = () => {
         <div className="md:col-span-2 lg:col-span-4">
           <H2>Eiendeler</H2>
           <ul className="flex flex-wrap gap-1 max-w-[500px]">
-            {bags.map((item) => (
-              <li key={item.id}>
+            {bags.map((item, index) => (
+              <li key={item.id + index}>
                 <ItemTile name={item.name} img={item.img} tier={item.tier} />
               </li>
             ))}

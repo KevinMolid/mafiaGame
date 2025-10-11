@@ -28,8 +28,6 @@ const SidebarRight = () => {
   const auth = getAuth();
   const navigate = useNavigate();
 
-  if (!userCharacter || userCharacter.status === "dead") return;
-
   useEffect(() => {
     if (!userCharacter || !userCharacter.id) return;
 

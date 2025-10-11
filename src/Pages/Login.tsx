@@ -112,7 +112,7 @@ const Login = () => {
   }
 
   return (
-    <Main img="Mafia">
+    <Main noBg>
       <div className="w-full max-w-[400px] sm:w-3/4 md:w-2/3 md:max-w-[500px] flex flex-col relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 items-center">
         <small className="bg-neutral-900 px-4 py-2 w-fit rounded-t-xl border-t border-x border-neutral-500">
           v. <strong>Alpha</strong>
