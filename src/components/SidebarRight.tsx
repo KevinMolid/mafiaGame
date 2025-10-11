@@ -141,91 +141,95 @@ const SidebarRight = () => {
       });
   }
 
+  if (!userData) return;
+
   return (
-    <div className="hidden xl:block bg-neutral-900 px-4 py-8 text-sm leading-relaxed h-full pb-24 border-l border-neutral-700">
-      {/* Navigation */}
-      <nav className="flex flex-col gap-2">
-        {userData?.type === "admin" && (
-          <>
-            <SidebarLink to="/admin" icon="gears" color="yellow">
-              <p>Kontrollpanel</p>
+    userData && (
+      <div className="hidden xl:block bg-neutral-900 px-4 py-8 text-sm leading-relaxed h-full pb-24 border-l border-neutral-700">
+        {/* Navigation */}
+        <nav className="flex flex-col gap-2">
+          {userData?.type === "admin" && (
+            <>
+              <SidebarLink to="/admin" icon="gears" color="yellow">
+                <p>Kontrollpanel</p>
+              </SidebarLink>
+              <hr className="border-neutral-600" />
+            </>
+          )}
+
+          {userData && !hasUnreadAlerts && (
+            <SidebarLink to="/varsler" icon="bell">
+              Varsler
             </SidebarLink>
-            <hr className="border-neutral-600" />
-          </>
-        )}
+          )}
 
-        {userData && !hasUnreadAlerts && (
-          <SidebarLink to="/varsler" icon="bell">
-            Varsler
+          {userData && hasUnreadAlerts && (
+            <SidebarLink
+              to="/varsler"
+              icon="bell fa-bounce text-yellow-400"
+              color="yellow"
+            >
+              <p>Varsler</p>
+              <p className="font-bold">{unreadAlertCount}</p>
+            </SidebarLink>
+          )}
+
+          {userData && !hasUnreadMessages && (
+            <SidebarLink to="/meldinger" icon="comment-dots">
+              <p>Meldinger</p>
+            </SidebarLink>
+          )}
+
+          {userData && hasUnreadMessages && (
+            <SidebarLink
+              to="/meldinger"
+              icon="comment-dots fa-bounce text-sky-400"
+              color="sky"
+            >
+              <p>Meldinger</p>
+              <p className="font-bold">{unreadMessageCount}</p>
+            </SidebarLink>
+          )}
+
+          {userData && (
+            <SidebarLink to="/forum" icon="comments">
+              Forum
+            </SidebarLink>
+          )}
+
+          <hr className="border-neutral-600" />
+
+          <SidebarLink to="/toppliste" icon="trophy">
+            Toppliste
           </SidebarLink>
-        )}
 
-        {userData && hasUnreadAlerts && (
-          <SidebarLink
-            to="/varsler"
-            icon="bell fa-bounce text-yellow-400"
-            color="yellow"
-          >
-            <p>Varsler</p>
-            <p className="font-bold">{unreadAlertCount}</p>
+          <SidebarLink to="/finnspiller" icon="magnifying-glass">
+            Finn spiller
           </SidebarLink>
-        )}
 
-        {userData && !hasUnreadMessages && (
-          <SidebarLink to="/meldinger" icon="comment-dots">
-            <p>Meldinger</p>
+          <SidebarLink to="/statistikk" icon="chart-simple">
+            Statistikk
           </SidebarLink>
-        )}
 
-        {userData && hasUnreadMessages && (
-          <SidebarLink
-            to="/meldinger"
-            icon="comment-dots fa-bounce text-sky-400"
-            color="sky"
-          >
-            <p>Meldinger</p>
-            <p className="font-bold">{unreadMessageCount}</p>
+          <SidebarLink to="/spillguide" icon="book-open">
+            Spillguide
           </SidebarLink>
-        )}
 
-        {userData && (
-          <SidebarLink to="/forum" icon="comments">
-            Forum
-          </SidebarLink>
-        )}
+          <hr className="border-neutral-600" />
 
-        <hr className="border-neutral-600" />
-
-        <SidebarLink to="/toppliste" icon="trophy">
-          Toppliste
-        </SidebarLink>
-
-        <SidebarLink to="/finnspiller" icon="magnifying-glass">
-          Finn spiller
-        </SidebarLink>
-
-        <SidebarLink to="/statistikk" icon="chart-simple">
-          Statistikk
-        </SidebarLink>
-
-        <SidebarLink to="/spillguide" icon="book-open">
-          Spillguide
-        </SidebarLink>
-
-        <hr className="border-neutral-600" />
-
-        {userData && (
-          <SidebarLink
-            icon="right-from-bracket"
-            onClick={() => {
-              logOut();
-            }}
-          >
-            <p>Logg ut</p>
-          </SidebarLink>
-        )}
-      </nav>
-    </div>
+          {userData && (
+            <SidebarLink
+              icon="right-from-bracket"
+              onClick={() => {
+                logOut();
+              }}
+            >
+              <p>Logg ut</p>
+            </SidebarLink>
+          )}
+        </nav>
+      </div>
+    )
   );
 };
 
