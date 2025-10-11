@@ -75,6 +75,8 @@ const NoFamily = ({
   const [invitesLoading, setInvitesLoading] = useState<boolean>(true);
   const [invitesError, setInvitesError] = useState<string | null>(null);
 
+  const createFamilyCost = 250_000_000;
+
   // Fetch all families from Firestore
   useEffect(() => {
     if (!userCharacter || family) return;
@@ -162,7 +164,7 @@ const NoFamily = ({
       return;
     }
 
-    const cost = 250_000_000;
+    const cost = createFamilyCost;
     if (userCharacter.stats.money < cost) {
       setMessageType("warning");
       setMessage("Du har ikke nok penger til å opprette familie.");
@@ -446,7 +448,11 @@ const NoFamily = ({
           <Box>
             <H2>Opprett ny familie</H2>
             <p className="mb-2">
-              Kostnad: <strong className="text-yellow-400">$250,000,000</strong>
+              Kostnad:{" "}
+              <strong className="text-yellow-400">
+                <i className="fa-solid fa-dollar-sign"></i>{" "}
+                {createFamilyCost.toLocaleString("NO-nb")}
+              </strong>
             </p>
             <form
               action=""

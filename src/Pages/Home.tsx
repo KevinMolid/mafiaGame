@@ -128,18 +128,21 @@ const Home = () => {
                 </strong>
               </p>
             </Link>
-            <p>
-              Familie:{" "}
-              {userCharacter.familyName ? (
+
+            {userCharacter.familyName ? (
+              <p>
                 <Link to={`familie/profil/${userCharacter.familyId}`}>
+                  Familie:{" "}
                   <strong className="text-neutral-200 hover:underline">
                     {userCharacter.familyName}
                   </strong>
                 </Link>
-              ) : (
-                <Link to="/familie">Ingen familie</Link>
-              )}
-            </p>
+              </p>
+            ) : (
+              <p>
+                <Link to="/familie">Familie: Ingen familie</Link>
+              </p>
+            )}
           </div>
         </div>
 

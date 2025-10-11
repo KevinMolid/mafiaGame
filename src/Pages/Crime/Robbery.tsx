@@ -2,12 +2,12 @@
 import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
-import H3 from "../../components/Typography/H3";
+import H4 from "../../components/Typography/H4";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import Box from "../../components/Box";
 import JailBox from "../../components/JailBox";
-import Username from "../../components/Typography/Username"; // <-- NEW
+import Username from "../../components/Typography/Username";
 
 // Functions
 import {
@@ -23,7 +23,7 @@ import { useCharacter } from "../../CharacterContext";
 import { Target } from "../../Interfaces/CharacterTypes";
 
 // React
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 // Firebase
@@ -59,12 +59,21 @@ const Robbery = () => {
   const { cooldowns, startCooldown } = useCooldown();
   const navigate = useNavigate();
 
+  const targetInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (!userData) {
       navigate("/login");
       return;
     }
   }, [userData, navigate, cooldowns]);
+
+  useEffect(() => {
+    if (!isTargetRandom && targetInputRef.current) {
+      targetInputRef.current.focus();
+      targetInputRef.current.select();
+    }
+  }, [isTargetRandom]);
 
   if (!userCharacter) {
     return null;
@@ -299,7 +308,7 @@ const Robbery = () => {
         <H1>Ran spiller</H1>
         {helpActive ? (
           <Button
-            size="small"
+            size="small-square"
             style="helpActive"
             onClick={() => setHelpActive(!helpActive)}
           >
@@ -307,7 +316,7 @@ const Robbery = () => {
           </Button>
         ) : (
           <Button
-            size="small"
+            size="small-square"
             style="help"
             onClick={() => setHelpActive(!helpActive)}
           >
@@ -321,19 +330,21 @@ const Robbery = () => {
       {/* Info box */}
       {helpActive && (
         <div className="mb-4">
-          <Box type="help">
-            <H3>Rane en tilfeldig spiller</H3>
-            <p>90% sjanse for å finne en tilfeldig spiller</p>
-            <p className="mb-4">
-              75% sjanse for å stjele 10-50% av spillerens utsetående penger
-            </p>
-            <H3>Rane en bestemt spiller</H3>
-            <p>
-              50% sjanse for å finne spilleren dersom vedkommende er i samme by
-            </p>
-            <p>
-              75% sjanse for å stjele 10-50% av spillerens utsetående penger
-            </p>
+          <Box type="help" className="text-sm flex gap-x-8 flex-wrap">
+            <article>
+              <H4>Rane en tilfeldig spiller</H4>
+              <p>90% sjanse for å finne en tilfeldig spiller.</p>
+              <p className="mb-4">
+                75% sjanse for å stjele 10-50% av spillerens penger.
+              </p>
+            </article>
+            <article>
+              <H4>Rane en bestemt spiller</H4>
+              <p>
+                50% sjanse for å finne spilleren. Spilleren må være i samme by.
+              </p>
+              <p>75% sjanse for å stjele 10-50% av spillerens penger.</p>
+            </article>
           </Box>
         </div>
       )}
@@ -354,41 +365,53 @@ const Robbery = () => {
         <H2>Hvem vil du rane?</H2>
         <ul className="flex gap-2 flex-wrap mb-4">
           <li
-            className={
-              "border px-4 py-2 flex-grow text-center cursor-pointer max-w-64 " +
-              (isTargetRandom
-                ? "bg-neutral-900 border-neutral-600"
-                : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
-            }
+            className={"flex flex-grow text-center cursor-pointer max-w-64 "}
             onClick={() => setIsTargetRandom(true)}
           >
-            <p className={isTargetRandom ? "text-white" : ""}>
+            <button
+              className={
+                "border px-4 py-2 flex-grow text-center cursor-pointer " +
+                (isTargetRandom
+                  ? "bg-neutral-900 border-neutral-600 text-white "
+                  : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
+              }
+              type="button"
+            >
               Tilfeldig spiller
-            </p>
+            </button>
           </li>
           <li
-            className={
-              "border px-4 py-2 flex-grow text-center cursor-pointer max-w-64 " +
-              (isTargetRandom
-                ? "bg-neutral-800 hover:bg-neutral-700 border-transparent"
-                : "bg-neutral-900 border-neutral-600")
-            }
+            className={"flex flex-grow text-center cursor-pointer max-w-64 "}
             onClick={() => setIsTargetRandom(false)}
           >
-            <p className={isTargetRandom ? "" : "text-white"}>
+            <button
+              className={
+                "border px-4 py-2 flex-grow text-center cursor-pointer " +
+                (!isTargetRandom
+                  ? "bg-neutral-900 border-neutral-600 text-white "
+                  : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
+              }
+              type="button"
+            >
               Bestemt spiller
-            </p>
+            </button>
           </li>
         </ul>
 
         {!isTargetRandom && (
           <input
+            ref={targetInputRef}
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             type="text"
             placeholder="Brukernavn"
             value={targetCharacter}
             spellCheck={false}
             onChange={handleTargetCharacterInputChange}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSubmit(e);
+              }
+            }}
           />
         )}
 

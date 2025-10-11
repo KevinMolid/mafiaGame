@@ -215,42 +215,47 @@ const StreetCrime = () => {
           <li
             key={crime.id}
             onClick={() => setSelectedCrime(crime.name)}
-            className={
-              "border px-4 py-2 flex-1 flex-grow min-w-[max-content] text-center cursor-pointer " +
-              (selectedCrime === crime.name
-                ? "bg-neutral-900 border-neutral-600"
-                : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
-            }
+            className={"flex flex-1 flex-grow min-w-[max-content]"}
           >
-            <p
+            <button
               className={
-                selectedCrime == crime.name
-                  ? "text-white font-bold text-lg"
-                  : "font-bold text-lg"
+                "border px-4 py-2 flex-1 flex-grow min-w-[max-content] text-center cursor-pointer " +
+                (selectedCrime === crime.name
+                  ? "bg-neutral-900 border-neutral-600"
+                  : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
               }
             >
-              {crime.name}
-            </p>
-
-            {/* Chance of success */}
-            <p className="text-neutral-100 font-bold">
-              {pct(crime.successRate)}
-            </p>
-
-            <div className="flex justify-center gap-1 mt-2 mb-1">
-              {/* XP reward */}
-              <p className="text-neutral-950 text-xs bg-neutral-500 px-2 rounded-lg">
-                <span className="font-semibold">{crime.xpReward}xp</span>
+              <p
+                className={
+                  selectedCrime == crime.name
+                    ? "text-white font-bold text-lg"
+                    : "font-bold text-lg"
+                }
+              >
+                {crime.name}
               </p>
 
-              {/* Money range */}
-              <p className="text-neutral-950 text-xs bg-neutral-500 px-2 rounded-lg">
-                <span className="font-semibold">
-                  <i className="fa-solid fa-dollar-sign"></i>{" "}
-                  {money(crime.minMoneyReward)} – {money(crime.maxMoneyReward)}
-                </span>
+              {/* Chance of success */}
+              <p className="text-neutral-100 font-bold">
+                {pct(crime.successRate)}
               </p>
-            </div>
+
+              <div className="flex justify-center gap-1 mt-2 mb-1">
+                {/* XP reward */}
+                <p className="text-neutral-950 text-xs bg-neutral-500 px-2 rounded-lg">
+                  <span className="font-semibold">{crime.xpReward}xp</span>
+                </p>
+
+                {/* Money range */}
+                <p className="text-neutral-950 text-xs bg-neutral-500 px-2 rounded-lg">
+                  <span className="font-semibold">
+                    <i className="fa-solid fa-dollar-sign"></i>{" "}
+                    {money(crime.minMoneyReward)} –{" "}
+                    {money(crime.maxMoneyReward)}
+                  </span>
+                </p>
+              </div>
+            </button>
           </li>
         ))}
       </ul>

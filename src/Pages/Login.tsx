@@ -85,6 +85,11 @@ const Login = () => {
       .catch((error) => setError(getAuthErrorMessage(error)));
   }
 
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    logIn();
+  }
+
   /* Login with Facebook */
   {
     /* function logInWithFacebook() {
@@ -120,7 +125,7 @@ const Login = () => {
         <div className="bg-neutral-900/80 border border-neutral-500 p-6 rounded-lg flex flex-col gap-4 w-full">
           <H1>Logg inn</H1>
 
-          <form action="" className="flex flex-col gap-2">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-2">
             <div className="flex flex-col">
               <label htmlFor="email">E-post</label>
               <input
@@ -138,7 +143,7 @@ const Login = () => {
                 type="password"
                 onChange={handlePwChange}
               />
-              <p className="text-right">
+              <p className="text-right mt-1">
                 <Link to="/glemtpassord">
                   <span className="font-medium hover:underline">
                     Glemt passord?
@@ -147,9 +152,10 @@ const Login = () => {
               </p>
             </div>
             {error && <span className="text-red-500">{error}</span>}
+            <div className="w-full flex flex-col mt-2">
+              <Button type="submit">Logg inn</Button>
+            </div>
           </form>
-
-          <Button onClick={logIn}>Logg inn</Button>
 
           {/* Google login */}
           <div className="grid grid-cols-3 items-center">

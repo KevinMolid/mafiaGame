@@ -3,15 +3,16 @@ import { ReactNode } from "react";
 interface BoxProps {
   children: ReactNode;
   type?: string;
+  className?: string;
 }
 
-const Box = ({ children, type = "normal" }: BoxProps) => {
+const Box = ({ children, type = "normal", className }: BoxProps) => {
   return (
     <div
       className={
-        "border p-4 " +
+        `border p-4 ${className} ` +
         (type === "help"
-          ? "border-yellow-400 bg-neutral-900 text-sm lg:text-base"
+          ? "border-yellow-400 bg-neutral-900"
           : "border-neutral-500")
       }
     >

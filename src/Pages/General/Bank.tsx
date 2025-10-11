@@ -369,6 +369,9 @@ const Bank = () => {
             placeholder="Beløp"
             value={amount !== "" ? amount.toLocaleString("nb-NO") : ""}
             onChange={handleInputChange}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") deposit();
+            }}
           />
           <div className="flex gap-2 flex-wrap">
             <div className="flex gap-2">
@@ -404,6 +407,9 @@ const Bank = () => {
             spellCheck={false}
             value={targetCharacter}
             onChange={handleTargetCharacterInputChange}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") transfer();
+            }}
           />
           <input
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
@@ -411,6 +417,9 @@ const Bank = () => {
             placeholder="Beløp"
             value={amountToSend ? amountToSend.toLocaleString("nb-NO") : ""}
             onChange={handleAmountToSendInputChange}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") transfer();
+            }}
           />
           <div>
             {" "}
