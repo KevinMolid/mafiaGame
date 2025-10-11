@@ -12,8 +12,10 @@ import {
   setDoc,
   getDocFromServer,
   collection,
-  addDoc,
+  writeBatch,
 } from "firebase/firestore";
+
+import Item from "../../components/Typography/Item";
 
 type Props = {
   onSell: () => void | Promise<void>;
@@ -146,9 +148,9 @@ const Weapons: React.FC<Props> = ({
   const [nowLocal, setNowLocal] = useState<number>(Date.now());
 
   const [busyStart, setBusyStart] = useState(false);
-  const [busyGive, setBusyGive] = useState(false); // <-- added
+  const [busyClaim, setBusyClaim] = useState(false); // NEW
 
-  // Sync server time (one-shot + periodic resync). Gate progress until first sync completes.
+  // Sync server time
   useEffect(() => {
     let cancelled = false;
 
@@ -219,17 +221,16 @@ const Weapons: React.FC<Props> = ({
   const active1 = active && clockReady;
   const active2 = active && clockReady && bar1 >= 1;
 
-  // Count of completed slots
+  // Completed slots => number of weapons to give
   const filledCount = clockReady
     ? Math.min(2, Math.floor(elapsed / FOUR_HOURS_MS))
     : 0;
   const isComplete = filledCount >= 2;
 
   async function startProduction() {
-    if (!userCharacter?.id || busyStart) return;
+    if (!userCharacter?.id || busyStart || busyClaim) return;
     setBusyStart(true);
 
-    // tell parent immediately
     onSetMessageType("info");
     onSetMessage(<>Produksjon startet.</>);
 
@@ -246,62 +247,61 @@ const Weapons: React.FC<Props> = ({
     }
   }
 
+  // CLAIM: grant `filledCount` weapons, then reset productionStarted
   async function claimProduction() {
-    if (!userCharacter?.id) return;
-    if (filledCount <= 0) return;
+    if (!userCharacter?.id || busyClaim || busyStart) return;
+    if (filledCount <= 0) return; // nothing to claim
 
+    setBusyClaim(true);
     try {
-      await updateDoc(doc(db, "Characters", userCharacter.id), {
+      const weapon = getItemById("iw0001");
+      const batch = writeBatch(db);
+
+      // Add N weapon docs
+      for (let i = 0; i < filledCount; i++) {
+        const ref = doc(
+          collection(db, "Characters", userCharacter.id, "items")
+        );
+        const payload = {
+          ...weapon,
+          aquiredAt: serverTimestamp(), // keep your existing key spelling
+        };
+        batch.set(ref, payload);
+      }
+
+      // Reset production
+      batch.update(doc(db, "Characters", userCharacter.id), {
         "activeFactory.productionStarted": null,
       });
+
+      await batch.commit();
+
       onSetMessageType("success");
       onSetMessage(
         <>
-          Du fikk <strong>{filledCount}</strong> våpen.
+          Du fikk <strong>{filledCount}</strong>{" "}
+          <Item name={weapon?.name || "våpen"} tier={weapon?.tier || 1} />.
         </>
       );
     } catch (err) {
       console.error("Kunne ikke hente ut produksjon:", err);
       onSetMessageType("failure");
       onSetMessage(<>Noe gikk galt. Prøv igjen.</>);
-    }
-  }
-
-  // Functio to get weapon item
-  async function handleGetWeapon() {
-    if (!userCharacter?.id || busyGive) return;
-    setBusyGive(true);
-    try {
-      const weapon = getItemById("iw0001");
-      const payload = { ...weapon, aquiredAt: serverTimestamp() };
-
-      await addDoc(
-        collection(db, "Characters", userCharacter.id, "items"),
-        payload
-      );
-      onSetMessageType("success");
-      onSetMessage(
-        <>
-          Du fikk <strong>Simple knife</strong>.
-        </>
-      );
-    } catch (err) {
-      console.error("Kunne ikke legge til våpen:", err);
-      onSetMessageType("failure");
-      onSetMessage(<>Kunne ikke gi våpen. Prøv igjen.</>);
     } finally {
-      setBusyGive(false);
+      setBusyClaim(false);
     }
   }
 
-  const buttonLabel = !active ? (
-    <>Start</>
-  ) : isComplete ? (
-    <>Hent ut</>
-  ) : (
-    <>Produserer...</>
-  );
-  const buttonDisabled = busyStart || (active && !isComplete);
+  // Button label & routing
+  const buttonLabel = !active
+    ? "Start"
+    : isComplete
+    ? `Hent ut (${filledCount})`
+    : "Produserer...";
+
+  const buttonDisabled =
+    processing || busyStart || busyClaim || (active && !isComplete); // can only claim when complete
+
   const onButtonClick = () => {
     if (!active) return startProduction();
     if (isComplete) return claimProduction();
@@ -322,7 +322,7 @@ const Weapons: React.FC<Props> = ({
             if (confirm("Er du sikker på at du vil selge denne fabrikken?"))
               onSell();
           }}
-          disabled={processing}
+          disabled={processing || busyStart || busyClaim}
         >
           {processing ? "Behandler..." : "Legg ned fabrikken"}
         </Button>
@@ -368,12 +368,14 @@ const Weapons: React.FC<Props> = ({
             <>
               <i className="fa-solid fa-spinner fa-spin" /> Starter…
             </>
+          ) : busyClaim ? (
+            <>
+              <i className="fa-solid fa-spinner fa-spin" /> Henter…
+            </>
           ) : (
             buttonLabel
           )}
         </Button>
-
-        <Button onClick={handleGetWeapon}>Få våpen</Button>
       </div>
     </div>
   );

@@ -106,6 +106,7 @@ export const increaseHeat = async (
 ) => {
   try {
     const characterRef = doc(db, "Characters", characterID);
+    if (character.stats.heat >= 50) return;
 
     const newHeat = character.stats.heat + heat;
 

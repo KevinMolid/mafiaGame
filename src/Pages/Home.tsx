@@ -5,6 +5,7 @@ import H2 from "../components/Typography/H2";
 import Equipment from "../components/Equipment";
 import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
+import ItemTile from "../components/ItemTile";
 
 import NewsFeed from "../components/News/NewsFeed";
 import UpdateFeed from "../components/UpdateFeed";
@@ -285,16 +286,7 @@ const Home = () => {
           <ul className="flex flex-wrap gap-1 max-w-[500px]">
             {bags.map((item) => (
               <li key={item.id}>
-                <div className="w-14 h-14 border border-neutral-600 rounded-xl overflow-hidden flex items-center justify-center">
-                  {/* optional: show image if present */}
-                  {item.img ? (
-                    <img
-                      src={item.img}
-                      alt={item.name ?? "Item"}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : null}
-                </div>
+                <ItemTile name={item.name} img={item.img} tier={item.tier} />
               </li>
             ))}
           </ul>

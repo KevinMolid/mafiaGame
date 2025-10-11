@@ -16,6 +16,7 @@ import j8 from "/images/items/j8.jpg";
 
 // Weapons
 import w1 from "/images/items/Knife1.png";
+import w2 from "/images/items/Knife2.jpg";
 
 const Hats = [
   {
@@ -134,12 +135,21 @@ const Jackets = [
 const Weapons = [
   {
     id: "iw0001",
-    name: "Simple knife",
+    name: "Enkel kniv",
     slot: "weapon",
     tier: 1,
     value: 150,
     attack: 5,
     img: w1,
+  },
+  {
+    id: "iw0002",
+    name: "Springkniv",
+    slot: "weapon",
+    tier: 2,
+    value: 250,
+    attack: 6,
+    img: w2,
   },
 ];
 
