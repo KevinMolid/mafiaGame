@@ -219,42 +219,50 @@ const StreetCrime = () => {
           >
             <button
               className={
-                "border px-4 py-2 flex-1 flex-grow min-w-[max-content] text-center cursor-pointer " +
+                "relative border px-4 py-2 flex-1 flex-grow min-w-[max-content] text-center cursor-pointer " +
                 (selectedCrime === crime.name
                   ? "bg-neutral-900 border-neutral-600"
-                  : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
+                  : "bg-neutral-800 hover:bg-neutral-900 border-transparent hover:border-neutral-600")
               }
             >
               <p
                 className={
                   selectedCrime == crime.name
-                    ? "text-white font-bold text-lg"
-                    : "font-bold text-lg"
+                    ? "text-sand-400 font-bold"
+                    : "font-bold"
                 }
               >
                 {crime.name}
               </p>
 
               {/* Chance of success */}
-              <p className="text-neutral-100 font-bold">
+              <p className="text-neutral-200 text-xl font-bold">
                 {pct(crime.successRate)}
               </p>
 
-              <div className="flex justify-center gap-1 mt-2 mb-1">
-                {/* XP reward */}
-                <p className="text-neutral-950 text-xs bg-neutral-500 px-2 rounded-lg">
-                  <span className="font-semibold">{crime.xpReward}xp</span>
-                </p>
-
-                {/* Money range */}
-                <p className="text-neutral-950 text-xs bg-neutral-500 px-2 rounded-lg">
-                  <span className="font-semibold">
-                    <i className="fa-solid fa-dollar-sign"></i>{" "}
-                    {money(crime.minMoneyReward)} –{" "}
-                    {money(crime.maxMoneyReward)}
-                  </span>
-                </p>
+              <div className="absolute top-2 right-2">
+                <Button style="black" size="small-square">
+                  <i className="fa-solid fa-question"></i>
+                </Button>
               </div>
+
+              {false && (
+                <div className="absolute top-0 right-0 bg-neutral-900 px-4 py-2 border border-neutral-500">
+                  {/* XP reward */}
+                  <p className="text-neutral-200 text-sm bg-neutral-00 px-2 rounded-lg">
+                    <span className="font-bold">+{crime.xpReward} XP</span>
+                  </p>
+
+                  {/* Money range */}
+                  <p className="text-neutral-200 text-sm bg-neutral-00 px-2 rounded-lg">
+                    <span className="font-bold">
+                      <i className="fa-solid fa-dollar-sign"></i>{" "}
+                      {money(crime.minMoneyReward)} –{" "}
+                      {money(crime.maxMoneyReward)}
+                    </span>
+                  </p>
+                </div>
+              )}
             </button>
           </li>
         ))}
