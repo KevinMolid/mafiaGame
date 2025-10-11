@@ -204,7 +204,7 @@ const Production: React.FC = () => {
                     <>Produser våpen som kan brukes til å angripe spillere.</>
                   }
                   price={1000000}
-                  icon="gun"
+                  img="https://static.vecteezy.com/system/resources/thumbnails/043/660/593/small_2x/assault-rifle-on-isolated-background-png.png"
                   onBuy={() => buyFactory("weapons")}
                 />
 
@@ -216,20 +216,17 @@ const Production: React.FC = () => {
                     </>
                   }
                   price={1000000}
-                  icon="wand-magic"
+                  img="https://pngimg.com/uploads/bullets/bullets_PNG35565.png"
                   onBuy={() => buyFactory("bullets")}
                 />
 
                 <FactoryCard
                   title="Narkolab"
                   description={
-                    <>
-                      Produser narkotika som kan gi forskjellige fordeler i
-                      spillet.
-                    </>
+                    <>Produser narkotika som kan gi ulike fordeler i spillet.</>
                   }
                   price={1000000}
-                  icon="seedling"
+                  img="https://www.pngkey.com/png/full/21-211984_crack-cocaine.png"
                   onBuy={() => buyFactory("narco")}
                 />
               </div>

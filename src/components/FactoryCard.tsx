@@ -8,6 +8,7 @@ export type FactoryCardProps = {
   description: React.ReactNode;
   price: number;
   icon?: string;
+  img?: string;
   onBuy: () => Promise<void> | void;
   productionText?: string;
   requirementText?: string;
@@ -22,6 +23,7 @@ export default function FactoryCard({
   description,
   price,
   icon,
+  img,
   onBuy,
   productionText = "1 våpen/4 timer",
   requirementText = "Torpedo",
@@ -53,6 +55,17 @@ export default function FactoryCard({
         <div className="absolute inset-0 flex items-center justify-center text-neutral-700">
           <i className={`fa-solid fa-${icon} text-9xl`} />
         </div>
+      )}
+      {img && (
+        <div
+          className="w-full absolute inset-0"
+          style={{
+            backgroundImage: `url(${img})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        ></div>
       )}
       {/* Scrim for readability */}
       <div className="absolute inset-0 bg-neutral-950/60" aria-hidden="true" />

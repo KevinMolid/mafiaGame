@@ -14,19 +14,21 @@ interface InfoBoxInterface {
 
 const InfoBox = ({ children, type }: InfoBoxInterface) => {
   const types = {
-    success: "bg-neutral-900/100 border-green-400/50 text-stone-200",
-    failure: "bg-neutral-900/100 border-red-400/50 text-stone-200",
-    important: "bg-neutral-900/100 border-blue-400/50 text-stone-200",
-    warning: "bg-neutral-900/100 border-yellow-400/50 text-stone-200",
-    info: "bg-neutral-900/100 border-slate-400/50 text-stone-200",
+    success: "bg-green-950/40 border-green-400/50 text-stone-200",
+    failure: "bg-red-950/40 border-red-400/50 text-stone-200",
+    important: "bg-neutral-900 border-blue-400/50 text-stone-200",
+    warning: "bg-yellow-950/40 border-yellow-400/50 text-stone-200",
+    info: "bg-sky-950/40 border-sky-400/50 text-stone-200",
   };
 
   // Fallback to 'red' if color is not in the defined colorClasses
   const selectedType = types[type];
 
   return (
-    <div className={`border py-2 px-4 rounded-lg mb-6 ${selectedType}`}>
-      {children}
+    <div className="bg-neutral-900 rounded-lg">
+      <div className={`border py-2 px-4 rounded-lg mb-6 ${selectedType}`}>
+        {children}
+      </div>
     </div>
   );
 };
