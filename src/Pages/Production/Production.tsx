@@ -204,7 +204,7 @@ const Production: React.FC = () => {
                     <>Produser våpen som kan brukes til å angripe spillere.</>
                   }
                   price={1000000}
-                  img="https://static.vecteezy.com/system/resources/thumbnails/043/660/593/small_2x/assault-rifle-on-isolated-background-png.png"
+                  img="/public/images/illustrations/guns4.png"
                   onBuy={() => buyFactory("weapons")}
                 />
 
@@ -216,7 +216,7 @@ const Production: React.FC = () => {
                     </>
                   }
                   price={1000000}
-                  img="https://pngimg.com/uploads/bullets/bullets_PNG35565.png"
+                  img="/public/images/illustrations/bullets2.png"
                   onBuy={() => buyFactory("bullets")}
                 />
 
@@ -226,7 +226,7 @@ const Production: React.FC = () => {
                     <>Produser narkotika som kan gi ulike fordeler i spillet.</>
                   }
                   price={1000000}
-                  img="https://www.pngkey.com/png/full/21-211984_crack-cocaine.png"
+                  img="/public/images/illustrations/narco2.png"
                   onBuy={() => buyFactory("narco")}
                 />
               </div>

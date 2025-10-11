@@ -46,7 +46,7 @@ export default function FactoryCard({
   return (
     <article
       className={
-        "relative overflow-hidden rounded-xl border border-neutral-700 bg-neutral-900 h-96 w-64 shadow-xl " +
+        "relative overflow-hidden rounded-xl border border-neutral-600 bg-neutral-900 h-96 w-64 shadow-xl " +
         className
       }
       style={{ minHeight: 280 }}
@@ -75,6 +75,13 @@ export default function FactoryCard({
         style={{
           background:
             "linear-gradient(to top, rgba(23,23,23,0.9), rgba(23,23,23,0.0))",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-40"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(23,23,23,0.9), rgba(23,23,23,0.0))",
         }}
       />
 
