@@ -150,16 +150,10 @@ const DropdownLeft = () => {
 
           <DropdownOption
             to="/fengsel"
-            icon={`handcuffs ${jailRemainingSeconds > 0 && "text-red-400"}`}
+            icon={`handcuffs`}
             onClick={toggleActions}
           >
-            <div
-              className={
-                jailRemainingSeconds > 0 ? "font-bold text-red-400" : ""
-              }
-            >
-              Fengsel
-            </div>
+            <div>Fengsel</div>
             {jailRemainingSeconds > 0 ? (
               <div className="text-neutral-200 font-medium pr-4">
                 {jailRemainingSeconds}

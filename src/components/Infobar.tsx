@@ -87,30 +87,40 @@ const Infobar = () => {
       </div>
 
       <Link to="/familie" className="flex items-center gap-1 sm:gap-2">
-        <i className="fa-solid fa-users"></i>{" "}
         <Tooltip label="Familie">
-          <p>{userCharacter.familyName || "Ingen familie"}</p>
+          <p>
+            <i className="fa-solid fa-users"></i>{" "}
+            {userCharacter.familyName || "Ingen familie"}
+          </p>
         </Tooltip>
       </Link>
 
       <Link to="/flyplass" className="flex items-center gap-1 sm:gap-2">
-        <i className="fa-solid fa-location-dot"></i>
         <Tooltip label="Lokasjon">
-          <p>{userCharacter.location}</p>
+          <p>
+            <i className="fa-solid fa-location-dot"></i>{" "}
+            {userCharacter.location}
+          </p>
         </Tooltip>
       </Link>
 
       <Link to="/bank" className="flex items-center gap-1 sm:gap-2">
-        <i className="fa-solid fa-dollar-sign"></i>
         <Tooltip label="Penger">
-          <p>{userCharacter.stats.money.toLocaleString("nb-NO")}</p>
+          <div className="flex items-center">
+            <p>
+              <i className="fa-solid fa-dollar-sign"></i>{" "}
+              {userCharacter.stats.money.toLocaleString("nb-NO")}
+            </p>
+          </div>
         </Tooltip>
       </Link>
 
       <Link to="/" className="flex items-center gap-1 sm:gap-2">
-        <i className="fa-solid fa-shield-halved"></i>
         <Tooltip label="Beskyttelse">
-          <p>{userCharacter.stats.protection}%</p>
+          <p>
+            <i className="fa-solid fa-shield-halved"></i>{" "}
+            {userCharacter.stats.protection}%
+          </p>
         </Tooltip>
       </Link>
     </section>
