@@ -20,6 +20,7 @@ import Button from "./Button";
 import InfoBox from "./InfoBox";
 
 import { serverNow } from "../Functions/serverTime";
+import { mmss } from "../Functions/TimeFunctions";
 import { arrest } from "../Functions/RewardFunctions";
 
 // ---- Simple tunables for prison actions (match original) ----
@@ -57,14 +58,6 @@ type JailCharacter = {
   username: string;
   jailReleaseTime: Timestamp | null;
 };
-
-function mmss(totalSeconds: number) {
-  const m = Math.floor(totalSeconds / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = (totalSeconds % 60).toString().padStart(2, "0");
-  return `${m}:${s}`;
-}
 
 function JailList({
   characters,

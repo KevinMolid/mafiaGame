@@ -3,10 +3,7 @@ import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import InfoBox from "../../components/InfoBox";
 import FactoryCard from "../../components/FactoryCard";
-
-import guns from "/images/illustrations/guns3.png";
-import bullets from "/images/illustrations/bullets.png";
-import narco from "/images/illustrations/narco.png";
+import Button from "../../components/Button";
 
 import Weapons from "./Weapons";
 import Bullets from "./Bullets";
@@ -104,7 +101,7 @@ const Production: React.FC = () => {
       // delete the field
       await updateDoc(userDocRef, { activeFactory: deleteField() });
       // onSnapshot will update local state
-      setMessageType("info");
+      setMessageType("success");
       setMessage(<>Fabrikken ble lagt ned.</>);
     } catch (err) {
       console.error("Failed to stop factory:", err);
@@ -156,10 +153,36 @@ const Production: React.FC = () => {
         <div>Laster...</div>
       ) : (
         <>
-          <div className="mb-6">
-            <H1>Produksjon</H1>
-            {message ? <InfoBox type={messageType}>{message}</InfoBox> : null}
+          <div className="flex justify-between items-baseline">
+            <H1>
+              {activeFactory
+                ? activeFactory.type === "weapons"
+                  ? "Våpenfabrikk"
+                  : activeFactory.type === "bullets"
+                  ? "Kulefabrikk"
+                  : activeFactory.type === "narco"
+                  ? "Narkolab"
+                  : ""
+                : "Produksjon"}
+            </H1>
+            {activeFactory && (
+              <Button
+                style="text"
+                size="text"
+                onClick={() => {
+                  if (processing) return;
+                  if (
+                    confirm("Er du sikker på at du vil selge denne fabrikken?")
+                  )
+                    sellFactory();
+                }}
+                disabled={processing}
+              >
+                {processing ? "Behandler..." : "Legg ned fabrikken"}
+              </Button>
+            )}
           </div>
+          {message ? <InfoBox type={messageType}>{message}</InfoBox> : null}
 
           {/* No active factory — show buy cards */}
           {!activeFactory ? (
@@ -178,13 +201,10 @@ const Production: React.FC = () => {
                 <FactoryCard
                   title="Våpenfabrikk"
                   description={
-                    <>
-                      Produser våpen som kan benyttes til å angripe andre
-                      spillere.
-                    </>
+                    <>Produser våpen som kan brukes til å angripe spillere.</>
                   }
                   price={1000000}
-                  imgSrc={guns}
+                  icon="gun"
                   onBuy={() => buyFactory("weapons")}
                 />
 
@@ -192,12 +212,11 @@ const Production: React.FC = () => {
                   title="Kulefabrikk"
                   description={
                     <>
-                      Produser ammunisjon som kan benyttes til å angripe andre
-                      spillere.
+                      Produser ammunisjon som kan brukes til å angripe spillere.
                     </>
                   }
                   price={1000000}
-                  imgSrc={bullets}
+                  icon="wand-magic"
                   onBuy={() => buyFactory("bullets")}
                 />
 
@@ -210,7 +229,7 @@ const Production: React.FC = () => {
                     </>
                   }
                   price={1000000}
-                  imgSrc={narco}
+                  icon="seedling"
                   onBuy={() => buyFactory("narco")}
                 />
               </div>

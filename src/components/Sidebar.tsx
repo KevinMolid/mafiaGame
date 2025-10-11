@@ -2,6 +2,8 @@
 import { useCharacter } from "../CharacterContext";
 import { useCooldown } from "../CooldownContext";
 
+import { compactMmSs } from "../Functions/TimeFunctions";
+
 // Components
 import SidebarLink from "./SidebarLink";
 
@@ -46,7 +48,7 @@ const Sidebar = () => {
           <div>Kriminalitet</div>
           {cooldowns["crime"] > 0 ? (
             <div className="text-neutral-200 font-medium">
-              {cooldowns["crime"]}
+              {compactMmSs(cooldowns["crime"])}
             </div>
           ) : (
             <div className="text-green-400">
@@ -59,7 +61,7 @@ const Sidebar = () => {
           <div>Biltyveri</div>
           {cooldowns["gta"] > 0 ? (
             <div className="text-neutral-200 font-medium">
-              {cooldowns["gta"]}
+              {compactMmSs(cooldowns["gta"])}
             </div>
           ) : (
             <div className="text-green-400">
@@ -72,7 +74,7 @@ const Sidebar = () => {
           <div>Ran spiller</div>
           {cooldowns["robbery"] > 0 ? (
             <div className="text-neutral-200 font-medium">
-              {cooldowns["robbery"]}
+              {compactMmSs(cooldowns["robbery"])}
             </div>
           ) : (
             <div className="text-green-400">
@@ -99,18 +101,11 @@ const Sidebar = () => {
         </SidebarLink>
         <hr className="border-neutral-600" />
 
-        <SidebarLink
-          to="fengsel"
-          icon={`handcuffs ${jailRemainingSeconds > 0 && "text-red-400"}`}
-        >
-          <div
-            className={jailRemainingSeconds > 0 ? "font-bold text-red-400" : ""}
-          >
-            Fengsel
-          </div>
+        <SidebarLink to="fengsel" icon={`handcuffs`}>
+          <div>Fengsel</div>
           {jailRemainingSeconds > 0 ? (
             <div className="text-neutral-200 font-medium">
-              {jailRemainingSeconds}
+              {compactMmSs(jailRemainingSeconds)}
             </div>
           ) : (
             <></>

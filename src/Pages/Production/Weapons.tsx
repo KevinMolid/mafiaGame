@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState, ReactNode } from "react";
 import H2 from "../../components/Typography/H2";
 import Button from "../../components/Button";
-import H1 from "../../components/Typography/H1";
 import { useCharacter } from "../../CharacterContext";
 import {
   getFirestore,
@@ -132,7 +131,6 @@ function CircularProgress({
 }
 
 const Weapons: React.FC<Props> = ({
-  onSell,
   processing = false,
   onSetMessage,
   onSetMessageType,
@@ -312,22 +310,6 @@ const Weapons: React.FC<Props> = ({
 
   return (
     <div className="flex flex-col">
-      <div className="flex justify-between items-baseline">
-        <H1>Våpenfabrikk</H1>
-        <Button
-          style="text"
-          size="text"
-          onClick={() => {
-            if (processing) return;
-            if (confirm("Er du sikker på at du vil selge denne fabrikken?"))
-              onSell();
-          }}
-          disabled={processing || busyStart || busyClaim}
-        >
-          {processing ? "Behandler..." : "Legg ned fabrikken"}
-        </Button>
-      </div>
-
       <p className="mb-4">
         Her kan du produsere våpen som kan brukes til å angripe andre spillere.
       </p>
