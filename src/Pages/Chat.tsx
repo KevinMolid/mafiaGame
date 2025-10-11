@@ -70,6 +70,7 @@ const Chat = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [unreadByConv, setUnreadByConv] = useState<Record<string, number>>({});
+  const [isDropdownActive, setIsDropdownActive] = useState<boolean>(false);
 
   if (!userCharacter) return null;
 
@@ -500,10 +501,23 @@ const Chat = () => {
   }
 
   return (
-    <section className="flex flex-col flex-grow">
-      <div className="flex-grow grid grid-cols-[auto_1fr] h-full">
-        {/* Left panel */}
-        <div className="h-full min-w-32 md:min-w-36 lg:min-w-40 py-8 bg-neutral-800/50">
+    <div className="flex flex-grow h-full relative px-4 lg:px-8 xl:px-12">
+      <div className="absolute top-6 right-8 lg:right-12 xl:right-16">
+        <Button
+          style="black"
+          size="square"
+          onClick={() => setIsDropdownActive(!isDropdownActive)}
+        >
+          <i className="text-lg fa-solid fa-comment-dots"></i>
+        </Button>
+      </div>
+
+      {/* Dropdown panel */}
+      {isDropdownActive && (
+        <section
+          id="dropdown"
+          className="min-w-32 md:min-w-36 lg:min-w-40 py-6 bg-neutral-800 absolute top-20 right-20 z-10 rounded-xl shadow-lg"
+        >
           <div className="mb-4 flex justify-center">
             <Button size="small" style="secondary" onClick={handleNewChatClick}>
               <i className="fa-solid fa-plus"></i> Ny chat
@@ -542,125 +556,121 @@ const Chat = () => {
               );
             })}
           </ul>
+        </section>
+      )}
+
+      {/* Chat panel */}
+      <section
+        id="chat"
+        className="flex flex-col px-4 pt-8 pb-16 w-full flex-grow mb-4 lg:mb-6 xl:mb-8"
+      >
+        <div id="chat_heading" className="border-b border-neutral-600 mb-2">
+          {isCreatingChat ? <H3>Velg spiller</H3> : <H3>{receiver}</H3>}
         </div>
 
-        {/* Right panel */}
-        <div id="right_panel" className="flex flex-col px-4 pt-8 pb-16 min-h-0">
-          <div
-            id="right_panel_heading"
-            className="border-b border-neutral-600 mb-2 max-w-[400px]"
-          >
-            {isCreatingChat ? <H3>Velg spiller</H3> : <H3>{receiver}</H3>}
+        {/* Render list of all players if creating a chat */}
+        {isCreatingChat ? (
+          <ul>
+            {players.map((player) => (
+              <li key={player.id}>
+                <button
+                  className="hover:text-white w-full text-left"
+                  onClick={() => handlePlayerClick(player.username)}
+                >
+                  {player.username}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div id="messages_div" className="mb-4 mr-2 flex-grow">
+            <ScrollArea className="" contentClassName="pr-4" stickToBottom>
+              <ul className="flex flex-col">
+                {messages.map((m, i) => {
+                  const isOwn = m.senderId === userCharacter.id;
+
+                  // group header only if previous sender is different
+                  const prev = messages[i - 1];
+                  const showMeta = !prev || prev.senderId !== m.senderId;
+
+                  // time divider logic
+                  const curMs = tsToMs(m.timestamp);
+                  const prevMs = prev ? tsToMs(prev.timestamp) : null;
+                  const showTime =
+                    curMs !== null &&
+                    (!prev ||
+                      prevMs === null ||
+                      isNewDay(curMs, prevMs) ||
+                      curMs - prevMs >= MIN_GAP_MS);
+
+                  // Show exactly one "Lest" (on the last read own msg),
+                  // and one "Sendt" (on the very last own msg). If they coincide, "Lest" wins.
+                  let statusBelow: "sent" | "read" | null = null;
+                  if (isOwn) {
+                    if (i === lastReadOwnIdx) statusBelow = "read";
+                    else if (i === lastOwnIdx) statusBelow = "sent";
+                  }
+
+                  return (
+                    <Fragment key={m.id}>
+                      {showTime && curMs !== null && (
+                        <ChatTimeDivider label={fmtDividerLabel(curMs)} />
+                      )}
+                      <ChatMessage
+                        {...m}
+                        isOwn={isOwn}
+                        showMeta={showMeta}
+                        statusBelow={statusBelow}
+                      />
+                    </Fragment>
+                  );
+                })}
+              </ul>
+            </ScrollArea>
           </div>
+        )}
 
-          {/* Render list of all players if creating a chat */}
-          {isCreatingChat ? (
-            <ul>
-              {players.map((player) => (
-                <li key={player.id}>
-                  <button
-                    className="hover:text-white w-full text-left"
-                    onClick={() => handlePlayerClick(player.username)}
-                  >
-                    {player.username}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div id="messages_div" className="mb-4 mr-2 max-w-[400px]">
-              <ScrollArea
-                className="h-[400px]"
-                contentClassName="pr-4"
-                stickToBottom
-              >
-                <ul className="flex flex-col">
-                  {messages.map((m, i) => {
-                    const isOwn = m.senderId === userCharacter.id;
-
-                    // group header only if previous sender is different
-                    const prev = messages[i - 1];
-                    const showMeta = !prev || prev.senderId !== m.senderId;
-
-                    // time divider logic
-                    const curMs = tsToMs(m.timestamp);
-                    const prevMs = prev ? tsToMs(prev.timestamp) : null;
-                    const showTime =
-                      curMs !== null &&
-                      (!prev ||
-                        prevMs === null ||
-                        isNewDay(curMs, prevMs) ||
-                        curMs - prevMs >= MIN_GAP_MS);
-
-                    // Show exactly one "Lest" (on the last read own msg),
-                    // and one "Sendt" (on the very last own msg). If they coincide, "Lest" wins.
-                    let statusBelow: "sent" | "read" | null = null;
-                    if (isOwn) {
-                      if (i === lastReadOwnIdx) statusBelow = "read";
-                      else if (i === lastOwnIdx) statusBelow = "sent";
+        {/* Textarea */}
+        {isCreatingChat || !receiver ? (
+          <></>
+        ) : (
+          <div id="new_message_div">
+            <form
+              action=""
+              onSubmit={submitNewMessage}
+              className="grid grid-cols-[auto_min-content] gap-2 pr-2"
+            >
+              <textarea
+                ref={textareaRef}
+                rows={1}
+                value={newMessage}
+                placeholder="Melding"
+                spellCheck={false}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    if (e.shiftKey) {
+                      return;
+                    } else {
+                      e.preventDefault();
+                      submitNewMessage(e);
                     }
+                  }
+                }}
+                onChange={handleInputChange}
+                className="w-full bg-neutral-800 outline-none resize-none rounded-3xl px-4 py-2 leading-normal"
+                style={{ minHeight: 0 }}
+              ></textarea>
 
-                    return (
-                      <Fragment key={m.id}>
-                        {showTime && curMs !== null && (
-                          <ChatTimeDivider label={fmtDividerLabel(curMs)} />
-                        )}
-                        <ChatMessage
-                          {...m}
-                          isOwn={isOwn}
-                          showMeta={showMeta}
-                          statusBelow={statusBelow}
-                        />
-                      </Fragment>
-                    );
-                  })}
-                </ul>
-              </ScrollArea>
-            </div>
-          )}
-
-          {/* Textarea */}
-          {isCreatingChat || !receiver ? (
-            <></>
-          ) : (
-            <div id="new_message_div">
-              <form
-                action=""
-                onSubmit={submitNewMessage}
-                className="grid grid-cols-[auto_min-content] gap-2 pr-2 max-w-[400px]"
-              >
-                <textarea
-                  ref={textareaRef}
-                  rows={1}
-                  value={newMessage}
-                  placeholder="Melding"
-                  spellCheck={false}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      if (e.shiftKey) {
-                        return;
-                      } else {
-                        e.preventDefault();
-                        submitNewMessage(e);
-                      }
-                    }
-                  }}
-                  onChange={handleInputChange}
-                  className="w-full bg-neutral-800 outline-none resize-none rounded-3xl px-4 py-2 leading-normal"
-                  style={{ minHeight: 0 }}
-                ></textarea>
-
-                <div className="mt-auto">
-                  <Button type="submit" size="square">
-                    <i className=" fa-solid fa-paper-plane"></i>
-                  </Button>
-                </div>
-              </form>
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
+              <div className="mt-auto">
+                <Button type="submit" size="square">
+                  <i className=" fa-solid fa-paper-plane"></i>
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
+      </section>
+    </div>
   );
 };
 
