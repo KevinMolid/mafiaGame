@@ -86,13 +86,16 @@ export default function CharacterListRank({
   return (
     <section>
       <ul>
-        <li className="grid grid-cols-[40px_120px_auto] border-b border-neutral-700 mb-2 font-bold text-neutral-200">
+        <li className="grid grid-cols-[40px_130px_auto] gap-2 border-b border-neutral-700 mb-2 font-bold text-neutral-200">
           <p>#</p>
           <p>Spiller</p>
           <p>Rank</p>
         </li>
         {rankedCharacters.map((character, index) => (
-          <li key={character.id} className="grid grid-cols-[40px_120px_auto]">
+          <li
+            key={character.id}
+            className="grid grid-cols-[40px_130px_auto] gap-2"
+          >
             <p
               className={
                 "mr-2 " +

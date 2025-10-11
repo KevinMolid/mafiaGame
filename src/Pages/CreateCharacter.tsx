@@ -1,7 +1,7 @@
 // Components
 import Main from "../components/Main";
 import H1 from "../components/Typography/H1";
-import H2 from "../components/Typography/H2";
+import H3 from "../components/Typography/H3";
 import Button from "../components/Button";
 
 import Dialogue from "../components/Dialogue";
@@ -72,8 +72,8 @@ const CreateCharacter = () => {
       setNameStatus("invalid");
       return;
     }
-    if (value.length > 16) {
-      setError("Brukernavnet kan ikke være lengre enn 16 tegn.");
+    if (value.length > 11) {
+      setError("Brukernavnet kan ikke være lengre enn 11 tegn.");
       setUsername(value);
       setNameStatus("invalid");
       return;
@@ -99,7 +99,7 @@ const CreateCharacter = () => {
   useEffect(() => {
     // preconditions: format valid + >=3 chars
     const regex = /^[A-Za-zæÆøØåÅ0-9]*$/;
-    if (!regex.test(username) || username.length < 3 || username.length > 16) {
+    if (!regex.test(username) || username.length < 3 || username.length > 11) {
       setNameStatus(username ? "invalid" : "idle");
       return;
     }
@@ -130,7 +130,7 @@ const CreateCharacter = () => {
   async function handleClick() {
     // Final sync checks before write
     const regex = /^[A-Za-zæÆøØåÅ0-9]*$/;
-    if (!regex.test(username) || username.length < 3 || username.length > 16) {
+    if (!regex.test(username) || username.length < 3 || username.length > 11) {
       setError(
         username.length < 3
           ? "Brukernavnet må inneholde minst 3 tegn."
@@ -231,14 +231,13 @@ const CreateCharacter = () => {
           ]}
         />
         <div className="order-2 sm:order-1">
-          <H1>Opprett ny spillkarakter</H1>
+          <H1>Velkommen til Den Siste Don!</H1>
+          <p className="mb-6">Lag din spillkarakter og kom i gang!</p>
           <form action="" className="flex flex-col mb-4 gap-2">
-            <label htmlFor="username">
-              <H2>Velg brukernavn</H2>
-            </label>
+            <label htmlFor="username"></label>
             <input
               className={
-                "bg-transparent border-b py-1 text-lg font-medium text-white placeholder-neutral-500 focus:outline-none " +
+                "bg-transparent border-b py-1 text-2xl font-medium text-white placeholder-neutral-500 focus:outline-none " +
                 (nameStatus === "taken"
                   ? "border-red-500 focus:border-red-500"
                   : nameStatus === "available"
@@ -250,11 +249,11 @@ const CreateCharacter = () => {
               placeholder="Brukernavn"
               value={username}
               onChange={handleUsernameChange}
-              maxLength={16}
+              maxLength={11}
               autoComplete="off"
               spellCheck={false}
             />
-            <div className="min-h-[1.5rem]">
+            <div className="min-h-[1.5rem] mb-4">
               {/* Live hint or error */}
               {error ? (
                 <span className="text-red-500">{error}</span>
@@ -263,7 +262,7 @@ const CreateCharacter = () => {
               )}
             </div>
 
-            <H2>Velg hvor du vil starte</H2>
+            <H3>Startområde</H3>
             <ul className="flex gap-2 flex-wrap">
               {cities.map((city) => (
                 <li
@@ -284,7 +283,7 @@ const CreateCharacter = () => {
             </ul>
           </form>
           <Button onClick={handleClick} disabled={isSubmitDisabled}>
-            Opprett karakter
+            Start spillet!
           </Button>
         </div>
       </div>

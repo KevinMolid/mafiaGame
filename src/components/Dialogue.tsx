@@ -68,11 +68,11 @@ const Dialogue = ({
       <img
         src={imageSrc}
         alt={imageAlt}
-        className="w-[200px] h-[150px] object-cover border-2 border-slate-400"
+        className="w-[200px] h-[150px] object-cover border-2 border-sky-400"
       />
 
       {speaker && (
-        <p className="font-medium bg-gradient-to-b from-slate-400 to-slate-700 text-white py-0.5 px-2 text-center border-b-2 border-slate-600 mb-1">
+        <p className="font-medium bg-sky-950 text-neutral-200 py-0.5 px-2 text-center border-l-2 border-r-2 border-b-2 border-sky-400 mb-1">
           {speaker}
         </p>
       )}
@@ -81,7 +81,7 @@ const Dialogue = ({
       <button
         type="button"
         onClick={goNext}
-        className="w-full border bg-slate-800 text-white text-center border-neutral-600 p-2"
+        className="w-full min-h-32 border-2 bg-sky-950 text-sky-200 text-center border-sky-400 p-2"
         aria-label="Neste linje"
         disabled={isLast}
       >
@@ -95,19 +95,19 @@ const Dialogue = ({
             <span
               key={idx}
               className={`h-1.5 w-1.5 rounded-full ${
-                idx === i ? "bg-white" : "bg-slate-500"
+                idx === i ? "bg-sky-400" : "bg-neutral-600"
               }`}
               aria-hidden
             />
           ))}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           <button
             type="button"
             onClick={goPrev}
             disabled={isFirst}
-            className="text-sm px-2 py-0.5 border border-slate-500 rounded disabled:opacity-50 hover:bg-slate-700 disabled:hover:bg-transparent"
+            className="bg-neutral-900 text-neutral-200 font-semibold text-sm px-2 py-0.5 border-2 border-sky-400 rounded disabled:opacity-50 hover:bg-neutral-900 disabled:hover:bg-transparent"
           >
             Forrige
           </button>
@@ -115,7 +115,7 @@ const Dialogue = ({
             type="button"
             onClick={goNext}
             disabled={isLast}
-            className="text-sm px-2 py-0.5 border border-slate-500 rounded disabled:opacity-50 hover:bg-slate-700 disabled:hover:bg-transparent"
+            className="bg-neutral-900 text-neutral-200 font-semibold text-sm px-2 py-0.5 border-2 border-sky-400 rounded disabled:opacity-50 hover:bg-neutral-900 disabled:hover:bg-transparent"
           >
             Neste
           </button>
