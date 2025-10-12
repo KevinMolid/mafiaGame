@@ -161,11 +161,33 @@ const Parking = () => {
         "stats.money": (userCharacter.stats.money || 0) + (car.value || 0),
       });
 
+      const catalog = car.key ? getCarByKey(car.key) : getCarByName(car.name);
+
       setMessageType("success");
       setMessage(
         <p>
-          Du solgte <Item name={car.name} tier={car.tier} /> for{" "}
-          <i className="fa-solid fa-dollar-sign"></i>{" "}
+          Du solgte{" "}
+          <Item
+            name={car.name}
+            tier={car.tier}
+            tooltipImg={catalog?.img && catalog.img}
+            tooltipContent={
+              <div>
+                <p>
+                  Effekt:{" "}
+                  <strong className="text-neutral-200">{car.hp} hk</strong>
+                </p>
+                <p>
+                  Verdi:{" "}
+                  <strong className="text-neutral-200">
+                    <i className="fa-solid fa-dollar-sign"></i>{" "}
+                    {car.value.toLocaleString("nb-NO")}
+                  </strong>
+                </p>
+              </div>
+            }
+          />{" "}
+          for <i className="fa-solid fa-dollar-sign"></i>{" "}
           <strong>{(car.value || 0).toLocaleString("nb-NO")}</strong>.
         </p>
       );
