@@ -7,11 +7,11 @@ type ItemTileProps = {
 const ItemTile = ({ name, img, tier }: ItemTileProps) => {
   return (
     <div
-      className={`flex h-16 border-2 rounded-xl cursor-pointer ${
+      className={`flex h-16 w-16 border-2 rounded-xl cursor-pointer ${
         tier === 1
           ? "border-neutral-400 shadow-lg shadow-neutral-500/25"
           : tier === 2
-          ? "border-green-400 shadow-lg shadow-neutral-500/25"
+          ? "border-emerald-400 shadow-lg shadow-neutral-500/25"
           : tier === 3
           ? "border-sky-400 shadow-lg shadow-sky-500/25"
           : tier === 4

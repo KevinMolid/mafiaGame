@@ -52,6 +52,7 @@ export interface Character {
   conversations?: any;
   friends?: any;
   blacklist?: any;
+  equipment?: Record<string, any>;
 }
 
 export interface Target {
@@ -89,4 +90,5 @@ export interface Target {
   conversations?: any;
   friends?: any;
   blacklist?: any;
+  equipment?: Record<string, any>;
 }

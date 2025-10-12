@@ -6,6 +6,8 @@ import Equipment from "../components/Equipment";
 import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
 import ItemTile from "../components/ItemTile";
+import Button from "../components/Button";
+import Item from "../components/Typography/Item";
 
 import NewsFeed from "../components/News/NewsFeed";
 import UpdateFeed from "../components/UpdateFeed";
@@ -15,7 +17,12 @@ import { getCurrentRank } from "../Functions/RankFunctions";
 import {
   getFirestore,
   collection,
-  onSnapshot /*, orderBy, query */,
+  onSnapshot,
+  doc,
+  runTransaction,
+  serverTimestamp,
+  increment,
+  writeBatch,
 } from "firebase/firestore";
 const db = getFirestore();
 
@@ -31,16 +38,137 @@ import { getRankProgress } from "../Functions/RankFunctions";
 
 const Home = () => {
   const { userCharacter, dailyXp } = useCharacter();
-  const [message] = useState("");
-  const [messageType] = useState<
+  const [message, setMessage] = useState<React.ReactNode>("");
+  const [messageType, setMessageType] = useState<
     "success" | "failure" | "important" | "warning" | "info"
   >("success");
 
   // Local state for XP, initialized with the character's current XP
   const [xp, setXP] = useState<number>(userCharacter?.stats.xp || 0);
 
-  type ItemDoc = { id: string } & Record<string, any>;
+  type ItemDoc = { docId: string } & Record<string, any>;
   const [bags, setBags] = useState<ItemDoc[]>([]);
+  const [itemModalOpen, setItemModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<ItemDoc | null>(null);
+
+  const openItemModal = (item: ItemDoc) => {
+    setSelectedItem(item);
+    setItemModalOpen(true);
+  };
+  const closeItemModal = () => {
+    setItemModalOpen(false);
+    setSelectedItem(null);
+  };
+
+  const equipItem = async (item: ItemDoc) => {
+    if (!userCharacter?.id) return;
+
+    const slot = (item.slot || "").trim();
+    if (!slot) {
+      setMessageType("warning");
+      setMessage("Denne gjenstanden kan ikke utstyres (mangler slot).");
+      return;
+    }
+
+    const charRef = doc(db, "Characters", userCharacter.id);
+    const invRef = doc(db, "Characters", userCharacter.id, "items", item.docId);
+
+    try {
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(charRef);
+        const data = (snap.data() || {}) as any;
+
+        const currentlyEquipped = data?.equipment?.[slot] || null;
+
+        // If something is already equipped in this slot, move it back to inventory (optional).
+        if (currentlyEquipped) {
+          const backToInvRef = doc(
+            collection(db, "Characters", userCharacter.id, "items")
+          );
+          tx.set(backToInvRef, {
+            ...currentlyEquipped,
+            returnedFromSlot: slot,
+            returnedAt: serverTimestamp(),
+          });
+        }
+
+        // Write the new equipment to the slot
+        const equipPayload = {
+          // keep whatever fields you want visible in Equipment UI
+          id: item.id, // type id
+          name: item.name,
+          img: item.img ?? null,
+          tier: item.tier ?? 1,
+          slot,
+          value: item.value ?? 0,
+          // helpful bookkeeping
+          fromDocId: item.docId, // the inventory doc this came from
+          equippedAt: serverTimestamp(),
+        };
+
+        tx.update(charRef, { [`equipment.${slot}`]: equipPayload });
+
+        // Remove from inventory
+        tx.delete(invRef);
+      });
+
+      setMessageType("success");
+      setMessage(
+        <>
+          Du utstyrte <strong className="text-neutral-200">{item.name}</strong>{" "}
+          i <strong className="text-neutral-200">{slot}</strong>.
+        </>
+      );
+    } catch (e) {
+      console.error("Equip item failed:", e);
+      setMessageType("failure");
+      setMessage("Kunne ikke utstyre gjenstanden. Prøv igjen.");
+    } finally {
+      closeItemModal();
+    }
+  };
+
+  const sellItem = async (item: ItemDoc) => {
+    if (!userCharacter?.id) return;
+
+    const value = Number(item.value) || 0;
+    const itemRef = doc(
+      db,
+      "Characters",
+      userCharacter.id,
+      "items",
+      item.docId
+    );
+    const charRef = doc(db, "Characters", userCharacter.id);
+
+    try {
+      const batch = writeBatch(db);
+      batch.delete(itemRef);
+      if (value > 0) {
+        batch.update(charRef, { "stats.money": increment(value) });
+      }
+      await batch.commit();
+
+      setMessageType("success");
+      setMessage(
+        <>
+          Du solgte <strong className="text-neutral-200">{item.name}</strong>{" "}
+          for{" "}
+          <strong className="text-neutral-200">
+            <i className="fa-solid fa-dollar-sign" />{" "}
+            {value.toLocaleString("nb-NO")}
+          </strong>
+          .
+        </>
+      );
+    } catch (e) {
+      console.error("Sell item failed:", e);
+      setMessageType("failure");
+      setMessage("Kunne ikke selge gjenstanden. Prøv igjen.");
+    } finally {
+      closeItemModal();
+    }
+  };
 
   // Sync the local XP state with character stats if character changes
   useEffect(() => {
@@ -63,7 +191,10 @@ const Home = () => {
     const itemsRef = collection(db, "Characters", userCharacter.id, "items");
 
     const unsubscribe = onSnapshot(itemsRef, (snap) => {
-      const items = snap.docs.map((item) => ({ id: item.id, ...item.data() }));
+      const items: ItemDoc[] = snap.docs.map((d) => ({
+        ...d.data(), // retains your data.id (type id)
+        docId: d.id, // Firestore document id
+      }));
       setBags(items);
     });
 
@@ -286,14 +417,96 @@ const Home = () => {
         {/* Bags */}
         <div className="md:col-span-2 lg:col-span-4">
           <H2>Eiendeler</H2>
-          <ul className="flex flex-wrap gap-1 max-w-[500px]">
+          <ul className="flex flex-wrap gap-x-1 gap-y-0 max-w-[500px]">
             {bags.map((item, index) => (
               <li key={item.id + index}>
-                <ItemTile name={item.name} img={item.img} tier={item.tier} />
+                <button
+                  type="button"
+                  onClick={() => openItemModal(item)}
+                  className="focus:outline-none"
+                  title="Åpne handlinger"
+                >
+                  <ItemTile name={item.name} img={item.img} tier={item.tier} />
+                </button>
               </li>
             ))}
           </ul>
         </div>
+
+        {/* --- Item action modal --- */}
+        {itemModalOpen && selectedItem && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Varehandlinger"
+            onClick={(e) => {
+              // close if clicking the dimmed backdrop (not the modal content)
+              if (e.target === e.currentTarget) closeItemModal();
+            }}
+          >
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/60" />
+
+            {/* Window */}
+            <div className="relative z-10 w-full max-w-sm rounded-xl border border-neutral-700 bg-neutral-900 p-4 shadow-xl">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  {selectedItem.img ? (
+                    <ItemTile
+                      name={selectedItem.name}
+                      img={selectedItem.img}
+                      tier={selectedItem.tier}
+                    />
+                  ) : null}
+                  <div>
+                    <p className="text-neutral-200 font-semibold leading-tight">
+                      <Item
+                        name={selectedItem.name}
+                        tier={selectedItem.tier}
+                      ></Item>
+                    </p>
+                    {/* VALUE LINE */}
+                    <p className="text-neutral-400 text-sm mt-1">
+                      Verdi:{" "}
+                      <strong className="text-neutral-200">
+                        <i className="fa-solid fa-dollar-sign" />{" "}
+                        {(Number(selectedItem.value) || 0).toLocaleString(
+                          "nb-NO"
+                        )}
+                      </strong>
+                    </p>
+                    {/* Actions */}
+                    <div className="mt-4 flex gap-2">
+                      <Button
+                        size="small"
+                        onClick={() => equipItem(selectedItem)}
+                      >
+                        Bruk
+                      </Button>
+                      <Button
+                        size="small"
+                        style="danger"
+                        onClick={() => sellItem(selectedItem)}
+                      >
+                        Selg
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  onClick={closeItemModal}
+                  aria-label="Lukk"
+                  title="Lukk"
+                  style="exit"
+                  size="small-square"
+                >
+                  <i className="fa-solid fa-xmark" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Main>
   );

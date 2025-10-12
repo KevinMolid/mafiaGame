@@ -7,7 +7,7 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import { Character, Stats, Reputation } from "./Interfaces/CharacterTypes";
+import { Character } from "./Interfaces/CharacterTypes";
 import { getCurrentRank } from "./Functions/RankFunctions.tsx";
 import {
   getFirestore,
@@ -142,68 +142,24 @@ export const CharacterProvider = ({
 
       const unsubscribe = onSnapshot(charDocRef, async (docSnapshot) => {
         if (docSnapshot.exists()) {
-          const characterData = docSnapshot.data();
+          const raw = docSnapshot.data() as any;
 
-          if (
-            characterData &&
-            characterData.location &&
-            characterData.stats &&
-            characterData.username
-          ) {
+          if (raw && raw.location && raw.stats && raw.username) {
+            // ✅ Pull everything with a spread so new fields (like `equipment`) flow through
             const newCharacter: Character = {
               id: docSnapshot.id,
-              role: characterData.role as string,
-              location: characterData.location as string,
-              stats: characterData.stats as Stats,
-              img: characterData.img as string,
+              ...raw,
+              // Normalize Timestamp-like fields:
+              createdAt: raw.createdAt?.toDate?.() ?? raw.createdAt ?? null,
+              diedAt: raw.diedAt?.toDate?.() ?? null,
+              lastCrimeTimestamp: raw.lastCrimeTimestamp?.toDate?.(),
+              lastGtaTimestamp: raw.lastGtaTimestamp?.toDate?.(),
               currentRank:
-                typeof characterData.currentRank === "number"
-                  ? characterData.currentRank
-                  : 1,
-              username: characterData.username as string,
-              username_lowercase: characterData.username_lowercase as string,
-              createdAt: characterData.createdAt.toDate(),
-              diedAt: characterData.diedAt
-                ? characterData.diedAt.toDate()
-                : null,
-              lastCrimeTimestamp:
-                characterData.lastCrimeTimestamp &&
-                characterData.lastCrimeTimestamp.toDate
-                  ? characterData.lastCrimeTimestamp.toDate()
-                  : undefined,
-              lastGtaTimestamp:
-                characterData.lastGtaTimestamp &&
-                characterData.lastGtaTimestamp.toDate
-                  ? characterData.lastGtaTimestamp.toDate()
-                  : undefined,
-              profileText: characterData.profileText as string,
-              reputation: characterData.reputation as Reputation,
-              status: characterData.status as string,
-              uid: characterData.uid as string,
-              parkingFacilities: characterData.parkingFacilities as any,
-              airplane: characterData.airplane as any,
-              familyId: characterData.familyId as string,
-              familyName: characterData.familyName as string,
-              activeFamilyApplication: characterData.activeFamilyApplication
-                ? {
-                    applicationId:
-                      characterData.activeFamilyApplication.applicationId,
-                    applicationText:
-                      characterData.activeFamilyApplication.applicationText,
-                    familyId: characterData.activeFamilyApplication.familyId,
-                    familyName:
-                      characterData.activeFamilyApplication.familyName,
-                    appliedAt: characterData.activeFamilyApplication.appliedAt,
-                  }
-                : null,
-              inJail: characterData.inJail as boolean,
-              jailReleaseTime: characterData.jailReleaseTime as any,
-              friends: characterData.friends as any,
-              blacklist: characterData.blacklist as any,
+                typeof raw.currentRank === "number" ? raw.currentRank : 1,
             };
 
             // Ensure currentRank is set to 1 in the database if it was not set
-            if (typeof characterData.currentRank !== "number") {
+            if (typeof raw.currentRank !== "number") {
               const charDocRef2 = doc(db, "Characters", newCharacter.id);
               await setDoc(charDocRef2, { currentRank: 1 }, { merge: true });
             }
@@ -268,11 +224,11 @@ export const CharacterProvider = ({
               );
             }
 
-            // Update character first (so consumers have stats)
+            // Update character first (so consumers have stats/equipment/etc.)
             setUserCharacter(newCharacter);
 
             // --- Daily XP baseline from Firestore (shared across devices) ---
-            const start = (characterData.dailyXpStart as any) || {};
+            const start = (raw.dailyXpStart as any) || {};
             const startDate: string | undefined = start.date;
             const startBaseline: number | undefined = start.baseline;
             const today = getOsloYmd();

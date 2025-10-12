@@ -168,7 +168,7 @@ const Parking = () => {
 
       setMessageType("success");
       setMessage(
-        <p>
+        <div>
           Du solgte{" "}
           <Item
             name={car.name}
@@ -192,7 +192,7 @@ const Parking = () => {
           />{" "}
           for <i className="fa-solid fa-dollar-sign"></i>{" "}
           <strong>{(car.value || 0).toLocaleString("nb-NO")}</strong>.
-        </p>
+        </div>
       );
     } catch (err) {
       console.error("Feil ved salg av bil: ", err);
