@@ -22,7 +22,7 @@ const Item = ({
   className = "",
   tooltipImg,
   tooltipContent,
-  tooltipWidthClass = "w-72",
+  tooltipWidthClass = "min-w-72 w-max-content",
   ...rest
 }: ItemProps) => {
   const color = TIER_CLASSES[tier] ?? "neutral-300";
@@ -31,7 +31,7 @@ const Item = ({
 
   return (
     <span
-      className={`relative inline-flex items-center font-bold group text-${color} ${className} cursor-pointer`}
+      className={`relative inline-flex items-center font-bold group text-${color} ${className} cursor-pointer text-nowrap`}
       // make focusable for keyboard users if it has a tooltip
       tabIndex={hasTooltip ? 0 : undefined}
       aria-describedby={hasTooltip ? tooltipId : undefined}
@@ -48,7 +48,7 @@ const Item = ({
             className={[
               "pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2",
               "rounded-2xl border border-neutral-700 bg-neutral-900 text-neutral-100 shadow-xl",
-              "px-4 py-3 text-sm",
+              "px-4 py-3 text-sm text-left",
               tooltipWidthClass,
               // show on hover AND keyboard focus
               "opacity-0 scale-95 transition-all duration-150 ease-out",

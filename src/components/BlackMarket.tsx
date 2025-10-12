@@ -10,6 +10,8 @@ import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
 import Item from "../components/Typography/Item";
 
+import { getCarByName, getCarByKey } from "../Data/Cars";
+
 // Context
 import { useCharacter } from "../CharacterContext";
 
@@ -53,6 +55,8 @@ type CarDoc = {
   name?: string;
   brand?: string;
   model?: string;
+  hp?: number;
+  value?: number;
   tier?: number;
   city?: string;
   [key: string]: any;
@@ -100,6 +104,13 @@ const BlackMarket = () => {
   // Filters for “Markedet”
   const [filterCategory, setFilterCategory] = useState<"all" | Category>("all");
   const [search, setSearch] = useState("");
+
+  const selectedCatalog = useMemo(() => {
+    if (!selectedCar) return null;
+    return selectedCar.key
+      ? getCarByKey(selectedCar.key)
+      : getCarByName(selectedCar.name || "car");
+  }, [selectedCar]);
 
   // --- Subscribe to the user's Cars subcollection ---------------------------
   useEffect(() => {
@@ -683,21 +694,47 @@ const BlackMarket = () => {
                         </p>
                       ) : (
                         <ul className="flex flex-col gap-1">
-                          {carsInMyCity.map((c) => (
-                            <li key={c.id}>
-                              <Button
-                                size="text"
-                                style="text"
-                                onClick={() => {
-                                  setSelectedCar(c);
-                                  setItemName(carBaseName(c)); // store base name
-                                }}
-                                title="Velg bil"
-                              >
-                                <Item name={carBaseName(c)} tier={c.tier} />
-                              </Button>
-                            </li>
-                          ))}
+                          {carsInMyCity.map((c) => {
+                            const catalog = c.key
+                              ? getCarByKey(c.key)
+                              : getCarByName(c.name || "car");
+                            return (
+                              <li key={c.id}>
+                                <Button
+                                  size="text"
+                                  style="text"
+                                  onClick={() => {
+                                    setSelectedCar(c);
+                                    setItemName(carBaseName(c)); // store base name
+                                  }}
+                                  title="Velg bil"
+                                >
+                                  <Item
+                                    name={c.name || "car"}
+                                    tier={c.tier}
+                                    tooltipImg={catalog?.img}
+                                    tooltipContent={
+                                      <div>
+                                        <p>
+                                          Effekt:{" "}
+                                          <strong className="text-neutral-200">
+                                            {c.hp} hk
+                                          </strong>
+                                        </p>
+                                        <p>
+                                          Verdi:{" "}
+                                          <strong className="text-neutral-200">
+                                            <i className="fa-solid fa-dollar-sign"></i>{" "}
+                                            {c.value?.toLocaleString("nb-NO")}
+                                          </strong>
+                                        </p>
+                                      </div>
+                                    }
+                                  />
+                                </Button>
+                              </li>
+                            );
+                          })}
                         </ul>
                       )}
                     </>
@@ -705,8 +742,26 @@ const BlackMarket = () => {
                     <>
                       <div className="flex items-center gap-2">
                         <Item
-                          name={carBaseName(selectedCar)}
-                          tier={selectedCar.tier ?? undefined}
+                          name={selectedCar.name || "car"}
+                          tier={selectedCar.tier}
+                          tooltipImg={selectedCatalog?.img}
+                          tooltipContent={
+                            <div>
+                              <p>
+                                Effekt:{" "}
+                                <strong className="text-neutral-200">
+                                  {selectedCar.hp} hk
+                                </strong>
+                              </p>
+                              <p>
+                                Verdi:{" "}
+                                <strong className="text-neutral-200">
+                                  <i className="fa-solid fa-dollar-sign"></i>{" "}
+                                  {selectedCar.value?.toLocaleString("nb-NO")}
+                                </strong>
+                              </p>
+                            </div>
+                          }
                         />
                         <Button
                           size="text"
