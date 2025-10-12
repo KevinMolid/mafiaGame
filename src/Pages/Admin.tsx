@@ -9,6 +9,7 @@ import InfoBox from "./../components/InfoBox";
 import Box from "../components/Box";
 import Username from "../components/Typography/Username";
 import Tab from "../components/Tab";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
@@ -79,6 +80,7 @@ const Admin = () => {
     Record<string, "close" | "delete" | null>
   >({});
   const [activeTicketId, setActiveTicketId] = useState<string | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   function truncate(text: string, n = 100) {
     if (!text) return "";
@@ -250,14 +252,8 @@ const Admin = () => {
     if (count > 0) await batch.commit();
   }
 
-  async function handleResetGame() {
-    const ok = window.confirm(
-      "Er du sikker? Dette sletter auksjoner, invitasjoner, familier (inkl. underkolleksjoner), biler, alerts m.m., og resetter spillerdata."
-    );
-    if (!ok) return;
-
+  async function doResetGame() {
     setLoading(true);
-
     try {
       // ----- Characters: reset fields, clear alerts and cars subcollection -----
       const characterCollectionRef = collection(db, "Characters");
@@ -294,58 +290,47 @@ const Admin = () => {
           { merge: true }
         );
 
-        // Delete alerts subcollection
         await deleteAllDocsInCollection(["Characters", charDoc.id, "alerts"]);
-
-        // Delete cars subcollection  <-- NEW
         await deleteAllDocsInCollection(["Characters", charDoc.id, "cars"]);
       }
 
-      // ----- Root collections to clear -----
-      // Bounty
       await deleteAllDocsInCollection(["Bounty"]);
-
-      // Auctions (and legacy "Auction" if it exists)  <-- NEW
       await deleteAllDocsInCollection(["Auctions"]);
       await deleteAllDocsInCollection(["Auction"]);
-
-      // FamilyInvites  <-- NEW
       await deleteAllDocsInCollection(["FamilyInvites"]);
 
-      // ----- Families: delete subcollections (Applications, Events), then doc -----
       const familiesCollectionRef = collection(db, "Families");
       const familiesDocs = await getDocs(familiesCollectionRef);
-
       for (const familyDoc of familiesDocs.docs) {
         const familyId = familyDoc.id;
         const familyDocRef = doc(db, "Families", familyId);
-
-        // Clear known subcollections so the doc doesn't linger as "has subcollections"
         await deleteAllDocsInCollection(["Families", familyId, "Applications"]);
         await deleteAllDocsInCollection(["Families", familyId, "Events"]);
-
-        // Finally delete the family doc
         await deleteDoc(familyDocRef);
       }
 
-      // ----- GameEvents: clear and add reset event -----
       await deleteAllDocsInCollection(["GameEvents"]);
-
-      const newGameEvent = {
+      await setDoc(doc(db, "GameEvents", "reset-" + Date.now()), {
         eventType: "GameReset",
         resetById: userCharacter?.id || "",
         resetByName: userCharacter?.username || "",
         timestamp: serverTimestamp(),
-      };
-      await setDoc(doc(db, "GameEvents", "reset-" + Date.now()), newGameEvent);
+      });
 
-      alert("Spillet er nå tilbakestilt!");
+      setMessageType("success");
+      setMessage("Spillet er nå tilbakestilt!");
     } catch (error) {
       console.error("Feil ved tilbakestilling av spillet:", error);
-      alert("En feil oppsto under tilbakestilling av spillet.");
+      setMessageType("failure");
+      setMessage("En feil oppsto under tilbakestilling av spillet.");
     } finally {
       setLoading(false);
+      setShowResetConfirm(false);
     }
+  }
+
+  function handleResetGame() {
+    setShowResetConfirm(true);
   }
 
   // ---------- Tabs & filtering ----------
@@ -391,6 +376,26 @@ const Admin = () => {
       </H1>
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
+      <ConfirmDialog
+        open={showResetConfirm}
+        title="Tilbakestill spillet?"
+        description={
+          <div className="text-sm">
+            <p className="pb-2">
+              Dette vil slette auksjoner, invitasjoner, familier (inkludert
+              underkolleksjoner), biler, varsler m.m., og tilbakestille alle
+              spillerdata.
+            </p>
+            <p className="pb-2">Denne handlingen kan ikke angres!</p>
+          </div>
+        }
+        confirmLabel="Ja, tilbakestill"
+        cancelLabel="Avbryt"
+        loading={loading}
+        onConfirm={doResetGame}
+        onCancel={() => setShowResetConfirm(false)}
+      />
 
       <div className="flex flex-col gap-4">
         <Box>

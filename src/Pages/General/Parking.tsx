@@ -7,6 +7,7 @@ import Box from "../../components/Box";
 import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
 import Item from "../../components/Typography/Item";
+import ConfirmDialog from "../../components/ConfirmDialog";
 
 import { useState, useEffect, useMemo } from "react";
 
@@ -51,6 +52,8 @@ const Parking = () => {
   >("info");
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [showConfirmSellAll, setShowConfirmSellAll] = useState(false);
+  const [sellAllBusy, setSellAllBusy] = useState(false);
 
   if (!userCharacter) {
     return null;
@@ -206,6 +209,7 @@ const Parking = () => {
       return;
     }
 
+    setSellAllBusy(true);
     const characterRef = fsDoc(db, "Characters", userCharacter.id);
     const batch = writeBatch(db);
 
@@ -225,9 +229,11 @@ const Parking = () => {
       setMessageType("success");
       setMessage(
         <p>
-          Du solgte <strong>{cars.length}</strong>{" "}
-          {cars.length === 1 ? "bil" : "biler"} for{" "}
-          <i className="fa-solid fa-dollar-sign"></i>{" "}
+          Du solgte{" "}
+          <strong>
+            {cars.length} {cars.length === 1 ? "bil" : "biler"}
+          </strong>{" "}
+          for <i className="fa-solid fa-dollar-sign"></i>{" "}
           <strong>{totalSoldValue.toLocaleString("nb-NO")}</strong>.
         </p>
       );
@@ -235,6 +241,9 @@ const Parking = () => {
       console.error("Feil ved salg av biler: ", err);
       setMessageType("failure");
       setMessage("En ukjent feil dukket opp ved salg av biler.");
+    } finally {
+      setSellAllBusy(false);
+      setShowConfirmSellAll(false);
     }
   };
 
@@ -263,6 +272,35 @@ const Parking = () => {
 
         {/* Infobox */}
         {message && <InfoBox type={messageType}>{message}</InfoBox>}
+
+        <ConfirmDialog
+          open={showConfirmSellAll}
+          title="Selg alle biler?"
+          description={
+            <div className="text-sm text-neutral-300 space-y-1">
+              <p>
+                Dette vil selge{" "}
+                <strong>
+                  {cars.length} {cars.length === 1 ? "bil" : "biler"}
+                </strong>{" "}
+                i <strong>{userCharacter.location}</strong>.
+              </p>
+              <p>
+                Forventet inntekt:{" "}
+                <strong>
+                  <i className="fa-solid fa-dollar-sign" />{" "}
+                  {totalValue.toLocaleString("nb-NO")}
+                </strong>
+              </p>
+              <p className="text-neutral-400">Handlingen kan ikke angres.</p>
+            </div>
+          }
+          confirmLabel="Ja, selg alle"
+          cancelLabel="Avbryt"
+          loading={sellAllBusy}
+          onConfirm={sellAllCars}
+          onCancel={() => setShowConfirmSellAll(false)}
+        />
 
         {/* Parking facility */}
         {!upgrading && (
@@ -315,7 +353,11 @@ const Parking = () => {
           <Box>
             <div className="flex justify-between items-baseline gap-4">
               <H2>Oppgrader?</H2>
-              <Button style="black" size="small" onClick={toggleUpgrading}>
+              <Button
+                style="exit"
+                size="small-square"
+                onClick={toggleUpgrading}
+              >
                 <p>
                   <i className="fa-solid fa-x"></i>
                 </p>
@@ -535,7 +577,14 @@ const Parking = () => {
                   </td>
                   <td className="px-2 py-1">
                     <button
-                      onClick={sellAllCars}
+                      onClick={() => {
+                        if (cars.length === 0) {
+                          setMessageType("info");
+                          setMessage("Du har ingen biler å selge.");
+                          return;
+                        }
+                        setShowConfirmSellAll(true);
+                      }}
                       className="font-medium text-neutral-200 hover:text-white"
                     >
                       Selg alle
