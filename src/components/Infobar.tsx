@@ -28,9 +28,10 @@ const Infobar = () => {
   const { progress, minXP, maxXP } = getRankProgress(userCharacter.stats.xp);
 
   const maxHeat = 50;
-  const heatPercentage = userCharacter
+  const rawHeatPct = userCharacter
     ? (userCharacter.stats.heat / maxHeat) * 100
     : 0;
+  const heatPercentage = Math.min(100, Math.max(0, Math.round(rawHeatPct)));
 
   return (
     <section className="bg-neutral-700 px-4 sm:px-8 py-2 flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 justify-center text-stone-400 text-sm sm:text-base">
