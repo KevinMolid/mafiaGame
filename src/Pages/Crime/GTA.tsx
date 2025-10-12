@@ -179,7 +179,7 @@ const GTA = () => {
 
         setMessageType("success");
         setMessage(
-          <p>
+          <div>
             Du stjal en{" "}
             <Item
               name={randomCar.name}
@@ -204,7 +204,7 @@ const GTA = () => {
               }
             />
             !
-          </p>
+          </div>
         );
 
         startCooldown("gta");
