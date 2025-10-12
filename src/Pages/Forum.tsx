@@ -29,6 +29,8 @@ import {
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
 
+import { stripBBCode } from "../Functions/bbcode";
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -304,7 +306,7 @@ const Forum = () => {
 
   // helper to build a 100-char preview from content
   const buildPreview = (s: string) => {
-    const clean = (s || "").replace(/\s+/g, " ").trim();
+    const clean = stripBBCode(s);
     return clean.length > 100 ? clean.slice(0, 100) + "…" : clean;
   };
 
@@ -461,7 +463,7 @@ const Forum = () => {
                         {timeAgo(createdAtMs)} siden
                       </div>
 
-                      {/* 50-char content preview */}
+                      {/* content preview */}
                       <p className="text-stone-300">
                         {buildPreview(thread.content)}
                       </p>

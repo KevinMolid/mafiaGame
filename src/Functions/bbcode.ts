@@ -60,3 +60,29 @@ export function bbcodeToHtml(input: string): string {
 
   return s;
 }
+
+export function stripBBCode(input: string): string {
+  let s = input || "";
+
+  // Keep inner text for common tags
+  s = s.replace(/\[code[^\]]*\]([\s\S]*?)\[\/code\]/gi, "$1");
+  s = s.replace(/\[quote[^\]]*\]([\s\S]*?)\[\/quote\]/gi, "$1");
+
+  // URLs: keep visible text
+  s = s.replace(/\[url\]([\s\S]*?)\[\/url\]/gi, "$1");
+  s = s.replace(/\[url=(?:'|")?([^\]"']+)(?:'|")?\]([\s\S]*?)\[\/url\]/gi, "$2");
+
+  // Images: drop from preview
+  s = s.replace(/\[img[^\]]*\]([\s\S]*?)\[\/img\]/gi, "");
+
+  // Lists: turn [*] into bullets (keeps some structure in preview)
+  s = s.replace(/\[\*\]/g, "• ");
+
+  // Strip any remaining [tag]... or [tag=...]
+  s = s.replace(/\[(\/)?[a-z0-9*]+(?:=[^\]]+)?\]/gi, "");
+
+  // Collapse whitespace
+  s = s.replace(/\s+/g, " ").trim();
+
+  return s;
+}

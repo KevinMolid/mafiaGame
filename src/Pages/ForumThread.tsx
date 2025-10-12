@@ -8,13 +8,14 @@ import Label from "../components/Label";
 import InfoBox from "../components/InfoBox";
 import defaultImg from "/default.jpg";
 
-import { useEffect, useState, Fragment, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 
 import { useAuth } from "../AuthContext";
 import { useCharacter } from "../CharacterContext";
 
 import timeAgo from "../Functions/TimeFunctions";
+import { bbcodeToHtml } from "../Functions/bbcode";
 
 import {
   getFirestore,
@@ -791,13 +792,12 @@ const ForumThread = () => {
               </div>
 
               {/* Thread content */}
-              <div className=" pb-4 text-stone-300">
-                {thread.content.split("\n").map((line, index) => (
-                  <Fragment key={index}>
-                    {line}
-                    <br />
-                  </Fragment>
-                ))}
+              <div className="pb-4 prose prose-invert max-w-none text-stone-300 ">
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: bbcodeToHtml((thread.content ?? "").toString()),
+                  }}
+                />
               </div>
 
               {/* Reactions: counts (hide 0) + chosen highlight + conditionally show "+" */}
@@ -859,7 +859,7 @@ const ForumThread = () => {
                 maxLength={MAX_CONTENT}
                 rows={8}
                 spellCheck={false}
-                className="bg-neutral-900 text-white placeholder-neutral-400 resize-none"
+                className="bg-neutral-900 text-white placeholder-neutral-400 resize-none p-1"
                 placeholder="Innhold (minst 10 tegn)"
               />
               <div className="flex flex-wrap gap-1">
@@ -954,13 +954,14 @@ const ForumThread = () => {
                 {/* Innhold / Redigering */}
                 {!isEditingThis ? (
                   <div className="flex flex-col flex-1">
-                    <div className="pb-4 text-stone-300">
-                      {reply.content.split("\n").map((line, index) => (
-                        <Fragment key={index}>
-                          {line}
-                          <br />
-                        </Fragment>
-                      ))}
+                    <div className="pb-4 prose prose-invert max-w-none text-stone-300">
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: bbcodeToHtml(
+                            (reply.content ?? "").toString()
+                          ),
+                        }}
+                      />
                     </div>
                     {/* Reactions: counts (hide 0) + chosen highlight + conditionally show "+" */}
                     <div className="flex flex-1 items-end text-neutral-200 font-medium">
