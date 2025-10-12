@@ -158,9 +158,11 @@ const Login = () => {
           </form>
 
           {/* Google login */}
-          <div className="grid grid-cols-3 items-center">
+          <div className="grid grid-cols-[auto_max-content_auto] gap-2 items-center">
             <hr className="border-neutral-600" />
-            <p className="text-center">Eller logg inn med</p>
+            <p className="text-sm text-center text-nowrap">
+              Eller logg inn med
+            </p>
             <hr className="border-neutral-600" />
           </div>
           <Button style="secondary" onClick={logInWithGoogle}>
