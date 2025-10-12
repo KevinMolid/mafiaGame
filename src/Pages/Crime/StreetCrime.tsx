@@ -215,10 +215,19 @@ const StreetCrime = () => {
         {crimes.map((crime) => (
           <li
             key={crime.id}
-            onClick={() => setSelectedCrime(crime.name)}
-            className={"flex flex-1 flex-grow min-w-[max-content]"}
+            className="flex flex-1 flex-grow min-w-[max-content]"
           >
-            <button
+            <div
+              role="button"
+              tabIndex={0}
+              aria-pressed={selectedCrime === crime.name}
+              onClick={() => setSelectedCrime(crime.name)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setSelectedCrime(crime.name);
+                }
+              }}
               className={
                 "relative border px-4 py-2 flex-1 flex-grow min-w-[max-content] text-center cursor-pointer " +
                 (selectedCrime === crime.name
@@ -228,7 +237,7 @@ const StreetCrime = () => {
             >
               <p
                 className={
-                  selectedCrime == crime.name
+                  selectedCrime === crime.name
                     ? "text-sand-400 font-bold"
                     : "font-bold"
                 }
@@ -241,21 +250,28 @@ const StreetCrime = () => {
                 {pct(crime.successRate)}
               </p>
 
-              <div className="absolute top-2 right-2">
-                <Button style="black" size="small-square">
+              {/* Info trigger + hover card */}
+              <div className="absolute top-2 right-2 group">
+                <Button style="black" size="small-square" type="button">
                   <i className="fa-solid fa-question"></i>
                 </Button>
-              </div>
 
-              {false && (
-                <div className="absolute top-0 right-0 bg-neutral-900 px-4 py-2 border border-neutral-500">
+                {/* Hover panel */}
+                <div
+                  className="
+              absolute right-0 z-20 mt-2 w-56 rounded-md border border-neutral-600
+              bg-neutral-900 p-2 text-sm text-neutral-200 shadow-lg
+              opacity-0 pointer-events-none transition-opacity
+              group-hover:opacity-100 group-hover:pointer-events-auto
+            "
+                  role="tooltip"
+                >
                   {/* XP reward */}
-                  <p className="text-neutral-200 text-sm bg-neutral-00 px-2 rounded-lg">
+                  <p className="mb-1">
                     <span className="font-bold">+{crime.xpReward} XP</span>
                   </p>
-
                   {/* Money range */}
-                  <p className="text-neutral-200 text-sm bg-neutral-00 px-2 rounded-lg">
+                  <p>
                     <span className="font-bold">
                       <i className="fa-solid fa-dollar-sign"></i>{" "}
                       {money(crime.minMoneyReward)} –{" "}
@@ -263,8 +279,8 @@ const StreetCrime = () => {
                     </span>
                   </p>
                 </div>
-              )}
-            </button>
+              </div>
+            </div>
           </li>
         ))}
       </ul>

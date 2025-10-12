@@ -5,7 +5,7 @@ import b1 from "/images/boxes/Briefcase1.png";
 import b2 from "/images/boxes/Briefcase2.png";
 import b3 from "/images/boxes/Briefcase3.png";
 
-import Items from "../Data/Items";
+import { Items } from "../Data/Items";
 
 const suitcaseBoxes = [
   {

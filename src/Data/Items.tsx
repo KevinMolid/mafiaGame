@@ -1,3 +1,5 @@
+// Items.tsx
+
 // Hats
 import h1 from "/images/items/h1.jpg";
 import h2 from "/images/items/h2.jpg";
@@ -18,7 +20,45 @@ import j8 from "/images/items/j8.jpg";
 import w1 from "/images/items/Knife1.png";
 import w2 from "/images/items/Knife2.jpg";
 
-const Hats = [
+// Narcotics
+import n1 from "/images/items/n1.png"; // Cocaine
+import n2 from "/images/items/n2.png"; // Ecstasy
+
+// ---------- Types ----------
+export type Slot = "hat" | "jacket" | "weapon" | "narcotic";
+
+interface BaseItem {
+  id: string;
+  name: string;
+  tier: number;
+  value: number;
+  img: string;
+}
+
+export interface HatItem extends BaseItem {
+  slot: "hat";
+  hp: number;
+}
+
+export interface JacketItem extends BaseItem {
+  slot: "jacket";
+  hp: number;
+}
+
+export interface WeaponItem extends BaseItem {
+  slot: "weapon";
+  attack: number;
+}
+
+export interface NarcoticItem extends BaseItem {
+  slot: "narcotic";
+  // add effect fields later if needed, e.g. duration, boost, etc.
+}
+
+export type Item = HatItem | JacketItem | WeaponItem | NarcoticItem;
+
+// ---------- Category Arrays ----------
+export const Hats: HatItem[] = [
   {
     id: "ih0001",
     name: "Bailey of Hollywood Fedora",
@@ -102,7 +142,7 @@ const Hats = [
   },
 ];
 
-const Jackets = [
+export const Jackets: JacketItem[] = [
   {
     id: "ij0001",
     name: "Skrukket jakke",
@@ -132,7 +172,7 @@ const Jackets = [
   },
 ];
 
-const Weapons = [
+export const Weapons: WeaponItem[] = [
   {
     id: "iw0001",
     name: "Enkel kniv",
@@ -153,12 +193,32 @@ const Weapons = [
   },
 ];
 
-// Combine Hats and Jackets into a single Items array
-const Items = [...Hats, ...Jackets, ...Weapons];
+export const Narcotics: NarcoticItem[] = [
+  {
+    id: "in0001",
+    name: "Kokain",
+    slot: "narcotic",
+    tier: 2,
+    value: 150,
+    img: n1,
+  },
+  {
+    id: "in0002",
+    name: "Ecstasy",
+    slot: "narcotic",
+    tier: 2,
+    value: 150,
+    img: n2,
+  },
+];
 
-export default Items;
+// ---------- Combined + Helpers ----------
+export const Items: Item[] = [...Hats, ...Jackets, ...Weapons, ...Narcotics];
 
-// Function to fetch an item by its ID
-export const getItemById = (id: string) => {
-  return Items.find((item) => item.id === id) || null;
-};
+export const ITEMS_BY_ID: Record<string, Item> = Object.fromEntries(
+  Items.map((i) => [i.id, i])
+);
+
+export function getItemById(id: string): Item | null {
+  return ITEMS_BY_ID[id] ?? null;
+}

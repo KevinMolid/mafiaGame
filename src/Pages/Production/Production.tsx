@@ -4,9 +4,10 @@ import H1 from "../../components/Typography/H1";
 import InfoBox from "../../components/InfoBox";
 import FactoryCard from "../../components/FactoryCard";
 import Button from "../../components/Button";
+import ConfirmDialog from "../../components/ConfirmDialog";
 
 // Images
-import Weapons from "./Weapons";
+import Weapons from "./WeaponFactory";
 import Bullets from "./Bullets";
 import Narcotics from "./Narcotics";
 
@@ -50,7 +51,7 @@ const FACTORIES: FactoryDef[] = [
     type: "weapons",
     title: "Våpenfabrikk",
     description: <>Produser våpen som kan brukes til å angripe spillere.</>,
-    price: 1_000_000,
+    price: 100_000,
     img: "/images/illustrations/guns4.png",
   },
   {
@@ -95,6 +96,7 @@ const Production: React.FC = () => {
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "important" | "warning" | "info"
   >("info");
+  const [showSellConfirm, setShowSellConfirm] = useState(false);
 
   // Subscribe to the current character doc
   useEffect(() => {
@@ -159,7 +161,14 @@ const Production: React.FC = () => {
       } as ActiveFactory);
       setMessageType("success");
       setMessage(
-        <p>Fabrikken ble kjøpt for {price.toLocaleString("NO-nb")}.</p>
+        <p>
+          Fabrikken ble kjøpt for{" "}
+          <strong>
+            <i className="fa-solid fa-dollar-sign"></i>{" "}
+            {price.toLocaleString("NO-nb")}
+          </strong>
+          .
+        </p>
       );
     } catch (error: any) {
       console.error("Failed to buy factory:", error);
@@ -189,6 +198,7 @@ const Production: React.FC = () => {
       setMessage(<>Noe gikk galt. Prøv igjen.</>);
     } finally {
       setProcessing(false);
+      setShowSellConfirm(false);
     }
   }
 
@@ -233,6 +243,23 @@ const Production: React.FC = () => {
         <div>Laster...</div>
       ) : (
         <>
+          <ConfirmDialog
+            open={showSellConfirm}
+            title="Legge ned fabrikken?"
+            description={
+              <div className="text-sm">
+                <p className="pb-2">
+                  Dette vil slette all produksjon og fremgang i denne fabrikken.
+                </p>
+                <p className="pb-2">Denne handlingen kan ikke angres!</p>
+              </div>
+            }
+            confirmLabel="Ja, legg ned"
+            cancelLabel="Avbryt"
+            loading={loading}
+            onConfirm={sellFactory}
+            onCancel={() => setShowSellConfirm(false)}
+          />
           <div className="flex justify-between items-baseline">
             <H1>
               {activeFactory ? FACTORY_TITLE[activeFactory.type] : "Produksjon"}
@@ -243,10 +270,7 @@ const Production: React.FC = () => {
                 size="text"
                 onClick={() => {
                   if (processing) return;
-                  if (
-                    confirm("Er du sikker på at du vil selge denne fabrikken?")
-                  )
-                    sellFactory();
+                  setShowSellConfirm(true);
                 }}
                 disabled={processing}
               >
