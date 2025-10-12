@@ -31,4 +31,5 @@ export type Car = {
   hp: number;
   tier: number;
   isElectric?: boolean;
+  key?: string;
 };

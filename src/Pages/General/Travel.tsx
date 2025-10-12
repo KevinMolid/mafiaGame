@@ -19,6 +19,7 @@ import {
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
+import { useCooldown } from "../../CooldownContext";
 
 // Define location coordinates as percentages
 const locations = [
@@ -55,6 +56,7 @@ type Airplane = {
 
 const Travel = () => {
   const { userCharacter } = useCharacter();
+  const { jailRemainingSeconds } = useCooldown();
   const [targetLocation, setTargetLocation] = useState("");
   const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
   const [message, setMessage] = useState<React.ReactNode>("");
@@ -157,7 +159,7 @@ const Travel = () => {
     }
   };
 
-  if (userCharacter?.inJail) {
+  if (userCharacter?.inJail && jailRemainingSeconds > 0) {
     return <JailBox message={message} messageType={messageType} />;
   }
 

@@ -13,6 +13,8 @@ import {
   arrest,
 } from "../../Functions/RewardFunctions";
 
+import { getCarByName, getCarByKey } from "../../Data/Cars";
+
 // Data
 import ParkingTypes from "../../Data/ParkingTypes";
 import Cars from "../../Data/Cars";
@@ -63,6 +65,7 @@ const GTA = () => {
   >("info");
   const { userCharacter } = useCharacter();
   const { userData } = useAuth();
+  const { jailRemainingSeconds } = useCooldown();
   const { cooldowns, startCooldown } = useCooldown();
   const navigate = useNavigate();
 
@@ -154,8 +157,8 @@ const GTA = () => {
 
       // 2) Attempt theft (75% success)
       if (Math.random() <= 0.75) {
-        // Normalize isElectric (legacy data might miss it)
         const carDoc = {
+          modelKey: randomCar.key,
           name: randomCar.name,
           value: randomCar.value,
           hp: randomCar.hp,
@@ -170,10 +173,37 @@ const GTA = () => {
         rewardXp(userCharacter, 10);
         increaseHeat(userCharacter, userCharacter.id, 1);
 
+        const catalog = randomCar.key
+          ? getCarByKey(randomCar.key)
+          : getCarByName(randomCar.name);
+
         setMessageType("success");
         setMessage(
           <p>
-            Du stjal en <Item name={randomCar.name} tier={randomCar.tier} />!
+            Du stjal en{" "}
+            <Item
+              name={randomCar.name}
+              tier={randomCar.tier}
+              tooltipImg={catalog?.img && catalog.img}
+              tooltipContent={
+                <div>
+                  <p>
+                    Effekt:{" "}
+                    <strong className="text-neutral-200">
+                      {randomCar.hp} hk
+                    </strong>
+                  </p>
+                  <p>
+                    Verdi:{" "}
+                    <strong className="text-neutral-200">
+                      <i className="fa-solid fa-dollar-sign"></i>{" "}
+                      {randomCar.value.toLocaleString("nb-NO")}
+                    </strong>
+                  </p>
+                </div>
+              }
+            />
+            !
           </p>
         );
 
@@ -203,7 +233,7 @@ const GTA = () => {
     }
   };
 
-  if (userCharacter?.inJail) {
+  if (userCharacter?.inJail && jailRemainingSeconds > 0) {
     return <JailBox message={message} messageType={messageType} />;
   }
 

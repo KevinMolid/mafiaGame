@@ -28,9 +28,11 @@ import {
 const db = getFirestore();
 
 import { useCharacter } from "../../CharacterContext";
+import { useCooldown } from "../../CooldownContext";
 
 const Assassinate = () => {
   const { userCharacter } = useCharacter();
+  const { jailRemainingSeconds } = useCooldown();
   const [targetPlayer, setTargetPlayer] = useState("");
   const [message, setMessage] = useState<React.ReactNode>("");
   const [messageType, setMessageType] = useState<
@@ -340,7 +342,7 @@ const Assassinate = () => {
     setBountyAmountInput(cleaned);
   };
 
-  if (userCharacter?.inJail) {
+  if (userCharacter?.inJail && jailRemainingSeconds > 0) {
     return <JailBox message={message} messageType={messageType} />;
   }
 

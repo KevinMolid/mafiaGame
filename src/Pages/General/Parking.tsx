@@ -11,6 +11,7 @@ import Item from "../../components/Typography/Item";
 import { useState, useEffect, useMemo } from "react";
 
 import { useCharacter } from "../../CharacterContext";
+import { getCarByName, getCarByKey } from "../../Data/Cars";
 
 import { initializeApp } from "firebase/app";
 import {
@@ -33,12 +34,14 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 import type { Car } from "../../Interfaces/Types";
+import { useCooldown } from "../../CooldownContext";
 
 type SortKey = "name" | "hp" | "value";
 type SortDir = "asc" | "desc";
 
 const Parking = () => {
   const { userCharacter } = useCharacter();
+  const { jailRemainingSeconds } = useCooldown();
   const [parking, setParking] = useState<number | null>(null);
   const [cars, setCars] = useState<(Car & { id: string })[]>([]);
   const [message, setMessage] = useState<React.ReactNode>("");
@@ -218,7 +221,7 @@ const Parking = () => {
     setUpgrading(!upgrading);
   };
 
-  if (userCharacter?.inJail) {
+  if (userCharacter?.inJail && jailRemainingSeconds > 0) {
     return <JailBox message={message} messageType={messageType} />;
   }
 
@@ -439,31 +442,59 @@ const Parking = () => {
               </thead>
               <tbody>
                 {sortedCars.length ? (
-                  sortedCars.map((car) => (
-                    <tr
-                      className="border bg-neutral-800 border-neutral-700"
-                      key={car.id}
-                    >
-                      <td className="px-2 py-1 text-sm sm:text-base">
-                        <Item name={car.name} tier={car.tier} />
-                      </td>
-                      <td className="px-2 py-1 text-sm sm:text-base">
-                        {car.hp} hk
-                      </td>
-                      <td className="px-2 py-1 text-sm sm:text-base">
-                        <i className="fa-solid fa-dollar-sign"></i>{" "}
-                        {car.value.toLocaleString("nb-NO")}
-                      </td>
-                      <td className="px-2 py-1">
-                        <button
-                          onClick={() => sellCar(car)}
-                          className="font-medium text-neutral-200 hover:text-white text-sm sm:text-base"
-                        >
-                          Selg
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  sortedCars.map((car) => {
+                    const catalog = car.key
+                      ? getCarByKey(car.key)
+                      : getCarByName(car.name);
+                    return (
+                      <tr
+                        className="border bg-neutral-800 border-neutral-700"
+                        key={car.id}
+                      >
+                        <td className="px-2 py-1 text-sm sm:text-base">
+                          <div className="flex items-center gap-2">
+                            <Item
+                              name={car.name}
+                              tier={car.tier}
+                              tooltipImg={catalog?.img && catalog.img}
+                              tooltipContent={
+                                <div>
+                                  <p>
+                                    Effekt:{" "}
+                                    <strong className="text-neutral-200">
+                                      {car.hp} hk
+                                    </strong>
+                                  </p>
+                                  <p>
+                                    Verdi:{" "}
+                                    <strong className="text-neutral-200">
+                                      <i className="fa-solid fa-dollar-sign"></i>{" "}
+                                      {car.value.toLocaleString("nb-NO")}
+                                    </strong>
+                                  </p>
+                                </div>
+                              }
+                            />
+                          </div>
+                        </td>
+                        <td className="px-2 py-1 text-sm sm:text-base">
+                          {car.hp} hk
+                        </td>
+                        <td className="px-2 py-1 text-sm sm:text-base">
+                          <i className="fa-solid fa-dollar-sign"></i>{" "}
+                          {car.value.toLocaleString("nb-NO")}
+                        </td>
+                        <td className="px-2 py-1">
+                          <button
+                            onClick={() => sellCar(car)}
+                            className="font-medium text-neutral-200 hover:text-white text-sm sm:text-base"
+                          >
+                            Selg
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr className="border bg-neutral-800 border-neutral-700">
                     <td colSpan={4} className="px-2 py-1">

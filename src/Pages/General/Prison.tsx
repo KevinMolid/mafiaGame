@@ -7,6 +7,7 @@ import JailBox from "../../components/JailBox";
 import Box from "../../components/Box";
 import CharacterList from "../../components/CharacterList";
 import Button from "../../components/Button";
+import { useCooldown } from "../../CooldownContext";
 
 import { useState } from "react";
 
@@ -17,6 +18,7 @@ import { arrest } from "../../Functions/RewardFunctions";
 
 const Prison = () => {
   const { userCharacter } = useCharacter();
+  const { jailRemainingSeconds } = useCooldown();
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "info" | "warning"
@@ -44,7 +46,7 @@ const Prison = () => {
     }
   }
 
-  if (userCharacter?.inJail) {
+  if (userCharacter?.inJail && jailRemainingSeconds > 0) {
     return <JailBox message={message} messageType={messageType} />;
   }
 

@@ -24,6 +24,7 @@ const db = getFirestore();
 
 const StreetCrime = () => {
   const { userCharacter } = useCharacter();
+  const { jailRemainingSeconds } = useCooldown();
   const { userData } = useAuth();
   const navigate = useNavigate();
 
@@ -181,7 +182,7 @@ const StreetCrime = () => {
     },
   ];
 
-  if (userCharacter?.inJail) {
+  if (userCharacter?.inJail && jailRemainingSeconds > 0) {
     return <JailBox message={message} messageType={messageType} />;
   }
 

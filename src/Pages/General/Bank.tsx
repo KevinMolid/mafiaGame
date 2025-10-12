@@ -27,6 +27,7 @@ import {
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../../firebaseConfig";
 import Username from "../../components/Typography/Username";
+import { useCooldown } from "../../CooldownContext";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -42,6 +43,7 @@ const Bank = () => {
   const [amountToSend, setAmountToSend] = useState<number | "">("");
 
   const { userCharacter } = useCharacter();
+  const { jailRemainingSeconds } = useCooldown();
 
   if (!userCharacter) {
     return null;
@@ -335,7 +337,7 @@ const Bank = () => {
     }
   };
 
-  if (userCharacter?.inJail) {
+  if (userCharacter?.inJail && jailRemainingSeconds > 0) {
     return <JailBox message={message} messageType={messageType} />;
   }
 

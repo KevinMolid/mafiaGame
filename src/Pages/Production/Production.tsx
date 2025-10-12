@@ -1,25 +1,31 @@
-import React, { useEffect, useState, ReactNode } from "react";
+// Components
 import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import InfoBox from "../../components/InfoBox";
 import FactoryCard from "../../components/FactoryCard";
 import Button from "../../components/Button";
 
+// Images
 import Weapons from "./Weapons";
 import Bullets from "./Bullets";
 import Narcotics from "./Narcotics";
 
+// React
+import React, { useEffect, useState, ReactNode } from "react";
+
+// Firebase
 import { initializeApp, getApps, getApp } from "firebase/app";
 import {
   getFirestore,
   doc,
   onSnapshot,
-  setDoc,
   serverTimestamp,
   DocumentData,
   DocumentSnapshot,
   updateDoc,
   deleteField,
+  runTransaction,
+  increment,
 } from "firebase/firestore";
 import firebaseConfig from "../../firebaseConfig";
 
@@ -29,6 +35,49 @@ type ActiveFactory = {
   type: "weapons" | "bullets" | "narco";
   purchasedAt?: any;
 };
+
+type FactoryKind = ActiveFactory["type"];
+type FactoryDef = {
+  type: FactoryKind;
+  title: string;
+  description: React.ReactNode;
+  price: number;
+  img: string;
+};
+
+const FACTORIES: FactoryDef[] = [
+  {
+    type: "weapons",
+    title: "Våpenfabrikk",
+    description: <>Produser våpen som kan brukes til å angripe spillere.</>,
+    price: 1_000_000,
+    img: "/images/illustrations/guns4.png",
+  },
+  {
+    type: "bullets",
+    title: "Kulefabrikk",
+    description: (
+      <>Produser ammunisjon som kan brukes til å angripe spillere.</>
+    ),
+    price: 1_000_000,
+    img: "/images/illustrations/bullets2.png",
+  },
+  {
+    type: "narco",
+    title: "Narkolab",
+    description: <>Produser narkotika som kan gi ulike fordeler i spillet.</>,
+    price: 1_000_000,
+    img: "/images/illustrations/narco2.png",
+  },
+];
+
+const FACTORY_PRICE = Object.fromEntries(
+  FACTORIES.map((f) => [f.type, f.price])
+) as Record<FactoryKind, number>;
+
+const FACTORY_TITLE = Object.fromEntries(
+  FACTORIES.map((f) => [f.type, f.title])
+) as Record<FactoryKind, string>;
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
@@ -69,24 +118,55 @@ const Production: React.FC = () => {
 
   // Purchase factory
   async function buyFactory(type: ActiveFactory["type"]) {
-    if (processing) return;
+    if (processing || !userCharacter?.id) return;
     setProcessing(true);
 
-    const charDocRef = doc(db, "Characters", userCharacter!.id);
-    const payload: ActiveFactory = {
-      type,
-      purchasedAt: serverTimestamp(),
-    };
+    const price = FACTORY_PRICE[type];
+    const charRef = doc(db, "Characters", userCharacter!.id);
 
     try {
-      await setDoc(charDocRef, { activeFactory: payload }, { merge: true });
-      setActiveFactory(payload); // optimistic; snapshot will correct
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(charRef);
+        if (!snap.exists()) {
+          setMessageType("failure");
+          setMessage("Spilleren ble ikke funnet.");
+        }
+
+        const data = snap.data() as any;
+        const currentMoney: number = data?.stats?.money ?? 0;
+
+        // already has a factory
+        if (data?.activeFactory) {
+          throw new Error("Du har allerede en aktiv fabrikk.");
+        }
+
+        if (currentMoney < price) {
+          throw new Error("Du har ikke nok penger til å kjøpe fabrikken.");
+        }
+
+        tx.update(charRef, {
+          "stats.money": increment(-price),
+          activeFactory: {
+            type,
+            purchasedAt: serverTimestamp(),
+          } as ActiveFactory,
+        });
+      });
+
+      setActiveFactory({
+        type,
+        purchasedAt: serverTimestamp(),
+      } as ActiveFactory);
       setMessageType("success");
-      setMessage(<>Fabrikken ble kjøpt.</>);
-    } catch (err) {
-      console.error("Failed to buy factory:", err);
+      setMessage(
+        <p>Fabrikken ble kjøpt for {price.toLocaleString("NO-nb")}.</p>
+      );
+    } catch (error: any) {
+      console.error("Failed to buy factory:", error);
       setMessageType("failure");
-      setMessage(<>Noe gikk galt ved kjøpet. Prøv igjen.</>);
+      setMessage(
+        <p>{error?.message ?? "Noe gikk galt ved kjøpet. Prøv igjen."}</p>
+      );
     } finally {
       setProcessing(false);
     }
@@ -155,15 +235,7 @@ const Production: React.FC = () => {
         <>
           <div className="flex justify-between items-baseline">
             <H1>
-              {activeFactory
-                ? activeFactory.type === "weapons"
-                  ? "Våpenfabrikk"
-                  : activeFactory.type === "bullets"
-                  ? "Kulefabrikk"
-                  : activeFactory.type === "narco"
-                  ? "Narkolab"
-                  : ""
-                : "Produksjon"}
+              {activeFactory ? FACTORY_TITLE[activeFactory.type] : "Produksjon"}
             </H1>
             {activeFactory && (
               <Button
@@ -198,37 +270,16 @@ const Production: React.FC = () => {
               </div>
 
               <div className="flex gap-2 flex-wrap">
-                <FactoryCard
-                  title="Våpenfabrikk"
-                  description={
-                    <>Produser våpen som kan brukes til å angripe spillere.</>
-                  }
-                  price={1000000}
-                  img="/public/images/illustrations/guns4.png"
-                  onBuy={() => buyFactory("weapons")}
-                />
-
-                <FactoryCard
-                  title="Kulefabrikk"
-                  description={
-                    <>
-                      Produser ammunisjon som kan brukes til å angripe spillere.
-                    </>
-                  }
-                  price={1000000}
-                  img="/public/images/illustrations/bullets2.png"
-                  onBuy={() => buyFactory("bullets")}
-                />
-
-                <FactoryCard
-                  title="Narkolab"
-                  description={
-                    <>Produser narkotika som kan gi ulike fordeler i spillet.</>
-                  }
-                  price={1000000}
-                  img="/public/images/illustrations/narco2.png"
-                  onBuy={() => buyFactory("narco")}
-                />
+                {FACTORIES.map((f) => (
+                  <FactoryCard
+                    key={f.type}
+                    title={f.title}
+                    description={f.description}
+                    price={f.price}
+                    img={f.img}
+                    onBuy={() => buyFactory(f.type)}
+                  />
+                ))}
               </div>
             </div>
           ) : (

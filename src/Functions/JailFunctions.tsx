@@ -1,7 +1,14 @@
-// /Functions/JailFunctions.ts
-import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  runTransaction,
+  deleteField,
+  increment,
+} from "firebase/firestore";
 import { Timestamp } from "firebase/firestore";
-import { arrest } from "./RewardFunctions"; // same as before
+import { arrest } from "./RewardFunctions";
 import { serverNow } from "./serverTime";
 
 export const BRIBE_COST = 10_000;
@@ -29,11 +36,37 @@ export async function isStillJailed(targetId: string): Promise<boolean> {
   return !!ts && ts.toMillis() > serverNow();
 }
 
+export async function releaseIfExpired(characterId: string): Promise<boolean> {
+  const db = getFirestore();
+  const ref = doc(db, "Characters", characterId);
+
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return false;
+
+    const data = snap.data() as any;
+    if (!data?.inJail) return false;
+
+    const ts = normalizeTs(data.jailReleaseTime);
+    const nowMs = serverNow();
+
+    // No valid timestamp or already past release time -> clear jail
+    if (!ts || ts.toMillis() <= nowMs) {
+      tx.update(ref, {
+        inJail: false,
+        jailReleaseTime: deleteField(),
+      });
+      return true;
+    }
+    return false;
+  });
+}
+
 export async function freeTarget(targetId: string): Promise<void> {
   const db = getFirestore();
   await updateDoc(doc(db, "Characters", targetId), {
     inJail: false,
-    jailReleaseTime: null,
+    jailReleaseTime: deleteField(),
   });
 }
 
@@ -50,16 +83,26 @@ export async function bribeRelease(
   targetId: string
 ): Promise<JailActionResult> {
   const db = getFirestore();
+  const actorRef = doc(db, "Characters", actor.id);
+
+  // First make sure target is actually jailed right now
   if (!(await isStillJailed(targetId)))
     return { ok: false, reason: "NOT_JAILED" };
 
-  const money: number = actor?.stats?.money ?? 0;
-  if (money < BRIBE_COST) return { ok: false, reason: "NO_FUNDS" };
-
-  // charge
-  await updateDoc(doc(db, "Characters", actor.id), {
-    "stats.money": Math.max(0, money - BRIBE_COST),
-  });
+  try {
+    // Charge atomically with a funds check
+    await runTransaction(db, async (tx) => {
+      const aSnap = await tx.get(actorRef);
+      if (!aSnap.exists()) throw new Error("Actor not found");
+      const a = aSnap.data() as any;
+      const money: number = a?.stats?.money ?? 0;
+      if (money < BRIBE_COST) throw new Error("NO_FUNDS");
+      tx.update(actorRef, { "stats.money": increment(-BRIBE_COST) });
+    });
+  } catch (e: any) {
+    if (e?.message === "NO_FUNDS") return { ok: false, reason: "NO_FUNDS" };
+    return { ok: false, reason: "ERROR" };
+  }
 
   const success = Math.random() < CHANCE_BRIBE;
   if (success) {

@@ -27,7 +27,26 @@ import FerrariSF90Stradale from "/images/cars/Ferrari SF90 Stradale.jpg";
 import PaganiZondaRevolucion from "/images/cars/Pagani Zonda Revolucion.jpg";
 import LamborghiniVenenoRoadster from "/images/cars/Lamborghini Veneno Roadster.jpg";
 
-const Cars = [
+type CatalogCar = {
+  name: string;
+  value: number;
+  hp: number;
+  img: string;
+  tier: number;
+  isElectric?: boolean;
+  key?: string;
+};
+
+export function normalizeCarName(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove diacritics
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+const Cars: CatalogCar[] = [
   // Tier 1
   {
     name: "Toyota Camry",
@@ -36,6 +55,7 @@ const Cars = [
     img: ToyotaCamry,
     tier: 1,
     isElectric: false,
+    key: "toyota-camry",
   },
   {
     name: "Honda Accord",
@@ -44,6 +64,7 @@ const Cars = [
     img: HondaAccord,
     tier: 1,
     isElectric: false,
+    key: "honda-accord",
   },
   {
     name: "Nissan Altima",
@@ -52,6 +73,7 @@ const Cars = [
     img: NissanAltima,
     tier: 1,
     isElectric: false,
+    key: "nissan-altima",
   },
   {
     name: "Subaru Outback",
@@ -60,8 +82,17 @@ const Cars = [
     img: SubaruOutback,
     tier: 1,
     isElectric: false,
+    key: "subaru-outback",
   },
-  { name: "Ford Escape", value: 29500, hp: 181, img: FordEscape, tier: 1 },
+  {
+    name: "Ford Escape",
+    value: 29500,
+    hp: 181,
+    img: FordEscape,
+    tier: 1,
+    isElectric: false,
+    key: "ford-escape",
+  },
   {
     name: "Chevrolet Equinox",
     value: 28000,
@@ -69,6 +100,7 @@ const Cars = [
     img: ChevroletEquinox,
     tier: 1,
     isElectric: false,
+    key: "chevrolet-equinox",
   },
   {
     name: "Toyota RAV4",
@@ -77,6 +109,7 @@ const Cars = [
     img: ToyotaRAV4,
     tier: 1,
     isElectric: false,
+    key: "toyota-rav4",
   },
   {
     name: "Honda CR-V",
@@ -85,6 +118,7 @@ const Cars = [
     img: HondaCRV,
     tier: 1,
     isElectric: false,
+    key: "honda-cr-v",
   },
   {
     name: "Tesla Model 3",
@@ -93,6 +127,7 @@ const Cars = [
     img: TeslaModel3,
     tier: 1,
     isElectric: true,
+    key: "tesla-model-3",
   },
 
   // Tier 2
@@ -103,6 +138,7 @@ const Cars = [
     img: BMW5Series,
     tier: 2,
     isElectric: false,
+    key: "bmw-5-series",
   },
   {
     name: "Mercedes-Benz E-Class",
@@ -111,6 +147,7 @@ const Cars = [
     img: MercedesBenzEClass,
     tier: 2,
     isElectric: false,
+    key: "mercedes-benz-e-class",
   },
   {
     name: "Audi Q7",
@@ -119,6 +156,7 @@ const Cars = [
     img: AudiQ7,
     tier: 2,
     isElectric: false,
+    key: "audi-q7",
   },
   {
     name: "Porsche Macan",
@@ -127,6 +165,7 @@ const Cars = [
     img: PorscheMacan,
     tier: 2,
     isElectric: false,
+    key: "porsche-macan",
   },
   {
     name: "Tesla Model S",
@@ -135,7 +174,9 @@ const Cars = [
     img: TeslaModelS,
     tier: 2,
     isElectric: true,
+    key: "tesla-model-s",
   },
+
   // Tier 3
   {
     name: "Porsche 911 Carrera",
@@ -144,6 +185,7 @@ const Cars = [
     img: Porsche911Carrera,
     tier: 3,
     isElectric: false,
+    key: "porsche-911-carrera",
   },
   {
     name: "Mercedes-Benz S 580",
@@ -152,6 +194,7 @@ const Cars = [
     img: MercedesBenzS580,
     tier: 3,
     isElectric: false,
+    key: "mercedes-benz-s-580",
   },
   {
     name: "Tesla Model X Plaid",
@@ -160,6 +203,7 @@ const Cars = [
     img: TeslaModelXPlaid,
     tier: 3,
     isElectric: true,
+    key: "tesla-model-x-plaid",
   },
   {
     name: "BMW M8 Competition",
@@ -168,6 +212,7 @@ const Cars = [
     img: BMWM8Competition,
     tier: 3,
     isElectric: false,
+    key: "bmw-m8-competition",
   },
   {
     name: "Audi R8 V10 Performance",
@@ -176,7 +221,9 @@ const Cars = [
     img: AudiR8V10Performance,
     tier: 3,
     isElectric: false,
+    key: "audi-r8-v10-performance",
   },
+
   // Tier 4
   {
     name: "Lamborghini Huracán EVO",
@@ -185,6 +232,7 @@ const Cars = [
     img: LamborghiniHuracánEVO,
     tier: 4,
     isElectric: false,
+    key: "lamborghini-huracan-evo",
   },
   {
     name: "Ferrari F8 Tributo",
@@ -193,8 +241,17 @@ const Cars = [
     img: FerrariF8Tributo,
     tier: 4,
     isElectric: false,
+    key: "ferrari-f8-tributo",
   },
-  { name: "McLaren 720S", value: 300000, hp: 710, img: McLaren720s, tier: 4 },
+  {
+    name: "McLaren 720S",
+    value: 300000,
+    hp: 710,
+    img: McLaren720s,
+    tier: 4,
+    isElectric: false,
+    key: "mclaren-720s",
+  },
   {
     name: "Rolls-Royce Ghost",
     value: 340000,
@@ -202,6 +259,7 @@ const Cars = [
     img: RollsRoyceGhost,
     tier: 4,
     isElectric: false,
+    key: "rolls-royce-ghost",
   },
   {
     name: "Aston Martin DBS Superleggera",
@@ -210,7 +268,9 @@ const Cars = [
     img: AstonMartinDBSSuperleggera,
     tier: 4,
     isElectric: false,
+    key: "aston-martin-dbs-superleggera",
   },
+
   // Tier 5
   {
     name: "Ferrari SF90 Stradale",
@@ -219,6 +279,7 @@ const Cars = [
     img: FerrariSF90Stradale,
     tier: 5,
     isElectric: false,
+    key: "ferrari-sf90-stradale",
   },
   {
     name: "Pagani Zonda Revolucion",
@@ -227,6 +288,7 @@ const Cars = [
     img: PaganiZondaRevolucion,
     tier: 5,
     isElectric: false,
+    key: "pagani-zonda-revolucion",
   },
   {
     name: "Lamborghini Veneno Roadster",
@@ -235,7 +297,26 @@ const Cars = [
     img: LamborghiniVenenoRoadster,
     tier: 5,
     isElectric: false,
+    key: "lamborghini-veneno-roadster",
   },
 ];
+
+export const CAR_INDEX_BY_KEY: Record<string, CatalogCar> = Object.fromEntries(
+  Cars.filter((c) => c.key).map((c) => [c.key!, c])
+);
+
+export function getCarByKey(key?: string) {
+  return key ? CAR_INDEX_BY_KEY[key] : undefined;
+}
+
+// Build index by normalized name
+export const CAR_INDEX_BY_NAME: Record<string, CatalogCar> = Object.fromEntries(
+  Cars.map((c) => [normalizeCarName(c.name), c])
+);
+
+// Convenience accessor
+export function getCarByName(name: string): CatalogCar | undefined {
+  return CAR_INDEX_BY_NAME[normalizeCarName(name)];
+}
 
 export default Cars;

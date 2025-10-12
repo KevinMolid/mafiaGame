@@ -5,6 +5,8 @@ import Main from "./Main";
 import CharacterList from "./CharacterList";
 import ChatMessage from "./ChatMessage";
 
+import { releaseIfExpired } from "../Functions/JailFunctions";
+
 // Firebase
 import {
   getFirestore,
@@ -45,6 +47,18 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
 
   const channelId = "EivoYnQQVwVQvnMctcXN";
 
+  useEffect(() => {
+    if (!userCharacter?.id) return;
+    // Self-heal stuck state on mount
+    releaseIfExpired(userCharacter.id);
+
+    // And when the countdown finishes
+    if (jailRemainingSeconds <= 0) {
+      releaseIfExpired(userCharacter.id);
+    }
+  }, [userCharacter?.id, jailRemainingSeconds]);
+
+  // Get messages
   useEffect(() => {
     const unsubscribe = onSnapshot(
       query(
@@ -128,7 +142,7 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
         {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
         {/* CHAT */}
-        {loading && <p>Laster chat...</p>}
+        {loading && <p>Laster Fengsel...</p>}
         {error && <p>Feil: {error}</p>}
 
         {!loading && !error && (

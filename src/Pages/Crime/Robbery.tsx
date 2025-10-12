@@ -56,6 +56,7 @@ const Robbery = () => {
 
   const { userData } = useAuth();
   const { userCharacter } = useCharacter();
+  const { jailRemainingSeconds } = useCooldown();
   const { cooldowns, startCooldown } = useCooldown();
   const navigate = useNavigate();
 
@@ -293,7 +294,7 @@ const Robbery = () => {
     }
   };
 
-  if (userCharacter?.inJail) {
+  if (userCharacter?.inJail && jailRemainingSeconds > 0) {
     return (
       <JailBox
         message={typeof message === "string" ? message : ""} // string fallback
