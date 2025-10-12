@@ -160,7 +160,7 @@ const Login = () => {
           {/* Google login */}
           <div className="grid grid-cols-[auto_max-content_auto] gap-2 items-center">
             <hr className="border-neutral-600" />
-            <p className="text-sm text-center text-nowrap">
+            <p className="text-sm sm:text-base text-center text-nowrap">
               Eller logg inn med
             </p>
             <hr className="border-neutral-600" />
