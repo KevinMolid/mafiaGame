@@ -15,6 +15,13 @@ import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 
+// Firebaase
+import {
+  GoogleAuthProvider,
+  //FacebookAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
+
 import { FirebaseError } from "firebase/app";
 
 import firebaseConfig from "../firebaseConfig";
@@ -31,6 +38,9 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  const [isVersionInfoActive, setIsVersionInfoActive] =
+    useState<boolean>(false);
 
   useEffect(() => {
     if (userData) {
@@ -96,14 +106,51 @@ const Signup = () => {
       });
   }
 
+  /* Login with Google */
+  function logInWithGoogle() {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider)
+      .then(() => {
+        navigate("/");
+      })
+      .catch((error) => {
+        setError(error.code);
+      });
+  }
+
   return (
     <Main noBg>
       <div className="w-full max-w-[400px] sm:w-3/4 md:w-2/3 md:max-w-[500px] flex flex-col relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 items-center">
-        <small className="bg-neutral-900 px-4 py-2 w-fit rounded-t-xl border-t border-x border-neutral-500">
-          v. <strong>Alpha</strong>
+        <small className="flex justify-center items-center gap-2 bg-neutral-900 pl-4 pr-2 py-1 w-fit rounded-t-xl border-t border-x border-neutral-500">
+          <p>
+            v. <strong>Alfa</strong>{" "}
+          </p>
+
+          <Button
+            style={isVersionInfoActive ? "helpActive" : "help"}
+            size="small-square"
+            onClick={() => setIsVersionInfoActive(!isVersionInfoActive)}
+          >
+            <i className="fa-solid fa-question"></i>
+          </Button>
         </small>
+
         <div className="bg-neutral-900/80 border border-neutral-500 p-6 rounded-lg flex flex-col gap-4 w-full">
-          <H1>Registrer bruker</H1>
+          <div className="flex gap-8">
+            <div className="text-nowrap">
+              <H1>Ny bruker</H1>
+            </div>
+
+            {isVersionInfoActive && (
+              <aside className="border-2 h-min bg-neutral-950 border-yellow-400 rounded-lg px-2 py-1 text-sm">
+                <p className="mb-1 text-neutral-200">
+                  Spillet er i en tidlig fase og delt med kun en liten gruppe
+                  for testing.
+                </p>
+              </aside>
+            )}
+          </div>
+
           <form action="" className="flex flex-col gap-2">
             <div className="flex flex-col">
               <label htmlFor="email">E-post</label>
@@ -125,14 +172,33 @@ const Signup = () => {
             </div>
             {error && <span className="text-red-500">{error}</span>}
           </form>
-          <Button onClick={signUp}>Registrer</Button>
-          <p className="text-stone-400 text-sm sm:text-base mt-4 text-center">
-            Har du allerede en bruker?{" "}
-            <Link to="/logginn">
-              <span className="text-white hover:underline">Logg inn her!</span>
-            </Link>
-          </p>
+          <Button onClick={signUp}>Opprett bruker</Button>
+
+          {/* Google login */}
+          <div className="grid grid-cols-[auto_max-content_auto] gap-2 items-center">
+            <hr className="border-neutral-600" />
+            <p className="text-sm sm:text-base text-center text-nowrap">
+              Eller registrer deg med
+            </p>
+            <hr className="border-neutral-600" />
+          </div>
+          <Button style="secondary" onClick={logInWithGoogle}>
+            <div className="flex justify-center gap-2">
+              <img
+                src="https://cdn4.iconfinder.com/data/icons/logos-brands-7/512/google_logo-google_icongoogle-512.png"
+                alt="Google logo"
+                className="size-6"
+              />
+              <p className="mr-4">Google</p>
+            </div>
+          </Button>
         </div>
+        <p className="text-stone-400 text-sm sm:text-base mt-4 text-center">
+          Har du allerede en bruker?{" "}
+          <Link to="/logginn">
+            <span className="text-white hover:underline">Logg inn her!</span>
+          </Link>
+        </p>
       </div>
     </Main>
   );

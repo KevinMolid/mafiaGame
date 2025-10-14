@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 
-// Firebaase
+// Firebase
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -29,6 +29,9 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  const [isVersionInfoActive, setIsVersionInfoActive] =
+    useState<boolean>(false);
 
   useEffect(() => {
     if (userData) {
@@ -119,11 +122,34 @@ const Login = () => {
   return (
     <Main noBg>
       <div className="w-full max-w-[400px] sm:w-3/4 md:w-2/3 md:max-w-[500px] flex flex-col relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 items-center">
-        <small className="bg-neutral-900 px-4 py-2 w-fit rounded-t-xl border-t border-x border-neutral-500">
-          v. <strong>Alpha</strong>
+        <small className="flex justify-center items-center gap-2 bg-neutral-900 pl-4 pr-2 py-1 w-fit rounded-t-xl border-t border-x border-neutral-500">
+          <p>
+            v. <strong>Alfa</strong>{" "}
+          </p>
+
+          <Button
+            style={isVersionInfoActive ? "helpActive" : "help"}
+            size="small-square"
+            onClick={() => setIsVersionInfoActive(!isVersionInfoActive)}
+          >
+            <i className="fa-solid fa-question"></i>
+          </Button>
         </small>
         <div className="bg-neutral-900/80 border border-neutral-500 p-6 rounded-lg flex flex-col gap-4 w-full">
-          <H1>Logg inn</H1>
+          <div className="flex gap-8">
+            <div className="text-nowrap">
+              <H1>Logg inn</H1>
+            </div>
+
+            {isVersionInfoActive && (
+              <aside className="border-2 h-min bg-neutral-950 border-yellow-400 rounded-lg px-2 py-1 text-sm">
+                <p className="mb-1 text-neutral-200">
+                  Spillet er i en tidlig fase og delt med kun en liten gruppe
+                  for testing.
+                </p>
+              </aside>
+            )}
+          </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-2">
             <div className="flex flex-col">
@@ -175,16 +201,15 @@ const Login = () => {
               <p className="mr-4">Google</p>
             </div>
           </Button>
-
-          <p className="text-center text-stone-400 text-sm sm:text-base mt-4">
-            Har du ikke bruker?{" "}
-            <Link to="/registrer">
-              <span className="text-white hover:underline">
-                Registrer deg her!
-              </span>
-            </Link>
-          </p>
         </div>
+        <p className="text-center text-stone-400 text-sm sm:text-base mt-4">
+          Har du ikke bruker?{" "}
+          <Link to="/registrer">
+            <span className="text-white hover:underline">
+              Registrer deg her!
+            </span>
+          </Link>
+        </p>
       </div>
     </Main>
   );
