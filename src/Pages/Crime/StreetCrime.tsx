@@ -51,6 +51,7 @@ const StreetCrime = () => {
   }, [selectedCrime]);
 
   // Function for comitting a crime
+  // Function for committing a crime
   const handleClick = async () => {
     if (cooldowns["crime"] > 0) {
       setMessageType("warning");
@@ -65,29 +66,32 @@ const StreetCrime = () => {
     }
 
     const crime = crimes.find((c) => c.name === selectedCrime);
-
     if (!crime) return;
 
     const characterRef = doc(db, "Characters", userCharacter.id);
-    const batch = writeBatch(db);
 
-    // Determine rewards and crime success
-
+    // Determine success/failure
     const success = Math.random() < crime.successRate;
 
     if (success) {
+      // Rewards
       const xpReward = crime.xpReward || 0;
       const moneyReward = Math.floor(
         crime.minMoneyReward +
           Math.random() * (crime.maxMoneyReward - crime.minMoneyReward)
       );
 
-      // Update XP, Money, and Heat in one batch
+      // Clamp heat to 50 when incrementing
+      const newHeat = Math.min(50, (userCharacter.stats.heat || 0) + 1);
+
+      // Commit only the success path writes
+      const batch = writeBatch(db);
       batch.update(characterRef, {
-        "stats.xp": userCharacter.stats.xp + xpReward,
-        "stats.money": userCharacter.stats.money + moneyReward,
-        "stats.heat": userCharacter.stats.heat + 1,
+        "stats.xp": (userCharacter.stats.xp || 0) + xpReward,
+        "stats.money": (userCharacter.stats.money || 0) + moneyReward,
+        "stats.heat": newHeat,
       });
+      await batch.commit();
 
       setMessage(
         <>
@@ -119,31 +123,35 @@ const StreetCrime = () => {
         </>
       );
       setMessageType("success");
-    } else {
-      // Failed
-      const newHeat = userCharacter.stats.heat + 1;
-      const jailChancePct = newHeat;
-      const shouldJail = newHeat >= 50 || Math.random() * 100 < jailChancePct;
-
-      if (shouldJail) {
-        await arrest(userCharacter);
-        setMessage("Handlingen feilet, og du ble arrestert!");
-        setMessageType("failure");
-      } else {
-        // Failed but not jailed: just add heat
-        batch.update(characterRef, {
-          "stats.heat": newHeat,
-        });
-
-        setMessage(
-          `Du prøvde å utføre ${crime.name}, men feilet. Bedre lykke neste gang!`
-        );
-        setMessageType("failure");
-      }
+      startCooldown("crime");
+      return;
     }
 
-    await batch.commit();
-    startCooldown("crime");
+    // Failure path
+    const newHeat = Math.min(50, (userCharacter.stats.heat || 0) + 1);
+    const jailChancePct = newHeat;
+    const shouldJail = Math.random() * 100 < jailChancePct;
+
+    if (shouldJail) {
+      // IMPORTANT: do NOT commit any pending batch after arrest
+      await arrest(userCharacter);
+      setMessage("Handlingen feilet, og du ble arrestert!");
+      setMessageType("failure");
+      startCooldown("crime");
+      return;
+    } else {
+      // Failed but not jailed: just add (clamped) heat
+      const batch = writeBatch(db);
+      batch.update(characterRef, { "stats.heat": newHeat });
+      await batch.commit();
+
+      setMessage(
+        `Du prøvde å utføre ${crime.name}, men feilet. Bedre lykke neste gang!`
+      );
+      setMessageType("failure");
+      startCooldown("crime");
+      return;
+    }
   };
 
   // Crime options array

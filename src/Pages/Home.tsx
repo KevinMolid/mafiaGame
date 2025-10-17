@@ -208,10 +208,10 @@ const Home = () => {
 
   const { progress, minXP, maxXP } = getRankProgress(userCharacter.stats.xp);
 
-  const maxHeat = 50;
-  const heatPercentage = userCharacter
-    ? Math.round((userCharacter.stats.heat / maxHeat) * 100)
-    : 0;
+  const MAX_HEAT = 100;
+  const heatRaw = userCharacter?.stats?.heat ?? 0;
+  const heat = Math.max(0, Math.min(heatRaw, MAX_HEAT)); // 0..100
+  const heatPercentage = Math.round((heat / MAX_HEAT) * 100); // 0..100
 
   return (
     <Main img="MafiaBg">
@@ -346,7 +346,7 @@ const Home = () => {
                   ></div>
                   <div className="flex justify-center items-center z-10 col-start-1 row-start-1">
                     <p className="text-red-50 text-xs">
-                      {userCharacter.stats.heat} / 50
+                      {heat} / {MAX_HEAT}
                     </p>
                   </div>
                 </div>

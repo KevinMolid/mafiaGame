@@ -214,13 +214,17 @@ const Robbery = () => {
       "failure"
     );
 
-    if (
+    const willBeArrested =
       userCharacter.stats.heat >= 50 ||
-      Math.random() * 100 < userCharacter.stats.heat
-    ) {
-      arrest(userCharacter);
+      Math.random() * 100 < userCharacter.stats.heat;
+
+    if (willBeArrested) {
+      await arrest(userCharacter); // ← await this
       displayMessage("Ranforsøket feilet, og du ble arrestert!", "failure");
+      return true; // arrested
     }
+
+    return false; // not arrested
   };
 
   // Rob player
@@ -249,7 +253,6 @@ const Robbery = () => {
       const target = isTargetRandom
         ? await findRandomTarget()
         : await findSpecificTarget(targetCharacter);
-
       if (!target) return;
 
       const foundPlayer = !isTargetRandom
@@ -276,14 +279,19 @@ const Robbery = () => {
         return;
       }
 
+      let arrested = false;
+
       const success = Math.random() <= 0.75;
       if (success) {
         await handleRobberySuccess(target);
       } else {
-        await handleRobberyFailure(target);
+        arrested = await handleRobberyFailure(target); // ← get result
       }
 
-      increaseHeat(userCharacter, userCharacter.id, 1);
+      if (!arrested) {
+        increaseHeat(userCharacter, userCharacter.id, 1);
+      }
+
       startCooldown("robbery");
     } catch (error) {
       console.error(error);

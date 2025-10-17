@@ -17,7 +17,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 
-import { Weapons, getItemById } from "../../Data/Items";
+import { Bullets, getItemById } from "../../Data/Items";
 
 type Props = {
   onSell: () => void | Promise<void>;
@@ -30,9 +30,7 @@ type Props = {
 
 const db = getFirestore();
 
-// Testing: 30s per slot. Real: 4 hours.
-// const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
-const FOUR_HOURS_MS = 1 * 30 * 1000;
+const FOUR_HOURS_MS = 1 * 60 * 1000;
 
 function clamp01(n: number) {
   return Math.max(0, Math.min(1, n));
@@ -61,7 +59,7 @@ function SimpleModal({
       <div className="relative z-[61] w-full max-w-2xl rounded-2xl border border-neutral-700 bg-neutral-900 p-4 shadow-xl">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-white text-lg font-semibold">
-            {title || "Velg våpen"}
+            {title || "Velg kule"}
           </h3>
           <button
             className="text-neutral-300 hover:text-white p-1"
@@ -174,7 +172,7 @@ function CircularProgress({
   );
 }
 
-const WeaponFactory: React.FC<Props> = ({
+const BulletFactory: React.FC<Props> = ({
   processing = false,
   onSetMessage,
   onSetMessageType,
@@ -183,7 +181,7 @@ const WeaponFactory: React.FC<Props> = ({
 
   const [startedAtMs, setStartedAtMs] = useState<number | null>(null);
 
-  // Per-slot selections (item IDs), persisted under activeFactory.weaponSelections = [id0, id1]
+  // Per-slot selections (item IDs), persisted under activeFactory.bulletSelections = [id0, id1]
   const [selections, setSelections] = useState<(string | null)[]>([null, null]);
 
   // Server clock handling
@@ -240,7 +238,7 @@ const WeaponFactory: React.FC<Props> = ({
         else if (typeof ts === "number") setStartedAtMs(ts);
         else setStartedAtMs(null);
 
-        const sel: any[] = data?.activeFactory?.weaponSelections || [];
+        const sel: any[] = data?.activeFactory?.bulletSelections || [];
         setSelections([
           typeof sel[0] === "string" ? sel[0] : null,
           typeof sel[1] === "string" ? sel[1] : null,
@@ -297,7 +295,7 @@ const WeaponFactory: React.FC<Props> = ({
       next[slotIndex] = itemId;
       setSelections(next);
       await updateDoc(doc(db, "Characters", userCharacter.id), {
-        "activeFactory.weaponSelections": next,
+        "activeFactory.bulletSelections": next,
       });
     } catch (e) {
       console.error("Kunne ikke lagre valg:", e);
@@ -312,7 +310,7 @@ const WeaponFactory: React.FC<Props> = ({
     // Require both selections
     if (!selections[0] || !selections[1]) {
       onSetMessageType("warning");
-      onSetMessage(<>Velg et våpen for begge slottene før du starter.</>);
+      onSetMessage(<>Velg kuler for begge maskinene før du starter.</>);
       return;
     }
 
@@ -356,9 +354,10 @@ const WeaponFactory: React.FC<Props> = ({
         batch.set(ref, payload);
       }
 
-      // Reset production timestamp (keep selections so user can reuse if desired)
+      // Reset production timestamp and clear the selections in Firestore
       batch.update(doc(db, "Characters", userCharacter.id), {
         "activeFactory.productionStarted": null,
+        "activeFactory.bulletSelections": [null, null],
       });
 
       await batch.commit();
@@ -368,7 +367,7 @@ const WeaponFactory: React.FC<Props> = ({
         <>
           Du fikk{" "}
           <strong>
-            {filledCount} {filledCount > 1 ? "våpen" : "våpen"}
+            {filledCount} {filledCount > 1 ? "kuler" : "kule"}
           </strong>
           :
           <div className="mt-1 flex gap-2">
@@ -378,7 +377,7 @@ const WeaponFactory: React.FC<Props> = ({
               return it ? (
                 <Item key={i} name={it.name} tier={it.tier} />
               ) : (
-                <span key={i}>Våpen</span>
+                <span key={i}>kule</span>
               );
             })}
           </div>
@@ -394,7 +393,7 @@ const WeaponFactory: React.FC<Props> = ({
   }
 
   const buttonLabel = !active
-    ? "Start produksjon"
+    ? "Start"
     : isComplete
     ? `Hent ut (${filledCount})`
     : "Produserer…";
@@ -418,7 +417,7 @@ const WeaponFactory: React.FC<Props> = ({
         <button
           className="rounded-full h-9 w-9 grid place-items-center bg-neutral-800 hover:bg-neutral-700 text-white"
           onClick={() => setPickerOpenFor(slot)}
-          aria-label="Velg våpen"
+          aria-label="Velg kule"
         >
           <i className="fa-solid fa-plus" />
         </button>
@@ -433,23 +432,24 @@ const WeaponFactory: React.FC<Props> = ({
       >
         {/* small preview */}
         {it?.img ? (
-          <img
-            src={it.img}
-            alt={it.name}
-            className="h-8 w-8 rounded object-cover border border-neutral-700"
-          />
+          <ItemTile name={it.name} img={it.img} tier={it.tier} size="small" />
         ) : (
           <i className="fa-solid fa-gun" />
         )}
-        <span className="max-w-[72px] truncate">{it?.name || "Våpen"}</span>
       </button>
     );
   };
 
+  const getSel = (slot: 0 | 1) =>
+    selections[slot] ? getItemById(selections[slot] as string) : null;
+
+  const s0 = getSel(0);
+  const s1 = getSel(1);
+
   return (
     <div className="flex flex-col">
       <p className="mb-4">
-        Her kan du produsere våpen som kan brukes til å angripe andre spillere.
+        Her kan du produsere kuler som kan brukes til å angripe andre spillere.
       </p>
 
       <H2>Produksjon</H2>
@@ -457,7 +457,7 @@ const WeaponFactory: React.FC<Props> = ({
       <div className="mb-4">
         <p>
           Effektivitet:{" "}
-          <strong className="text-neutral-200">1 våpen / 4 timer</strong>
+          <strong className="text-neutral-200">1 kule / time</strong>
         </p>
       </div>
 
@@ -473,13 +473,30 @@ const WeaponFactory: React.FC<Props> = ({
               active={active1}
               center={centerForSlot(0)}
             />
+            <button
+              type="button"
+              onClick={() => setPickerOpenFor(0)}
+              className="mt-1 text-sm text-neutral-300 hover:text-white"
+              title="Velg / endre kule"
+            >
+              {s0 ? <Item name={s0.name} tier={s0.tier} /> : "Slot 1"}
+            </button>
           </div>
+
           <div className="relative flex flex-col items-center justify-center">
             <CircularProgress
               value={bar2}
               active={active2}
               center={centerForSlot(1)}
             />
+            <button
+              type="button"
+              onClick={() => setPickerOpenFor(1)}
+              className="mt-1 text-sm text-neutral-300 hover:text-white"
+              title="Velg / endre kule"
+            >
+              {s1 ? <Item name={s1.name} tier={s1.tier} /> : "Slot 2"}
+            </button>
           </div>
         </div>
       )}
@@ -504,24 +521,34 @@ const WeaponFactory: React.FC<Props> = ({
       <SimpleModal
         open={pickerOpenFor !== null}
         onClose={() => setPickerOpenFor(null)}
-        title="Velg våpen"
+        title="Velg kule"
       >
         <div className="flex gap-2">
-          {Weapons.map((weapon) => (
+          {Bullets.map((bullet) => (
             <button
-              key={weapon.id}
-              className="text-left"
+              key={bullet.id}
+              className="text-left flex bg-neutral-950 hover:bg-neutral-800 pr-4 gap-2 rounded-xl"
               onClick={async () => {
                 if (pickerOpenFor === null) return;
-                await setSelection(pickerOpenFor, weapon.id);
+                await setSelection(pickerOpenFor, bullet.id);
                 setPickerOpenFor(null);
               }}
             >
               <ItemTile
-                name={weapon.name}
-                tier={weapon.tier}
-                img={weapon.img}
+                name={bullet.name}
+                tier={bullet.tier}
+                img={bullet.img}
               />
+              <div>
+                <Item name={bullet.name} tier={bullet.tier}></Item>
+                <p>
+                  Pris:{" "}
+                  <strong className="text-neutral-200">
+                    <i className="fa-solid fa-dollar-sign"></i> {bullet.value}
+                  </strong>
+                </p>
+                <p>{bullet.attack}</p>
+              </div>
             </button>
           ))}
         </div>
@@ -530,4 +557,4 @@ const WeaponFactory: React.FC<Props> = ({
   );
 };
 
-export default WeaponFactory;
+export default BulletFactory;

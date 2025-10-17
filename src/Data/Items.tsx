@@ -21,11 +21,15 @@ import w1 from "/images/items/Knife1.png";
 import w2 from "/images/items/Knife2.jpg";
 
 // Narcotics
+import b1 from "/images/items/b1.jpg";
+import b2 from "/images/items/b2.jpg";
+
+// Narcotics
 import n1 from "/images/items/n1.png"; // Cocaine
 import n2 from "/images/items/n2.png"; // Ecstasy
 
 // ---------- Types ----------
-export type Slot = "hat" | "jacket" | "weapon" | "narcotic";
+export type Slot = "hat" | "jacket" | "weapon" | "bullet" | "narcotic";
 
 interface BaseItem {
   id: string;
@@ -50,12 +54,22 @@ export interface WeaponItem extends BaseItem {
   attack: number;
 }
 
+export interface BulletItem extends BaseItem {
+  slot: "bullet";
+  attack: number;
+}
+
 export interface NarcoticItem extends BaseItem {
   slot: "narcotic";
   // add effect fields later if needed, e.g. duration, boost, etc.
 }
 
-export type Item = HatItem | JacketItem | WeaponItem | NarcoticItem;
+export type Item =
+  | HatItem
+  | JacketItem
+  | WeaponItem
+  | BulletItem
+  | NarcoticItem;
 
 // ---------- Category Arrays ----------
 export const Hats: HatItem[] = [
@@ -193,6 +207,27 @@ export const Weapons: WeaponItem[] = [
   },
 ];
 
+export const Bullets: BulletItem[] = [
+  {
+    id: "ib0001",
+    name: "Enkel kule",
+    slot: "bullet",
+    tier: 1,
+    value: 15,
+    attack: 1,
+    img: b1,
+  },
+  {
+    id: "ib0002",
+    name: "Kvalitetskule",
+    slot: "bullet",
+    tier: 2,
+    value: 25,
+    attack: 2,
+    img: b2,
+  },
+];
+
 export const Narcotics: NarcoticItem[] = [
   {
     id: "in0001",
@@ -213,7 +248,13 @@ export const Narcotics: NarcoticItem[] = [
 ];
 
 // ---------- Combined + Helpers ----------
-export const Items: Item[] = [...Hats, ...Jackets, ...Weapons, ...Narcotics];
+export const Items: Item[] = [
+  ...Hats,
+  ...Jackets,
+  ...Weapons,
+  ...Bullets,
+  ...Narcotics,
+];
 
 export const ITEMS_BY_ID: Record<string, Item> = Object.fromEntries(
   Items.map((i) => [i.id, i])

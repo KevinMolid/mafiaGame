@@ -1,4 +1,11 @@
-import { getFirestore, doc, updateDoc, Timestamp } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  updateDoc,
+  Timestamp,
+  runTransaction,
+  serverTimestamp,
+} from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
 import { serverNow, serverTimeReady } from "./serverTime";
@@ -132,16 +139,20 @@ export const resetHeat = async (characterID: string) => {
 
 export const arrest = async (character: any) => {
   try {
-    await serverTimeReady; // ensure we have the offset at least once
-
+    await serverTimeReady;
     const characterRef = doc(db, "Characters", character.id);
-    const jailDurationMs = 10_000 + character.stats.heat * 5_000; // 10s + 5s*heat
+    const jailDurationMs = 10_000 + (character?.stats?.heat ?? 0) * 5_000;
     const releaseMs = serverNow() + jailDurationMs;
 
-    await updateDoc(characterRef, {
-      inJail: true,
-      jailReleaseTime: Timestamp.fromMillis(releaseMs),
-      "stats.heat": 0,
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(characterRef);
+      if (!snap.exists()) throw new Error("Character not found");
+      tx.update(characterRef, {
+        inJail: true,
+        jailReleaseTime: Timestamp.fromMillis(releaseMs),
+        "stats.heat": 0,
+        lastActive: serverTimestamp(),
+      });
     });
   } catch (error) {
     console.error("Feil ved arrestering:", error);

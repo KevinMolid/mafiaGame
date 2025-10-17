@@ -8,7 +8,7 @@ import ConfirmDialog from "../../components/ConfirmDialog";
 
 // Images
 import Weapons from "./WeaponFactory";
-import Bullets from "./Bullets";
+import Bullets from "./BulletFactory";
 import Narcotics from "./Narcotics";
 
 // React
@@ -217,7 +217,6 @@ const Production: React.FC = () => {
           <Bullets
             onSell={sellFactory}
             // If Bullets will also need messages, pass these too:
-            // @ts-expect-error if Bullets doesn't accept them yet
             onSetMessage={setMessage}
             onSetMessageType={setMessageType}
           />

@@ -2,12 +2,15 @@ type ItemTileProps = {
   name: string;
   img: string;
   tier: number;
+  size?: string;
 };
 
-const ItemTile = ({ name, img, tier }: ItemTileProps) => {
+const ItemTile = ({ name, img, tier, size }: ItemTileProps) => {
   return (
     <div
-      className={`flex h-16 w-16 border-2 rounded-xl cursor-pointer ${
+      className={`flex ${
+        size === "small" ? "h-12 w-12" : "h-16 w-16"
+      } border-2 rounded-xl cursor-pointer ${
         tier === 1
           ? "border-neutral-400 shadow-lg shadow-neutral-500/25"
           : tier === 2

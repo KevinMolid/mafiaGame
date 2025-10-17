@@ -6,6 +6,7 @@ import {
   runTransaction,
   deleteField,
   increment,
+  getDocFromServer,
 } from "firebase/firestore";
 import { Timestamp } from "firebase/firestore";
 import { arrest } from "./RewardFunctions";
@@ -40,26 +41,32 @@ export async function releaseIfExpired(characterId: string): Promise<boolean> {
   const db = getFirestore();
   const ref = doc(db, "Characters", characterId);
 
-  return runTransaction(db, async (tx) => {
-    const snap = await tx.get(ref);
-    if (!snap.exists()) return false;
+  // Fresh read (fallback to cached if offline)
+  const snap = await getDocFromServer(ref).catch(() => getDoc(ref));
+  if (!snap.exists()) return false;
 
-    const data = snap.data() as any;
-    if (!data?.inJail) return false;
+  const data = snap.data() as any;
+  if (!data?.inJail) return false;
 
-    const ts = normalizeTs(data.jailReleaseTime);
-    const nowMs = serverNow();
+  const ts = normalizeTs(data.jailReleaseTime);
+  const expired = !ts || ts.toMillis() <= serverNow();
+  if (!expired) return false;
 
-    // No valid timestamp or already past release time -> clear jail
-    if (!ts || ts.toMillis() <= nowMs) {
-      tx.update(ref, {
-        inJail: false,
-        jailReleaseTime: deleteField(),
-      });
+  try {
+    await updateDoc(ref, {
+      inJail: false,
+      jailReleaseTime: deleteField(),
+    });
+    return true;
+  } catch (e: any) {
+    // If another writer already released them between our read and write,
+    // we can treat that as success.
+    if (e?.code === "failed-precondition" || e?.code === "aborted") {
       return true;
     }
+    console.error("[jail] releaseIfExpired update failed:", e);
     return false;
-  });
+  }
 }
 
 export async function freeTarget(targetId: string): Promise<void> {

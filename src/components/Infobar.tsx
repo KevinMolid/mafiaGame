@@ -27,7 +27,7 @@ const Infobar = () => {
 
   const { progress, minXP, maxXP } = getRankProgress(userCharacter.stats.xp);
 
-  const maxHeat = 50;
+  const maxHeat = 100;
   const rawHeatPct = userCharacter
     ? (userCharacter.stats.heat / maxHeat) * 100
     : 0;

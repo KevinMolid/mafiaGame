@@ -156,8 +156,11 @@ const GTA = () => {
       }
 
       // 2) Attempt theft (75% success)
-      if (Math.random() <= 0.75) {
-        const carDoc = {
+      const success = Math.random() <= 0.75;
+
+      if (success) {
+        // Add car
+        await addDoc(carsCol, {
           modelKey: randomCar.key,
           name: randomCar.name,
           value: randomCar.value,
@@ -166,12 +169,11 @@ const GTA = () => {
           isElectric: !!randomCar.isElectric,
           city: userCharacter.location,
           acquiredAt: serverTimestamp(),
-        };
+        });
 
-        await addDoc(carsCol, carDoc);
-
+        // Rewards + heat (clamped)
         rewardXp(userCharacter, 10);
-        increaseHeat(userCharacter, userCharacter.id, 1);
+        increaseHeat(userCharacter, userCharacter.id, 1); // ok here; we’re not jailing
 
         const catalog = randomCar.key
           ? getCarByKey(randomCar.key)
@@ -208,24 +210,33 @@ const GTA = () => {
         );
 
         startCooldown("gta");
-      } else {
-        setMessage(
-          "Du prøvde å stjele en bil, men feilet. Bedre lykke neste gang!"
-        );
+        return;
+      }
+
+      // -------- Failure path --------
+      // Compute tentative new heat (for chance) but DO NOT write yet.
+      const tentativeHeat = Math.min(50, (userCharacter.stats.heat || 0) + 1);
+      const jailChance = tentativeHeat; // 0–50% (or clamp to 50 by your rules)
+      const shouldJail =
+        tentativeHeat >= 50 || Math.random() * 100 < jailChance;
+
+      if (shouldJail) {
+        // If we jail, do NOT increase heat first — arrest() will reset it to 0.
+        await arrest(userCharacter);
+        setMessage("Du prøvde å stjele en bil, men ble arrestert!");
         setMessageType("failure");
         startCooldown("gta");
-
-        increaseHeat(userCharacter, userCharacter.id, 1);
-        const newHeat = userCharacter.stats.heat + 1;
-        const jailChance = newHeat;
-
-        if (newHeat >= 50 || Math.random() * 100 < jailChance) {
-          arrest(userCharacter);
-          setMessage("Du prøvde å stjele en bil, men ble arrestert!");
-          setMessageType("failure");
-          return;
-        }
+        return; // important: no more writes after arrest()
       }
+
+      // Not jailed: now we can safely increase heat
+      increaseHeat(userCharacter, userCharacter.id, 1);
+
+      setMessage(
+        "Du prøvde å stjele en bil, men feilet. Bedre lykke neste gang!"
+      );
+      setMessageType("failure");
+      startCooldown("gta");
     } catch (error) {
       setMessageType("failure");
       setMessage("Du fikk ikke til å stjele en bil. Prøv igjen senere.");
