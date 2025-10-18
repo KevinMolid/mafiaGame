@@ -1,9 +1,11 @@
 // Components
 import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
+import H4 from "../../components/Typography/H4";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
+import Box from "../../components/Box";
 
 import { arrest } from "../../Functions/RewardFunctions";
 
@@ -37,6 +39,7 @@ const StreetCrime = () => {
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "important" | "warning" | "info"
   >("success");
+  const [helpActive, setHelpActive] = useState<boolean>(false);
 
   useEffect(() => {
     if (!userData) {
@@ -200,12 +203,61 @@ const StreetCrime = () => {
 
   return (
     <Main>
-      <H1>Kriminalitet</H1>
+      <div className="flex items-baseline justify-between gap-4">
+        <H1>Kriminalitet</H1>
+        {helpActive ? (
+          <Button
+            size="small-square"
+            style="helpActive"
+            onClick={() => setHelpActive(!helpActive)}
+          >
+            <i className="fa-solid fa-question"></i>
+          </Button>
+        ) : (
+          <Button
+            size="small-square"
+            style="help"
+            onClick={() => setHelpActive(!helpActive)}
+          >
+            <i className="fa-solid fa-question"></i>
+          </Button>
+        )}
+      </div>
 
       <p className="pb-2">
         Her kan du gjøre kriminelle handlinger for å tjene penger og få
         erfaring.
       </p>
+
+      {/* Info box */}
+      {helpActive && (
+        <div className="mb-4">
+          <Box type="help" className="text-sm flex gap-x-8 flex-wrap">
+            <article>
+              <H4>Hvordan utføre kriminalitet</H4>
+              <p>
+                Velg ønsket kriminell handling, og trykk på "Utfør handling". Du
+                kan velge mellom "Lommetyveri", "Herverk", "Stjel verdisaker"
+                eller "Ran butikk".
+              </p>
+              <H4>Sjanse for suksess og belønning</H4>
+              {crimes.map((crime) => (
+                <p>
+                  {crime.name}:{" "}
+                  <strong className="text-neutral-200">
+                    +{crime.xpReward} XP
+                  </strong>{" "}
+                  og{" "}
+                  <strong className="text-neutral-200">
+                    {crime.minMoneyReward} - {crime.maxMoneyReward}
+                  </strong>
+                </p>
+              ))}
+              <p className="mb-4"></p>
+            </article>
+          </Box>
+        </div>
+      )}
 
       {cooldowns["crime"] > 0 && (
         <p className="mb-4 text-stone-400">
@@ -257,37 +309,6 @@ const StreetCrime = () => {
               <p className="text-neutral-200 text-xl font-bold">
                 {pct(crime.successRate)}
               </p>
-
-              {/* Info trigger + hover card */}
-              <div className="absolute top-2 right-2 group">
-                <Button style="black" size="small-square" type="button">
-                  <i className="fa-solid fa-question"></i>
-                </Button>
-
-                {/* Hover panel */}
-                <div
-                  className="
-              absolute right-0 z-20 mt-2 w-56 rounded-md border border-neutral-600
-              bg-neutral-900 p-2 text-sm text-neutral-200 shadow-lg
-              opacity-0 pointer-events-none transition-opacity
-              group-hover:opacity-100 group-hover:pointer-events-auto
-            "
-                  role="tooltip"
-                >
-                  {/* XP reward */}
-                  <p className="mb-1">
-                    <span className="font-bold">+{crime.xpReward} XP</span>
-                  </p>
-                  {/* Money range */}
-                  <p>
-                    <span className="font-bold">
-                      <i className="fa-solid fa-dollar-sign"></i>{" "}
-                      {money(crime.minMoneyReward)} –{" "}
-                      {money(crime.maxMoneyReward)}
-                    </span>
-                  </p>
-                </div>
-              </div>
             </div>
           </li>
         ))}

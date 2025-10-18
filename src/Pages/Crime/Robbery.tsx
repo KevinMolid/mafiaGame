@@ -370,7 +370,7 @@ const Robbery = () => {
 
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-2" action="">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
         <H2>Hvem vil du rane?</H2>
         <ul className="flex gap-2 flex-wrap mb-4">
           <li
@@ -410,7 +410,7 @@ const Robbery = () => {
         {!isTargetRandom && (
           <input
             ref={targetInputRef}
-            className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+            className="bg-transparent border-b border-neutral-600 py-1 mb-4 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
             type="text"
             placeholder="Brukernavn"
             value={targetCharacter}
