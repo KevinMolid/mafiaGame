@@ -550,7 +550,7 @@ const GTA = () => {
         <div className="mb-4">
           <Box type="help" className="text-sm flex gap-x-8 flex-wrap">
             <article>
-              <H4>Fra gata</H4>
+              <H4>Stjele en bil fra gata</H4>
               <p className="mb-2">
                 Det er {SUCCESS_CHANCE_STREET * 100}% sjanse for å stjele en
                 bil.
@@ -577,7 +577,7 @@ const GTA = () => {
               </section>
             </article>
             <article>
-              <H4>Fra spiller</H4>
+              <H4>Stjele en bil fra spiller</H4>
               <p className="mb-2">
                 Grunnsjansen er 50%. Målet må ha parkering med biler i samme by.
                 Har målet parkering med sikkerhet, reduseres sjansen:{" "}
