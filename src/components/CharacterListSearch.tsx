@@ -1,14 +1,10 @@
-// components/CharacterListSearch.tsx
 import { useEffect, useMemo, useState } from "react";
 import {
   getFirestore,
   collection,
-  query,
+  getDocs,
   orderBy,
-  startAt,
-  endAt,
-  onSnapshot,
-  // limit, // (optional) add a cap if your dataset is huge
+  query,
 } from "firebase/firestore";
 import Username from "./Typography/Username";
 import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
@@ -31,56 +27,54 @@ export default function CharacterListSearch({
 }) {
   const [players, setPlayers] = useState<CharacterLite[]>([]);
   const [loading, setLoading] = useState(false);
-
   const term = useMemo(() => searchText.trim().toLowerCase(), [searchText]);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
 
-    // Build query: if no term → list all alphabetically; else → prefix-search
-    const base = collection(db, "Characters");
+    (async () => {
+      try {
+        const q = query(
+          collection(db, "Characters"),
+          orderBy("username_lowercase")
+        );
+        const snap = await getDocs(q);
 
-    const q =
-      term === ""
-        ? query(
-            base,
-            orderBy("username_lowercase")
-            // , limit(500) // uncomment to cap results if needed
-          )
-        : query(
-            base,
-            orderBy("username_lowercase"),
-            startAt(term),
-            endAt(term + "\uf8ff")
-            // , limit(50)
-          );
+        if (cancelled) return;
 
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        const rows: CharacterLite[] = snap.docs.map((d) => {
+        const all = snap.docs.map((d) => {
           const data = d.data() as any;
+          const stats = data.stats || {};
           return {
             id: d.id,
             username: String(data.username ?? ""),
-            username_lowercase: data.username_lowercase,
-            xp: data.stats?.xp ?? 0,
-            money: data.stats?.money ?? 0,
-            bank: data.stats?.bank ?? 0,
+            username_lowercase: data.username_lowercase ?? "",
+            xp: stats.xp ?? 0,
+            money: stats.money ?? 0,
+            bank: stats.bank ?? 0,
           };
         });
-        setPlayers(rows);
-        setLoading(false);
-      },
-      (err) => {
-        console.error("Search/listen failed:", err);
-        setPlayers([]);
-        setLoading(false);
-      }
-    );
 
-    return () => unsub();
-  }, [term]);
+        setPlayers(all);
+      } catch (e) {
+        console.error("Error loading players", e);
+        setPlayers([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Filter on the client
+  const filtered = useMemo(() => {
+    if (term === "") return players;
+    return players.filter((p) => p.username_lowercase?.includes(term));
+  }, [term, players]);
 
   if (loading) {
     return (
@@ -90,7 +84,7 @@ export default function CharacterListSearch({
     );
   }
 
-  if (players.length === 0) {
+  if (filtered.length === 0) {
     return (
       <p className="mt-3 text-sm text-neutral-400">
         {term === "" ? "Ingen spillere funnet." : "Ingen treff."}
@@ -100,7 +94,7 @@ export default function CharacterListSearch({
 
   return (
     <ul className="mt-3 flex flex-col gap-1">
-      {players.map((p) => (
+      {filtered.map((p) => (
         <li
           key={p.id}
           className="flex items-center justify-between border border-neutral-700 bg-neutral-900/60 px-3 py-1"
