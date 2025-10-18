@@ -328,6 +328,23 @@ const Alerts = () => {
                       name={alert.car.name}
                       tier={alert.car.tier}
                       tooltipImg={alert.car.img ?? undefined}
+                      tooltipContent={
+                        <div>
+                          <p>
+                            Effekt:{" "}
+                            <strong className="text-neutral-200">
+                              {alert.car.hp} hk
+                            </strong>
+                          </p>
+                          <p>
+                            Verdi:{" "}
+                            <strong className="text-neutral-200">
+                              <i className="fa-solid fa-dollar-sign"></i>{" "}
+                              {alert.car.value?.toLocaleString("nb-NO")}
+                            </strong>
+                          </p>
+                        </div>
+                      }
                     />
                     .
                   </small>
