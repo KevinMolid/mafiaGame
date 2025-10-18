@@ -29,6 +29,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const [isVersionInfoActive, setIsVersionInfoActive] =
     useState<boolean>(false);
@@ -45,9 +46,9 @@ const Login = () => {
       const code = (err as FirebaseError).code;
 
       const M: Record<string, string> = {
-        "auth/invalid-credential": "Brukernavnet og/eller passordet er feil.",
+        "auth/invalid-credential": "E-posten og/eller passordet er feil.",
         "auth/user-not-found": "Fant ingen bruker med denne e-posten.",
-        "auth/wrong-password": "Brukernavnet og/eller passordet er feil.",
+        "auth/wrong-password": "E-posten og/eller passordet er feil.",
         "auth/invalid-email": "Ugyldig e-postadresse.",
         "auth/too-many-requests": "For mange forsøk. Vent litt og prøv igjen.",
         "auth/network-request-failed":
@@ -135,7 +136,7 @@ const Login = () => {
             <i className="fa-solid fa-question"></i>
           </Button>
         </small>
-        <div className="bg-neutral-900/80 border border-neutral-500 p-6 rounded-lg flex flex-col gap-4 w-full">
+        <div className="bg-neutral-900 border border-neutral-500 p-6 rounded-lg flex flex-col gap-4 w-full">
           <div className="flex gap-8">
             <div className="text-nowrap">
               <H1>Logg inn</H1>
@@ -155,29 +156,51 @@ const Login = () => {
             <div className="flex flex-col">
               <label htmlFor="email">E-post</label>
               <input
-                className="bg-transparent px-2 py-1 border-b border-neutral-500"
+                className="bg-transparent py-1 border-b border-neutral-500 text-neutral-200 text-xl outline-0 focus:border-white selection:border-white"
                 id="email"
                 type="text"
                 onChange={handleEmailChange}
+                spellCheck={false}
               />
             </div>
             <div className="flex flex-col">
-              <label htmlFor="pw">Passord</label>
-              <input
-                className="bg-transparent px-2 py-1 border-b border-neutral-500"
-                id="pw"
-                type="password"
-                onChange={handlePwChange}
-              />
-              <p className="text-right mt-1">
-                <Link to="/glemtpassord">
-                  <span className="font-medium hover:underline">
-                    Glemt passord?
-                  </span>
-                </Link>
-              </p>
+              <div className="relative">
+                <label htmlFor="pw">Passord</label>
+
+                <input
+                  className="w-full bg-transparent py-1 border-b border-neutral-500 text-neutral-200 text-xl outline-0 focus:border-white selection:border-white"
+                  id="pw"
+                  type={showPassword ? "text" : "password"}
+                  onChange={handlePwChange}
+                  spellCheck={false}
+                />
+                <div className="absolute right-0 bottom-0">
+                  <Button
+                    size="square"
+                    style="text"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <i className="text-xl fa-solid fa-eye"></i>
+                    ) : (
+                      <i className="text-xl fa-solid fa-eye-slash"></i>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-baseline">
+                <p>{error && <span className="text-red-500">{error}</span>}</p>
+                <p className="text-right mt-1">
+                  <Link to="/glemtpassord">
+                    <span className="font-medium hover:underline">
+                      Glemt passord?
+                    </span>
+                  </Link>
+                </p>
+              </div>
             </div>
-            {error && <span className="text-red-500">{error}</span>}
+
             <div className="w-full flex flex-col mt-2">
               <Button type="submit">Logg inn</Button>
             </div>

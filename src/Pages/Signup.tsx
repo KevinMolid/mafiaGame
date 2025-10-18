@@ -38,6 +38,7 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const [isVersionInfoActive, setIsVersionInfoActive] =
     useState<boolean>(false);
@@ -135,7 +136,7 @@ const Signup = () => {
           </Button>
         </small>
 
-        <div className="bg-neutral-900/80 border border-neutral-500 p-6 rounded-lg flex flex-col gap-4 w-full">
+        <div className="bg-neutral-900 border border-neutral-500 p-6 rounded-lg flex flex-col gap-4 w-full">
           <div className="flex gap-8">
             <div className="text-nowrap">
               <H1>Ny bruker</H1>
@@ -155,20 +156,37 @@ const Signup = () => {
             <div className="flex flex-col">
               <label htmlFor="email">E-post</label>
               <input
-                className="bg-transparent px-2 py-1 border-b border-neutral-500"
+                className="bg-transparent py-1 border-b border-neutral-500 text-neutral-200 text-xl outline-0 focus:border-white selection:border-white"
                 id="email"
                 type="text"
                 onChange={handleEmailChange}
+                spellCheck={false}
               />
             </div>
             <div className="flex flex-col">
-              <label htmlFor="pw">Passord</label>
-              <input
-                className="bg-transparent px-2 py-1 border-b border-neutral-500"
-                id="pw"
-                type="password"
-                onChange={handlePwChange}
-              />
+              <div className="relative">
+                <label htmlFor="pw">Passord</label>
+                <input
+                  className="w-full bg-transparent py-1 border-b border-neutral-500 text-neutral-200 text-xl outline-0 focus:border-white selection:border-white"
+                  id="pw"
+                  type={showPassword ? "text" : "password"}
+                  onChange={handlePwChange}
+                  spellCheck={false}
+                />
+                <div className="absolute right-0 bottom-0">
+                  <Button
+                    size="square"
+                    style="text"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <i className="text-xl fa-solid fa-eye"></i>
+                    ) : (
+                      <i className="text-xl fa-solid fa-eye-slash"></i>
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
             {error && <span className="text-red-500">{error}</span>}
           </form>

@@ -2,12 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background: #151515;
-  color: white;
-}
-
 @layer base {
+  body {
+    background: #151515; /* or theme('colors.neutral.900') */
+    color: white; /* or theme('colors.white') */
+  }
+
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -15,11 +15,36 @@ body {
   }
 }
 
-.no-scrollbar {
-  -ms-overflow-style: none; /* IE 10+ */
-  scrollbar-width: none; /* Firefox */
-}
-.no-scrollbar::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+@layer utilities {
+  /* Chrome / Edge / Safari */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: theme("colors.neutral.200") !important;
+    caret-color: theme("colors.neutral.200");
+    /* Paint over yellow autofill background */
+    /* Replace with your background color to be safe on dark themes */
+    -webkit-box-shadow: 0 0 0px 1000px theme("colors.neutral.900") inset !important;
+    box-shadow: 0 0 0px 1000px theme("colors.neutral.900") inset !important;
+
+    /* Prevent flash of yellow */
+    transition: background-color 9999s ease-out, color 9999s ease-out;
+  }
+
+  /* Firefox */
+  input:-moz-autofill {
+    -moz-text-fill-color: theme("colors.neutral.200") !important;
+    box-shadow: 0 0 0px 1000px #151515 inset !important;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE 10+ */
+    scrollbar-width: none; /* Firefox */
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
 }

@@ -11,7 +11,9 @@ const ContentWrap = ({ children }: ContentInterface) => {
   const { pathname } = useLocation();
 
   const showBackground =
-    (!userData && pathname === "/logginn") || pathname === "/registrer";
+    (!userData && pathname === "/logginn") ||
+    pathname === "/registrer" ||
+    pathname === "/glemtpassord";
 
   return (
     <div
