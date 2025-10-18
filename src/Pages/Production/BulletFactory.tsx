@@ -61,13 +61,14 @@ function SimpleModal({
           <h3 className="text-white text-lg font-semibold">
             {title || "Velg kule"}
           </h3>
-          <button
-            className="text-neutral-300 hover:text-white p-1"
+          <Button
             onClick={onClose}
             aria-label="Lukk"
+            style="exit"
+            size="small-square"
           >
             <i className="fa-solid fa-xmark" />
-          </button>
+          </Button>
         </div>
         {children}
       </div>
@@ -414,13 +415,14 @@ const BulletFactory: React.FC<Props> = ({
     const selId = selections[slot];
     if (!selId) {
       return (
-        <button
-          className="rounded-full h-9 w-9 grid place-items-center bg-neutral-800 hover:bg-neutral-700 text-white"
+        <Button
           onClick={() => setPickerOpenFor(slot)}
           aria-label="Velg kule"
+          style="secondary"
+          size="square"
         >
           <i className="fa-solid fa-plus" />
-        </button>
+        </Button>
       );
     }
     const it = getItemById(selId);
@@ -479,7 +481,7 @@ const BulletFactory: React.FC<Props> = ({
               className="mt-1 text-sm text-neutral-300 hover:text-white"
               title="Velg / endre kule"
             >
-              {s0 ? <Item name={s0.name} tier={s0.tier} /> : "Slot 1"}
+              {s0 ? <Item name={s0.name} tier={s0.tier} /> : ""}
             </button>
           </div>
 
@@ -495,7 +497,7 @@ const BulletFactory: React.FC<Props> = ({
               className="mt-1 text-sm text-neutral-300 hover:text-white"
               title="Velg / endre kule"
             >
-              {s1 ? <Item name={s1.name} tier={s1.tier} /> : "Slot 2"}
+              {s1 ? <Item name={s1.name} tier={s1.tier} /> : ""}
             </button>
           </div>
         </div>
@@ -527,7 +529,7 @@ const BulletFactory: React.FC<Props> = ({
           {Bullets.map((bullet) => (
             <button
               key={bullet.id}
-              className="text-left flex bg-neutral-950 hover:bg-neutral-800 pr-4 gap-2 rounded-xl"
+              className="text-left flex hover:bg-neutral-800 pr-4 gap-2 rounded-xl"
               onClick={async () => {
                 if (pickerOpenFor === null) return;
                 await setSelection(pickerOpenFor, bullet.id);
@@ -539,15 +541,18 @@ const BulletFactory: React.FC<Props> = ({
                 tier={bullet.tier}
                 img={bullet.img}
               />
-              <div>
+              <div className="flex flex-col justify-center leading-5">
                 <Item name={bullet.name} tier={bullet.tier}></Item>
-                <p>
+                <p className="text-sm">
                   Pris:{" "}
                   <strong className="text-neutral-200">
                     <i className="fa-solid fa-dollar-sign"></i> {bullet.value}
                   </strong>
                 </p>
-                <p>{bullet.attack}</p>
+                <p className="text-sm">
+                  Skade:{" "}
+                  <strong className="text-neutral-200">+{bullet.attack}</strong>
+                </p>
               </div>
             </button>
           ))}

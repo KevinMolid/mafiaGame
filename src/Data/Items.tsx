@@ -1,5 +1,3 @@
-// Items.tsx
-
 // Hats
 import h1 from "/images/items/h1.jpg";
 import h2 from "/images/items/h2.jpg";
@@ -25,8 +23,8 @@ import b1 from "/images/items/b1.jpg";
 import b2 from "/images/items/b2.jpg";
 
 // Narcotics
-import n1 from "/images/items/n1.png"; // Cocaine
-import n2 from "/images/items/n2.png"; // Ecstasy
+import n1 from "/images/items/n1.png";
+import n2 from "/images/items/n2.png";
 
 // ---------- Types ----------
 export type Slot = "hat" | "jacket" | "weapon" | "bullet" | "narcotic";
