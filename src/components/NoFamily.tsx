@@ -440,7 +440,11 @@ const NoFamily = ({
     <>
       <H1>Familie</H1>
       <p className="mb-2">Du tilhører ingen familie.</p>
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       <div className="flex flex-col gap-4">
         {/* Create family */}

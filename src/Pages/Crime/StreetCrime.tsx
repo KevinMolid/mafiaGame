@@ -269,7 +269,11 @@ const StreetCrime = () => {
         </p>
       )}
 
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       <ul className="grid grid-cols-2 gap-2 mb-4 max-w-[500px]">
         {crimes.map((crime) => (

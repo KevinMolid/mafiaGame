@@ -144,7 +144,11 @@ const Jackpot = () => {
         </Box>
       </div>
 
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       <div className="flex flex-col gap-4">
         <div>

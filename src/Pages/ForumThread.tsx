@@ -687,7 +687,11 @@ const ForumThread = () => {
         </Button>
       </div>
 
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       <div className="grid grid-cols-[auto_max-content] gap-4 mb-2 lg:mb-4 bg-neutral-900 border p-4 border-neutral-600">
         <div className="flex flex-col">

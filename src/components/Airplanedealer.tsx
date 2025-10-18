@@ -109,7 +109,11 @@ const Airplanedealer = () => {
         for å reise eller transportere narkotika mellom byer.
       </p>
 
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       {/* Same list/card layout style as Cardealer */}
       <ul className="flex flex-wrap gap-2 mb-4">

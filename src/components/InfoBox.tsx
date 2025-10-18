@@ -5,6 +5,7 @@ interface InfoBoxInterface {
   children: ReactNode;
   type: "success" | "failure" | "important" | "warning" | "info";
   className?: string;
+  onClose?: () => void; // ← NEW
 }
 
 const ICON_CLASS: Record<InfoBoxInterface["type"], string> = {
@@ -15,7 +16,6 @@ const ICON_CLASS: Record<InfoBoxInterface["type"], string> = {
   info: "text-sky-400/80",
 };
 
-// icon glyphs (Font Awesome)
 const ICON_GLYPH: Record<InfoBoxInterface["type"], string> = {
   success: "fa-thumbs-up",
   failure: "fa-thumbs-down",
@@ -24,7 +24,12 @@ const ICON_GLYPH: Record<InfoBoxInterface["type"], string> = {
   info: "fa-circle-info",
 };
 
-const InfoBox = ({ children, type, className = "" }: InfoBoxInterface) => {
+const InfoBox = ({
+  children,
+  type,
+  className = "",
+  onClose,
+}: InfoBoxInterface) => {
   const iconColor = ICON_CLASS[type];
   const icon = ICON_GLYPH[type];
 
@@ -63,12 +68,20 @@ const InfoBox = ({ children, type, className = "" }: InfoBoxInterface) => {
         <i className={`fa-solid ${icon}`} />
       </span>
 
-      {/* Right-side icon */}
-      <span className="absolute right-2 top-1/2 -translate-y-1/2">
-        <Button size="small-square" style="exit">
-          <i className={`fa-solid fa-x`} />
-        </Button>
-      </span>
+      {/* Right-side close button (only if onClose provided) */}
+      {onClose && (
+        <span className="absolute right-2 top-1/2 -translate-y-1/2">
+          <Button
+            size="small-square"
+            style="exit"
+            type="button"
+            onClick={onClose}
+            aria-label="Lukk"
+          >
+            <i className="fa-solid fa-x" />
+          </Button>
+        </span>
+      )}
 
       {/* Content */}
       <div className="relative z-10 ml-6 leading-relaxed">{children}</div>

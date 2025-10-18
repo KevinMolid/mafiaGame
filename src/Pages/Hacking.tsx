@@ -164,7 +164,11 @@ const Hacking = () => {
     <Main>
       <H1>Hacking</H1>
 
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       {/* Answer row on game over */}
       {gameOver && (

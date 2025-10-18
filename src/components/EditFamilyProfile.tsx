@@ -94,7 +94,11 @@ const EditFamilyProfile = () => {
 
   return (
     <section>
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       <form
         className="flex flex-col gap-4 mb-4"

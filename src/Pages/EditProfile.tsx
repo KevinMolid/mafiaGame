@@ -58,7 +58,11 @@ const EditProfile = () => {
     <section>
       <H2>Endre profil</H2>
 
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       <form action="" className="flex flex-col gap-4 mb-4">
         <div className="flex flex-col">

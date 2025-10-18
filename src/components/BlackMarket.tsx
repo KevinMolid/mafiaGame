@@ -515,7 +515,11 @@ const BlackMarket = () => {
         kjøpe fra andre spillere.
       </p>
 
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       <div className="flex flex-wrap gap-4">
         {/* Market list */}

@@ -556,7 +556,11 @@ const Forum = () => {
                 </div>
               </div>
 
-              {message && <InfoBox type={messageType}>{message}</InfoBox>}
+              {message && (
+                <InfoBox type={messageType} onClose={() => setMessage("")}>
+                  {message}
+                </InfoBox>
+              )}
 
               <input
                 ref={titleRef}

@@ -349,7 +349,11 @@ const Bank = () => {
         Ved midnatt vil du motta 5% rente på pengene i din bankkonto.
       </p>
 
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       <div>
         <H2>Konto</H2>

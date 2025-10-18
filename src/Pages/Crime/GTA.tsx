@@ -600,7 +600,11 @@ const GTA = () => {
         </p>
       )}
 
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       {/* --- Single form --- */}
       <form onSubmit={handleSubmit} className="flex flex-col gap-2">

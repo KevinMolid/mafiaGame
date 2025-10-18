@@ -182,7 +182,9 @@ const Support = () => {
 
       {message && (
         <div className="mb-4 max-w-2xl">
-          <InfoBox type={message.kind}>{message.text}</InfoBox>
+          <InfoBox type={message.kind} onClose={() => setMessage(null)}>
+            {message.text}
+          </InfoBox>
         </div>
       )}
 

@@ -136,7 +136,11 @@ const Contacts = () => {
     <div>
       <H2>Kontakter</H2>
 
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       <div className="grid grid-cols-2 mt-4 gap-8">
         {/* VENNER */}

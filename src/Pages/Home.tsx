@@ -219,7 +219,11 @@ const Home = () => {
       <H1>Hovedkvarter</H1>
 
       {/* Message */}
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       {/* Content */}
       <div className="grid grid-cols-[auto] md:grid-cols-6 lg:grid-cols-8 items-start gap-x-8 gap-y-8 mb-6">

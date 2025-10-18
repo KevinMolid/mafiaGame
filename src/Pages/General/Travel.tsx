@@ -176,7 +176,11 @@ const Travel = () => {
     <Main img="">
       <H1>Flyplass</H1>
       <p className="mb-2">Her kan du reise mellom byer.</p>
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
       {!targetLocation && (
         <p>
           Du befinner deg for øyeblikket i{" "}

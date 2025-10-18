@@ -308,7 +308,11 @@ const Family = () => {
           </H1>
 
           {/* InfoBox: Message */}
-          {message && <InfoBox type={messageType}>{message}</InfoBox>}
+          {message && (
+            <InfoBox type={messageType} onClose={() => setMessage("")}>
+              {message}
+            </InfoBox>
+          )}
 
           {/* Family info */}
           <div className="flex gap-4 mb-2">

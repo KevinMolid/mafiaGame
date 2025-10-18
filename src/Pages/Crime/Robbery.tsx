@@ -368,7 +368,11 @@ const Robbery = () => {
         </p>
       )}
 
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-2">
         <H2>Hvem vil du rane?</H2>

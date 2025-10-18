@@ -375,7 +375,11 @@ const Admin = () => {
         <i className="text-yellow-400 fa-solid fa-gears"></i> Kontrollpanel
       </H1>
 
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       <ConfirmDialog
         open={showResetConfirm}

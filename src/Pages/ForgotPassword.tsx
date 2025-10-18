@@ -118,7 +118,11 @@ const ForgotPassword = () => {
         <div className="bg-neutral-900/80 border border-neutral-500 p-6 rounded-lg flex flex-col gap-4 w-full">
           <H1>Glemt passord</H1>
 
-          {message && <InfoBox type={messageType}>{message}</InfoBox>}
+          {message && (
+            <InfoBox type={messageType} onClose={() => setMessage("")}>
+              {message}
+            </InfoBox>
+          )}
 
           <form className="flex flex-col gap-2" onSubmit={onSubmit} noValidate>
             <div className="flex flex-col">

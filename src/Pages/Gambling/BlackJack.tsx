@@ -1003,7 +1003,11 @@ const BlackJack = () => {
     <div className="flex flex-col">
       <H2>BlackJack</H2>
 
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       <div className="rounded border border-neutral-700 p-4 bg-neutral-900">
         {/* Always render the table; show placeholders when empty */}

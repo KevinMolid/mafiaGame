@@ -266,7 +266,11 @@ const Cardealer = () => {
       </p>
       <p className="mb-4">Biler kan brukes til StreetRacing i Tokyo</p>
 
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       {/* Wait for daily state to load to avoid flicker */}
       {!dailyLoaded ? (
