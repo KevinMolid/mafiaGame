@@ -3,6 +3,7 @@ import H1 from "../components/Typography/H1";
 import Alert from "../components/Alert";
 import Username from "../components/Typography/Username";
 import Familyname from "../components/Typography/Familyname";
+import Item from "../components/Typography/Item";
 import { serverNow } from "../Functions/serverTime";
 
 import { useState, useEffect } from "react";
@@ -23,12 +24,25 @@ import { initializeApp } from "firebase/app";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+type AlertCar = {
+  name: string;
+  tier: number;
+  img?: string | null;
+  // nice-to-haves if you want tooltips/stats later:
+  modelKey?: string | null;
+  hp?: number;
+  value?: number;
+  isElectric?: boolean;
+  city?: string;
+};
+
 // Define the structure of an alert item (note: timestamp is a Date now)
 interface AlertItem {
   id: string;
   type: string;
   newRank: string;
   amountLost: number;
+  car: AlertCar;
   amountSent: number;
   robberId: string;
   senderId: string;
@@ -125,6 +139,7 @@ const Alerts = () => {
             timestamp: toDate(data.timestamp),
             newRank: data.newRank || "",
             amountLost: data.amountLost || 0,
+            car: data.car || [],
             amountSent: data.amountSent || 0,
             robberId: data.robberId || "",
             robberName: data.robberName || "",
@@ -294,6 +309,26 @@ const Alerts = () => {
                         {alert.amountLost.toLocaleString("nb-NO")}
                       </strong>
                     </span>
+                    .
+                  </small>
+                )}
+
+                {/* GTA alert */}
+                {alert.type === "gta" && alert.car && (
+                  <small>
+                    Din parkering ble ranet av{" "}
+                    <Username
+                      character={{
+                        id: alert.robberId,
+                        username: alert.robberName,
+                      }}
+                    />
+                    . Du mistet{" "}
+                    <Item
+                      name={alert.car.name}
+                      tier={alert.car.tier}
+                      tooltipImg={alert.car.img ?? undefined}
+                    />
                     .
                   </small>
                 )}

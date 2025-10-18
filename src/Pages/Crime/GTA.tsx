@@ -393,10 +393,37 @@ const GTA = () => {
         // Remove from target
         await deleteDoc(doc(db, "Characters", target.id, "cars", chosen.id));
 
-        rewardXp(userCharacter, 15); // PvP a bit more XP
-        increaseHeat(userCharacter, userCharacter.id, 2); // PvP hotter
-
+        // --- NEW: build car snapshot for alert and write alert ---
         const catalog = carData.modelKey
+          ? getCarByKey(carData.modelKey)
+          : getCarByName(carData.name);
+
+        const carSnapshot = {
+          modelKey: carData.modelKey ?? null,
+          name: carData.name,
+          tier: carData.tier,
+          hp: carData.hp,
+          value: carData.value,
+          isElectric: !!carData.isElectric,
+          img: catalog?.img ?? null, // lets Item render a tooltip image
+          city: attackerCity, // optional
+        };
+
+        await addDoc(collection(db, "Characters", target.id, "alerts"), {
+          type: "gta",
+          carLost: true,
+          car: carSnapshot,
+          read: false,
+          robberId: userCharacter.id,
+          robberName: userCharacter.username,
+          timestamp: serverTimestamp(),
+        });
+        // --- END NEW ---
+
+        rewardXp(userCharacter, 15);
+        increaseHeat(userCharacter, userCharacter.id, 2);
+
+        const catalogForMsg = carData.modelKey
           ? getCarByKey(carData.modelKey)
           : getCarByName(carData.name);
 
@@ -407,7 +434,7 @@ const GTA = () => {
             <Item
               name={carData.name}
               tier={carData.tier}
-              tooltipImg={catalog?.img && catalog.img}
+              tooltipImg={catalogForMsg?.img && catalogForMsg.img}
               tooltipContent={
                 <div>
                   <p>
