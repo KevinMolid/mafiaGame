@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import Button from "./Button";
 
 interface InfoBoxInterface {
   children: ReactNode;
@@ -6,16 +7,7 @@ interface InfoBoxInterface {
   className?: string;
 }
 
-const BAR_CLASS: Record<InfoBoxInterface["type"], string> = {
-  success: "bg-green-400/80",
-  failure: "bg-red-400/80",
-  important: "bg-blue-400/80",
-  warning: "bg-amber-400/80",
-  info: "bg-sky-400/80",
-};
-
-// matching text color for the icon
-const ICON_COLOR: Record<InfoBoxInterface["type"], string> = {
+const ICON_CLASS: Record<InfoBoxInterface["type"], string> = {
   success: "text-green-400/80",
   failure: "text-red-400/80",
   important: "text-blue-400/80",
@@ -33,8 +25,7 @@ const ICON_GLYPH: Record<InfoBoxInterface["type"], string> = {
 };
 
 const InfoBox = ({ children, type, className = "" }: InfoBoxInterface) => {
-  const bar = BAR_CLASS[type];
-  const iconColor = ICON_COLOR[type];
+  const iconColor = ICON_CLASS[type];
   const icon = ICON_GLYPH[type];
 
   return (
@@ -54,26 +45,33 @@ const InfoBox = ({ children, type, className = "" }: InfoBoxInterface) => {
       <span
         aria-hidden
         className={[
-          "pointer-events-none absolute left-0 top-0 h-full w-4 rounded-l-2xl",
-          bar,
+          "pointer-events-none absolute left-0 top-0 h-full w-10 rounded-l-2xl",
+          "bg-neutral-700",
           "-z-10",
         ].join(" ")}
       />
 
-      {/* Right-side icon */}
+      {/* Left-side icon */}
       <span
         aria-hidden
         className={[
-          "absolute right-3 top-1/2 -translate-y-1/2",
-          "text-2xl", // icon size
+          "absolute left-3 top-1/2 -translate-y-1/2",
+          "text-xl",
           iconColor,
         ].join(" ")}
       >
         <i className={`fa-solid ${icon}`} />
       </span>
 
+      {/* Right-side icon */}
+      <span className="absolute right-2 top-1/2 -translate-y-1/2">
+        <Button size="small-square" style="exit">
+          <i className={`fa-solid fa-x`} />
+        </Button>
+      </span>
+
       {/* Content */}
-      <div className="relative z-10 ml-1 leading-relaxed">{children}</div>
+      <div className="relative z-10 ml-6 leading-relaxed">{children}</div>
     </div>
   );
 };

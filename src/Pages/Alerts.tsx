@@ -316,14 +316,14 @@ const Alerts = () => {
                 {/* GTA alert */}
                 {alert.type === "gta" && alert.car && (
                   <small>
-                    Din parkering ble ranet av{" "}
+                    Du ble ranet av{" "}
                     <Username
                       character={{
                         id: alert.robberId,
                         username: alert.robberName,
                       }}
-                    />
-                    . Du mistet{" "}
+                    />{" "}
+                    og mistet{" "}
                     <Item
                       name={alert.car.name}
                       tier={alert.car.tier}
