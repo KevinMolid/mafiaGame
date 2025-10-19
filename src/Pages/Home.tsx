@@ -50,11 +50,14 @@ const Home = () => {
   const [bags, setBags] = useState<ItemDoc[]>([]);
   const [itemModalOpen, setItemModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ItemDoc | null>(null);
+  const [sellQty, setSellQty] = useState<number>(1);
 
   const openItemModal = (item: ItemDoc) => {
     setSelectedItem(item);
+    setSellQty(1);
     setItemModalOpen(true);
   };
+
   const closeItemModal = () => {
     setItemModalOpen(false);
     setSelectedItem(null);
@@ -115,8 +118,7 @@ const Home = () => {
       setMessageType("success");
       setMessage(
         <>
-          Du utstyrte <strong className="text-neutral-200">{item.name}</strong>{" "}
-          i <strong className="text-neutral-200">{slot}</strong>.
+          Du utstyrte deg med <strong>{item.name}</strong>.
         </>
       );
     } catch (e) {
@@ -128,10 +130,19 @@ const Home = () => {
     }
   };
 
-  const sellItem = async (item: ItemDoc) => {
+  function clamp(n: number, min: number, max: number) {
+    return Math.max(min, Math.min(max, n));
+  }
+
+  const sellItem = async (item: ItemDoc, qty: number = 1) => {
     if (!userCharacter?.id) return;
 
-    const value = Number(item.value) || 0;
+    const valueEach = Number(item.value) || 0;
+    const stackQty = Number(item.quantity ?? 1);
+    const qtyToSell = clamp(Math.floor(qty), 1, Math.max(1, stackQty)); // safety
+
+    const totalValue = valueEach * qtyToSell;
+
     const itemRef = doc(
       db,
       "Characters",
@@ -143,20 +154,34 @@ const Home = () => {
 
     try {
       const batch = writeBatch(db);
-      batch.delete(itemRef);
-      if (value > 0) {
-        batch.update(charRef, { "stats.money": increment(value) });
+
+      // If selling the whole stack, delete the doc. Otherwise decrement quantity.
+      if (stackQty > qtyToSell) {
+        batch.update(itemRef, {
+          quantity: increment(-qtyToSell),
+          lastSoldAt: serverTimestamp(),
+        });
+      } else {
+        batch.delete(itemRef);
       }
+
+      if (totalValue > 0) {
+        batch.update(charRef, { "stats.money": increment(totalValue) });
+      }
+
       await batch.commit();
 
       setMessageType("success");
       setMessage(
         <>
-          Du solgte <strong className="text-neutral-200">{item.name}</strong>{" "}
+          Du solgte{" "}
+          <strong className="text-neutral-200">
+            {qtyToSell}× {item.name}
+          </strong>{" "}
           for{" "}
           <strong className="text-neutral-200">
             <i className="fa-solid fa-dollar-sign" />{" "}
-            {value.toLocaleString("nb-NO")}
+            {totalValue.toLocaleString("nb-NO")}
           </strong>
           .
         </>
@@ -212,6 +237,16 @@ const Home = () => {
   const heatRaw = userCharacter?.stats?.heat ?? 0;
   const heat = Math.max(0, Math.min(heatRaw, MAX_HEAT)); // 0..100
   const heatPercentage = Math.round((heat / MAX_HEAT) * 100); // 0..100
+
+  const canEquip =
+    !!selectedItem &&
+    typeof selectedItem.slot === "string" &&
+    selectedItem.slot.trim().length > 0;
+
+  const maxSellable = Number(selectedItem?.quantity ?? 1);
+  const eachValue = Number(selectedItem?.value) || 0;
+  const totalValue = eachValue * sellQty;
+  const canSell = sellQty >= 1 && sellQty <= maxSellable;
 
   return (
     <Main img="MafiaBg">
@@ -422,18 +457,26 @@ const Home = () => {
         <div className="md:col-span-2 lg:col-span-4">
           <H2>Eiendeler</H2>
           <ul className="flex flex-wrap gap-x-1 gap-y-0 max-w-[500px]">
-            {bags.map((item, index) => (
-              <li key={item.id + index}>
-                <button
-                  type="button"
-                  onClick={() => openItemModal(item)}
-                  className="focus:outline-none"
-                  title="Åpne handlinger"
-                >
-                  <ItemTile name={item.name} img={item.img} tier={item.tier} />
-                </button>
-              </li>
-            ))}
+            {bags.map((item, index) => {
+              const qty = Number(item.quantity ?? 1);
+              return (
+                <li key={item.id + index}>
+                  <button
+                    type="button"
+                    onClick={() => openItemModal(item)}
+                    className="focus:outline-none"
+                    title="Åpne handlinger"
+                  >
+                    <ItemTile
+                      name={item.name}
+                      img={item.img}
+                      tier={item.tier}
+                      qty={qty}
+                    />
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
@@ -461,6 +504,7 @@ const Home = () => {
                       name={selectedItem.name}
                       img={selectedItem.img}
                       tier={selectedItem.tier}
+                      qty={Number(selectedItem.quantity ?? 1)}
                     />
                   ) : null}
                   <div>
@@ -471,27 +515,81 @@ const Home = () => {
                       ></Item>
                     </p>
                     {/* VALUE LINE */}
-                    <p className="text-neutral-400 text-sm mt-1">
+                    <p className="text-neutral-400 mt-1">
                       Verdi:{" "}
                       <strong className="text-neutral-200">
                         <i className="fa-solid fa-dollar-sign" />{" "}
-                        {(Number(selectedItem.value) || 0).toLocaleString(
-                          "nb-NO"
-                        )}
+                        {eachValue.toLocaleString("nb-NO")}
                       </strong>
                     </p>
+
+                    {/* Quantity picker (show when stack size > 1, or always if you prefer) */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="small-square"
+                          style="secondary"
+                          onClick={() =>
+                            setSellQty((q) => clamp(q - 1, 1, maxSellable))
+                          }
+                          disabled={sellQty <= 1}
+                          aria-label="Mindre"
+                          title="Mindre"
+                        >
+                          <i className="fa-solid fa-minus"></i>
+                        </Button>
+                        <input
+                          id="sellQty"
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          max={maxSellable}
+                          value={sellQty}
+                          onChange={(e) => {
+                            const v = Number(e.target.value);
+                            setSellQty(
+                              clamp(isFinite(v) ? v : 1, 1, maxSellable)
+                            );
+                          }}
+                          className="w-12 text-lg font-bold bg-transparent py-1 border-b border-neutral-600 text-neutral-200 text-center"
+                        />
+                        <Button
+                          size="small-square"
+                          style="secondary"
+                          onClick={() =>
+                            setSellQty((q) => clamp(q + 1, 1, maxSellable))
+                          }
+                          disabled={sellQty >= maxSellable}
+                          aria-label="Mer"
+                          title="Mer"
+                        >
+                          <i className="fa-solid fa-plus"></i>
+                        </Button>
+                        {/* Live total */}
+                        <span className="ml-3 text-neutral-300">
+                          <strong className="text-neutral-200">
+                            <i className="fa-solid fa-dollar-sign" />{" "}
+                            {totalValue.toLocaleString("nb-NO")}
+                          </strong>
+                        </span>
+                      </div>
+                    </div>
+
                     {/* Actions */}
-                    <div className="mt-4 flex gap-2">
-                      <Button
-                        size="small"
-                        onClick={() => equipItem(selectedItem)}
-                      >
-                        Bruk
-                      </Button>
+                    <div className="mt-4 flex gap-2 items-center">
+                      {canEquip && (
+                        <Button
+                          size="small"
+                          onClick={() => equipItem(selectedItem)}
+                        >
+                          Bruk
+                        </Button>
+                      )}
                       <Button
                         size="small"
                         style="danger"
-                        onClick={() => sellItem(selectedItem)}
+                        onClick={() => sellItem(selectedItem, sellQty)}
+                        disabled={!canSell}
                       >
                         Selg
                       </Button>

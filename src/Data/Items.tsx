@@ -35,6 +35,7 @@ interface BaseItem {
   tier: number;
   value: number;
   img: string;
+  stackable?: boolean;
 }
 
 export interface HatItem extends BaseItem {
@@ -53,12 +54,12 @@ export interface WeaponItem extends BaseItem {
 }
 
 export interface BulletItem extends BaseItem {
-  slot: "bullet";
   attack: number;
+  stackable: true;
 }
 
 export interface NarcoticItem extends BaseItem {
-  slot: "narcotic";
+  stackable: true;
   // add effect fields later if needed, e.g. duration, boost, etc.
 }
 
@@ -209,20 +210,20 @@ export const Bullets: BulletItem[] = [
   {
     id: "ib0001",
     name: "Enkel kule",
-    slot: "bullet",
     tier: 1,
     value: 15,
     attack: 1,
     img: b1,
+    stackable: true,
   },
   {
     id: "ib0002",
     name: "Kvalitetskule",
-    slot: "bullet",
     tier: 2,
     value: 25,
     attack: 2,
     img: b2,
+    stackable: true,
   },
 ];
 
@@ -230,18 +231,18 @@ export const Narcotics: NarcoticItem[] = [
   {
     id: "in0001",
     name: "Kokain",
-    slot: "narcotic",
     tier: 2,
     value: 150,
     img: n1,
+    stackable: true,
   },
   {
     id: "in0002",
     name: "Ecstasy",
-    slot: "narcotic",
     tier: 2,
     value: 150,
     img: n2,
+    stackable: true,
   },
 ];
 

@@ -1,10 +1,17 @@
+// Components
 import React, { useEffect, useMemo, useState, ReactNode } from "react";
 import H2 from "../../components/Typography/H2";
 import Button from "../../components/Button";
 import ItemTile from "../../components/ItemTile";
 import Item from "../../components/Typography/Item";
 
+// Context
 import { useCharacter } from "../../CharacterContext";
+
+//Functions
+import { grantItemsToInventory } from "../../Functions/RewardFunctions";
+
+// Firebase
 import {
   getFirestore,
   doc,
@@ -13,8 +20,6 @@ import {
   serverTimestamp,
   setDoc,
   getDocFromServer,
-  collection,
-  writeBatch,
 } from "firebase/firestore";
 
 import { Bullets, getItemById } from "../../Data/Items";
@@ -339,30 +344,28 @@ const BulletFactory: React.FC<Props> = ({
 
     setBusyClaim(true);
     try {
-      const batch = writeBatch(db);
-
-      // Grant in order (slot 0, then slot 1)
+      // 1) Aggregate the output per itemId
+      const grants: Record<string, number> = {};
       for (let i = 0; i < filledCount; i++) {
-        const idForSlot = selections[i] || selections[0] || "iw0001";
-        const item = getItemById(idForSlot) || getItemById("iw0001");
-        const ref = doc(
-          collection(db, "Characters", userCharacter.id, "items")
-        );
-        const payload = {
-          ...item,
-          aquiredAt: serverTimestamp(),
-        };
-        batch.set(ref, payload);
+        const idForSlot = selections[i] || selections[0] || "ib0001";
+        if (!idForSlot) continue;
+        grants[idForSlot] = (grants[idForSlot] ?? 0) + 1;
       }
 
-      // Reset production timestamp and clear the selections in Firestore
-      batch.update(doc(db, "Characters", userCharacter.id), {
+      // 2) Give items via reusable helper
+      const entries = Object.entries(grants).map(([itemId, qty]) => ({
+        itemId,
+        qty,
+      }));
+      await grantItemsToInventory(userCharacter.id, entries);
+
+      // 3) Reset factory state
+      await updateDoc(doc(db, "Characters", userCharacter.id), {
         "activeFactory.productionStarted": null,
         "activeFactory.bulletSelections": [null, null],
       });
 
-      await batch.commit();
-
+      // 4) Message (unchanged)
       onSetMessageType("success");
       onSetMessage(
         <>
@@ -371,14 +374,15 @@ const BulletFactory: React.FC<Props> = ({
             {filledCount} {filledCount > 1 ? "kuler" : "kule"}
           </strong>
           :
-          <div className="mt-1 flex gap-2">
-            {Array.from({ length: filledCount }, (_, i) => {
-              const id = selections[i] || selections[0] || "iw0001";
-              const it = getItemById(id);
+          <div className="mt-1 flex gap-2 flex-wrap">
+            {entries.map(({ itemId, qty }) => {
+              const it = getItemById(itemId);
               return it ? (
-                <Item key={i} name={it.name} tier={it.tier} />
+                <span key={itemId} className="inline-flex items-center gap-1">
+                  <Item name={it.name} tier={it.tier} /> × {qty}
+                </span>
               ) : (
-                <span key={i}>kule</span>
+                <span key={itemId}>kule × {qty}</span>
               );
             })}
           </div>

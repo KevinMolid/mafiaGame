@@ -1,14 +1,24 @@
 import {
   getFirestore,
+  collection,
   doc,
+  setDoc,
   updateDoc,
+  serverTimestamp,
+  increment,
+  query,
+  where,
+  limit,
+  getDocs,
+  writeBatch,
   Timestamp,
   runTransaction,
-  serverTimestamp,
 } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "../firebaseConfig";
 import { serverNow, serverTimeReady } from "./serverTime";
+
+import { getItemById } from "../Data/Items";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -170,3 +180,92 @@ export const breakOut = async (characterID: string) => {
     console.error("Feil ved utbrytning:", error);
   }
 };
+
+export async function grantItemToInventory(
+  characterId: string,
+  itemId: string,
+  qty: number = 1
+): Promise<void> {
+  if (!characterId || !itemId || qty <= 0) return;
+
+  const it = getItemById(itemId);
+  if (!it) throw new Error(`Unknown itemId: ${itemId}`);
+
+  const itemsCol = collection(db, "Characters", characterId, "items");
+  const isStackable = !!(it as any).stackable;
+
+  if (isStackable) {
+    // Find ANY existing stack doc for this itemId (by catalog id).
+    // We use a normal query here; if two clients race, at worst you’ll end up with 2 stacks,
+    // which is acceptable since you want the ability to split stacks later anyway.
+    const q = query(itemsCol, where("id", "==", it.id), limit(1));
+    const snap = await getDocs(q);
+
+    if (!snap.empty) {
+      // Increment quantity on the first matching stack
+      const stackRef = snap.docs[0].ref;
+      await updateDoc(stackRef, {
+        quantity: increment(qty),
+        lastAcquiredAt: serverTimestamp(),
+      });
+    } else {
+      // Create a new stack doc (auto-id)
+      const newRef = doc(itemsCol);
+      await setDoc(newRef, {
+        // canonical metadata
+        id: it.id,
+        name: it.name,
+        slot: (it as any).slot ?? null,
+        tier: it.tier ?? 1,
+        value: it.value ?? 0,
+        img: (it as any).img ?? null,
+        attack: (it as any).attack ?? 0,
+
+        // stack data
+        quantity: qty,
+
+        // bookkeeping
+        createdAt: serverTimestamp(),
+        lastAcquiredAt: serverTimestamp(),
+      });
+    }
+    return;
+  }
+
+  // Non-stackable: create one doc per unit
+  // (You can batch these for efficiency if qty is large.)
+  const batch = writeBatch(db);
+  for (let i = 0; i < qty; i++) {
+    const ref = doc(itemsCol); // auto-id
+    batch.set(ref, {
+      id: it.id,
+      name: it.name,
+      slot: (it as any).slot ?? null,
+      tier: it.tier ?? 1,
+      value: it.value ?? 0,
+      img: (it as any).img ?? null,
+      attack: (it as any).attack ?? 0,
+
+      quantity: 1,
+      createdAt: serverTimestamp(),
+      lastAcquiredAt: serverTimestamp(),
+    });
+  }
+  await batch.commit();
+}
+
+/**
+ * Convenience: grant multiple items (small lists).
+ * Iterates sequentially so each item can query/update its stack safely.
+ */
+export async function grantItemsToInventory(
+  characterId: string,
+  entries: Array<{ itemId: string; qty: number }>
+): Promise<void> {
+  for (const { itemId, qty } of entries) {
+    if (qty > 0) {
+      // eslint-disable-next-line no-await-in-loop
+      await grantItemToInventory(characterId, itemId, qty);
+    }
+  }
+}

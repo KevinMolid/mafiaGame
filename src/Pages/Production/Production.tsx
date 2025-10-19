@@ -277,7 +277,11 @@ const Production: React.FC = () => {
               </Button>
             )}
           </div>
-          {message ? <InfoBox type={messageType}>{message}</InfoBox> : null}
+          {message && (
+            <InfoBox type={messageType} onClose={() => setMessage("")}>
+              {message}
+            </InfoBox>
+          )}
 
           {/* No active factory — show buy cards */}
           {!activeFactory ? (
