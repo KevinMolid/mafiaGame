@@ -17,6 +17,7 @@ import j8 from "/images/items/j8.jpg";
 // Weapons
 import w1 from "/images/items/Knife1.png";
 import w2 from "/images/items/Knife2.jpg";
+import w3 from "/images/items/w3.jpg";
 
 // Narcotics
 import b1 from "/images/items/b1.jpg";
@@ -51,6 +52,7 @@ export interface JacketItem extends BaseItem {
 export interface WeaponItem extends BaseItem {
   slot: "weapon";
   attack: number;
+  usingBullets: boolean;
 }
 
 export interface BulletItem extends BaseItem {
@@ -194,6 +196,7 @@ export const Weapons: WeaponItem[] = [
     value: 150,
     attack: 5,
     img: w1,
+    usingBullets: false,
   },
   {
     id: "iw0002",
@@ -203,6 +206,17 @@ export const Weapons: WeaponItem[] = [
     value: 250,
     attack: 6,
     img: w2,
+    usingBullets: false,
+  },
+  {
+    id: "iw0003",
+    name: "Glock 17",
+    slot: "weapon",
+    tier: 3,
+    value: 1500,
+    attack: 7,
+    img: w3,
+    usingBullets: true,
   },
 ];
 
