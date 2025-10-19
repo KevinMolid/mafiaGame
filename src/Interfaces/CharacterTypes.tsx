@@ -16,6 +16,14 @@ export interface Reputation {
   politics: number;
 }
 
+export interface CombatLoadout {
+  activeAmmo?: {
+    docId: string;
+    qty: number;
+    setAt: Timestamp;
+  } | null;
+}
+
 export interface Character {
   id: string;
   role?: string;
@@ -53,6 +61,7 @@ export interface Character {
   friends?: any;
   blacklist?: any;
   equipment?: Record<string, any>;
+  combatLoadout?: CombatLoadout;
 }
 
 export interface Target {

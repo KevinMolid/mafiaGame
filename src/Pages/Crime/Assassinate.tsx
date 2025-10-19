@@ -6,6 +6,7 @@ import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
 import Username from "../../components/Typography/Username";
+import ItemTile from "../../components/ItemTile";
 
 // React
 import { useState, useEffect, useRef } from "react";
@@ -23,7 +24,20 @@ import {
   serverTimestamp,
   onSnapshot,
   deleteDoc,
+  runTransaction,
 } from "firebase/firestore";
+
+type InvItem = {
+  docId: string; // unique stack/doc id
+  id: string; // catalog id: "iw..." or "ib..."
+  name: string;
+  img?: string;
+  tier?: number;
+  value?: number;
+  attack?: number;
+  quantity?: number; // stacks for bullets
+  usingBullets?: boolean; // for weapons
+};
 
 const db = getFirestore();
 
@@ -41,6 +55,16 @@ const Assassinate = () => {
   const [bounties, setBounties] = useState<any[]>([]);
   const [addingBounty, setAddingBounty] = useState<boolean>(false);
   const [wantedPlayer, setWantedPlayer] = useState("");
+
+  const [weaponStacks, setWeaponStacks] = useState<InvItem[]>([]);
+  const [bulletStacks, setBulletStacks] = useState<InvItem[]>([]);
+
+  const [activeAmmoDocId, setActiveAmmoDocId] = useState<string | null>(null);
+  const [activeAmmoQty, setActiveAmmoQty] = useState<number>(1);
+
+  function clamp(n: number, min: number, max: number) {
+    return Math.max(min, Math.min(max, n));
+  }
 
   // RAW input string to avoid formatting while typing
   const [bountyAmountInput, setBountyAmountInput] = useState<string>("");
@@ -78,10 +102,120 @@ const Assassinate = () => {
       : withSpaces;
   };
 
+  // Subscribe to weapons and bullets
+  useEffect(() => {
+    if (!userCharacter?.id) {
+      setWeaponStacks([]);
+      setBulletStacks([]);
+      return;
+    }
+
+    const itemsRef = collection(db, "Characters", userCharacter.id, "items");
+    const unsub = onSnapshot(itemsRef, (snap) => {
+      const all: InvItem[] = snap.docs.map((d) => {
+        const v = d.data() as any;
+        return {
+          docId: d.id,
+          id: String(v.id ?? ""),
+          name: String(v.name ?? "Ukjent"),
+          img: v.img ?? undefined,
+          tier: Number(v.tier ?? 1),
+          value: Number(v.value ?? 0),
+          attack: Number(v.attack ?? 0),
+          quantity: Number(v.quantity ?? 1),
+          usingBullets: Boolean(v.usingBullets), // only relevant for weapons
+        };
+      });
+
+      // Prefix-based filtering (matches your data set)
+      setWeaponStacks(all.filter((it) => it.id?.startsWith("iw")));
+      setBulletStacks(all.filter((it) => it.id?.startsWith("ib")));
+    });
+
+    return () => unsub();
+  }, [userCharacter?.id]);
+
   const sanitizeInt = (s: string) => s.replace(/[^\d]/g, ""); // keep digits only
 
   const parsedBountyAmount = (): number =>
     bountyAmountInput === "" ? 0 : parseInt(bountyAmountInput, 10);
+
+  // Equip weapon
+  async function equipWeaponFromInventory(item: InvItem) {
+    if (!userCharacter?.id) return;
+
+    const charRef = doc(db, "Characters", userCharacter.id);
+    const invRef = doc(db, "Characters", userCharacter.id, "items", item.docId);
+
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(charRef);
+      const data = (snap.data() || {}) as any;
+      const current = data?.equipment?.weapon || null;
+
+      // return currently equipped weapon back to inventory (optional)
+      if (current?.fromDocId) {
+        // (if you stored fromDocId when equipping)
+        const backRef = doc(
+          db,
+          "Characters",
+          userCharacter.id,
+          "items",
+          current.fromDocId
+        );
+        tx.set(
+          backRef,
+          {
+            ...current,
+            returnedFromSlot: "weapon",
+            returnedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+      } else if (current) {
+        // No back reference? Just create a new auto-id doc with the metadata
+        const backRef = doc(
+          collection(db, "Characters", userCharacter.id, "items")
+        );
+        tx.set(backRef, {
+          ...current,
+          returnedFromSlot: "weapon",
+          returnedAt: serverTimestamp(),
+        });
+      }
+
+      // Equip the chosen weapon
+      tx.update(charRef, {
+        "equipment.weapon": {
+          id: item.id,
+          name: item.name,
+          img: item.img ?? null,
+          tier: item.tier ?? 1,
+          value: item.value ?? 0,
+          attack: item.attack ?? 0,
+          slot: "weapon",
+          usingBullets: Boolean(item.usingBullets),
+          fromDocId: item.docId,
+          equippedAt: serverTimestamp(),
+        },
+      });
+
+      // Remove it from inventory
+      tx.delete(invRef);
+    });
+  }
+
+  // Set active Ammo
+  async function setActiveAmmo(docId: string, qty: number) {
+    if (!userCharacter?.id) return;
+    const charRef = doc(db, "Characters", userCharacter.id);
+    await updateDoc(charRef, {
+      "combatLoadout.activeAmmo": {
+        docId,
+        qty,
+        setAt: serverTimestamp(),
+      },
+    });
+  }
 
   // Remove bounty
   const removeBounty = async (bountyId: string, bountyAmount: number) => {
@@ -119,6 +253,7 @@ const Assassinate = () => {
     }
 
     try {
+      // Look up target by username
       const q = query(
         collection(db, "Characters"),
         where("username_lowercase", "==", input.toLowerCase())
@@ -131,112 +266,195 @@ const Assassinate = () => {
         return;
       }
 
-      const targetDoc = querySnapshot.docs[0];
-      const playerData: any = targetDoc.data();
-      const targetDocId = targetDoc.id;
+      const targetSnap = querySnapshot.docs[0];
+      const targetDocId = targetSnap.id;
+      const targetRef = doc(db, "Characters", targetDocId);
+      const targetData: any = targetSnap.data();
 
-      if (userCharacter?.username === playerData.username) {
+      // Basic guards
+      if (userCharacter?.username === targetData.username) {
         setMessage(`Du kan ikke drepe deg selv.`);
         setMessageType("warning");
         return;
       }
-      if ((playerData.role || "") === "admin") {
+      if ((targetData.role || "") === "admin") {
         setMessage("Du kan ikke drepe en administrator.");
         setMessageType("warning");
         return;
       }
-      if (playerData.status === "dead") {
-        setMessage(`${playerData.username} er allerede død!`);
+      if (targetData.status === "dead") {
+        setMessage(
+          <p>
+            <Username
+              character={{ id: targetDocId, username: targetData.username }}
+            />{" "}
+            er allerede død.
+          </p>
+        );
         setMessageType("warning");
         return;
       }
-      if (userCharacter?.location !== playerData.location) {
+      if (userCharacter?.location !== targetData.location) {
         setMessage(
-          `Du kunne ikke finne ${playerData.username} i ${userCharacter?.location}!`
+          <p>
+            Du kunne ikke finne{" "}
+            <Username
+              character={{ id: targetDocId, username: targetData.username }}
+            />{" "}
+            i {userCharacter?.location}!
+          </p>
         );
         setMessageType("failure");
         return;
       }
 
-      // Collect bounties on the victim (if any)
-      const bountyQuery = query(
-        collection(db, "Bounty"),
-        where("WantedId", "==", targetDocId)
-      );
-      const bountySnapshot = await getDocs(bountyQuery);
+      // ------ NEW: apply damage atomically ------
+      const damage = Math.max(1, Number(totalAttack) || 1); // safety; min 1 damage
+      let died = false;
+      let newHp = 0;
+      let hpField: "stats.hp" | "stats.health" = "stats.hp"; // decide which field to update
 
-      let totalBountyAmount = 0;
-      const bountyIdsToDelete: string[] = [];
+      await runTransaction(db, async (tx) => {
+        const fresh = await tx.get(targetRef);
+        if (!fresh.exists()) throw new Error("Target not found");
 
-      bountySnapshot.forEach((d) => {
-        const bountyData = d.data() as any;
-        totalBountyAmount += Number(bountyData.Bounty || 0);
-        bountyIdsToDelete.push(d.id);
-      });
+        const td = fresh.data() as any;
+        const currentHp =
+          typeof td?.stats?.hp === "number"
+            ? td.stats.hp
+            : typeof td?.stats?.health === "number"
+            ? td.stats.health
+            : 0;
 
-      // 1) Kill the target regardless of bounty
-      await updateDoc(doc(db, "Characters", targetDocId), {
-        status: "dead",
-        diedAt: serverTimestamp(),
-      });
+        // remember which key to write back
+        hpField =
+          typeof td?.stats?.hp === "number" ? "stats.hp" : "stats.health";
 
-      // 2) If there is bounty, pay it and remove bounties + alert
-      if (totalBountyAmount > 0) {
-        const updatedMoney =
-          (userCharacter.stats.money || 0) + totalBountyAmount;
-        await updateDoc(doc(db, "Characters", userCharacter.id), {
-          "stats.money": updatedMoney,
-        });
+        newHp = Math.max(0, currentHp - damage);
+        died = newHp <= 0;
 
-        for (const bountyId of bountyIdsToDelete) {
-          await deleteDoc(doc(db, "Bounty", bountyId));
+        const updates: Record<string, any> = { [hpField]: newHp };
+        if (died) {
+          updates.status = "dead";
+          updates.diedAt = serverTimestamp();
         }
 
-        await addDoc(collection(db, `Characters/${userCharacter.id}/alerts`), {
-          type: "bountyReward",
+        tx.update(targetRef, updates);
+      });
+      // ------------------------------------------
+
+      // Always add an alert to the victim about the attack
+      await addDoc(collection(db, `Characters/${targetDocId}/alerts`), {
+        type: "attack",
+        timestamp: serverTimestamp(),
+        attackerId: userCharacter.id,
+        attackerName: userCharacter.username,
+        healthLost: damage,
+        read: false,
+      });
+
+      // If the target died, pay any bounty + game event (keeps your old behavior)
+      if (died) {
+        // Collect bounties on the victim (if any)
+        const bountyQuery = query(
+          collection(db, "Bounty"),
+          where("WantedId", "==", targetDocId)
+        );
+        const bountySnapshot = await getDocs(bountyQuery);
+
+        let totalBountyAmount = 0;
+        const bountyIdsToDelete: string[] = [];
+
+        bountySnapshot.forEach((d) => {
+          const bountyData = d.data() as any;
+          totalBountyAmount += Number(bountyData.Bounty || 0);
+          bountyIdsToDelete.push(d.id);
+        });
+
+        // Payout bounty to attacker
+        if (totalBountyAmount > 0) {
+          await updateDoc(doc(db, "Characters", userCharacter.id), {
+            "stats.money": (userCharacter.stats.money || 0) + totalBountyAmount,
+          });
+
+          for (const bountyId of bountyIdsToDelete) {
+            await deleteDoc(doc(db, "Bounty", bountyId));
+          }
+
+          await addDoc(
+            collection(db, `Characters/${userCharacter.id}/alerts`),
+            {
+              type: "bountyReward",
+              timestamp: serverTimestamp(),
+              killedPlayerId: targetDocId,
+              killedPlayerName: targetData.username,
+              bountyAmount: totalBountyAmount,
+              read: false,
+            }
+          );
+        }
+
+        // Feedback
+        setMessage(
+          totalBountyAmount > 0 ? (
+            <p>
+              Du drepte{" "}
+              <Username
+                character={{ id: targetDocId, username: targetData.username }}
+              />{" "}
+              og mottok <strong>${formatMoney(totalBountyAmount)}</strong> i
+              dusør!
+            </p>
+          ) : (
+            <p>
+              Du drepte{" "}
+              <Username
+                character={{ id: targetDocId, username: targetData.username }}
+              />
+              !
+            </p>
+          )
+        );
+        setMessageType("success");
+
+        // Log game event + touch attacker
+        await updateDoc(doc(db, "Characters", userCharacter.id), {
+          lastActive: serverTimestamp(),
+        });
+        await addDoc(collection(db, "GameEvents"), {
+          eventType: "assassination",
+          assassinId: userCharacter.id,
+          assassinName: userCharacter.username,
+          victimId: targetDocId,
+          victimName: targetData.username,
+          location: userCharacter.location,
+          bountyPaid: totalBountyAmount > 0 ? totalBountyAmount : 0,
           timestamp: serverTimestamp(),
-          killedPlayerId: targetDocId,
-          killedPlayerName: playerData.username,
-          bountyAmount: totalBountyAmount,
-          read: false,
+        });
+      } else {
+        // Survived: show info message
+        setMessage(
+          <p>
+            Du angrep{" "}
+            <Username
+              character={{ id: targetDocId, username: targetData.username }}
+            />
+            . Spilleren tok <strong>{damage}</strong> skade, men overlevde.
+          </p>
+        );
+        setMessageType("info");
+
+        // (Optional) touch attacker activity
+        await updateDoc(doc(db, "Characters", userCharacter.id), {
+          lastActive: serverTimestamp(),
         });
       }
 
-      // 3) Feedback
-      setMessage(
-        totalBountyAmount > 0 ? (
-          <p>
-            Du angrep og drepte <strong>{playerData.username}</strong> og mottok{" "}
-            <strong>${formatMoney(totalBountyAmount)}</strong> i dusør!
-          </p>
-        ) : (
-          <p>
-            Du angrep og drepte <strong>{playerData.username}</strong>.
-          </p>
-        )
-      );
-      setMessageType("success");
-
-      await updateDoc(doc(db, "Characters", userCharacter.id), {
-        lastActive: serverTimestamp(),
-      });
-
-      await addDoc(collection(db, "GameEvents"), {
-        eventType: "assassination",
-        assassinId: userCharacter.id,
-        assassinName: userCharacter.username,
-        victimId: targetDocId,
-        victimName: playerData.username,
-        location: userCharacter.location,
-        bountyPaid: totalBountyAmount > 0 ? totalBountyAmount : 0,
-        timestamp: serverTimestamp(),
-      });
-
-      // Optional: clear input after success
+      // Clear input
       setTargetPlayer("");
     } catch (error) {
-      console.error("Error checking target player:", error);
-      setMessage("En ukjent feil oppstod da du prøvde å drepe en spiller.");
+      console.error("Error during attack:", error);
+      setMessage("En ukjent feil oppstod da du forsøkte å angripe en spiller.");
       setMessageType("failure");
     }
   };
@@ -349,27 +567,282 @@ const Assassinate = () => {
   const bountyAmount = parsedBountyAmount();
   const hasBountyAmount = bountyAmountInput !== "" && bountyAmount > 0;
 
+  // Equipped weapon
+  const equippedWeapon = userCharacter?.equipment?.weapon || null;
+
+  // Weapon attack: if the weapon exists but lacks an `attack` prop, use 1.
+  // If there is no weapon at all, treat as 0.
+  const weaponAttack = equippedWeapon
+    ? typeof equippedWeapon.attack === "number"
+      ? equippedWeapon.attack
+      : 1
+    : 0;
+
+  // Find the active bullet stack: prefer the UI’s current selection, otherwise what’s saved on the character.
+  const savedAmmoDocId =
+    userCharacter?.combatLoadout?.activeAmmo?.docId ?? null;
+  const currentAmmoDocId = activeAmmoDocId ?? savedAmmoDocId;
+
+  const activeBullet = currentAmmoDocId
+    ? bulletStacks.find((b) => b.docId === currentAmmoDocId) || null
+    : null;
+
+  // Bullet attack:
+  // - If the equipped weapon uses bullets:
+  //     - If a bullet stack is selected but its `attack` prop is missing -> 1
+  //     - If no bullet stack is selected -> 1 (missing attack info)
+  // - If the weapon does NOT use bullets -> 0 (no bullets contribute)
+  const bulletAttack = equippedWeapon?.usingBullets
+    ? activeBullet
+      ? typeof activeBullet.attack === "number"
+        ? activeBullet.attack
+        : 1
+      : 1
+    : 0;
+
+  // Total attack shown in the UI
+  const totalAttack = weaponAttack + bulletAttack;
+
   return (
     <Main>
       <H1>Drep spiller</H1>
       <p className="mb-4">Her kan du forsøke å drepe en annen spiller.</p>
-      {message && <InfoBox type={messageType}>{message}</InfoBox>}
+      {message && (
+        <InfoBox type={messageType} onClose={() => setMessage("")}>
+          {message}
+        </InfoBox>
+      )}
 
       {/* Assassinate */}
       {!addingBounty && (
         <div className="mb-8">
-          <H2>Hvem vil du drepe?</H2>
-          <div className="flex flex-col gap-2 ">
-            <input
-              type="text"
-              placeholder="Brukernavn"
-              value={targetPlayer}
-              spellCheck={false}
-              onChange={handleTargetInput}
-              className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-            />
+          <H2>Angrip spiller</H2>
+          <H3>Angrep: {totalAttack}</H3>
+
+          <div className="flex gap-8 flex-wrap">
             <div>
-              <Button onClick={killPlayer}>Angrip spiller</Button>
+              <H3>Velg våpen</H3>
+              <div className="flex flex-col gap-4">
+                {/* Equipped weapon */}
+                <div>
+                  <p className="text-neutral-300 mb-1">Aktivt våpen</p>
+                  {userCharacter?.equipment?.weapon ? (
+                    <div className="flex items-center gap-2">
+                      <ItemTile
+                        name={userCharacter.equipment.weapon.name}
+                        img={userCharacter.equipment.weapon.img}
+                        tier={userCharacter.equipment.weapon.tier}
+                      />
+                      <div className="leading-5">
+                        <p className="text-neutral-100 font-medium">
+                          {userCharacter.equipment.weapon.name}
+                        </p>
+                        {typeof userCharacter.equipment.weapon.attack ===
+                          "number" && (
+                          <p className="text-neutral-400 text-sm">
+                            Skade:{" "}
+                            <strong className="text-neutral-200">
+                              +{userCharacter.equipment.weapon.attack}
+                            </strong>
+                          </p>
+                        )}
+                        {userCharacter.equipment.weapon.usingBullets && (
+                          <p className="text-neutral-400 text-sm">
+                            Bruker kuler
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-neutral-400">Ingen våpen utstyrt.</p>
+                  )}
+                </div>
+
+                {/* Other weapons in inventory */}
+                <div>
+                  <p className="text-neutral-300 mb-1">Andre våpen</p>
+                  {weaponStacks.length ? (
+                    <ul className="flex flex-wrap gap-2">
+                      {weaponStacks.map((w) => (
+                        <li key={w.docId}>
+                          <button
+                            className="flex items-center gap-2 hover:bg-neutral-800 rounded-xl pr-3"
+                            onClick={() => equipWeaponFromInventory(w)}
+                            title="Utstyr dette våpenet"
+                          >
+                            <ItemTile
+                              name={w.name}
+                              img={w.img || ""}
+                              tier={w.tier || 1}
+                            />
+                            <div className="leading-5 text-left">
+                              <p className="text-neutral-100 font-medium">
+                                {w.name}
+                              </p>
+                              {typeof w.attack === "number" && (
+                                <p className="text-neutral-400 text-sm">
+                                  Skade:{" "}
+                                  <strong className="text-neutral-200">
+                                    +{w.attack}
+                                  </strong>
+                                </p>
+                              )}
+                              {w.usingBullets && (
+                                <p className="text-neutral-400 text-xs">
+                                  Bruker kuler
+                                </p>
+                              )}
+                            </div>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-neutral-400">
+                      Du har ingen våpen i sekken.
+                    </p>
+                  )}
+                </div>
+
+                {/* Ammo picker (only when equipped weapon uses bullets) */}
+                {userCharacter?.equipment?.weapon?.usingBullets && (
+                  <div className="mt-2">
+                    <p className="text-neutral-300 mb-1">Velg kuler</p>
+                    {bulletStacks.length ? (
+                      <>
+                        <ul className="flex flex-wrap gap-2 mb-2">
+                          {bulletStacks.map((b) => {
+                            const isSelected = activeAmmoDocId === b.docId;
+                            const qty = Number(b.quantity ?? 1);
+                            return (
+                              <li key={b.docId}>
+                                <button
+                                  className={`relative rounded-xl ${
+                                    isSelected ? "ring-2 ring-sky-400" : ""
+                                  }`}
+                                  onClick={() => {
+                                    setActiveAmmoDocId(b.docId);
+                                    setActiveAmmoQty((q) =>
+                                      clamp(q, 1, Math.max(1, qty))
+                                    );
+                                  }}
+                                  title="Velg denne kulestabelen"
+                                >
+                                  <ItemTile
+                                    name={b.name}
+                                    img={b.img || ""}
+                                    tier={b.tier || 1}
+                                    qty={qty}
+                                  />
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+
+                        {/* qty selector shows only if a stack is selected */}
+                        {activeAmmoDocId && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-neutral-300">
+                              Antall:
+                            </span>
+                            {(() => {
+                              const sel = bulletStacks.find(
+                                (b) => b.docId === activeAmmoDocId
+                              );
+                              const maxSellable = sel
+                                ? Number(sel.quantity ?? 1)
+                                : 1;
+                              return (
+                                <>
+                                  <Button
+                                    size="small-square"
+                                    style="secondary"
+                                    onClick={() =>
+                                      setActiveAmmoQty((q) =>
+                                        clamp(q - 1, 1, maxSellable)
+                                      )
+                                    }
+                                    disabled={activeAmmoQty <= 1}
+                                    aria-label="Mindre"
+                                  >
+                                    −
+                                  </Button>
+                                  <input
+                                    type="number"
+                                    className="w-16 bg-transparent py-1 border-b border-neutral-600 text-neutral-200 text-center"
+                                    min={1}
+                                    max={maxSellable}
+                                    value={activeAmmoQty}
+                                    onChange={(e) => {
+                                      const v = Number(e.target.value);
+                                      setActiveAmmoQty(
+                                        clamp(
+                                          isFinite(v) ? v : 1,
+                                          1,
+                                          maxSellable
+                                        )
+                                      );
+                                    }}
+                                  />
+                                  <Button
+                                    size="small-square"
+                                    style="secondary"
+                                    onClick={() =>
+                                      setActiveAmmoQty((q) =>
+                                        clamp(q + 1, 1, maxSellable)
+                                      )
+                                    }
+                                    disabled={activeAmmoQty >= maxSellable}
+                                    aria-label="Mer"
+                                  >
+                                    +
+                                  </Button>
+
+                                  <Button
+                                    onClick={() =>
+                                      setActiveAmmo(
+                                        activeAmmoDocId,
+                                        activeAmmoQty
+                                      )
+                                    }
+                                  >
+                                    Velg kuler
+                                  </Button>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-neutral-400">Du har ingen kuler.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <H3>Velg offer</H3>
+              <div className="flex flex-col gap-2 ">
+                <input
+                  type="text"
+                  placeholder="Brukernavn"
+                  value={targetPlayer}
+                  spellCheck={false}
+                  onChange={handleTargetInput}
+                  className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      killPlayer();
+                    }
+                  }}
+                />
+                <div>
+                  <Button onClick={killPlayer}>Angrip spiller</Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -378,7 +851,7 @@ const Assassinate = () => {
       <div className="flex  flex-col gap-4">
         <div>
           <div className="flex items-center justify-between mb-2">
-            {addingBounty ? <H2>Ny dusør</H2> : <H2>Dusørliste</H2>}
+            {addingBounty ? <H2>Ny dusør</H2> : <H2>Utlovede dusører</H2>}
             <Button
               style="black"
               size="small"

@@ -50,7 +50,7 @@ const InfoBox = ({
       <span
         aria-hidden
         className={[
-          "pointer-events-none absolute left-0 top-0 h-full w-10 rounded-l-2xl",
+          "pointer-events-none absolute left-0 top-0 h-full w-11 rounded-l-2xl",
           "bg-neutral-700",
           "-z-10",
         ].join(" ")}
@@ -84,7 +84,7 @@ const InfoBox = ({
       )}
 
       {/* Content */}
-      <div className="relative z-10 ml-6 leading-relaxed">{children}</div>
+      <div className="relative z-10 ml-8 leading-relaxed">{children}</div>
     </div>
   );
 };
