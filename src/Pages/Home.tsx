@@ -472,6 +472,25 @@ const Home = () => {
                       img={item.img}
                       tier={item.tier}
                       qty={qty}
+                      tooltipImg={item.img}
+                      tooltipContent={
+                        <ul className="space-y-0.5">
+                          {"attack" in item && (
+                            <li>
+                              Angrep:{" "}
+                              <strong className="text-neutral-200">
+                                +{item.attack ?? 0}
+                              </strong>
+                            </li>
+                          )}
+                          <li>
+                            Verdi:{" "}
+                            <strong className="text-neutral-200">
+                              ${Number(item.value ?? 0).toLocaleString("nb-NO")}
+                            </strong>
+                          </li>
+                        </ul>
+                      }
                     />
                   </button>
                 </li>

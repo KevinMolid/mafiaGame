@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import b1 from "/images/boxes/Briefcase1.png";
 import b2 from "/images/boxes/Briefcase2.png";
 import b3 from "/images/boxes/Briefcase3.png";
+import ItemTile from "../components/ItemTile";
 
 import { Items } from "../Data/Items";
 
@@ -37,15 +38,16 @@ const suitcaseRarities: { [key: number]: number[] } = {
   2: [4, 5, 6], // Krystall-koffert
 };
 
-// Visually each slot ≈ 72px wide (your images are 56px + border/gap)
-const ITEM_SLOT_PX = 72;
+// Visually each slot ≈ 64px wide (images are 48px + border/gap)
+const ITEM_SLOT_PX = 64;
+const MAX_VISIBLE_ITEMS = 7;
 
 const Suitcases = () => {
   const [wheelIndex, setWheelIndex] = useState(0);
   const [scrollIndex, setScrollIndex] = useState(0);
 
   // how many items fit in the current container
-  const [maxVisibleItems, setMaxVisibleItems] = useState(5);
+  const [maxVisibleItems, setMaxVisibleItems] = useState(MAX_VISIBLE_ITEMS);
 
   // items filtered by selected suitcase tier
   const [filteredItems, setFilteredItems] = useState(
@@ -77,10 +79,8 @@ const Suitcases = () => {
     const handleResize = () => {
       if (scrollContainerRef.current) {
         const containerWidth = scrollContainerRef.current.clientWidth;
-        const visibleItems = Math.max(
-          1,
-          Math.floor(containerWidth / ITEM_SLOT_PX)
-        );
+        const byWidth = Math.max(1, Math.floor(containerWidth / ITEM_SLOT_PX));
+        const visibleItems = Math.min(byWidth, MAX_VISIBLE_ITEMS); // 👈 cap at 9
         setMaxVisibleItems(Math.min(visibleItems, filteredItems.length || 1));
       }
     };
@@ -192,26 +192,13 @@ const Suitcases = () => {
         >
           {itemList.map((item, index) => (
             <li
-              key={`${item.name}-${index}`}
-              className={`flex h-max border-2 rounded-xl cursor-pointer ${
-                item.tier === 1
-                  ? "border-neutral-400 shadow-lg shadow-neutral-500/25"
-                  : item.tier === 2
-                  ? "border-green-400 shadow-lg shadow-neutral-500/25"
-                  : item.tier === 3
-                  ? "border-sky-400 shadow-lg shadow-sky-500/25"
-                  : item.tier === 4
-                  ? "border-purple-400 shadow-lg shadow-purple-500/25"
-                  : item.tier === 5
-                  ? "border-yellow-400 shadow-lg shadow-yellow-500/25"
-                  : ""
-              }`}
+              key={`${item.id ?? item.name}-${index}`}
+              className="shrink-0 w-16 flex items-center justify-center"
+              /* w-16 (~64px) matches ITEM_SLOT_PX so one “tick” == one item */
             >
-              <img
-                src={item.img}
-                alt={item.name}
-                className="min-w-14 max-w-14 h-14 hover:min-w-16 hover:max-w-16 hover:h-16 object-cover rounded-xl transition-all"
-              />
+              <div className="transition-transform hover:scale-105">
+                <ItemTile name={item.name} img={item.img} tier={item.tier} />
+              </div>
             </li>
           ))}
         </ul>
