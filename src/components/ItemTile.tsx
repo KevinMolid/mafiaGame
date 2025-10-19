@@ -37,7 +37,7 @@ const ItemTile = ({
   qty,
   tooltipImg,
   tooltipContent,
-  tooltipWidthClass = "min-w-72 w-max",
+  tooltipWidthClass = "min-w-48 w-max",
   className = "",
 }: ItemTileProps) => {
   const boxSize = size === "small" ? "h-12 w-12" : "h-16 w-16";

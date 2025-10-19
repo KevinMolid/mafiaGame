@@ -1,7 +1,7 @@
 import { useCharacter } from "../CharacterContext";
 import ItemTile from "./ItemTile";
 import React, { useMemo } from "react";
-import { getItemById } from "../Data/Items"; // <- to resolve catalog info
+import { getItemById } from "../Data/Items";
 
 type EquipmentBoxProps = {
   icon: string;
@@ -11,12 +11,16 @@ type EquipmentBoxProps = {
 
 const EquipmentBox = ({ icon, span, children }: EquipmentBoxProps) => {
   const classes =
-    "w-16 h-16 border-2 border-neutral-600 bg-neutral-900 text-neutral-700 flex justify-center items-center rounded-xl " +
+    "w-16 h-16 border shadow-inner shadow-black border-neutral-600 bg-gradient-to-br from-zinc-800 to-neutral-900 text-neutral-700 flex justify-center items-center rounded-xl " +
     (span ? "col-span-2 row-span-2 text-6xl" : "text-3xl");
 
   return (
     <div className={classes}>
-      {children ?? <i className={`fa-solid fa-${icon}`}></i>}
+      {children ?? (
+        <i
+          className={`fa-solid fa-${icon} bg-gradient-to-br from-zinc-700 to-neutral-500 bg-clip-text text-transparent`}
+        ></i>
+      )}
     </div>
   );
 };
@@ -73,7 +77,30 @@ const Equipment: React.FC = () => {
     if (item) {
       return (
         <EquipmentBox icon={icon} span={span}>
-          <ItemTile name={item.name} img={item.img} tier={item.tier} />
+          <ItemTile
+            name={item.name}
+            img={item.img}
+            tier={item.tier}
+            tooltipImg={item.img}
+            tooltipContent={
+              <ul className="space-y-0.5">
+                {"attack" in item && (
+                  <li>
+                    Angrep:{" "}
+                    <strong className="text-neutral-200">
+                      +{item.attack ?? 0}
+                    </strong>
+                  </li>
+                )}
+                <li>
+                  Verdi:{" "}
+                  <strong className="text-neutral-200">
+                    ${Number(item.value ?? 0).toLocaleString("nb-NO")}
+                  </strong>
+                </li>
+              </ul>
+            }
+          />
         </EquipmentBox>
       );
     }
@@ -83,9 +110,9 @@ const Equipment: React.FC = () => {
 
   return (
     <section
-      className="grid grid-cols-[max-content_auto_max-content] grid-rows-5 h-[400px] w-[287px] bg-neutral-800 p-2"
+      className="border border-neutral-600 grid grid-cols-[max-content_auto_max-content] grid-rows-5 h-[400px] w-[287px] bg-neutral-800 p-2 shadow-xl rounded-xl"
       style={{
-        backgroundImage: "url('CharacterV4.jpg')",
+        backgroundImage: "url('EquipmentBG.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -113,7 +140,10 @@ const Equipment: React.FC = () => {
       <Slot slotKey="ringLeft" fallbackKey="ring" icon="ring" />
 
       {/* Row 5 */}
-      <div></div>
+      <div>
+        <p>Angrep:</p>
+        <p>Beskyttelse:</p>
+      </div>
       <div></div>
       <Slot slotKey="ringRight" fallbackKey="ring2" icon="ring" />
     </section>

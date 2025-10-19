@@ -444,13 +444,9 @@ const Home = () => {
           </Box>*/}
 
         {/* Equipment */}
-        <div className="border border-neutral-500 grid grid-cols-1 w-fit md:col-span-4 lg:col-span-4">
-          <div className="col-start-1 row-start-1 z-10 p-4">
-            <H2>Utstyr</H2>
-          </div>
-          <div className="col-start-1 row-start-1">
-            <Equipment />
-          </div>
+        <div className="w-fit md:col-span-4 lg:col-span-4">
+          <H2>Utstyr</H2>
+          <Equipment />
         </div>
 
         {/* Bags */}
