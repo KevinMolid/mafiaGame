@@ -15,9 +15,9 @@ const Sidebar = () => {
   if (!userCharacter || userCharacter.status === "dead") return;
 
   return (
-    <div className="hidden lg:block bg-neutral-900 px-4 py-8 leading-relaxed h-full pb-24 border-r border-neutral-700">
+    <div className="hidden lg:block bg-neutral-900 py-8 leading-relaxed h-full pb-24 border-r border-neutral-700">
       {/* Navigation */}
-      <nav className="flex flex-col gap-2">
+      <nav className="flex flex-col">
         <SidebarLink to="/" icon="house">
           Hovedkvarter
         </SidebarLink>
@@ -30,13 +30,13 @@ const Sidebar = () => {
           Bank
         </SidebarLink>
 
-        <hr className="border-neutral-600" />
+        <hr className="border-neutral-600 my-2 mx-4" />
 
         <SidebarLink to="familie" icon="users">
           Familie
         </SidebarLink>
 
-        <hr className="border-neutral-600" />
+        <hr className="border-neutral-600 my-2 mx-4" />
 
         {/*<SidebarLink to="innflytelse" icon="handshake-simple">
           Innflytelse
@@ -87,7 +87,8 @@ const Sidebar = () => {
           Drep spiller
         </SidebarLink>
 
-        <hr className="border-neutral-600" />
+        <hr className="border-neutral-600 my-2 mx-4" />
+
         <SidebarLink to="streetracing" icon="flag-checkered">
           Streetracing
         </SidebarLink>
@@ -99,7 +100,8 @@ const Sidebar = () => {
         <SidebarLink to="hacking" icon="laptop">
           Hacking
         </SidebarLink>
-        <hr className="border-neutral-600" />
+
+        <hr className="border-neutral-600 my-2 mx-4" />
 
         <SidebarLink to="fengsel" icon={`handcuffs`}>
           <div>Fengsel</div>
@@ -120,7 +122,7 @@ const Sidebar = () => {
           Flyplass
         </SidebarLink>
 
-        <hr className="border-neutral-600" />
+        <hr className="border-neutral-600 my-2 mx-4" />
 
         <SidebarLink to="casino" icon="coins">
           Casino{" "}

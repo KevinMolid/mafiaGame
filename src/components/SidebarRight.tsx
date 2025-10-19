@@ -148,8 +148,8 @@ const SidebarRight = () => {
 
   return (
     userData && (
-      <div className="hidden xl:block bg-neutral-900 px-4 py-8 leading-relaxed h-full pb-24 border-l border-neutral-700">
-        <div className="flex gap-2 items-end mb-6">
+      <div className="hidden xl:block bg-neutral-900 py-8 leading-relaxed h-full pb-24 border-l border-neutral-700">
+        <div className="flex gap-2 items-end mb-6 px-4">
           <Link to={`/profil/${userCharacter.id}`}>
             <img
               className="border border-neutral-500 w-[60px] h-[60px] object-cover hover:cursor-pointer"
@@ -170,13 +170,14 @@ const SidebarRight = () => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col gap-2">
+        <nav className="flex flex-col">
           {userData?.type === "admin" && (
             <>
               <SidebarLink to="/admin" icon="gears" color="yellow">
                 <p>Kontrollpanel</p>
               </SidebarLink>
-              <hr className="border-neutral-600" />
+
+              <hr className="border-neutral-600 my-2 mx-4" />
             </>
           )}
 
@@ -220,7 +221,7 @@ const SidebarRight = () => {
             </SidebarLink>
           )}
 
-          <hr className="border-neutral-600" />
+          <hr className="border-neutral-600 my-2 mx-4" />
 
           <SidebarLink to="/toppliste" icon="trophy">
             Toppliste
@@ -238,15 +239,10 @@ const SidebarRight = () => {
             Spillguide
           </SidebarLink>
 
-          <hr className="border-neutral-600" />
+          <hr className="border-neutral-600 my-2 mx-4" />
 
           {userData && (
-            <SidebarLink
-              icon="right-from-bracket"
-              onClick={() => {
-                logOut();
-              }}
-            >
+            <SidebarLink icon="right-from-bracket" onClick={logOut}>
               <p>Logg ut</p>
             </SidebarLink>
           )}

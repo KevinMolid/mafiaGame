@@ -1,30 +1,75 @@
 import { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 interface LinkProps {
   to?: string;
-  icon: string;
-  color?: string;
+  icon: string; // can include extra classes like "comment-dots fa-bounce text-sky-400"
+  color?: "yellow" | "sky"; // add sky support
   children: ReactNode;
   onClick?: () => void;
+  exact?: boolean; // exact match for "/"
 }
 
-const SidebarLink = ({ to, icon, children, color, onClick }: LinkProps) => {
-  return (
-    <Link to={to || "#"} onClick={onClick}>
-      <div
-        className={
-          color === "yellow"
-            ? "text-yellow-400 hover:text-yellow-300 grid grid-cols-[24px_auto]"
-            : "text-stone-400 hover:text-stone-200 grid grid-cols-[24px_auto]"
-        }
+const baseRow =
+  "grid grid-cols-[24px_auto] px-4 py-1 transition-colors border-l-2";
+const textClasses = (color?: "yellow" | "sky", active?: boolean) => {
+  if (color === "yellow") {
+    return active
+      ? " text-yellow-300 border-l-yellow-400"
+      : " text-yellow-400 hover:text-yellow-300 border-l-transparent";
+  }
+  if (color === "sky") {
+    return active
+      ? " text-sky-300 border-l-sky-400"
+      : " text-sky-400 hover:text-sky-300 border-l-transparent";
+  }
+  return active
+    ? " text-stone-200 border-l-sky-400"
+    : " text-stone-400 hover:text-stone-200 border-l-transparent";
+};
+
+const SidebarLink = ({
+  to,
+  icon,
+  children,
+  color,
+  onClick,
+  exact,
+}: LinkProps) => {
+  // BUTTON (no navigation)
+  if (!to) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`${baseRow} hover:bg-neutral-800 ${textClasses(
+          color,
+          false
+        )} w-full text-left`}
       >
         <div>
-          <i className={`fa-solid fa-${icon}`}></i>
+          <i className={`fa-solid fa-${icon}`} />
         </div>
         <div className="grid grid-cols-[auto_max-content]">{children}</div>
+      </button>
+    );
+  }
+
+  // NAVLINK (navigation + active styles)
+  return (
+    <NavLink
+      to={to}
+      end={!!exact}
+      className={({ isActive }) => {
+        const bg = isActive ? " bg-neutral-800" : " hover:bg-neutral-800";
+        return `${baseRow}${bg} ${textClasses(color, isActive)}`;
+      }}
+    >
+      <div>
+        <i className={`fa-solid fa-${icon}`} />
       </div>
-    </Link>
+      <div className="grid grid-cols-[auto_max-content]">{children}</div>
+    </NavLink>
   );
 };
 

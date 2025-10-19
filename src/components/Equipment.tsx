@@ -140,9 +140,13 @@ const Equipment: React.FC = () => {
       <Slot slotKey="ringLeft" fallbackKey="ring" icon="ring" />
 
       {/* Row 5 */}
-      <div>
-        <p>Angrep:</p>
-        <p>Beskyttelse:</p>
+      <div className="h-16 flex flex-col justify-end">
+        <p>
+          Angrep: <strong className="text-neutral-200">0</strong>
+        </p>
+        <p>
+          Beskyttelse: <strong className="text-neutral-200">0</strong>
+        </p>
       </div>
       <div></div>
       <Slot slotKey="ringRight" fallbackKey="ring2" icon="ring" />
