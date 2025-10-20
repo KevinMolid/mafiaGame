@@ -30,6 +30,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [capsOn, setCapsOn] = useState<boolean>(false);
 
   const [isVersionInfoActive, setIsVersionInfoActive] =
     useState<boolean>(false);
@@ -74,12 +75,19 @@ const Login = () => {
   }
 
   /* Handle input fields */
-  function handleEmailChange(event: any) {
-    setEmail(event.target.value);
+  function handleEmailChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (error) setError("");
+    setEmail(e.target.value);
   }
 
-  function handlePwChange(event: any) {
-    setPassword(event.target.value);
+  function handlePwChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (error) setError("");
+    setPassword(e.target.value);
+  }
+
+  function handlePwKey(e: React.KeyboardEvent<HTMLInputElement>) {
+    const isCaps = e.getModifierState && e.getModifierState("CapsLock");
+    setCapsOn(Boolean(isCaps));
   }
 
   /* Handle Login*/
@@ -173,6 +181,9 @@ const Login = () => {
                   id="pw"
                   type={showPassword ? "text" : "password"}
                   onChange={handlePwChange}
+                  onKeyDown={handlePwKey}
+                  onKeyUp={handlePwKey}
+                  onBlur={() => setCapsOn(false)}
                   spellCheck={false}
                 />
                 <div className="absolute right-0 bottom-0">
@@ -191,7 +202,20 @@ const Login = () => {
               </div>
 
               <div className="flex justify-between items-baseline">
-                <p>{error && <span className="text-red-500">{error}</span>}</p>
+                <p>
+                  {error ? (
+                    <span className="text-red-400">{error}</span>
+                  ) : capsOn ? (
+                    <div className="text-yellow-400 flex justify-center items-center gap-1">
+                      <div className="border-2 border-yellow-500 w-6 h-6 rounded-lg font-bold flex justify-center items-center">
+                        <p>A</p>
+                      </div>
+                      <p>Caps lock er på</p>
+                    </div>
+                  ) : (
+                    <></>
+                  )}
+                </p>
                 <p className="text-right mt-1">
                   <Link to="/glemtpassord">
                     <span className="font-medium hover:underline">
