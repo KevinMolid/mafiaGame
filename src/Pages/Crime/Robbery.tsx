@@ -107,7 +107,10 @@ const Robbery = () => {
     const potentialTargets = charactersSnapshot.docs
       .map((doc) => ({ id: doc.id, ...(doc.data() as Target) }))
       .filter(
-        (char) => char.id !== userCharacter.id && (char as any).role !== "admin"
+        (char) =>
+          char.id !== userCharacter.id &&
+          (char as any).role !== "admin" &&
+          (char as any).status !== "dead"
       );
 
     if (potentialTargets.length === 0) {
@@ -146,6 +149,11 @@ const Robbery = () => {
     if ((target as any).role === "admin") {
       // Warn and block
       displayMessage("Du kan ikke rane en administrator.", "warning");
+      return null;
+    }
+    if ((target as any).status === "dead") {
+      // Warn and block
+      displayMessage("Spilleren du forsøker å rane er død!", "warning");
       return null;
     }
     return target;

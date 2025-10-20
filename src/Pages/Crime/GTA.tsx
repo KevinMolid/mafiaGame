@@ -344,6 +344,12 @@ const GTA = () => {
         setIsBusy(false);
         return;
       }
+      if ((target.data?.status as string) === "dead") {
+        setMessageType("warning");
+        setMessage("Spilleren du forsøker å stjele fra er død!");
+        setIsBusy(false);
+        return;
+      }
 
       // Target must have parking + cars in same city
       const tFacilityType = target.data?.parkingFacilities?.[attackerCity] ?? 0;
