@@ -229,7 +229,19 @@ export default function CharacterListAdmin() {
       <ul>
         {sortedCharacters.map((character) => (
           <li key={character.id}>
-            <div className="flex items-center gap-2">
+            <div
+              className={
+                "grid grid-cols-[96px_80px_100px_110px_120px] gap-2 cursor-pointer " +
+                (selectedCharacterId === character.id
+                  ? "bg-neutral-800"
+                  : "hover:bg-neutral-800")
+              }
+              onClick={() =>
+                selectedCharacterId === character.id
+                  ? setSelectedCharacterId("")
+                  : setSelectedCharacterId(character.id)
+              }
+            >
               <p>
                 <Username
                   character={{
@@ -239,57 +251,41 @@ export default function CharacterListAdmin() {
                   }}
                 />
               </p>
+
+              <p>
+                <span
+                  className={
+                    "capitalize " +
+                    (character.status === "dead"
+                      ? "text-red-400"
+                      : "text-green-400")
+                  }
+                >
+                  {character.status === "alive" ? "Levende" : "Død"}
+                </span>
+              </p>
               <p>{getCurrentRank(character.xp)}</p>
-              {selectedCharacterId === character.id ? (
-                <div
-                  className="text-xl text-neutral-200 hover:text-white cursor-pointer"
-                  onClick={() => setSelectedCharacterId("")}
-                >
-                  <i className="fa-solid fa-caret-up"></i>
-                </div>
-              ) : (
-                <div
-                  className="text-xl text-neutral-200 hover:text-white cursor-pointer"
-                  onClick={() => {
-                    setSelectedCharacterId(character.id);
-                    setNewValue("");
-                  }}
-                >
-                  <i className="fa-solid fa-caret-down"></i>
-                </div>
-              )}
+
+              <p>
+                {character.familyName ? (
+                  <Familyname
+                    family={{
+                      id: character.familyId,
+                      name: character.familyName,
+                    }}
+                  />
+                ) : (
+                  "Ingen familie"
+                )}
+              </p>
+
+              <p>{character.location}</p>
             </div>
 
             {selectedCharacterId === character.id && (
               <div className="border border-neutral-600 mb-2 mt-2">
                 {/* Info (same as original) */}
                 <div className="bg-neutral-800 px-2 sm:px-4 py-2 text-sm flex flex-wrap gap-x-4 gap-y-1">
-                  <p>
-                    Status:{" "}
-                    <span
-                      className={
-                        "capitalize " +
-                        (character.status === "dead"
-                          ? "text-red-400"
-                          : "text-green-400")
-                      }
-                    >
-                      {character.status === "alive" ? "Levende" : "Død"}
-                    </span>
-                  </p>
-                  <p>
-                    Familie:{" "}
-                    {character.familyName ? (
-                      <Familyname
-                        family={{
-                          id: character.familyId,
-                          name: character.familyName,
-                        }}
-                      />
-                    ) : (
-                      "Ingen familie"
-                    )}
-                  </p>
                   <p>Xp: {character.xp}</p>
                   <p>
                     Penger: <i className="fa-solid fa-dollar-sign"></i>{" "}
@@ -299,7 +295,6 @@ export default function CharacterListAdmin() {
                     Bank: <i className="fa-solid fa-dollar-sign"></i>{" "}
                     {character.bank.toLocaleString("nb-NO")}
                   </p>
-                  <p>Lokasjon: {character.location}</p>
                 </div>
 
                 {/* Actions (same as original) */}
