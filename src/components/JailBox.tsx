@@ -142,18 +142,23 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
         {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
         {/* CHAT */}
-        {loading && <p>Laster Fengsel...</p>}
         {error && <p>Feil: {error}</p>}
 
-        {!loading && !error && (
-          <div className="mb-4 flex flex-col gap-4">
-            <Box>
-              <H2>Fengselschatten</H2>
-              {/* Messages */}
-              <div
-                id="messages_div"
-                className="mb-4 pb-2 border-b border-neutral-600"
-              >
+        <div className="mb-4 flex flex-col gap-4">
+          <Box>
+            <H2>Fengselschatten</H2>
+
+            {/* Messages */}
+            <div
+              id="messages_div"
+              className="mb-4 pb-2 border-b border-neutral-600"
+            >
+              {loading && (
+                <div className="min-h-60">
+                  <p>Laster Fengsel...</p>
+                </div>
+              )}
+              {!loading && !error && (
                 <ul>
                   {messages.map((message) => (
                     <ChatMessage
@@ -166,44 +171,44 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
                     />
                   ))}
                 </ul>
-              </div>
+              )}
+            </div>
 
-              <div id="new_message_div">
-                <form
-                  action=""
-                  onSubmit={submitNewMessage}
-                  className="grid grid-cols-[auto_min-content] gap-2 pr-2"
-                >
-                  <textarea
-                    ref={textareaRef}
-                    rows={1}
-                    value={newMessage}
-                    placeholder="Melding"
-                    spellCheck={false}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        if (e.shiftKey) return;
-                        e.preventDefault();
-                        submitNewMessage(e);
-                      }
-                    }}
-                    onChange={handleInputChange}
-                    className="w-full bg-neutral-800 outline-none resize-none rounded-3xl px-4 py-2 leading-normal"
-                  ></textarea>
+            <div id="new_message_div">
+              <form
+                action=""
+                onSubmit={submitNewMessage}
+                className="grid grid-cols-[auto_min-content] gap-2 pr-2"
+              >
+                <textarea
+                  ref={textareaRef}
+                  rows={1}
+                  value={newMessage}
+                  placeholder="Melding"
+                  spellCheck={false}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      if (e.shiftKey) return;
+                      e.preventDefault();
+                      submitNewMessage(e);
+                    }
+                  }}
+                  onChange={handleInputChange}
+                  className="w-full bg-neutral-800 outline-none resize-none rounded-3xl px-4 py-2 leading-normal"
+                ></textarea>
 
-                  <Button type="submit" size="square">
-                    <i className=" text-xl fa-solid fa-paper-plane"></i>
-                  </Button>
-                </form>
-              </div>
-            </Box>
+                <Button type="submit" size="square">
+                  <i className=" text-xl fa-solid fa-paper-plane"></i>
+                </Button>
+              </form>
+            </div>
+          </Box>
 
-            <Box>
-              <H2>Spillere i fengsel</H2>
-              <CharacterList type="jail" inJail />
-            </Box>
-          </div>
-        )}
+          <Box>
+            <H2>Spillere i fengsel</H2>
+            <CharacterList type="jail" inJail />
+          </Box>
+        </div>
 
         {userCharacter && userData.type === "admin" && (
           <Button onClick={() => breakOut(userCharacter.id)}>Stikk av</Button>
