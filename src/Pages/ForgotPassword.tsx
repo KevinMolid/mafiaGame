@@ -153,6 +153,7 @@ const ForgotPassword = () => {
             <div className="flex flex-col">
               <label htmlFor="email">E-post</label>
               <input
+                autoFocus
                 className="bg-transparent py-1 border-b border-neutral-500 text-neutral-200 text-xl outline-0 focus:border-white"
                 id="email"
                 type="email"
