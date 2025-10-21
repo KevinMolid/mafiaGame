@@ -174,7 +174,7 @@ const Suitcases = () => {
       {/* Item Display wheel */}
       <div className="border border-neutral-700 bg-neutral-950 rounded-full relative overflow-hidden max-w-[800px]">
         <button
-          className="absolute flex justify-center items-center w-12 h-12 left-1 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded-full"
+          className="absolute flex justify-center items-center w-12 h-12 left-1 top-1/2 -translate-y-1/2 z-10 bg-neutral-800 hover:text-neutral-200 hover:bg-neutral-700 px-2 py-1 rounded-full"
           onClick={handleScrollLeft}
           aria-label="Forrige"
         >
@@ -204,7 +204,7 @@ const Suitcases = () => {
         </ul>
 
         <button
-          className="absolute flex justify-center items-center w-10 h-10 right-1 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded-full"
+          className="absolute flex justify-center items-center w-10 h-10 right-1 top-1/2 -translate-y-1/2 bg-neutral-800 hover:text-neutral-200 hover:bg-neutral-700 z-10 px-2 py-1 rounded-full"
           onClick={handleScrollRight}
           aria-label="Neste"
         >

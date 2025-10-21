@@ -205,10 +205,7 @@ const Airplanedealer = () => {
 
                   <Button
                     disabled={
-                      isBuying ||
-                      isActive || // prevent re-buying the active plane
-                      !selectedPlane ||
-                      selectedPlane !== plane.name
+                      isBuying || isActive // prevent re-buying the active plane
                     }
                     onClick={(e) => {
                       e.stopPropagation();

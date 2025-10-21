@@ -231,7 +231,7 @@ export default function CharacterListAdmin() {
           <li key={character.id}>
             <div
               className={
-                "grid grid-cols-[96px_80px_100px_110px_120px] gap-2 cursor-pointer " +
+                "grid grid-cols-3 sm:grid-cols-[96px_80px_100px_110px_120px] gap-x-1 cursor-pointer " +
                 (selectedCharacterId === character.id
                   ? "bg-neutral-800"
                   : "hover:bg-neutral-800")

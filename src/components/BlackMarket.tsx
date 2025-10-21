@@ -46,7 +46,7 @@ type Listing = {
   seller: { id: string; username: string };
   createdAt: number;
   expiresAt?: number;
-  car?: { id: string; tier?: number | null };
+  car?: CarDoc;
   location?: string | null;
 };
 
@@ -160,19 +160,18 @@ const BlackMarket = () => {
               category: (v.category || "cars") as Category,
               itemType: v.itemType || "Car",
               name: v.name || "Ukjent",
+              img: v.img || "",
               quantity: v.quantity ?? 1,
               price: v.price ?? 0,
               seller: { id: v.sellerId, username: v.sellerName },
               createdAt: v.createdAt?.toMillis
                 ? v.createdAt.toMillis()
                 : Date.now(),
-              car: v.carId
-                ? { id: v.carId, tier: v.car?.tier ?? null }
-                : undefined,
+              car: v.carId ? { id: v.carId, ...(v.car || {}) } : undefined, // <-- here
               location: v.location ?? null,
             };
           })
-          .sort((a, b) => b.createdAt - a.createdAt); // newest first
+          .sort((a, b) => b.createdAt - a.createdAt);
 
         setMyListings(items);
       },
@@ -219,9 +218,7 @@ const BlackMarket = () => {
               createdAt: v.createdAt?.toMillis
                 ? v.createdAt.toMillis()
                 : Date.now(),
-              car: v.carId
-                ? { id: v.carId, tier: v.car?.tier ?? null }
-                : undefined,
+              car: v.carId ? { id: v.carId, ...(v.car || {}) } : undefined,
               location: v.location ?? null,
             };
           })
@@ -318,7 +315,7 @@ const BlackMarket = () => {
           price,
           seller: { id: userCharacter.id, username: userCharacter.username },
           createdAt: now,
-          car: { id: selectedCar.id, tier: selectedCar.tier ?? null },
+          car: { ...selectedCar },
           location: selectedCar.city ?? userCharacter.location ?? null,
         };
         setAllListings((prev) => [listing, ...prev]);
@@ -585,14 +582,32 @@ const BlackMarket = () => {
                 return (
                   <li
                     key={l.id}
-                    className="rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 flex items-center justify-between"
+                    className="rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 flex flex-wrap gap-2 items-center justify-between"
                   >
                     <div className="flex flex-col">
-                      <span className="text-neutral-100 font-semibold flex items-center gap-2">
+                      <span className="text-neutral-100 font-semibold flex flex-wrap items-center gap-2">
                         {isCar ? (
                           <Item
                             name={nameNoTier}
                             tier={l.car?.tier ?? undefined}
+                            tooltipImg={l.car?.img}
+                            tooltipContent={
+                              <div>
+                                <p>
+                                  Effekt:{" "}
+                                  <strong className="text-neutral-200">
+                                    {l.car?.hp} hk
+                                  </strong>
+                                </p>
+                                <p>
+                                  Verdi:{" "}
+                                  <strong className="text-neutral-200">
+                                    <i className="fa-solid fa-dollar-sign"></i>{" "}
+                                    {l.car?.value?.toLocaleString("nb-NO")}
+                                  </strong>
+                                </p>
+                              </div>
+                            }
                           />
                         ) : (
                           nameNoTier
@@ -613,7 +628,7 @@ const BlackMarket = () => {
                         </span>
                       </span>
                       <span className="text-sm text-neutral-400">
-                        Selgers av{" "}
+                        Selges av{" "}
                         <Username
                           character={{
                             id: l.seller.id,
@@ -907,14 +922,34 @@ const BlackMarket = () => {
                   return (
                     <li
                       key={l.id}
-                      className="rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 flex gap-4 items-center justify-between"
+                      className="rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 flex flex-wrap gap-4 items-center justify-between"
                     >
                       <div className="flex flex-col">
-                        <span className="text-neutral-100 font-semibold flex items-center gap-2">
+                        <span className="text-neutral-100 font-semibold flex flex-wrap items-center gap-2">
                           {isCar ? (
                             <Item
                               name={nameNoTier}
                               tier={l.car?.tier ?? undefined}
+                              tooltipImg={l.car?.img && l.car.img}
+                              tooltipContent={
+                                <div>
+                                  <p>
+                                    Effekt:{" "}
+                                    <strong className="text-neutral-200">
+                                      {l.car?.hp} hk
+                                    </strong>
+                                  </p>
+                                  <p>
+                                    Verdi:{" "}
+                                    <strong className="text-neutral-200">
+                                      <i className="fa-solid fa-dollar-sign"></i>{" "}
+                                      {Number(l.car?.value).toLocaleString(
+                                        "nb-NO"
+                                      )}
+                                    </strong>
+                                  </p>
+                                </div>
+                              }
                             />
                           ) : (
                             nameNoTier

@@ -239,7 +239,28 @@ const Cardealer = () => {
       setMessageType("success");
       setMessage(
         <p>
-          Du kjøpte en <Item name={car.name} tier={car.tier} /> for{" "}
+          Du kjøpte en{" "}
+          <Item
+            name={car.name}
+            tier={car.tier}
+            tooltipImg={car?.img && car.img}
+            tooltipContent={
+              <div>
+                <p>
+                  Effekt:{" "}
+                  <strong className="text-neutral-200">{car.hp} hk</strong>
+                </p>
+                <p>
+                  Verdi:{" "}
+                  <strong className="text-neutral-200">
+                    <i className="fa-solid fa-dollar-sign"></i>{" "}
+                    {Number(car.value).toLocaleString("nb-NO")}
+                  </strong>
+                </p>
+              </div>
+            }
+          />{" "}
+          for{" "}
           <strong>
             <i className="fa-solid fa-dollar-sign"></i>{" "}
             {car.value.toLocaleString("nb-NO")}
@@ -300,7 +321,7 @@ const Cardealer = () => {
             return (
               <li
                 key={car.name}
-                className={`flex border justify-between relative ${
+                className={`flex border z-1 justify-between relative ${
                   blocked
                     ? "opacity-60 bg-neutral-800 border-neutral-800"
                     : selected
@@ -364,7 +385,7 @@ const Cardealer = () => {
                     </div>
 
                     <Button
-                      disabled={isBuying || blocked || !selected}
+                      disabled={isBuying || blocked}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (!blocked) handleBuy(car, idx);
