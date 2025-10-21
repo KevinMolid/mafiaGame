@@ -42,6 +42,7 @@ interface AlertItem {
   type: string;
   newRank: string;
   amountLost: number;
+  healthLost: number;
   car: AlertCar;
   amountSent: number;
   robberId: string;
@@ -139,6 +140,7 @@ const Alerts = () => {
             timestamp: toDate(data.timestamp),
             newRank: data.newRank || "",
             amountLost: data.amountLost || 0,
+            healthLost: data.healthLost || 0,
             car: data.car || [],
             amountSent: data.amountSent || 0,
             robberId: data.robberId || "",
@@ -288,6 +290,19 @@ const Alerts = () => {
                         username: alert.killedPlayerName,
                       }}
                     />
+                    .
+                  </small>
+                )}
+
+                {/* Attack alert */}
+                {alert.type === "attack" && alert.healthLost && (
+                  <small>
+                    Du ble angrepet og mistet{" "}
+                    <span className="text-neutral-200">
+                      <strong>
+                        {alert.healthLost.toLocaleString("nb-NO")} helse
+                      </strong>
+                    </span>
                     .
                   </small>
                 )}
