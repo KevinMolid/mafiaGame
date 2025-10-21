@@ -24,7 +24,6 @@ import {
   addDoc,
   serverTimestamp,
   runTransaction,
-  writeBatch,
   updateDoc,
   getDoc,
   deleteDoc,
@@ -48,7 +47,7 @@ type CarDoc = {
 
 type MsgType = "success" | "failure" | "info" | "warning";
 
-type RaceStatus = "open" | "in_progress" | "finished" | "cancelled";
+type RaceStatus = "open" | "in_progress" | "finished" | "archived";
 
 type RaceDoc = {
   id: string;
@@ -68,6 +67,7 @@ type RaceDoc = {
       tier?: number;
       img?: string | null;
     };
+    done?: boolean; // <- player acknowledged
   };
   challenger?: {
     id: string;
@@ -80,12 +80,13 @@ type RaceDoc = {
       tier?: number;
       img?: string | null;
     };
+    done?: boolean; // <- player acknowledged
   };
   winnerId?: string;
   result?: { totalCreator: number; totalChallenger: number };
 };
 
-// ---------- tiny deterministic RNG helpers ----------
+// ---------- tiny deterministic RNG helpers (for stage logs) ----------
 function strHash(s: string) {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < s.length; i++) {
@@ -120,6 +121,11 @@ const StreetRacing = () => {
   const [openRaces, setOpenRaces] = useState<RaceDoc[]>([]);
   const [myOpenRace, setMyOpenRace] = useState<RaceDoc | null>(null);
 
+  // Unacknowledged finished race for me (blocks create/accept)
+  const [myPendingFinished, setMyPendingFinished] = useState<RaceDoc | null>(
+    null
+  );
+
   // Accept-flow UI states
   const [pendingRace, setPendingRace] = useState<RaceDoc | null>(null);
   const [acceptCarId, setAcceptCarId] = useState<string | null>(null);
@@ -131,14 +137,16 @@ const StreetRacing = () => {
       id: string;
       username: string;
       img?: string | null;
-      hp?: number | null;
+      hp: number;
+      tier: number;
       name: string;
     };
     challenger: {
       id: string;
       username: string;
       img?: string | null;
-      hp?: number | null;
+      hp: number;
+      tier: number;
       name: string;
     };
     winnerId: string;
@@ -159,7 +167,7 @@ const StreetRacing = () => {
   });
   const raceOverRef = useRef(false);
 
-  // Subscribe to character for activeCarId (useful when creating your own challenge)
+  // Subscribe to character for activeCarId (used when creating your own challenge)
   useEffect(() => {
     if (!userCharacter?.id) return;
     const ref = doc(db, "Characters", userCharacter.id);
@@ -225,7 +233,64 @@ const StreetRacing = () => {
     });
   }, [userCharacter?.id]);
 
-  // Helper: pick catalog meta (img/hp/value fallback)
+  // Subscribe to my UNACKNOWLEDGED finished race (two queries merged client-side)
+  useEffect(() => {
+    if (!userCharacter?.id) {
+      setMyPendingFinished(null);
+      return;
+    }
+
+    const qAsCreator = query(
+      collection(db, "Streetraces"),
+      where("status", "==", "finished"),
+      where("creator.id", "==", userCharacter.id)
+    );
+    const qAsChallenger = query(
+      collection(db, "Streetraces"),
+      where("status", "==", "finished"),
+      where("challenger.id", "==", userCharacter.id)
+    );
+
+    let latestCreator: RaceDoc[] = [];
+    let latestChallenger: RaceDoc[] = [];
+
+    const mergeAndSet = () => {
+      // Only races where *I* haven’t acknowledged yet
+      const mine = [
+        ...latestCreator.filter((r) => !r.creator?.done),
+        ...latestChallenger.filter((r) => !r.challenger?.done),
+      ];
+      // pick the most recent unfinished (or null)
+      const next =
+        mine.sort(
+          (a, b) =>
+            (b.finishedAt?.toMillis?.() ?? 0) -
+            (a.finishedAt?.toMillis?.() ?? 0)
+        )[0] ?? null;
+      setMyPendingFinished(next);
+    };
+
+    const unsub1 = onSnapshot(qAsCreator, (snap) => {
+      latestCreator = snap.docs.map(
+        (d) => ({ id: d.id, ...(d.data() as any) } as RaceDoc)
+      );
+      mergeAndSet();
+    });
+
+    const unsub2 = onSnapshot(qAsChallenger, (snap) => {
+      latestChallenger = snap.docs.map(
+        (d) => ({ id: d.id, ...(d.data() as any) } as RaceDoc)
+      );
+      mergeAndSet();
+    });
+
+    return () => {
+      unsub1();
+      unsub2();
+    };
+  }, [userCharacter?.id]);
+
+  // Prepare garage with catalog meta
   const withCatalog = (c: CarDoc) => {
     const catalog = c.key ? getCarByKey(c.key) : getCarByName(c.name || "");
     return {
@@ -248,7 +313,7 @@ const StreetRacing = () => {
     [activeCarId, enriched]
   );
 
-  // Persist active car selection (used when creating your own challenge)
+  // Persist active car selection (for creating your own challenge)
   const setActiveCar = useCallback(
     async (carId: string) => {
       if (!userCharacter?.id) return;
@@ -265,11 +330,18 @@ const StreetRacing = () => {
     [userCharacter?.id]
   );
 
-  // Start a race (your own) — blocked if you already have one
+  // Start my challenge (blocked if I have one, or if I have an unacknowledged finished race)
   async function handleStartRace() {
     if (!userCharacter?.id || !activeCar) return;
     if (myOpenRace) {
       setNewRaceMesssage("Du har allerede en aktiv utfordring.");
+      setNewRaceMessageType("warning");
+      return;
+    }
+    if (myPendingFinished) {
+      setNewRaceMesssage(
+        "Fullfør/avslutt det aktive løpet før du starter et nytt."
+      );
       setNewRaceMessageType("warning");
       return;
     }
@@ -289,6 +361,7 @@ const StreetRacing = () => {
             tier: activeCar.tier ?? 1,
             img: activeCar.img ?? null,
           },
+          done: false,
         },
       });
       setNewRaceMesssage(
@@ -330,6 +403,13 @@ const StreetRacing = () => {
       setNewRaceMessageType("warning");
       return;
     }
+    if (myPendingFinished) {
+      setNewRaceMesssage(
+        "Fullfør/avslutt det aktive løpet før du tar en ny utfordring."
+      );
+      setNewRaceMessageType("warning");
+      return;
+    }
     setPendingRace(r);
     setAcceptCarId(null); // must select
   }
@@ -344,10 +424,10 @@ const StreetRacing = () => {
       return;
     }
 
-    try {
-      const ref = doc(db, "Streetraces", pendingRace.id);
+    const ref = doc(db, "Streetraces", pendingRace.id);
 
-      // Atomically claim with chosen car
+    try {
+      // Transaction: claim race + set challenger + pick winner (probabilistic by HP)
       await runTransaction(db, async (tx) => {
         const snap = await tx.get(ref);
         if (!snap.exists()) throw new Error("Løpet finnes ikke.");
@@ -357,9 +437,26 @@ const StreetRacing = () => {
         if (v.creator?.id === userCharacter.id)
           throw new Error("Du kan ikke ta din egen utfordring.");
 
+        const cHP = Number(v.creator?.car?.hp ?? 0);
+        const hHP = Number(car.hp ?? 0);
+        const total = Math.max(1, cHP + hHP);
+        const pCreator = cHP / total;
+        const rnd = Math.random(); // single draw, persisted
+        const winnerId = rnd < pCreator ? v.creator.id : userCharacter.id;
+
+        // Optional: write some stage logs for flavor (deterministic seed)
+        const seed = strHash(pendingRace.id);
+        const rng = mulberry32(seed);
+        const s1 = Math.round(rng() * 10);
+        const s2 = Math.round(rng() * 10);
+        const s3 = Math.round(rng() * 10);
+        const totalCreator = cHP + s1 + s2 + s3;
+        const totalChallenger = hHP + (10 - s1) + (10 - s2) + (10 - s3);
+
         tx.update(ref, {
-          status: "in_progress",
+          status: "finished",
           acceptedAt: serverTimestamp(),
+          finishedAt: serverTimestamp(),
           challenger: {
             id: userCharacter.id,
             username: userCharacter.username ?? "Ukjent",
@@ -371,14 +468,14 @@ const StreetRacing = () => {
               tier: car.tier ?? 1,
               img: car.img ?? null,
             },
+            done: false,
           },
+          winnerId,
+          result: { totalCreator, totalChallenger },
         });
       });
 
-      // Simulate right after acceptance (server state)
-      await simulateRace(pendingRace.id);
-
-      // Read the finished race for winner + both cars
+      // Fetch final race to render animation
       const finalSnap = await getDoc(ref);
       const v = finalSnap.data() as RaceDoc;
       if (
@@ -388,32 +485,26 @@ const StreetRacing = () => {
         v.creator &&
         v.challenger
       ) {
-        // Prepare animation view
         setRaceView({
           raceId: pendingRace.id,
           creator: {
             id: v.creator.id,
             username: v.creator.username,
             img: v.creator.car?.img ?? null,
-            hp: v.creator.car?.hp ?? null,
+            hp: Number(v.creator.car?.hp ?? 0),
+            tier: Number(v.creator.car?.tier ?? 1),
             name: v.creator.car?.name ?? "Bil",
           },
           challenger: {
             id: v.challenger.id!,
             username: v.challenger.username!,
             img: v.challenger.car?.img ?? null,
-            hp: v.challenger.car?.hp ?? null,
+            hp: Number(v.challenger.car?.hp ?? 0),
+            tier: Number(v.challenger.car?.tier ?? 1),
             name: v.challenger.car?.name ?? "Bil",
           },
           winnerId: v.winnerId!,
         });
-
-        // Kick off animation (client-side)
-        startRaceAnimation(
-          v.creator.car?.hp ?? 0,
-          v.challenger.car?.hp ?? 0,
-          v.winnerId!
-        );
       }
 
       setNewRaceMesssage("");
@@ -422,11 +513,42 @@ const StreetRacing = () => {
       setNewRaceMesssage(e?.message || "Kunne ikke ta utfordringen.");
       setNewRaceMessageType("failure");
     } finally {
-      // leave selection mode; race view takes over
+      // leave selection mode; race view (if any) will take over
       setPendingRace(null);
       setAcceptCarId(null);
     }
   }
+
+  // If I have a finished race not yet acknowledged, show its race view (and replay animation)
+  useEffect(() => {
+    async function mountPending() {
+      if (!myPendingFinished || !userCharacter?.id) return;
+      const r = myPendingFinished;
+      if (!r.creator || !r.challenger || !r.winnerId) return;
+      setRaceView({
+        raceId: r.id,
+        creator: {
+          id: r.creator.id,
+          username: r.creator.username,
+          img: r.creator.car?.img ?? null,
+          hp: Number(r.creator.car?.hp ?? 0),
+          tier: Number(r.creator.car?.tier ?? 1),
+          name: r.creator.car?.name ?? "Bil",
+        },
+        challenger: {
+          id: r.challenger.id!,
+          username: r.challenger.username!,
+          img: r.challenger.car?.img ?? null,
+          hp: Number(r.challenger.car?.hp ?? 0),
+          tier: Number(r.challenger.car?.tier ?? 1),
+
+          name: r.challenger.car?.name ?? "Bil",
+        },
+        winnerId: r.winnerId!,
+      });
+    }
+    mountPending();
+  }, [myPendingFinished, userCharacter?.id]);
 
   // Abort acceptance UI (go back)
   function cancelAcceptFlow() {
@@ -434,102 +556,71 @@ const StreetRacing = () => {
     setAcceptCarId(null);
   }
 
-  // Simulate a 3-stage race and finish (server-side record)
-  async function simulateRace(raceId: string) {
-    const ref = doc(db, "Streetraces", raceId);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return;
-    const v = snap.data() as any;
+  // Acknowledge finished race: mark my `done=true`. If both done -> archive.
+  async function handleAcknowledgeRace() {
+    if (!raceView || !userCharacter?.id) return;
+    const ref = doc(db, "Streetraces", raceView.raceId);
 
-    const creator = v.creator;
-    const challenger = v.challenger;
-    if (!creator || !challenger) return;
+    try {
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists()) return;
+        const v = snap.data() as any;
 
-    const seed = strHash(raceId);
-    const rnd = mulberry32(seed);
+        const isCreator = v.creator?.id === userCharacter.id;
+        const isChallenger = v.challenger?.id === userCharacter.id;
 
-    const baseCreator = (creator.car?.hp ?? 0) + (creator.car?.tier ?? 1) * 10;
-    const baseChall =
-      (challenger.car?.hp ?? 0) + (challenger.car?.tier ?? 1) * 10;
+        if (!isCreator && !isChallenger) return; // shouldn't happen
 
-    const stages = ["Start", "Midtseksjon", "Måloppløp"] as const;
-    let scoreCreator = 0;
-    let scoreChall = 0;
+        const updates: any = {};
+        if (isCreator) updates["creator.done"] = true;
+        if (isChallenger) updates["challenger.done"] = true;
 
-    const batch = writeBatch(db);
-    const eventsCol = collection(db, "Streetraces", raceId, "events");
+        const otherDone = isCreator
+          ? Boolean(v.challenger?.done)
+          : Boolean(v.creator?.done);
 
-    stages.forEach((label, i) => {
-      const jitterC = Math.round(rnd() * 30 - 15);
-      const jitterH = Math.round(rnd() * 30 - 15);
-      const sC = baseCreator + jitterC + Math.round(rnd() * 10);
-      const sH = baseChall + jitterH + Math.round(rnd() * 10);
-      scoreCreator += sC;
-      scoreChall += sH;
+        if (otherDone) {
+          // both acknowledged -> archive
+          updates["status"] = "archived";
+          updates["archivedAt"] = serverTimestamp();
+        }
 
-      batch.set(doc(eventsCol), {
-        idx: i,
-        label,
-        creatorStage: sC,
-        challengerStage: sH,
-        ts: serverTimestamp(),
+        tx.update(ref, updates);
       });
-    });
 
-    const winnerId = scoreCreator >= scoreChall ? creator.id : challenger.id;
-
-    batch.update(ref, {
-      status: "finished",
-      finishedAt: serverTimestamp(),
-      winnerId,
-      result: {
-        totalCreator: scoreCreator,
-        totalChallenger: scoreChall,
-      },
-    });
-
-    await batch.commit();
+      // Clear local view; subscriptions will unblock UI
+      setRaceView(null);
+      setMyPendingFinished(null);
+      setNewRaceMesssage("Løpet er avsluttet.");
+      setNewRaceMessageType("success");
+    } catch (e) {
+      console.error(e);
+      setNewRaceMesssage("Kunne ikke avslutte løpet.");
+      setNewRaceMessageType("failure");
+    }
   }
-
-  const hasOwnOpenRace = !!myOpenRace;
-
-  // What mode is the right-side box in?
-  // - "own-active": you have your own open challenge
-  // - "accept-active": you are choosing a car for someone else's challenge
-  // - "race-view": animation is playing / finished
-  // - "create": default create-a-challenge
-  const mode: "own-active" | "accept-active" | "race-view" | "create" = raceView
-    ? "race-view"
-    : hasOwnOpenRace
-    ? "own-active"
-    : pendingRace
-    ? "accept-active"
-    : "create";
 
   // ---- Race animation logic --------------------------------------------------
   function startRaceAnimation(
     hpCreator: number,
     hpChallenger: number,
-    winnerId: string
+    winnerId: string,
+    creatorId: string,
+    challengerId: string
   ) {
-    // Normalize speeds so track length is 1.0.
-    // Winner should reach first; we add a small bias toward winner.
     const maxHp = Math.max(hpCreator || 1, hpChallenger || 1);
-    const baseSecsForMax = 5.0; // fastest finishes in ~5s
+    const baseSecsForMax = 5.0; // fastest finishes ~5s
     const baseCreator = (hpCreator || 1) / maxHp;
     const baseChall = (hpChallenger || 1) / maxHp;
 
-    // Convert to speed (units per second): speed = base / baseSecsForMax
     let speedCreator = baseCreator / baseSecsForMax;
     let speedChall = baseChall / baseSecsForMax;
 
-    // Bias so Firestore winner reaches first visually
-    const bias = 1.12; // ~12% faster
-    if (raceView?.creator.id === winnerId) {
-      speedCreator *= bias;
-    } else {
-      speedChall *= bias;
-    }
+    // Bias to ensure stored winner reaches finish first visually
+    const bias = 1.12;
+    if (creatorId === winnerId) speedCreator *= bias;
+    else if (challengerId === winnerId) speedChall *= bias;
 
     speedsRef.current = { creator: speedCreator, challenger: speedChall };
     setRacePositions({ creator: 0, challenger: 0 });
@@ -543,7 +634,6 @@ const StreetRacing = () => {
       const cPos = Math.min(1, dt * speedsRef.current.creator);
       const hPos = Math.min(1, dt * speedsRef.current.challenger);
 
-      // Stop both when first hits end
       if (cPos >= 1 || hPos >= 1) {
         setRacePositions({
           creator: cPos >= 1 ? 1 : cPos,
@@ -557,7 +647,6 @@ const StreetRacing = () => {
       rafRef.current = requestAnimationFrame(step);
     };
 
-    // Start RAF
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(step);
   }
@@ -567,7 +656,47 @@ const StreetRacing = () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
+
+  // (Re)start animation whenever raceView is set (including reload case)
+  useEffect(() => {
+    if (!raceView) return;
+    startRaceAnimation(
+      raceView.creator.hp,
+      raceView.challenger.hp,
+      raceView.winnerId,
+      raceView.creator.id,
+      raceView.challenger.id
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [raceView?.raceId]);
+
   // ---------------------------------------------------------------------------
+
+  const hasOwnOpenRace = !!myOpenRace;
+  const hasUnackedFinished = !!myPendingFinished;
+
+  // What mode is the right-side box in?
+  // - "own-active": you have your own open challenge
+  // - "accept-active": you are choosing a car for someone else's challenge
+  // - "race-view": you have a finished race that isn't acknowledged (or just finished)
+  // - "create": default create-a-challenge
+  const mode: "own-active" | "accept-active" | "race-view" | "create" = raceView
+    ? "race-view"
+    : hasOwnOpenRace
+    ? "own-active"
+    : pendingRace
+    ? "accept-active"
+    : hasUnackedFinished
+    ? "race-view"
+    : "create";
+
+  const raceFinished =
+    racePositions.creator >= 1 || racePositions.challenger >= 1;
+  const winnerName =
+    raceView?.winnerId === raceView?.creator.id
+      ? raceView?.creator.username
+      : raceView?.challenger.username;
+  const didIWin = userCharacter?.id === raceView?.winnerId;
 
   return (
     <Main>
@@ -614,6 +743,7 @@ const StreetRacing = () => {
                         !hasCarInTokyo ||
                         hasOwnOpenRace ||
                         !!pendingRace ||
+                        hasUnackedFinished ||
                         !!raceView
                       }
                       onClick={() => beginAcceptFlow(r)}
@@ -632,10 +762,8 @@ const StreetRacing = () => {
           <H2>
             {mode === "own-active"
               ? "Aktiv utfordring"
-              : mode === "accept-active"
+              : mode === "accept-active" || mode === "race-view"
               ? "Aktivt løp"
-              : mode === "race-view"
-              ? "Løp i gang"
               : "Start utfordring"}
           </H2>
 
@@ -649,7 +777,7 @@ const StreetRacing = () => {
                 start løpet.
               </>
             ) : mode === "race-view" ? (
-              "Løpet pågår…"
+              ""
             ) : (
               "Når du starter et løp vil det være mulig for hvem som helst å ta utfordringen."
             )}
@@ -801,83 +929,115 @@ const StreetRacing = () => {
 
           {/* RACE VIEW (animation + result) */}
           {mode === "race-view" && raceView && (
-            <div className="w-full">
-              {/* Names */}
-              <div className="flex justify-between items-center mb-3">
-                <span className="font-semibold text-neutral-100">
-                  {raceView.creator.username}
-                </span>
-                <span className="font-semibold text-neutral-100">
-                  {raceView.challenger.username}
-                </span>
-              </div>
-
-              {/* Cars images + VS */}
-              <div className="flex items-center justify-between mb-4 gap-4">
-                <img
-                  src={raceView.creator.img || ""}
-                  alt=""
-                  className="w-40 h-24 object-cover rounded-md border border-neutral-700"
-                />
-                <span className="text-2xl font-bold text-neutral-300">VS</span>
-                <img
-                  src={raceView.challenger.img || ""}
-                  alt=""
-                  className="w-40 h-24 object-cover rounded-md border border-neutral-700"
-                />
-              </div>
-
-              {/* Track + cars */}
-              <div className="relative w-full h-28 rounded-lg bg-neutral-950/60 border border-neutral-800 overflow-hidden">
-                {/* Track line */}
-                <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[2px] bg-neutral-600" />
-
-                {/* Finish flag */}
-                <div className="absolute right-2 top-2 text-neutral-300 text-xs">
-                  Mål
-                </div>
-
-                {/* Creator car (red) - top */}
-                <div
-                  className="absolute top-4 h-6 w-10 rounded-sm"
-                  style={{
-                    left: `calc(2px + ${racePositions.creator * 100}% - 20px)`,
-                    background:
-                      "linear-gradient(90deg, #ef4444 0%, #7f1d1d 100%)",
-                    boxShadow: "0 0 8px rgba(239,68,68,0.6)",
-                  }}
-                  title={raceView.creator.name}
-                />
-
-                {/* Challenger car (blue) - bottom */}
-                <div
-                  className="absolute bottom-4 h-6 w-10 rounded-sm"
-                  style={{
-                    left: `calc(2px + ${
-                      racePositions.challenger * 100
-                    }% - 20px)`,
-                    background:
-                      "linear-gradient(90deg, #60a5fa 0%, #1e3a8a 100%)",
-                    boxShadow: "0 0 8px rgba(96,165,250,0.6)",
-                  }}
-                  title={raceView.challenger.name}
-                />
-              </div>
-
+            <div className="w-full flex flex-col gap-2">
               {/* Winner banner when race stops */}
-              {racePositions.creator >= 1 || racePositions.challenger >= 1 ? (
-                <div className="mt-4 p-3 rounded-md border border-emerald-500/40 bg-emerald-900/20 text-emerald-300 font-semibold text-center">
-                  Vinner:{" "}
-                  {raceView.winnerId === raceView.creator.id
-                    ? raceView.creator.username
-                    : raceView.challenger.username}
-                </div>
+              {raceFinished ? (
+                <InfoBox type={didIWin ? "success" : "failure"}>
+                  {didIWin ? (
+                    <>Gratulerer, du vant!</>
+                  ) : (
+                    <>Beklager, {winnerName} vant!</>
+                  )}
+                </InfoBox>
               ) : (
-                <p className="mt-4 text-neutral-400 text-center text-sm italic">
-                  Løpet pågår…{` `}
-                  <span className="animate-pulse">🏁</span>
-                </p>
+                <InfoBox type="info">Løpet pågår...</InfoBox>
               )}
+
+              <div className="w-full min-h-4 grid grid-cols-[auto_auto_auto] relative rounded-xl p-2 gap-3">
+                <section id="player1">
+                  <div className="text-left">
+                    <p className="border-b-2 mb-1 px-2 py-0.5 border-red-500 bg-gradient-to-t from-red-950/0 to-red-900 rounded-t-lg">
+                      <Username
+                        character={{
+                          id: raceView.creator.id,
+                          username: raceView.creator.username,
+                        }}
+                      />
+                    </p>
+                  </div>
+                  <img
+                    src={raceView.creator.img || ""}
+                    alt=""
+                    className="w-40 h-24 object-cover rounded-md"
+                  />
+                  <Item
+                    name={raceView.creator.name}
+                    tier={raceView.creator.tier}
+                  />{" "}
+                  - {raceView.creator.hp} hp
+                </section>
+
+                <div className="h-full flex items-center">
+                  <p className="text-4xl font-extrabold text-neutral-300 z-10 ">
+                    VS
+                  </p>
+                </div>
+
+                <section id="player2">
+                  <div className="text-right">
+                    <p className="border-b-2 mb-1 px-2 py-0.5 border-blue-500 bg-gradient-to-t from-blue-950/0 to-blue-900 rounded-t-lg">
+                      <Username
+                        character={{
+                          id: raceView.challenger.id,
+                          username: raceView.challenger.username,
+                        }}
+                      />
+                    </p>
+                  </div>
+                  <img
+                    src={raceView.challenger.img || ""}
+                    alt=""
+                    className="w-40 h-24 object-cover rounded-md"
+                  />
+                  <Item
+                    name={raceView.challenger.name}
+                    tier={raceView.challenger.tier}
+                  />{" "}
+                  - {raceView.challenger.hp} hp
+                </section>
+
+                {/* Track + cars */}
+                <div className="relative col-span-3 w-full h-28 rounded-lg overflow-hidden">
+                  {/* Track line */}
+                  <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[2px] bg-neutral-600" />
+
+                  {/* Finish flag */}
+                  <div className="absolute right-2 top-2 text-neutral-300 text-xs">
+                    Mål
+                  </div>
+
+                  {/* Creator car (red) - top */}
+                  <div
+                    className="absolute top-4 h-6 w-10 rounded-sm bg-gradient-to-r from-red-600 to-red-500"
+                    style={{
+                      left: `calc(2px + ${
+                        racePositions.creator * 100
+                      }% - 20px)`,
+                    }}
+                    title={raceView.creator.name}
+                  />
+
+                  {/* Challenger car (blue) - bottom */}
+                  <div
+                    className="absolute bottom-4 h-6 w-10 rounded-sm bg-gradient-to-r from-blue-600 to-blue-500"
+                    style={{
+                      left: `calc(2px + ${
+                        racePositions.challenger * 100
+                      }% - 20px)`,
+                    }}
+                    title={raceView.challenger.name}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Button
+                  onClick={handleAcknowledgeRace}
+                  disabled={!raceFinished}
+                >
+                  {raceFinished ? "Avslutt løp" : "Løpet pågår..."}
+                </Button>
+              </div>
             </div>
           )}
 
@@ -993,7 +1153,10 @@ const StreetRacing = () => {
               </div>
 
               <div className="mt-4">
-                <Button disabled={!activeCarId} onClick={handleStartRace}>
+                <Button
+                  disabled={!activeCarId || hasUnackedFinished}
+                  onClick={handleStartRace}
+                >
                   Start løp
                 </Button>
               </div>
