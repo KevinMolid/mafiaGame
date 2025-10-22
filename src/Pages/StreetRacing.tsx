@@ -896,7 +896,7 @@ const StreetRacing = () => {
           Her kan du konkurrere i gateløp mot andre spillere.
         </p>
 
-        <Box className="flex-1">
+        <Box className="flex-1 min-w-max">
           <div className="flex gap-6 items-center">
             <img className="w-24" src={badgeSrc} alt="" />
 
@@ -929,7 +929,7 @@ const StreetRacing = () => {
         </Box>
 
         {/* Aktive utfordringer (car-secret UI) */}
-        <Box className="flex-1">
+        <Box className="flex-1 min-w-max">
           <H2>Aktive utfordringer</H2>
           {openRaces.length === 0 ? (
             <p className="text-neutral-400 mt-2">Ingen aktive utfordringer.</p>
@@ -971,7 +971,7 @@ const StreetRacing = () => {
         </Box>
 
         {/* Right column: create / own active / accept active / race view */}
-        <Box>
+        <Box className="flex-1 min-w-max">
           <H2>
             {mode === "own-active"
               ? "Aktiv utfordring"
