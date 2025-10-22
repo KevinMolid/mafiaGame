@@ -478,7 +478,7 @@ const Alerts = () => {
                   </small>
                 )}
 
-                <small>{formatTimeAgo(alert.timestamp, nowMs)}</small>
+                <small>{formatTimeAgo(alert.timestamp, nowMs)} siden</small>
               </Alert>
             ))}
           </div>

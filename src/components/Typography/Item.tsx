@@ -5,13 +5,14 @@ import React, {
   useLayoutEffect,
   useCallback,
 } from "react";
+import { createPortal } from "react-dom";
 
 type ItemProps = React.HTMLAttributes<HTMLSpanElement> & {
   name: string;
   tier?: number;
   tooltipImg?: string;
   tooltipContent?: React.ReactNode;
-  tooltipWidthClass?: string; // e.g. "w-72" (optional)
+  tooltipWidthClass?: string; // e.g. "w-72"
 };
 
 const TIER_CLASSES: Record<number, string> = {
@@ -23,6 +24,8 @@ const TIER_CLASSES: Record<number, string> = {
 };
 
 const EDGE_PADDING = 8; // px from viewport edges
+const GAP = 8; // gap between trigger and tooltip
+const FADE_MS = 150;
 
 const Item = ({
   name,
@@ -38,60 +41,139 @@ const Item = ({
   const tooltipId = useId();
 
   const triggerRef = useRef<HTMLSpanElement | null>(null);
-  const tipRef = useRef<HTMLSpanElement | null>(null);
-  const [shiftX, setShiftX] = useState(0);
 
-  const reposition = useCallback(() => {
+  // lifecycle flags
+  const [mounted, setMounted] = useState(false); // actually render tooltip?
+  const [visible, setVisible] = useState(false); // play fade
+  const hideTimer = useRef<number | null>(null);
+
+  // computed placement
+  const [coords, setCoords] = useState<{ left: number; top: number }>({
+    left: -9999,
+    top: -9999,
+  });
+  const [caretX, setCaretX] = useState<number>(0); // px within tooltip
+
+  const clamp = (v: number, min: number, max: number) =>
+    Math.max(min, Math.min(max, v));
+
+  /**
+   * Measure using an off-screen hidden clone appended to <body>.
+   * Returns { width, height } synchronously (because sizes come from CSS).
+   */
+  const measureTooltip = useCallback(() => {
+    const container = document.createElement("div");
+    // replicate “box” styles for measuring
+    container.className = [
+      "fixed", // fixed so it never adds layout
+      "left-[-9999px]",
+      "top-[-9999px]",
+      "z-[99999]",
+      "px-4 py-3 text-sm text-left whitespace-normal break-words",
+      "rounded-2xl border border-neutral-700 bg-neutral-900 text-neutral-100 shadow-xl",
+      tooltipWidthClass,
+    ].join(" ");
+
+    // content shell (image is sized by classes, so measurement is correct even before load)
+    container.innerHTML = `
+      <article class="text-stone-400 leading-snug flex gap-2">
+        ${
+          tooltipImg
+            ? `<img src="${tooltipImg}" class="w-24 h-16 object-cover border-2 rounded-xl" />`
+            : ""
+        }
+        <section class="whitespace-normal break-words">
+          <span class="font-bold block">${name}</span>
+          <div class="font-normal">${
+            typeof tooltipContent === "string" ? tooltipContent : ""
+          }</div>
+        </section>
+      </article>
+    `;
+
+    document.body.appendChild(container);
+    const rect = container.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    document.body.removeChild(container);
+    return { width, height };
+  }, [name, tooltipContent, tooltipImg, tooltipWidthClass]);
+
+  const computePlacement = useCallback(() => {
     const trigger = triggerRef.current;
-    const tip = tipRef.current;
-    if (!trigger || !tip) return;
-
-    // Temporarily neutralize transitions/transforms so we measure real size
-    const prevTransition = tip.style.transition;
-    const prevOpacity = tip.style.opacity;
-    const prevTransform = tip.style.transform;
-    const prevDisplay = tip.style.display;
-
-    tip.style.transition = "none";
-    tip.style.opacity = "0";
-    tip.style.display = "block";
-    tip.style.transform = "none"; // neither scale nor translate while measuring
+    if (!trigger) return;
 
     const tRect = trigger.getBoundingClientRect();
-    const tipRect = tip.getBoundingClientRect();
+    const { width: tipW, height: tipH } = measureTooltip();
+
     const vw = window.innerWidth;
+    const vh = window.innerHeight;
 
-    // If centered relative to the trigger:
-    const centeredLeft = tRect.left + (tRect.width - tipRect.width) / 2;
+    const centerX = tRect.left + tRect.width / 2;
 
-    // Clamp to stay inside viewport with padding
-    const minLeft = EDGE_PADDING;
-    const maxLeft = vw - EDGE_PADDING - tipRect.width;
-    const clampedLeft = Math.max(minLeft, Math.min(maxLeft, centeredLeft));
+    // Center horizontally, clamp to viewport
+    let left = Math.round(centerX - tipW / 2);
+    left = clamp(left, EDGE_PADDING, vw - EDGE_PADDING - tipW);
 
-    // Translate relative to the trigger's left edge
-    const translateX = Math.round(clampedLeft - tRect.left);
-    setShiftX(translateX);
+    // Prefer below; flip above if it would overflow bottom
+    let top = Math.round(tRect.bottom + GAP);
+    if (
+      top + tipH + EDGE_PADDING > vh &&
+      tRect.top - GAP - tipH > EDGE_PADDING
+    ) {
+      top = Math.round(tRect.top - GAP - tipH);
+    }
 
-    // Restore styles
-    tip.style.transition = prevTransition;
-    tip.style.opacity = prevOpacity;
-    tip.style.transform = prevTransform;
-    tip.style.display = prevDisplay;
-  }, []);
+    // Caret X inside tooltip
+    const caretWithin = Math.round(centerX - left);
+    const caretClamp = clamp(caretWithin, 10, tipW - 10);
 
-  useLayoutEffect(() => {
+    setCoords({ left, top });
+    setCaretX(caretClamp);
+  }, [measureTooltip]);
+
+  // open/close
+  const open = useCallback(() => {
     if (!hasTooltip) return;
-    const onResizeScroll = () => reposition();
-    window.addEventListener("resize", onResizeScroll);
-    window.addEventListener("scroll", onResizeScroll, { passive: true });
-    return () => {
-      window.removeEventListener("resize", onResizeScroll);
-      window.removeEventListener("scroll", onResizeScroll);
-    };
-  }, [hasTooltip, reposition]);
+    if (hideTimer.current) {
+      window.clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+    // 1) compute placement BEFORE mounting (no layout changes)
+    computePlacement();
+    // 2) mount, then show (fade)
+    setMounted(true);
+    // next frame → visible
+    requestAnimationFrame(() => setVisible(true));
+  }, [hasTooltip, computePlacement]);
 
-  const onShow = () => reposition();
+  const close = useCallback(() => {
+    if (!mounted) return;
+    setVisible(false);
+    if (hideTimer.current) window.clearTimeout(hideTimer.current);
+    hideTimer.current = window.setTimeout(() => {
+      setMounted(false);
+    }, FADE_MS) as unknown as number;
+  }, [mounted]);
+
+  // Recompute on resize/scroll *while open* (no flicker; portal is fixed)
+  useLayoutEffect(() => {
+    if (!mounted) return;
+    const onRS = () => computePlacement();
+    window.addEventListener("resize", onRS);
+    window.addEventListener("scroll", onRS, { passive: true });
+    return () => {
+      window.removeEventListener("resize", onRS);
+      window.removeEventListener("scroll", onRS);
+    };
+  }, [mounted, computePlacement]);
+
+  // clean up timer on unmount
+  useLayoutEffect(() => {
+    return () => {
+      if (hideTimer.current) window.clearTimeout(hideTimer.current);
+    };
+  }, []);
 
   return (
     <span
@@ -99,61 +181,76 @@ const Item = ({
       className={`relative inline-flex items-center font-bold group text-${color} ${className} cursor-pointer text-nowrap`}
       tabIndex={hasTooltip ? 0 : undefined}
       aria-describedby={hasTooltip ? tooltipId : undefined}
-      onMouseEnter={hasTooltip ? onShow : undefined}
-      onFocus={hasTooltip ? onShow : undefined}
+      onMouseEnter={open}
+      onMouseLeave={close}
+      onFocus={open}
+      onBlur={close}
       {...rest}
     >
       {name}
 
-      {hasTooltip && (
-        <>
-          <span
-            ref={tipRef}
+      {/* Render the tooltip into <body> so it never affects layout */}
+      {hasTooltip &&
+        mounted &&
+        createPortal(
+          <div
             id={tooltipId}
             role="tooltip"
+            style={{
+              position: "fixed",
+              left: coords.left,
+              top: coords.top,
+              pointerEvents: "none", // important: don't steal hover → prevents flicker
+            }}
             className={[
-              "pointer-events-none absolute left-0 top-full z-50 mt-2",
+              "z-[99999]",
               "rounded-2xl border border-neutral-700 bg-neutral-900 text-neutral-100 shadow-xl",
               "px-4 py-3 text-sm text-left",
               tooltipWidthClass,
               "whitespace-normal break-words",
-              "opacity-0 scale-95 transition-all duration-150 ease-out",
-              "group-hover:opacity-100 group-hover:scale-100",
-              "group-focus-within:opacity-100 group-focus-within:scale-100",
+              "transition-all duration-150 ease-out",
+              visible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-1.5",
             ].join(" ")}
-            style={{
-              transform: `translateX(${shiftX}px)`,
-              maxWidth: `calc(100vw - ${EDGE_PADDING * 2}px)`,
-            }}
           >
-            {tooltipContent && (
-              <article className="text-stone-400 leading-snug flex gap-2">
-                {tooltipImg && (
-                  <img
-                    src={tooltipImg}
-                    alt=""
-                    className={`w-24 h-16 object-cover border-2 border-${color} rounded-xl`}
-                    onLoad={reposition} // <-- remeasure after img load
-                  />
-                )}
-                <section className="whitespace-normal break-words">
-                  <span className={`font-bold text-${color} block`}>
-                    {name}
-                  </span>
-                  <div className="font-normal">{tooltipContent}</div>
-                </section>
-              </article>
-            )}
+            <article className="text-stone-400 leading-snug flex gap-2">
+              {tooltipImg && (
+                <img
+                  src={tooltipImg}
+                  alt=""
+                  className={`w-24 h-16 object-cover border-2 border-${color} rounded-xl`}
+                  onLoad={() => mounted && computePlacement()}
+                />
+              )}
+              <section className="whitespace-normal break-words">
+                <span className={`font-bold text-${color} block`}>{name}</span>
+                <div className="font-normal">{tooltipContent}</div>
+              </section>
+            </article>
 
             {/* caret */}
             <span
               aria-hidden
-              className="absolute -top-2 left-1/2 rotate-45 h-3 w-3 border-l border-t border-neutral-700 bg-neutral-900"
-              style={{ transform: `translateX(${shiftX}px) rotate(45deg)` }}
+              className="absolute h-3 w-3 rotate-45 border-l border-t border-neutral-700 bg-neutral-900"
+              style={{
+                left: caretX - 6, // center 12px caret
+                // pick top/bottom based on whether we flipped
+                top:
+                  coords.top <
+                  (triggerRef.current?.getBoundingClientRect().top ?? 0)
+                    ? undefined
+                    : -6,
+                bottom:
+                  coords.top <
+                  (triggerRef.current?.getBoundingClientRect().top ?? 0)
+                    ? -6
+                    : undefined,
+              }}
             />
-          </span>
-        </>
-      )}
+          </div>,
+          document.body
+        )}
     </span>
   );
 };

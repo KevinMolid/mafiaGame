@@ -9,7 +9,7 @@ const Alert = ({ children, read }: AlertInterface) => {
   return (
     <div
       className={
-        "flex flex-col justify-center h-8 border border-neutral-700 " +
+        "flex flex-col justify-center py-0.5 min-h-8 border border-neutral-700 " +
         `${
           read
             ? "bg-neutral-900/50 border-neutral-700"
