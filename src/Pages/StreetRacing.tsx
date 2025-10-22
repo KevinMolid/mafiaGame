@@ -11,6 +11,9 @@ import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
 
 import racingBadgeI from "/images/streetracing/RacingIsmall.png";
+import racingBadgeII from "/images/streetracing/RacingIsmall.png";
+import racingBadgeIII from "/images/streetracing/RacingIIIsmall.png";
+import racingBadgeIV from "/images/streetracing/RacingIVsmall.png";
 import racingBadgeV from "/images/streetracing/RacingVsmall.png";
 
 import { useCharacter } from "../CharacterContext";
@@ -803,7 +806,16 @@ const StreetRacing = () => {
       : raceView?.challenger.username;
   const didIWin = userCharacter?.id === raceView?.winnerId;
 
-  const badgeSrc = racingStats.rating >= 2000 ? racingBadgeV : racingBadgeI;
+  const badgeSrc =
+    racingStats.rating >= 2000
+      ? racingBadgeV
+      : racingStats.rating >= 1500
+      ? racingBadgeIV
+      : racingStats.rating >= 1000
+      ? racingBadgeIII
+      : racingStats.rating >= 500
+      ? racingBadgeII
+      : racingBadgeI;
 
   return (
     <Main>
