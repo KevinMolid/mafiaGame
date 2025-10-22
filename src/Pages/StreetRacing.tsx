@@ -11,7 +11,7 @@ import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
 
 import racingBadgeI from "/images/streetracing/RacingIsmall.png";
-import racingBadgeII from "/images/streetracing/RacingIsmall.png";
+import racingBadgeII from "/images/streetracing/RacingIIsmall.png";
 import racingBadgeIII from "/images/streetracing/RacingIIIsmall.png";
 import racingBadgeIV from "/images/streetracing/RacingIVsmall.png";
 import racingBadgeV from "/images/streetracing/RacingVsmall.png";
@@ -48,6 +48,7 @@ type CarDoc = {
   tier?: number;
   city?: string;
   img?: string | null;
+  damage?: number; // 0–100
   [k: string]: any;
 };
 
@@ -110,7 +111,6 @@ function mulberry32(seed: number) {
   };
 }
 // ------------ Win / Loss helpers -----------------------
-
 function winDelta(r: number) {
   if (r < 500) return 5;
   if (r < 1000) return 4;
@@ -126,12 +126,14 @@ function lossDelta(r: number) {
   return -5;
 }
 
+// ------------ Damage helpers ---------------------------
+const randDamage = () => Math.floor(Math.random() * 15) + 1; // 1..15
+
 const StreetRacing = () => {
   const { userCharacter } = useCharacter();
 
-  // Tokyo-only; still use character location to filter the garage
-  const currentCity =
-    (userCharacter as any)?.location ?? (userCharacter as any)?.city ?? "Tokyo";
+  // still use character location to filter the garage
+  const currentCity = (userCharacter as any)?.location;
 
   const [carsInCity, setCarsInCity] = useState<CarDoc[]>([]);
   const [activeCarId, setActiveCarId] = useState<string | null>(null);
@@ -342,13 +344,14 @@ const StreetRacing = () => {
       hp: c.hp ?? catalog?.hp ?? null,
       value: c.value ?? catalog?.value ?? null,
       tier: c.tier ?? catalog?.tier ?? 1,
+      damage: Number(c.damage ?? 0), // default to 0
       displayName:
         c.name || [c.brand, c.model].filter(Boolean).join(" ") || "Bil",
     };
   };
 
   const enriched = useMemo(() => carsInCity.map(withCatalog), [carsInCity]);
-  const hasCarInTokyo = enriched.length > 0;
+  const hasUsableCar = enriched.some((c) => (c.damage ?? 0) < 100);
 
   const activeCar = useMemo(
     () =>
@@ -376,6 +379,13 @@ const StreetRacing = () => {
   // Start my challenge (blocked if I have one, or if I have an unacknowledged finished race)
   async function handleStartRace() {
     if (!userCharacter?.id || !activeCar) return;
+
+    if ((activeCar.damage ?? 0) >= 100) {
+      setNewRaceMesssage("Den aktive bilen har 100% skade og kan ikke brukes.");
+      setNewRaceMessageType("warning");
+      return;
+    }
+
     if (myOpenRace) {
       setNewRaceMesssage("Du har allerede en aktiv utfordring.");
       setNewRaceMessageType("warning");
@@ -391,7 +401,6 @@ const StreetRacing = () => {
     try {
       await addDoc(collection(db, "Streetraces"), {
         status: "open" as RaceStatus,
-        city: "Tokyo",
         createdAt: serverTimestamp(),
         creator: {
           id: userCharacter.id,
@@ -434,8 +443,8 @@ const StreetRacing = () => {
 
   // Click "Ta utfordringen" → switch right box into "Aktivt løp" (selection) mode
   function beginAcceptFlow(r: RaceDoc) {
-    if (!hasCarInTokyo) {
-      setNewRaceMesssage("Du trenger en bil i Tokyo for å delta.");
+    if (!hasUsableCar) {
+      setNewRaceMesssage("Du trenger en bil for å delta.");
       setNewRaceMessageType("warning");
       return;
     }
@@ -466,11 +475,16 @@ const StreetRacing = () => {
       setNewRaceMessageType("failure");
       return;
     }
+    if ((car.damage ?? 0) >= 100) {
+      setNewRaceMesssage("Valgt bil har 100% skade og kan ikke brukes.");
+      setNewRaceMessageType("warning");
+      return;
+    }
 
     const ref = doc(db, "Streetraces", pendingRace.id);
 
     try {
-      // Transaction: claim race + set challenger + pick winner (probabilistic by HP)
+      // Transaction: claim race + set challenger + pick winner + apply damage + update rating
       await runTransaction(db, async (tx) => {
         const snap = await tx.get(ref);
         if (!snap.exists()) throw new Error("Løpet finnes ikke.");
@@ -532,6 +546,7 @@ const StreetRacing = () => {
           newCreatorLosses += 1;
         }
 
+        // Never go below 0
         newCreatorRating = Math.max(0, newCreatorRating);
         newChallRating = Math.max(0, newChallRating);
 
@@ -552,7 +567,62 @@ const StreetRacing = () => {
           lastActive: serverTimestamp(),
         });
 
-        // Optional: write some stage logs for flavor (deterministic seed)
+        // ---- Apply damage to both cars (1–15%, cap at 100) -----------------------
+        const creatorCarRef = doc(
+          db,
+          "Characters",
+          v.creator.id,
+          "cars",
+          v.creator.carId
+        );
+        const challengerCarRef = doc(
+          db,
+          "Characters",
+          userCharacter.id,
+          "cars",
+          car.id
+        );
+
+        const [creatorCarSnap, challengerCarSnap] = await Promise.all([
+          tx.get(creatorCarRef),
+          tx.get(challengerCarRef),
+        ]);
+
+        const creatorCarData = (creatorCarSnap.data() as any) || {};
+        const challengerCarData = (challengerCarSnap.data() as any) || {};
+
+        const creatorDamagePrev = Math.min(
+          100,
+          Number(creatorCarData.damage ?? 0)
+        );
+        const challengerDamagePrev = Math.min(
+          100,
+          Number(challengerCarData.damage ?? 0)
+        );
+
+        // Abort if either car is already at 100 (cannot race)
+        if (creatorDamagePrev >= 100) {
+          throw new Error(
+            "Motstanderens bil har 100% skade og kan ikke brukes."
+          );
+        }
+        if (challengerDamagePrev >= 100) {
+          throw new Error("Bilen din har 100% skade og kan ikke brukes.");
+        }
+
+        const creatorInc = randDamage();
+        const challengerInc = randDamage();
+
+        const creatorDamageNew = Math.min(100, creatorDamagePrev + creatorInc);
+        const challengerDamageNew = Math.min(
+          100,
+          challengerDamagePrev + challengerInc
+        );
+
+        tx.update(creatorCarRef, { damage: creatorDamageNew });
+        tx.update(challengerCarRef, { damage: challengerDamageNew });
+
+        // ---- Stage logs / totals (flavor) ----------------------------------------
         const seed = strHash(pendingRace.id);
         const rng = mulberry32(seed);
         const s1 = Math.round(rng() * 10);
@@ -858,7 +928,7 @@ const StreetRacing = () => {
           </div>
         </Box>
 
-        {/* Aktive utfordringer (Tokyo-only & car-secret UI) */}
+        {/* Aktive utfordringer (car-secret UI) */}
         <Box className="flex-1">
           <H2>Aktive utfordringer</H2>
           {openRaces.length === 0 ? (
@@ -883,7 +953,7 @@ const StreetRacing = () => {
                       size="small"
                       disabled={
                         r.creator.id === userCharacter?.id ||
-                        !hasCarInTokyo ||
+                        !hasUsableCar ||
                         hasOwnOpenRace ||
                         !!pendingRace ||
                         hasUnackedFinished ||
@@ -965,6 +1035,13 @@ const StreetRacing = () => {
                                   </strong>
                                 </p>
                               )}
+                              <p>
+                                Skade:{" "}
+                                <strong className="text-neutral-200">
+                                  {Math.min(100, Number(activeCar.damage ?? 0))}
+                                  %
+                                </strong>
+                              </p>
                               {activeCar.value != null && (
                                 <p>
                                   Verdi:{" "}
@@ -1003,27 +1080,39 @@ const StreetRacing = () => {
               <div className="flex gap-8 flex-wrap">
                 <div className="grow min-w-72">
                   <H3>Velg bil</H3>
-                  {!hasCarInTokyo ? (
+                  {!hasUsableCar ? (
                     <p className="text-neutral-400 mt-1">
-                      Du har ingen biler i Tokyo.
+                      Du har ingen biler i denne byen.
                     </p>
                   ) : (
                     <ul className="mt-2 grid gap-2">
                       {enriched.map((c) => {
+                        const isBroken = (c.damage ?? 0) >= 100;
                         const isChosen = c.id === acceptCarId;
                         return (
                           <li
                             key={c.id}
-                            className={`rounded-lg border p-2 flex items-center justify-between cursor-pointer ${
+                            className={`rounded-lg border p-2 flex items-center justify-between ${
+                              isBroken
+                                ? "opacity-50 cursor-not-allowed"
+                                : "cursor-pointer"
+                            } ${
                               isChosen
                                 ? "border-neutral-600 bg-neutral-800"
                                 : "border-neutral-800 bg-neutral-900 hover:bg-neutral-800"
                             }`}
-                            onClick={() => setAcceptCarId(c.id)}
+                            onClick={() => !isBroken && setAcceptCarId(c.id)}
+                            title={
+                              isBroken
+                                ? "Denne bilen har 100% skade og kan ikke brukes."
+                                : ""
+                            }
                           >
                             <div className="flex items-center gap-3">
                               <Item
-                                name={c.displayName}
+                                name={`${c.displayName} ${
+                                  isBroken ? "(Ødelagt)" : ""
+                                }`}
                                 tier={c.tier}
                                 tooltipImg={c.img || undefined}
                                 tooltipContent={
@@ -1036,6 +1125,12 @@ const StreetRacing = () => {
                                         </strong>
                                       </p>
                                     )}
+                                    <p>
+                                      Skade:{" "}
+                                      <strong className="text-neutral-200">
+                                        {Math.min(100, Number(c.damage ?? 0))}%
+                                      </strong>
+                                    </p>
                                     {c.value != null && (
                                       <p>
                                         Verdi:{" "}
@@ -1214,6 +1309,13 @@ const StreetRacing = () => {
                                   </strong>
                                 </p>
                               )}
+                              <p>
+                                Skade:{" "}
+                                <strong className="text-neutral-200">
+                                  {Math.min(100, Number(activeCar.damage ?? 0))}
+                                  %
+                                </strong>
+                              </p>
                               {activeCar.value != null && (
                                 <p>
                                   Verdi:{" "}
@@ -1241,25 +1343,37 @@ const StreetRacing = () => {
                   <H3>Velg bil</H3>
                   {enriched.length === 0 ? (
                     <p className="text-neutral-400 mt-1">
-                      Du har ingen biler i Tokyo.
+                      Du har ingen biler i denne byen.
                     </p>
                   ) : (
                     <ul className="mt-2 grid gap-2">
                       {enriched.map((c) => {
                         const isActive = c.id === activeCarId;
+                        const isBroken = (c.damage ?? 0) >= 100;
                         return (
                           <li
                             key={c.id}
-                            className={`rounded-lg border p-2 flex items-center justify-between cursor-pointer ${
+                            className={`rounded-lg border p-2 flex items-center justify-between ${
+                              isBroken
+                                ? "opacity-50 cursor-not-allowed"
+                                : "cursor-pointer"
+                            } ${
                               isActive
                                 ? "border-neutral-600 bg-neutral-800"
                                 : "border-neutral-800 bg-neutral-900 hover:bg-neutral-800"
                             }`}
-                            onClick={() => setActiveCar(c.id)}
+                            onClick={() => !isBroken && setActiveCar(c.id)}
+                            title={
+                              isBroken
+                                ? "Denne bilen har 100% skade og kan ikke brukes."
+                                : ""
+                            }
                           >
                             <div className="flex items-center gap-3">
                               <Item
-                                name={c.displayName}
+                                name={`${c.displayName} ${
+                                  isBroken ? "(Ødelagt)" : ""
+                                }`}
                                 tier={c.tier}
                                 tooltipImg={c.img || undefined}
                                 tooltipContent={
@@ -1272,6 +1386,12 @@ const StreetRacing = () => {
                                         </strong>
                                       </p>
                                     )}
+                                    <p>
+                                      Skade:{" "}
+                                      <strong className="text-neutral-200">
+                                        {Math.min(100, Number(c.damage ?? 0))}%
+                                      </strong>
+                                    </p>
                                     {c.value != null && (
                                       <p>
                                         Verdi:{" "}
@@ -1297,7 +1417,11 @@ const StreetRacing = () => {
 
               <div className="mt-4">
                 <Button
-                  disabled={!activeCarId || hasUnackedFinished}
+                  disabled={
+                    !activeCarId ||
+                    hasUnackedFinished ||
+                    (activeCar ? (activeCar.damage ?? 0) >= 100 : false)
+                  }
                   onClick={handleStartRace}
                 >
                   Start løp
