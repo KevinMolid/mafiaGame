@@ -10,6 +10,9 @@ import Item from "../components/Typography/Item";
 import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
 
+import racingBadgeI from "/images/streetracing/RacingIsmall.png";
+import racingBadgeV from "/images/streetracing/RacingVsmall.png";
+
 import { useCharacter } from "../CharacterContext";
 import { getCarByKey, getCarByName } from "../Data/Cars";
 
@@ -103,7 +106,22 @@ function mulberry32(seed: number) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-// ---------------------------------------------------
+// ------------ Win / Loss helpers -----------------------
+
+function winDelta(r: number) {
+  if (r < 500) return 5;
+  if (r < 1000) return 4;
+  if (r < 1500) return 3;
+  if (r < 2000) return 2;
+  return 1;
+}
+function lossDelta(r: number) {
+  if (r < 500) return -1;
+  if (r < 1000) return -2;
+  if (r < 1500) return -3;
+  if (r < 2000) return -4;
+  return -5;
+}
 
 const StreetRacing = () => {
   const { userCharacter } = useCharacter();
@@ -129,6 +147,28 @@ const StreetRacing = () => {
   // Accept-flow UI states
   const [pendingRace, setPendingRace] = useState<RaceDoc | null>(null);
   const [acceptCarId, setAcceptCarId] = useState<string | null>(null);
+
+  const [racingStats, setRacingStats] = useState({
+    rating: 0,
+    wins: 0,
+    losses: 0,
+  });
+
+  useEffect(() => {
+    if (!userCharacter?.id) return;
+    const ref = doc(db, "Characters", userCharacter.id);
+    return onSnapshot(ref, (snap) => {
+      const d = snap.data() || {};
+      setActiveCarId(d?.activeCarId ?? null);
+
+      const rs = d?.racingStats || {};
+      setRacingStats({
+        rating: Number(rs?.rating ?? 0),
+        wins: Number(rs?.wins ?? 0),
+        losses: Number(rs?.losses ?? 0),
+      });
+    });
+  }, [userCharacter?.id]);
 
   // Race animation UI
   type RaceView = {
@@ -444,6 +484,71 @@ const StreetRacing = () => {
         const rnd = Math.random(); // single draw, persisted
         const winnerId = rnd < pCreator ? v.creator.id : userCharacter.id;
 
+        // ---- Update racingStats for both players ---------------------------------
+        const creatorRef = doc(db, "Characters", v.creator.id);
+        const challengerRef = doc(db, "Characters", userCharacter.id);
+
+        // Read both Character docs
+        const [creatorSnap, challengerSnap] = await Promise.all([
+          tx.get(creatorRef),
+          tx.get(challengerRef),
+        ]);
+
+        const creatorData = (creatorSnap.data() as any) || {};
+        const challengerData = (challengerSnap.data() as any) || {};
+
+        const cStats = creatorData.racingStats || {};
+        const hStats = challengerData.racingStats || {};
+
+        const creatorRating = Number(cStats.rating ?? 0);
+        const creatorWins = Number(cStats.wins ?? 0);
+        const creatorLosses = Number(cStats.losses ?? 0);
+
+        const challRating = Number(hStats.rating ?? 0);
+        const challWins = Number(hStats.wins ?? 0);
+        const challLosses = Number(hStats.losses ?? 0);
+
+        let newCreatorRating = creatorRating;
+        let newChallRating = challRating;
+        let newCreatorWins = creatorWins;
+        let newChallWins = challWins;
+        let newCreatorLosses = creatorLosses;
+        let newChallLosses = challLosses;
+
+        if (winnerId === v.creator.id) {
+          // Creator wins, Challenger loses
+          newCreatorRating += winDelta(creatorRating);
+          newChallRating += lossDelta(challRating);
+          newCreatorWins += 1;
+          newChallLosses += 1;
+        } else {
+          // Challenger wins, Creator loses
+          newChallRating += winDelta(challRating);
+          newCreatorRating += lossDelta(creatorRating);
+          newChallWins += 1;
+          newCreatorLosses += 1;
+        }
+
+        newCreatorRating = Math.max(0, newCreatorRating);
+        newChallRating = Math.max(0, newChallRating);
+
+        tx.update(creatorRef, {
+          racingStats: {
+            rating: newCreatorRating,
+            wins: newCreatorWins,
+            losses: newCreatorLosses,
+          },
+          lastActive: serverTimestamp(),
+        });
+        tx.update(challengerRef, {
+          racingStats: {
+            rating: newChallRating,
+            wins: newChallWins,
+            losses: newChallLosses,
+          },
+          lastActive: serverTimestamp(),
+        });
+
         // Optional: write some stage logs for flavor (deterministic seed)
         const seed = strHash(pendingRace.id);
         const rng = mulberry32(seed);
@@ -698,25 +803,51 @@ const StreetRacing = () => {
       : raceView?.challenger.username;
   const didIWin = userCharacter?.id === raceView?.winnerId;
 
+  const badgeSrc = racingStats.rating >= 2000 ? racingBadgeV : racingBadgeI;
+
   return (
     <Main>
       <H1>Street Racing</H1>
-      <p className="mb-4">
-        Her kan du konkurrere i gateløp mot andre spillere.
-      </p>
-
-      <div className="mb-8">
-        <p>
-          <small>Racingpoeng:</small>
-        </p>
-        <p>
-          <strong className="text-4xl text-neutral-200">3688</strong>
-        </p>
-      </div>
 
       <div className="flex flex-wrap gap-4">
+        <p className="mb-4 w-full">
+          Her kan du konkurrere i gateløp mot andre spillere.
+        </p>
+
+        <Box className="flex-1">
+          <div className="flex gap-6 items-center">
+            <img className="w-24" src={badgeSrc} alt="" />
+
+            <div>
+              <p>
+                <small>Racingpoeng:</small>
+              </p>
+              <p>
+                <strong className="text-4xl text-white">
+                  {racingStats.rating}
+                </strong>
+              </p>
+
+              <div className="flex gap-4 text-neutral-400">
+                <p>
+                  <small>Seiere:</small>{" "}
+                  <strong className="text-neutral-200">
+                    {racingStats.wins}
+                  </strong>
+                </p>
+                <p>
+                  <small>Tap:</small>{" "}
+                  <strong className="text-neutral-200">
+                    {racingStats.losses}
+                  </strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        </Box>
+
         {/* Aktive utfordringer (Tokyo-only & car-secret UI) */}
-        <Box>
+        <Box className="flex-1">
           <H2>Aktive utfordringer</H2>
           {openRaces.length === 0 ? (
             <p className="text-neutral-400 mt-2">Ingen aktive utfordringer.</p>

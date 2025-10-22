@@ -10,7 +10,7 @@ const Box = ({ children, type = "normal", className }: BoxProps) => {
   return (
     <div
       className={
-        `border p-4 ${className} ` +
+        `border px-2 py-4 sm:p-4 ${className} ` +
         (type === "help"
           ? "border-yellow-400 bg-neutral-900"
           : "border-neutral-500")
