@@ -486,31 +486,59 @@ const StreetRacing = () => {
     try {
       // Transaction: claim race + set challenger + pick winner + apply damage + update rating
       await runTransaction(db, async (tx) => {
-        const snap = await tx.get(ref);
-        if (!snap.exists()) throw new Error("Løpet finnes ikke.");
-        const v = snap.data() as any;
+        // --- READS ---------------------------------------------------------
+        const raceSnap = await tx.get(ref);
+        if (!raceSnap.exists()) throw new Error("Løpet finnes ikke.");
+        const v = raceSnap.data() as any;
         if (v.status !== "open")
           throw new Error("Utfordringen er allerede tatt.");
         if (v.creator?.id === userCharacter.id)
           throw new Error("Du kan ikke ta din egen utfordring.");
 
-        const cHP = Number(v.creator?.car?.hp ?? 0);
-        const hHP = Number(car.hp ?? 0);
-        const total = Math.max(1, cHP + hHP);
-        const pCreator = cHP / total;
-        const rnd = Math.random(); // single draw, persisted
-        const winnerId = rnd < pCreator ? v.creator.id : userCharacter.id;
-
-        // ---- Update racingStats for both players ---------------------------------
         const creatorRef = doc(db, "Characters", v.creator.id);
         const challengerRef = doc(db, "Characters", userCharacter.id);
 
-        // Read both Character docs
-        const [creatorSnap, challengerSnap] = await Promise.all([
-          tx.get(creatorRef),
-          tx.get(challengerRef),
-        ]);
+        const creatorCarId = v?.creator?.carId;
+        if (typeof creatorCarId !== "string" || !creatorCarId) {
+          throw new Error("Motstanderens bil-ID mangler på løpet.");
+        }
 
+        const creatorCarRef = doc(
+          db,
+          "Characters",
+          v.creator.id,
+          "cars",
+          creatorCarId
+        );
+        const challengerCarRef = doc(
+          db,
+          "Characters",
+          userCharacter.id,
+          "cars",
+          car.id
+        );
+
+        const [creatorSnap, challengerSnap, creatorCarSnap, challengerCarSnap] =
+          await Promise.all([
+            tx.get(creatorRef),
+            tx.get(challengerRef),
+            tx.get(creatorCarRef),
+            tx.get(challengerCarRef),
+          ]);
+
+        // ---- hard existence checks for cars; soft for characters -----------
+        if (!creatorCarSnap.exists()) {
+          throw new Error("Motstanderens bil finnes ikke lenger.");
+        }
+        if (!challengerCarSnap.exists()) {
+          throw new Error("Bilen din finnes ikke lenger.");
+        }
+
+        // If a Character doc might be missing, we’ll upsert later with tx.set(..., {merge:true})
+        const creatorCharacterExists = creatorSnap.exists();
+        const challengerCharacterExists = challengerSnap.exists();
+
+        // ---- derive data ---------------------------------------------------
         const creatorData = (creatorSnap.data() as any) || {};
         const challengerData = (challengerSnap.data() as any) || {};
 
@@ -525,72 +553,16 @@ const StreetRacing = () => {
         const challWins = Number(hStats.wins ?? 0);
         const challLosses = Number(hStats.losses ?? 0);
 
-        let newCreatorRating = creatorRating;
-        let newChallRating = challRating;
-        let newCreatorWins = creatorWins;
-        let newChallWins = challWins;
-        let newCreatorLosses = creatorLosses;
-        let newChallLosses = challLosses;
+        const cHP = Number(v.creator?.car?.hp ?? 0);
+        const hHP = Number(car.hp ?? 0);
+        const total = Math.max(1, cHP + hHP);
+        const pCreator = cHP / total;
+        const rnd = Math.random();
+        const winnerId = rnd < pCreator ? v.creator.id : userCharacter.id;
 
-        if (winnerId === v.creator.id) {
-          // Creator wins, Challenger loses
-          newCreatorRating += winDelta(creatorRating);
-          newChallRating += lossDelta(challRating);
-          newCreatorWins += 1;
-          newChallLosses += 1;
-        } else {
-          // Challenger wins, Creator loses
-          newChallRating += winDelta(challRating);
-          newCreatorRating += lossDelta(creatorRating);
-          newChallWins += 1;
-          newCreatorLosses += 1;
-        }
-
-        // Never go below 0
-        newCreatorRating = Math.max(0, newCreatorRating);
-        newChallRating = Math.max(0, newChallRating);
-
-        tx.update(creatorRef, {
-          racingStats: {
-            rating: newCreatorRating,
-            wins: newCreatorWins,
-            losses: newCreatorLosses,
-          },
-          lastActive: serverTimestamp(),
-        });
-        tx.update(challengerRef, {
-          racingStats: {
-            rating: newChallRating,
-            wins: newChallWins,
-            losses: newChallLosses,
-          },
-          lastActive: serverTimestamp(),
-        });
-
-        // ---- Apply damage to both cars (1–15%, cap at 100) -----------------------
-        const creatorCarRef = doc(
-          db,
-          "Characters",
-          v.creator.id,
-          "cars",
-          v.creator.carId
-        );
-        const challengerCarRef = doc(
-          db,
-          "Characters",
-          userCharacter.id,
-          "cars",
-          car.id
-        );
-
-        const [creatorCarSnap, challengerCarSnap] = await Promise.all([
-          tx.get(creatorCarRef),
-          tx.get(challengerCarRef),
-        ]);
-
+        // car damage
         const creatorCarData = (creatorCarSnap.data() as any) || {};
         const challengerCarData = (challengerCarSnap.data() as any) || {};
-
         const creatorDamagePrev = Math.min(
           100,
           Number(creatorCarData.damage ?? 0)
@@ -599,8 +571,6 @@ const StreetRacing = () => {
           100,
           Number(challengerCarData.damage ?? 0)
         );
-
-        // Abort if either car is already at 100 (cannot race)
         if (creatorDamagePrev >= 100) {
           throw new Error(
             "Motstanderens bil har 100% skade og kan ikke brukes."
@@ -610,19 +580,38 @@ const StreetRacing = () => {
           throw new Error("Bilen din har 100% skade og kan ikke brukes.");
         }
 
+        // ratings
+        let newCreatorRating = creatorRating;
+        let newChallRating = challRating;
+        let newCreatorWins = creatorWins;
+        let newChallWins = challWins;
+        let newCreatorLosses = creatorLosses;
+        let newChallLosses = challLosses;
+
+        if (winnerId === v.creator.id) {
+          newCreatorRating += winDelta(creatorRating);
+          newChallRating += lossDelta(challRating);
+          newCreatorWins += 1;
+          newChallLosses += 1;
+        } else {
+          newChallRating += winDelta(challRating);
+          newCreatorRating += lossDelta(creatorRating);
+          newChallWins += 1;
+          newCreatorLosses += 1;
+        }
+        newCreatorRating = Math.max(0, newCreatorRating);
+        newChallRating = Math.max(0, newChallRating);
+
+        // damage increments
         const creatorInc = randDamage();
         const challengerInc = randDamage();
-
         const creatorDamageNew = Math.min(100, creatorDamagePrev + creatorInc);
         const challengerDamageNew = Math.min(
           100,
           challengerDamagePrev + challengerInc
         );
 
-        tx.update(creatorCarRef, { damage: creatorDamageNew });
-        tx.update(challengerCarRef, { damage: challengerDamageNew });
-
-        // ---- Stage logs / totals (flavor) ----------------------------------------
+        // flavor totals
         const seed = strHash(pendingRace.id);
         const rng = mulberry32(seed);
         const s1 = Math.round(rng() * 10);
@@ -631,6 +620,61 @@ const StreetRacing = () => {
         const totalCreator = cHP + s1 + s2 + s3;
         const totalChallenger = hHP + (10 - s1) + (10 - s2) + (10 - s3);
 
+        // --- WRITES ---------------------------------------------------------
+        // Characters: use set(..., {merge:true}) to tolerate missing Character docs
+        if (creatorCharacterExists) {
+          tx.update(creatorRef, {
+            racingStats: {
+              rating: newCreatorRating,
+              wins: newCreatorWins,
+              losses: newCreatorLosses,
+            },
+            lastActive: serverTimestamp(),
+          });
+        } else {
+          tx.set(
+            creatorRef,
+            {
+              racingStats: {
+                rating: newCreatorRating,
+                wins: newCreatorWins,
+                losses: newCreatorLosses,
+              },
+              lastActive: serverTimestamp(),
+            },
+            { merge: true }
+          );
+        }
+
+        if (challengerCharacterExists) {
+          tx.update(challengerRef, {
+            racingStats: {
+              rating: newChallRating,
+              wins: newChallWins,
+              losses: newChallLosses,
+            },
+            lastActive: serverTimestamp(),
+          });
+        } else {
+          tx.set(
+            challengerRef,
+            {
+              racingStats: {
+                rating: newChallRating,
+                wins: newChallWins,
+                losses: newChallLosses,
+              },
+              lastActive: serverTimestamp(),
+            },
+            { merge: true }
+          );
+        }
+
+        // Cars: must exist; we already checked .exists()
+        tx.update(creatorCarRef, { damage: creatorDamageNew });
+        tx.update(challengerCarRef, { damage: challengerDamageNew });
+
+        // Race: we read it above and know it exists
         tx.update(ref, {
           status: "finished",
           acceptedAt: serverTimestamp(),
