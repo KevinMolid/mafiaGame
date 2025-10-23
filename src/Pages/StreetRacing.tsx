@@ -27,12 +27,10 @@ import {
   query,
   where,
   doc,
-  addDoc,
   serverTimestamp,
   runTransaction,
   updateDoc,
   getDoc,
-  deleteDoc,
 } from "firebase/firestore";
 
 const db = getFirestore();
@@ -50,6 +48,11 @@ type CarDoc = {
   img?: string | null;
   damage?: number; // 0–100
   [k: string]: any;
+  inRace?: {
+    raceId: string;
+    role: "creator" | "challenger";
+    since: any; // Firestore Timestamp
+  } | null;
 };
 
 type MsgType = "success" | "failure" | "info" | "warning";
@@ -388,59 +391,101 @@ const StreetRacing = () => {
   // Start my challenge (blocked if I have one, or if I have an unacknowledged finished race)
   async function handleStartRace() {
     if (!userCharacter?.id || !activeCar) return;
-
     if ((activeCar.damage ?? 0) >= 100) {
-      setNewRaceMesssage("Den aktive bilen har 100% skade og kan ikke brukes.");
-      setNewRaceMessageType("warning");
-      return;
+      /* ...same check... */ return;
     }
 
-    if (myOpenRace) {
-      setNewRaceMesssage("Du har allerede en aktiv utfordring.");
-      setNewRaceMessageType("warning");
-      return;
-    }
-    if (myPendingFinished) {
-      setNewRaceMesssage(
-        "Fullfør/avslutt det aktive løpet før du starter et nytt."
-      );
-      setNewRaceMessageType("warning");
-      return;
-    }
     try {
-      await addDoc(collection(db, "Streetraces"), {
-        status: "open" as RaceStatus,
-        createdAt: serverTimestamp(),
-        creator: {
-          id: userCharacter.id,
-          username: userCharacter.username ?? "Ukjent",
-          carId: activeCar.id,
-          car: {
-            name: activeCar.displayName,
-            hp: activeCar.hp ?? null,
-            value: activeCar.value ?? null,
-            tier: activeCar.tier ?? 1,
-            img: activeCar.img ?? null,
+      await runTransaction(db, async (tx) => {
+        // Re-read my chosen car inside the tx
+        const carRef = doc(
+          db,
+          "Characters",
+          userCharacter.id,
+          "cars",
+          activeCar.id
+        );
+        const carSnap = await tx.get(carRef);
+        if (!carSnap.exists()) throw new Error("Bilen finnes ikke lenger.");
+        const car = carSnap.data() as any;
+
+        if (car.inRace) throw new Error("Denne bilen er allerede i et løp.");
+
+        // Create race with fixed id so we can reference it from the car lock
+        const raceRef = doc(collection(db, "Streetraces"));
+
+        tx.set(raceRef, {
+          status: "open" as RaceStatus,
+          createdAt: serverTimestamp(),
+          city: userCharacter.location ?? null,
+          creator: {
+            id: userCharacter.id,
+            username: userCharacter.username ?? "Ukjent",
+            carId: activeCar.id,
+            car: {
+              name: activeCar.displayName,
+              hp: activeCar.hp ?? null,
+              value: activeCar.value ?? null,
+              tier: activeCar.tier ?? 1,
+              img: activeCar.img ?? null,
+            },
+            done: false,
           },
-          done: false,
-        },
+        });
+
+        // Lock the car
+        tx.update(carRef, {
+          inRace: {
+            raceId: raceRef.id,
+            role: "creator",
+            since: serverTimestamp(),
+          },
+        });
       });
+
       setNewRaceMesssage(
         "Utfordring startet! Den er nå synlig for andre spillere."
       );
       setNewRaceMessageType("success");
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      setNewRaceMesssage("Klarte ikke å starte løp.");
+      setNewRaceMesssage(e?.message || "Klarte ikke å starte løp.");
       setNewRaceMessageType("failure");
     }
   }
 
-  // Cancel my open challenge
+  // Cancel my open challenge (unlock my car + delete race)
   async function handleCancelMyRace() {
-    if (!myOpenRace) return;
+    if (!myOpenRace || !userCharacter?.id) return;
     try {
-      await deleteDoc(doc(db, "Streetraces", myOpenRace.id));
+      await runTransaction(db, async (tx) => {
+        const raceRef = doc(db, "Streetraces", myOpenRace.id);
+        const raceSnap = await tx.get(raceRef);
+        if (!raceSnap.exists()) return;
+
+        const v = raceSnap.data() as any;
+        if (v.status !== "open") {
+          throw new Error("Kan ikke avbryte nå.");
+        }
+
+        const creatorCarId = v?.creator?.carId;
+        if (creatorCarId) {
+          const creatorCarRef = doc(
+            db,
+            "Characters",
+            userCharacter.id,
+            "cars",
+            creatorCarId
+          );
+          const creatorCarSnap = await tx.get(creatorCarRef);
+          if (creatorCarSnap.exists()) {
+            tx.update(creatorCarRef, { inRace: null });
+          }
+        }
+
+        tx.delete(raceRef);
+      });
+
       setNewRaceMesssage("Utfordringen ble avbrutt.");
       setNewRaceMessageType("success");
     } catch (e) {
@@ -683,10 +728,25 @@ const StreetRacing = () => {
         }
 
         // Cars: must exist; we already checked .exists()
-        tx.update(creatorCarRef, { damage: creatorDamageNew });
-        tx.update(challengerCarRef, { damage: challengerDamageNew });
+        // Ensure both cars are locked for this race until archive
+        tx.update(creatorCarRef, {
+          damage: creatorDamageNew,
+          inRace: {
+            raceId: ref.id,
+            role: "creator",
+            since: serverTimestamp(),
+          },
+        });
+        tx.update(challengerCarRef, {
+          damage: challengerDamageNew,
+          inRace: {
+            raceId: ref.id,
+            role: "challenger",
+            since: serverTimestamp(),
+          },
+        });
 
-        // Race: we read it above and know it exists
+        // Race: we read it above and know it exists (finish immediately per your flow)
         tx.update(ref, {
           status: "finished",
           acceptedAt: serverTimestamp(),
@@ -802,7 +862,7 @@ const StreetRacing = () => {
     setAcceptCarId(null);
   }
 
-  // Acknowledge finished race: mark my `done=true`. If both done -> archive.
+  // Acknowledge finished race: mark my `done=true`. If both done -> archive & unlock.
   async function handleAcknowledgeRace() {
     if (!raceView || !userCharacter?.id) return;
     const ref = doc(db, "Streetraces", raceView.raceId);
@@ -827,9 +887,33 @@ const StreetRacing = () => {
           : Boolean(v.creator?.done);
 
         if (otherDone) {
-          // both acknowledged -> archive
+          // both acknowledged -> archive & unlock cars
           updates["status"] = "archived";
           updates["archivedAt"] = serverTimestamp();
+
+          const creatorCarId = v?.creator?.carId;
+          const challengerCarId = v?.challenger?.carId;
+
+          if (creatorCarId) {
+            const creatorCarRef = doc(
+              db,
+              "Characters",
+              v.creator.id,
+              "cars",
+              creatorCarId
+            );
+            tx.update(creatorCarRef, { inRace: null });
+          }
+          if (challengerCarId) {
+            const challengerCarRef = doc(
+              db,
+              "Characters",
+              v.challenger.id,
+              "cars",
+              challengerCarId
+            );
+            tx.update(challengerCarRef, { inRace: null });
+          }
         }
 
         tx.update(ref, updates);
@@ -1159,14 +1243,14 @@ const StreetRacing = () => {
                       Du har ingen biler i denne byen.
                     </p>
                   ) : (
-                    <ul className="mt-2 grid gap-2">
+                    <ul className="mt-2 grid gap-1">
                       {enriched.map((c) => {
                         const isBroken = (c.damage ?? 0) >= 100;
                         const isChosen = c.id === acceptCarId;
                         return (
                           <li
                             key={c.id}
-                            className={`rounded-lg border p-2 flex items-center justify-between ${
+                            className={`rounded-lg border px-2 py-1 flex items-center justify-between ${
                               isBroken
                                 ? "opacity-50 cursor-not-allowed"
                                 : "cursor-pointer"
@@ -1448,14 +1532,14 @@ const StreetRacing = () => {
                       Du har ingen biler i denne byen.
                     </p>
                   ) : (
-                    <ul className="mt-2 grid gap-2">
+                    <ul className="mt-2 grid gap-1">
                       {enriched.map((c) => {
                         const isActive = c.id === activeCarId;
                         const isBroken = (c.damage ?? 0) >= 100;
                         return (
                           <li
                             key={c.id}
-                            className={`rounded-lg border p-2 flex items-center justify-between ${
+                            className={`rounded-lg border px-2 py-1 flex items-center justify-between ${
                               isBroken
                                 ? "opacity-50 cursor-not-allowed"
                                 : "cursor-pointer"

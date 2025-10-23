@@ -42,11 +42,15 @@ import { useCooldown } from "../../CooldownContext";
 type SortKey = "name" | "hp" | "value" | "damage";
 type SortDir = "asc" | "desc";
 
+const isLocked = (c: any) => Boolean(c?.inRace?.raceId);
+
 const Parking = () => {
   const { userCharacter } = useCharacter();
   const { jailRemainingSeconds } = useCooldown();
   const [parking, setParking] = useState<number | null>(null);
-  const [cars, setCars] = useState<(Car & { id: string })[]>([]);
+  const [cars, setCars] = useState<(Car & { id: string } & { inRace?: any })[]>(
+    []
+  );
   const [message, setMessage] = useState<React.ReactNode>("");
   const [upgrading, setUpgrading] = useState<boolean>(false);
   const [messageType, setMessageType] = useState<
@@ -81,8 +85,8 @@ const Parking = () => {
     const q = query(carsCol, where("city", "==", userCharacter.location));
 
     const unsub = onSnapshot(q, (snap) => {
-      const arr = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Car) }));
-      setCars(arr);
+      const arr = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+      setCars(arr as any);
     });
 
     return () => unsub();
@@ -146,9 +150,20 @@ const Parking = () => {
     [cars, selectedIds]
   );
 
-  const selectedTotalValue = useMemo(
-    () => selectedCars.reduce((sum, c) => sum + carValue(c), 0),
+  // Sellable (not in a race)
+  const sellableCars = useMemo(() => cars.filter((c) => !isLocked(c)), [cars]);
+  const selectedSellableCars = useMemo(
+    () => selectedCars.filter((c) => !isLocked(c)),
     [selectedCars]
+  );
+
+  const selectedTotalValue = useMemo(
+    () => selectedCars.reduce((sum, c) => sum + carValue(c as any), 0),
+    [selectedCars]
+  );
+  const selectedSellableTotalValue = useMemo(
+    () => selectedSellableCars.reduce((sum, c) => sum + carValue(c as any), 0),
+    [selectedSellableCars]
   );
 
   const toggleSelected = (id: string) =>
@@ -161,8 +176,12 @@ const Parking = () => {
 
   // Total value of cars in the current city (from subcollection)
   const totalValue = useMemo(
-    () => cars.reduce((sum, c) => sum + carValue(c), 0),
+    () => cars.reduce((sum, c) => sum + carValue(c as any), 0),
     [cars]
+  );
+  const totalSellableValue = useMemo(
+    () => sellableCars.reduce((sum, c) => sum + carValue(c as any), 0),
+    [sellableCars]
   );
 
   // Sorted view of cars (from subcollection)
@@ -171,19 +190,25 @@ const Parking = () => {
     arr.sort((a, b) => {
       const dir = sortDir === "asc" ? 1 : -1;
       if (sortKey === "name") return a.name.localeCompare(b.name, "nb") * dir;
-      if (sortKey === "hp") return (a.hp - b.hp) * dir;
+      if (sortKey === "hp") return ((a.hp || 0) - (b.hp || 0)) * dir;
       if (sortKey === "damage")
         return (dmgPercent(a.damage) - dmgPercent(b.damage)) * dir;
-      return (carValue(a) - carValue(b)) * dir; // value
+      return (carValue(a as any) - carValue(b as any)) * dir; // value
     });
     return arr;
   }, [cars, sortKey, sortDir]);
 
-  // Sell Selected cars
+  // Sell Selected cars (blocked for cars in race)
   const sellSelectedCars = async () => {
     if (selectedCars.length === 0) {
       setMessageType("info");
       setMessage("Ingen biler valgt.");
+      return;
+    }
+
+    if (selectedSellableCars.length === 0) {
+      setMessageType("warning");
+      setMessage("Valgte biler kan ikke selges fordi de er i et løp.");
       return;
     }
 
@@ -192,8 +217,8 @@ const Parking = () => {
     const batch = writeBatch(db);
 
     let totalSoldValue = 0;
-    for (const car of selectedCars) {
-      totalSoldValue += carValue(car);
+    for (const car of selectedSellableCars) {
+      totalSoldValue += carValue(car as any);
       const carRef = fsDoc(db, "Characters", userCharacter.id, "cars", car.id);
       batch.delete(carRef);
     }
@@ -209,7 +234,8 @@ const Parking = () => {
         <p>
           Du solgte{" "}
           <strong>
-            {selectedCars.length} {selectedCars.length === 1 ? "bil" : "biler"}
+            {selectedSellableCars.length}{" "}
+            {selectedSellableCars.length === 1 ? "bil" : "biler"}
           </strong>{" "}
           for <i className="fa-solid fa-dollar-sign"></i>{" "}
           <strong>{totalSoldValue.toLocaleString("nb-NO")}</strong>.
@@ -226,11 +252,17 @@ const Parking = () => {
     }
   };
 
-  // Sell all cars in current city: batch delete + add money
+  // Sell all cars in current city: only those not in race
   const sellAllCars = async () => {
     if (cars.length === 0) {
       setMessageType("info");
       setMessage("Du har ingen biler å selge.");
+      return;
+    }
+
+    if (sellableCars.length === 0) {
+      setMessageType("warning");
+      setMessage("Ingen biler kan selges nå – alle er i løp.");
       return;
     }
 
@@ -239,8 +271,8 @@ const Parking = () => {
     const batch = writeBatch(db);
 
     let totalSoldValue = 0;
-    for (const car of cars) {
-      totalSoldValue += carValue(car);
+    for (const car of sellableCars) {
+      totalSoldValue += carValue(car as any);
       const carRef = fsDoc(db, "Characters", userCharacter.id, "cars", car.id);
       batch.delete(carRef);
     }
@@ -256,7 +288,7 @@ const Parking = () => {
         <p>
           Du solgte{" "}
           <strong>
-            {cars.length} {cars.length === 1 ? "bil" : "biler"}
+            {sellableCars.length} {sellableCars.length === 1 ? "bil" : "biler"}
           </strong>{" "}
           for <i className="fa-solid fa-dollar-sign"></i>{" "}
           <strong>{totalSoldValue.toLocaleString("nb-NO")}</strong>.
@@ -281,6 +313,9 @@ const Parking = () => {
     return <JailBox message={message} messageType={messageType} />;
   }
 
+  const allSellableSelected =
+    sellableCars.length > 0 && sellableCars.every((c) => selectedIds.has(c.id));
+
   return (
     <Main>
       <div className="flex flex-col gap-4">
@@ -302,12 +337,16 @@ const Parking = () => {
           open={showConfirmSellAll}
           title={anySelected ? "Selg valgte biler?" : "Selg alle biler?"}
           description={
-            <div className="text-sm text-neutral-300 space-y-1">
+            <div className="text-sm sm:text-base space-y-1">
               <p>
                 Dette vil selge{" "}
                 <strong>
-                  {anySelected ? selectedCars.length : cars.length}{" "}
-                  {(anySelected ? selectedCars.length : cars.length) === 1
+                  {anySelected
+                    ? selectedSellableCars.length
+                    : sellableCars.length}{" "}
+                  {(anySelected
+                    ? selectedSellableCars.length
+                    : sellableCars.length) === 1
                     ? "bil"
                     : "biler"}
                 </strong>{" "}
@@ -318,12 +357,14 @@ const Parking = () => {
                 <strong>
                   <i className="fa-solid fa-dollar-sign" />{" "}
                   {(anySelected
-                    ? selectedTotalValue
-                    : totalValue
+                    ? selectedSellableTotalValue
+                    : totalSellableValue
                   ).toLocaleString("nb-NO")}
                 </strong>
               </p>
-              <p className="text-neutral-400">Handlingen kan ikke angres.</p>
+              <p className="text-stone-400">
+                <small>Handlingen kan ikke angres!</small>
+              </p>
             </div>
           }
           confirmLabel={anySelected ? "Ja, selg valgte" : "Ja, selg alle"}
@@ -470,15 +511,17 @@ const Parking = () => {
               </colgroup>
 
               <thead>
-                <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
+                <tr className="border border-neutral-700 bg-neutral-950 text-neutral-200">
                   <th className="px-2 py-1 w-8">
                     <input
                       type="checkbox"
                       aria-label="Velg alle"
-                      checked={anySelected && selectedIds.size === cars.length}
+                      checked={allSellableSelected}
                       onChange={(e) => {
                         if (e.target.checked)
-                          setSelectedIds(new Set(cars.map((c) => c.id)));
+                          setSelectedIds(
+                            new Set(sellableCars.map((c) => c.id))
+                          );
                         else setSelectedIds(new Set());
                       }}
                     />
@@ -582,25 +625,33 @@ const Parking = () => {
                     const catalog = car.key
                       ? getCarByKey(car.key)
                       : getCarByName(car.name);
+                    const locked = isLocked(car);
                     const checked = selectedIds.has(car.id);
                     return (
                       <tr
-                        className="border bg-neutral-800 border-neutral-700"
+                        className={`border bg-neutral-800 border-neutral-700 ${
+                          locked ? "opacity-60" : ""
+                        }`}
                         key={car.id}
+                        title={
+                          locked ? "Kan ikke selges: Bilen er i et løp." : ""
+                        }
                       >
                         <td className="px-2 py-1 w-8">
                           <input
                             type="checkbox"
-                            checked={checked}
+                            disabled={locked}
+                            checked={locked ? false : checked}
                             onChange={() => toggleSelected(car.id)}
                             aria-label={`Velg ${car.name}`}
+                            title={locked ? "Bilen er i et løp" : ""}
                           />
                         </td>
                         <td className="px-2 py-1 text-sm sm:text-base">
                           <div className="flex items-center gap-2 min-w-0">
                             <div className="truncate">
                               <Item
-                                name={car.name}
+                                name={locked ? `${car.name}` : car.name}
                                 tier={car.tier}
                                 tooltipImg={catalog?.img && catalog.img}
                                 tooltipContent={
@@ -621,9 +672,16 @@ const Parking = () => {
                                       Verdi:{" "}
                                       <strong className="text-neutral-200">
                                         <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                        {carValue(car).toLocaleString("nb-NO")}
+                                        {carValue(car as any).toLocaleString(
+                                          "nb-NO"
+                                        )}
                                       </strong>
                                     </p>
+                                    {locked && (
+                                      <p className="text-yellow-400">
+                                        Kan ikke selges (i løp).
+                                      </p>
+                                    )}
                                   </div>
                                 }
                               />
@@ -651,7 +709,7 @@ const Parking = () => {
                         <td className="px-2 py-1 text-sm sm:text-base whitespace-nowrap">
                           <strong className="text-neutral-200">
                             <i className="fa-solid fa-dollar-sign"></i>{" "}
-                            {carValue(car).toLocaleString("nb-NO")}
+                            {carValue(car as any).toLocaleString("nb-NO")}
                           </strong>
                         </td>
                       </tr>
@@ -674,6 +732,11 @@ const Parking = () => {
                     <p className="text-sm sm:text-base">
                       {anySelected ? "Verdi valgte" : "Total verdi"}
                     </p>
+                    {!anySelected && (
+                      <div className="text-xs text-stone-400">
+                        Selgbar verdi
+                      </div>
+                    )}
                   </td>
                   <td className="px-2 py-1 text-sm sm:text-base">
                     <strong className="text-neutral-200">
@@ -683,6 +746,16 @@ const Parking = () => {
                         : totalValue
                       ).toLocaleString("nb-NO")}
                     </strong>
+                    <div className="text-xs text-stone-400">
+                      {anySelected ? (
+                        <></>
+                      ) : (
+                        <>
+                          <i className="fa-solid fa-dollar-sign"></i>{" "}
+                          {totalSellableValue.toLocaleString("nb-NO")}
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               </tfoot>

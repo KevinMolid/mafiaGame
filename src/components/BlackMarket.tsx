@@ -10,7 +10,9 @@ import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
 import Item from "../components/Typography/Item";
 
+// Functions
 import { getCarByName, getCarByKey } from "../Data/Cars";
+import { dmgPercent, valueAfterDamage } from "../Functions/RewardFunctions";
 
 // Context
 import { useCharacter } from "../CharacterContext";
@@ -596,14 +598,23 @@ const BlackMarket = () => {
                                 <p>
                                   Effekt:{" "}
                                   <strong className="text-neutral-200">
-                                    {l.car?.hp} hk
+                                    {l.car?.hp ?? 0} hk
+                                  </strong>
+                                </p>
+                                <p>
+                                  Skade:{" "}
+                                  <strong className="text-neutral-200">
+                                    {dmgPercent(l.car?.damage)}%
                                   </strong>
                                 </p>
                                 <p>
                                   Verdi:{" "}
                                   <strong className="text-neutral-200">
                                     <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                    {l.car?.value?.toLocaleString("nb-NO")}
+                                    {valueAfterDamage(
+                                      l.car?.value,
+                                      l.car?.damage
+                                    ).toLocaleString("nb-NO")}
                                   </strong>
                                 </p>
                               </div>
@@ -737,14 +748,23 @@ const BlackMarket = () => {
                                         <p>
                                           Effekt:{" "}
                                           <strong className="text-neutral-200">
-                                            {c.hp} hk
+                                            {c?.hp ?? 0} hk
+                                          </strong>
+                                        </p>
+                                        <p>
+                                          Skade:{" "}
+                                          <strong className="text-neutral-200">
+                                            {dmgPercent(c?.damage)}%
                                           </strong>
                                         </p>
                                         <p>
                                           Verdi:{" "}
                                           <strong className="text-neutral-200">
                                             <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                            {c.value?.toLocaleString("nb-NO")}
+                                            {valueAfterDamage(
+                                              c?.value,
+                                              c?.damage
+                                            ).toLocaleString("nb-NO")}
                                           </strong>
                                         </p>
                                       </div>
@@ -769,14 +789,23 @@ const BlackMarket = () => {
                               <p>
                                 Effekt:{" "}
                                 <strong className="text-neutral-200">
-                                  {selectedCar.hp} hk
+                                  {selectedCar?.hp ?? 0} hk
+                                </strong>
+                              </p>
+                              <p>
+                                Skade:{" "}
+                                <strong className="text-neutral-200">
+                                  {dmgPercent(selectedCar?.damage)}%
                                 </strong>
                               </p>
                               <p>
                                 Verdi:{" "}
                                 <strong className="text-neutral-200">
                                   <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                  {selectedCar.value?.toLocaleString("nb-NO")}
+                                  {valueAfterDamage(
+                                    selectedCar?.value,
+                                    selectedCar?.damage
+                                  ).toLocaleString("nb-NO")}
                                 </strong>
                               </p>
                             </div>
@@ -936,16 +965,23 @@ const BlackMarket = () => {
                                   <p>
                                     Effekt:{" "}
                                     <strong className="text-neutral-200">
-                                      {l.car?.hp} hk
+                                      {l.car?.hp ?? 0} hk
+                                    </strong>
+                                  </p>
+                                  <p>
+                                    Skade:{" "}
+                                    <strong className="text-neutral-200">
+                                      {dmgPercent(l.car?.damage)}%
                                     </strong>
                                   </p>
                                   <p>
                                     Verdi:{" "}
                                     <strong className="text-neutral-200">
                                       <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                      {Number(l.car?.value).toLocaleString(
-                                        "nb-NO"
-                                      )}
+                                      {valueAfterDamage(
+                                        l.car?.value,
+                                        l.car?.damage
+                                      ).toLocaleString("nb-NO")}
                                     </strong>
                                   </p>
                                 </div>
