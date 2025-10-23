@@ -958,8 +958,6 @@ const StreetRacing = () => {
   const mySide =
     userCharacter?.id === raceView?.creator.id ? "creator" : "challenger";
   const myEffects = raceView?.effects?.[mySide as "creator" | "challenger"];
-  const oppSide = mySide === "creator" ? "challenger" : "creator";
-  const oppEffects = raceView?.effects?.[oppSide as "creator" | "challenger"];
 
   return (
     <Main>
@@ -1003,16 +1001,18 @@ const StreetRacing = () => {
         </Box>
 
         {/* Aktive utfordringer (car-secret UI) */}
-        <Box className="flex-1 min-w-max">
+        <Box className="flex-1">
           <H2>Aktive utfordringer</H2>
           {openRaces.length === 0 ? (
-            <p className="text-neutral-400 mt-2">Ingen aktive utfordringer.</p>
+            <p className="text-neutral-400 mt-2">
+              Det er for øyeblikket ingen aktive utfordringer.
+            </p>
           ) : (
             <ul className="mt-2 grid gap-2">
               {openRaces.map((r) => (
                 <li
                   key={r.id}
-                  className="rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 flex items-center justify-between"
+                  className="rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 flex gap-2 items-center justify-between text-nowrap"
                 >
                   <div className="flex items-center gap-3">
                     <Username
@@ -1035,7 +1035,7 @@ const StreetRacing = () => {
                       }
                       onClick={() => beginAcceptFlow(r)}
                     >
-                      Ta utfordringen
+                      <p>Ta utfordringen</p>
                     </Button>
                   </div>
                 </li>
@@ -1045,7 +1045,7 @@ const StreetRacing = () => {
         </Box>
 
         {/* Right column: create / own active / accept active / race view */}
-        <Box className="flex-1 min-w-max">
+        <Box className="flex-1">
           <H2>
             {mode === "own-active"
               ? "Aktiv utfordring"
@@ -1243,46 +1243,48 @@ const StreetRacing = () => {
           {mode === "race-view" && raceView && (
             <div className="w-full flex flex-col gap-2">
               {/* Winner banner when race stops */}
-              {raceFinished ? (
+              {raceFinished && myEffects ? (
                 <InfoBox type={didIWin ? "success" : "failure"}>
                   {didIWin ? (
-                    <>Gratulerer, du vant!</>
+                    <p>
+                      <strong>Gratulerer, du vant løpet!</strong>
+                      <br />
+                      <small>
+                        <strong className="text-neutral-100">
+                          {myEffects.ratingDelta > 0 ? "+" : ""}
+                          {myEffects.ratingDelta}
+                        </strong>{" "}
+                        rating og{" "}
+                        <strong className="text-neutral-100">
+                          +{myEffects.damageDelta}%
+                        </strong>{" "}
+                        skade på bilen.
+                      </small>
+                    </p>
                   ) : (
-                    <>Beklager, {winnerName} vant!</>
+                    <>
+                      <strong>Beklager, {winnerName} vant løpet!</strong> Du
+                      mistet{" "}
+                      <strong className="text-neutral-100">
+                        {myEffects.ratingDelta > 0 ? "+" : ""}
+                        {myEffects.ratingDelta}
+                      </strong>{" "}
+                      rating og fikk{" "}
+                      <strong className="text-neutral-100">
+                        +{myEffects.damageDelta}%
+                      </strong>{" "}
+                      skade på bilen.
+                    </>
                   )}
                 </InfoBox>
               ) : (
                 <InfoBox type="info">Løpet pågår...</InfoBox>
               )}
 
-              {raceFinished && myEffects && (
-                <div className="text-sm text-neutral-300 -mt-2 mb-2">
-                  <div>
-                    Rating:{" "}
-                    <strong className="text-neutral-100">
-                      {myEffects.ratingDelta > 0 ? "+" : ""}
-                      {myEffects.ratingDelta}
-                    </strong>{" "}
-                    &nbsp;•&nbsp; Skade på bilen:{" "}
-                    <strong className="text-neutral-100">
-                      +{myEffects.damageDelta}%
-                    </strong>
-                  </div>
-
-                  {/* Optional: also show opponent for transparency */}
-                  {oppEffects && (
-                    <div className="text-neutral-400">
-                      Motstander: rating {oppEffects.ratingDelta > 0 ? "+" : ""}
-                      {oppEffects.ratingDelta}, skade +{oppEffects.damageDelta}%
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="w-full min-h-4 grid grid-cols-[auto_auto_auto] relative rounded-xl p-2 gap-3">
+              <div className="w-full min-h-4 grid grid-cols-[128px_auto_128px] sm:grid-cols-[160px_100px_160px] relative rounded-xl p-2 sm:gap-3">
                 <section id="player1">
                   <div className="text-left">
-                    <p className="border-b-2 mb-1 px-2 py-0.5 border-red-500 bg-gradient-to-t from-red-950/0 to-red-900 rounded-t-lg">
+                    <p className="border-b-2 mb-1 px-2 py-0.5 border-red-500 bg-gradient-to-t from-red-950/0 to-red-900 rounded-t-lg w-32 sm:w-40">
                       <Username
                         character={{
                           id: raceView.creator.id,
@@ -1294,24 +1296,24 @@ const StreetRacing = () => {
                   <img
                     src={raceView.creator.img || ""}
                     alt=""
-                    className="w-40 h-24 object-cover rounded-md"
+                    className="w-32 sm:w-40 object-cover rounded-md"
                   />
                   <Item
                     name={raceView.creator.name}
                     tier={raceView.creator.tier}
-                  />{" "}
-                  - {raceView.creator.hp} hp
+                  />
+                  <p>{raceView.creator.hp} hp</p>
                 </section>
 
-                <div className="h-full flex items-center">
-                  <p className="text-4xl font-extrabold text-neutral-300 z-10 ">
+                <div className="h-36 sm:h-40 flex items-center justify-center">
+                  <p className="text-2xl sm:text-4xl font-extrabold text-neutral-200 z-10 ">
                     VS
                   </p>
                 </div>
 
                 <section id="player2">
                   <div className="text-right">
-                    <p className="border-b-2 mb-1 px-2 py-0.5 border-blue-500 bg-gradient-to-t from-blue-950/0 to-blue-900 rounded-t-lg">
+                    <p className="border-b-2 mb-1 px-2 py-0.5 border-blue-500 bg-gradient-to-t from-blue-950/0 to-blue-900 rounded-t-lg w-32 sm:w-40">
                       <Username
                         character={{
                           id: raceView.challenger.id,
@@ -1323,22 +1325,24 @@ const StreetRacing = () => {
                   <img
                     src={raceView.challenger.img || ""}
                     alt=""
-                    className="w-40 h-24 object-cover rounded-md"
+                    className="w-32 sm:w-40 object-cover rounded-md"
                   />
-                  <Item
-                    name={raceView.challenger.name}
-                    tier={raceView.challenger.tier}
-                  />{" "}
-                  - {raceView.challenger.hp} hp
+                  <div className="text-right">
+                    <Item
+                      name={raceView.challenger.name}
+                      tier={raceView.challenger.tier}
+                    />
+                    <p>{raceView.challenger.hp} hp</p>
+                  </div>
                 </section>
 
                 {/* Track + cars */}
                 <div className="relative col-span-3 w-full h-28 rounded-lg overflow-hidden">
                   {/* Track line */}
-                  <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[2px] bg-neutral-600" />
+                  <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[2px] mr-6 bg-neutral-600" />
 
                   {/* Finish flag */}
-                  <div className="absolute right-2 top-2 text-neutral-300 text-xs">
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-300 text-xs">
                     Mål
                   </div>
 

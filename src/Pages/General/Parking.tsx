@@ -37,7 +37,7 @@ const db = getFirestore(app);
 import type { Car } from "../../Interfaces/Types";
 import { useCooldown } from "../../CooldownContext";
 
-type SortKey = "name" | "hp" | "value";
+type SortKey = "name" | "hp" | "value" | "damage";
 type SortDir = "asc" | "desc";
 
 const Parking = () => {
@@ -135,9 +135,16 @@ const Parking = () => {
 
   const canUpgrade = parking !== null && parking < ParkingTypes.length - 1;
 
+  // Helpers
+  const dmgPct = (car: Car & { damage?: number }) =>
+    Math.min(100, Math.max(0, Number(car.damage ?? 0)));
+
+  const effectiveValue = (car: Car & { damage?: number }) =>
+    Math.round((Number(car.value || 0) * (100 - dmgPct(car))) / 100);
+
   // Total value of cars in the current city (from subcollection)
   const totalValue = useMemo(
-    () => cars.reduce((sum, c) => sum + (c.value || 0), 0),
+    () => cars.reduce((sum, c) => sum + effectiveValue(c), 0),
     [cars]
   );
 
@@ -148,7 +155,10 @@ const Parking = () => {
       const dir = sortDir === "asc" ? 1 : -1;
       if (sortKey === "name") return a.name.localeCompare(b.name, "nb") * dir;
       if (sortKey === "hp") return (a.hp - b.hp) * dir;
-      return (a.value - b.value) * dir;
+      if (sortKey === "damage") return (dmgPct(a) - dmgPct(b)) * dir;
+
+      // value
+      return (effectiveValue(a) - effectiveValue(b)) * dir;
     });
     return arr;
   }, [cars, sortKey, sortDir]);
@@ -161,7 +171,7 @@ const Parking = () => {
     try {
       await deleteDoc(carRef);
       await updateDoc(characterRef, {
-        "stats.money": (userCharacter.stats.money || 0) + (car.value || 0),
+        "stats.money": (userCharacter.stats.money || 0) + effectiveValue(car),
       });
 
       const catalog = car.key ? getCarByKey(car.key) : getCarByName(car.name);
@@ -181,17 +191,21 @@ const Parking = () => {
                   <strong className="text-neutral-200">{car.hp} hk</strong>
                 </p>
                 <p>
+                  Skade:{" "}
+                  <strong className="text-neutral-200">{dmgPct(car)}%</strong>
+                </p>
+                <p>
                   Verdi:{" "}
                   <strong className="text-neutral-200">
                     <i className="fa-solid fa-dollar-sign"></i>{" "}
-                    {car.value.toLocaleString("nb-NO")}
+                    {effectiveValue(car).toLocaleString("nb-NO")}
                   </strong>
                 </p>
               </div>
             }
           />{" "}
           for <i className="fa-solid fa-dollar-sign"></i>{" "}
-          <strong>{(car.value || 0).toLocaleString("nb-NO")}</strong>.
+          <strong>{(effectiveValue(car) || 0).toLocaleString("nb-NO")}</strong>.
         </div>
       );
     } catch (err) {
@@ -215,7 +229,7 @@ const Parking = () => {
 
     let totalSoldValue = 0;
     for (const car of cars) {
-      totalSoldValue += car.value || 0;
+      totalSoldValue += effectiveValue(car);
       const carRef = fsDoc(db, "Characters", userCharacter.id, "cars", car.id);
       batch.delete(carRef);
     }
@@ -481,6 +495,29 @@ const Parking = () => {
                   <th className="px-2 py-1">
                     <button
                       type="button"
+                      onClick={() => requestSort("damage")}
+                      className="flex items-center gap-1 hover:underline"
+                    >
+                      Skade
+                      <span
+                        className={
+                          "inline-block w-4 text-center " +
+                          (sortKey === "damage" ? "opacity-100" : "invisible")
+                        }
+                        aria-hidden
+                      >
+                        {sortDir === "asc" ? (
+                          <i className="fa-solid fa-caret-up"></i>
+                        ) : (
+                          <i className="fa-solid fa-caret-down"></i>
+                        )}
+                      </span>
+                    </button>
+                  </th>
+
+                  <th className="px-2 py-1">
+                    <button
+                      type="button"
                       onClick={() => requestSort("value")}
                       className="flex items-center gap-1 hover:underline"
                     >
@@ -530,10 +567,18 @@ const Parking = () => {
                                     </strong>
                                   </p>
                                   <p>
+                                    Skade:{" "}
+                                    <strong className="text-neutral-200">
+                                      {dmgPct(car)}%
+                                    </strong>
+                                  </p>
+                                  <p>
                                     Verdi:{" "}
                                     <strong className="text-neutral-200">
                                       <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                      {car.value.toLocaleString("nb-NO")}
+                                      {effectiveValue(car).toLocaleString(
+                                        "nb-NO"
+                                      )}
                                     </strong>
                                   </p>
                                 </div>
@@ -544,10 +589,24 @@ const Parking = () => {
                         <td className="px-2 py-1 text-sm sm:text-base">
                           {car.hp} hk
                         </td>
+
+                        <td className="px-2 py-1 text-sm sm:text-base">
+                          <span
+                            className={
+                              Number(car.damage ?? 0) >= 100
+                                ? "text-red-400"
+                                : ""
+                            }
+                          >
+                            {Math.min(100, Number(car.damage ?? 0))}%
+                          </span>
+                        </td>
+
                         <td className="px-2 py-1 text-sm sm:text-base">
                           <i className="fa-solid fa-dollar-sign"></i>{" "}
-                          {car.value.toLocaleString("nb-NO")}
+                          {effectiveValue(car).toLocaleString("nb-NO")}
                         </td>
+
                         <td className="px-2 py-1">
                           <button
                             onClick={() => sellCar(car)}
@@ -569,6 +628,8 @@ const Parking = () => {
               </tbody>
               <tfoot>
                 <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
+                  <td className="px-2 py-1"></td>
+
                   <td className="px-2 py-1"></td>
                   <td className="px-2 py-1">Total verdi</td>
                   <td className="px-2 py-1">

@@ -32,4 +32,5 @@ export type Car = {
   tier: number;
   isElectric?: boolean;
   key?: string;
+  damage?: number;
 };
