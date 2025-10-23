@@ -383,6 +383,19 @@ const GTA = () => {
         return;
       }
 
+      const availableDocs = tCityCarsSnap.docs.filter((d) => {
+        const data = d.data() as any;
+        return !(data?.inRace && data.inRace.raceId);
+      });
+      if (availableDocs.length === 0) {
+        setMessageType("warning");
+        setMessage(
+          "Denne spilleren har ingen biler tilgjengelig å stjele i denne byen."
+        );
+        setIsBusy(false);
+        return;
+      }
+
       // Success chance
       const securityPct = (ParkingTypes[tFacilityType]?.security ??
         0) as number;
@@ -391,8 +404,7 @@ const GTA = () => {
 
       if (success) {
         // Pick a random car from target in this city
-        const carsDocs = tCityCarsSnap.docs;
-        const chosen = carsDocs[getRandom(0, carsDocs.length - 1)];
+        const chosen = availableDocs[getRandom(0, availableDocs.length - 1)];
         const carData = chosen.data();
 
         // Transfer: add to attacker
@@ -412,7 +424,7 @@ const GTA = () => {
         // Remove from target
         await deleteDoc(doc(db, "Characters", target.id, "cars", chosen.id));
 
-        // --- NEW: build car snapshot for alert and write alert ---
+        // --- build car snapshot for alert and write alert ---
         const catalog = carData.modelKey
           ? getCarByKey(carData.modelKey)
           : getCarByName(carData.name);
