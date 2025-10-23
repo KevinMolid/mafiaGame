@@ -9,6 +9,9 @@ import JailBox from "../../components/JailBox";
 import Item from "../../components/Typography/Item";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
+// Functions
+import { dmgPercent, carValue } from "../../Functions/RewardFunctions";
+
 import { useState, useEffect, useMemo } from "react";
 
 import { useCharacter } from "../../CharacterContext";
@@ -136,12 +139,6 @@ const Parking = () => {
   const canUpgrade = parking !== null && parking < ParkingTypes.length - 1;
 
   // Helpers
-  const dmgPct = (car: Car & { damage?: number }) =>
-    Math.min(100, Math.max(0, Number(car.damage ?? 0)));
-
-  const effectiveValue = (car: Car & { damage?: number }) =>
-    Math.round((Number(car.value || 0) * (100 - dmgPct(car))) / 100);
-
   const anySelected = selectedIds.size > 0;
 
   const selectedCars = useMemo(
@@ -150,7 +147,7 @@ const Parking = () => {
   );
 
   const selectedTotalValue = useMemo(
-    () => selectedCars.reduce((sum, c) => sum + effectiveValue(c), 0),
+    () => selectedCars.reduce((sum, c) => sum + carValue(c), 0),
     [selectedCars]
   );
 
@@ -164,7 +161,7 @@ const Parking = () => {
 
   // Total value of cars in the current city (from subcollection)
   const totalValue = useMemo(
-    () => cars.reduce((sum, c) => sum + effectiveValue(c), 0),
+    () => cars.reduce((sum, c) => sum + carValue(c), 0),
     [cars]
   );
 
@@ -175,10 +172,9 @@ const Parking = () => {
       const dir = sortDir === "asc" ? 1 : -1;
       if (sortKey === "name") return a.name.localeCompare(b.name, "nb") * dir;
       if (sortKey === "hp") return (a.hp - b.hp) * dir;
-      if (sortKey === "damage") return (dmgPct(a) - dmgPct(b)) * dir;
-
-      // value
-      return (effectiveValue(a) - effectiveValue(b)) * dir;
+      if (sortKey === "damage")
+        return (dmgPercent(a.damage) - dmgPercent(b.damage)) * dir;
+      return (carValue(a) - carValue(b)) * dir; // value
     });
     return arr;
   }, [cars, sortKey, sortDir]);
@@ -197,7 +193,7 @@ const Parking = () => {
 
     let totalSoldValue = 0;
     for (const car of selectedCars) {
-      totalSoldValue += effectiveValue(car);
+      totalSoldValue += carValue(car);
       const carRef = fsDoc(db, "Characters", userCharacter.id, "cars", car.id);
       batch.delete(carRef);
     }
@@ -244,7 +240,7 @@ const Parking = () => {
 
     let totalSoldValue = 0;
     for (const car of cars) {
-      totalSoldValue += effectiveValue(car);
+      totalSoldValue += carValue(car);
       const carRef = fsDoc(db, "Characters", userCharacter.id, "cars", car.id);
       batch.delete(carRef);
     }
@@ -618,16 +614,14 @@ const Parking = () => {
                                     <p>
                                       Skade:{" "}
                                       <strong className="text-neutral-200">
-                                        {dmgPct(car)}%
+                                        {dmgPercent(car.damage)}%
                                       </strong>
                                     </p>
                                     <p>
                                       Verdi:{" "}
                                       <strong className="text-neutral-200">
                                         <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                        {effectiveValue(car).toLocaleString(
-                                          "nb-NO"
-                                        )}
+                                        {carValue(car).toLocaleString("nb-NO")}
                                       </strong>
                                     </p>
                                   </div>
@@ -657,7 +651,7 @@ const Parking = () => {
                         <td className="px-2 py-1 text-sm sm:text-base whitespace-nowrap">
                           <strong className="text-neutral-200">
                             <i className="fa-solid fa-dollar-sign"></i>{" "}
-                            {effectiveValue(car).toLocaleString("nb-NO")}
+                            {carValue(car).toLocaleString("nb-NO")}
                           </strong>
                         </td>
                       </tr>

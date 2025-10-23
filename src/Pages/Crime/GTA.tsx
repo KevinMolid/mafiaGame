@@ -14,6 +14,8 @@ import {
   rewardXp,
   increaseHeat,
   arrest,
+  dmgPercent,
+  valueAfterDamage,
 } from "../../Functions/RewardFunctions";
 import { getCarByName, getCarByKey } from "../../Data/Cars";
 
@@ -168,6 +170,7 @@ const GTA = () => {
 
       // 2) Attempt theft (75% success)
       const success = Math.random() <= SUCCESS_CHANCE_STREET;
+      const dmg = getRandom(0, 99);
 
       if (success) {
         await addDoc(carsCol, {
@@ -179,6 +182,7 @@ const GTA = () => {
           isElectric: !!randomCar.isElectric,
           city: userCharacter.location,
           acquiredAt: serverTimestamp(),
+          damage: dmg,
         });
 
         rewardXp(userCharacter, 10);
@@ -205,10 +209,18 @@ const GTA = () => {
                     </strong>
                   </p>
                   <p>
+                    Skade:{" "}
+                    <strong className="text-neutral-200">
+                      {dmgPercent(dmg)}%
+                    </strong>
+                  </p>
+                  <p>
                     Verdi:{" "}
                     <strong className="text-neutral-200">
                       <i className="fa-solid fa-dollar-sign"></i>{" "}
-                      {randomCar.value.toLocaleString("nb-NO")}
+                      {valueAfterDamage(randomCar.value, dmg).toLocaleString(
+                        "nb-NO"
+                      )}
                     </strong>
                   </p>
                 </div>
@@ -394,6 +406,7 @@ const GTA = () => {
           city: attackerCity,
           acquiredAt: serverTimestamp(),
           stolenFrom: target.id,
+          damage: typeof carData.damage === "number" ? carData.damage : 0,
         });
 
         // Remove from target
@@ -450,10 +463,19 @@ const GTA = () => {
                     </strong>
                   </p>
                   <p>
+                    Skade:{" "}
+                    <strong className="text-neutral-200">
+                      {Number(carData.damage)}%
+                    </strong>
+                  </p>
+                  <p>
                     Verdi:{" "}
                     <strong className="text-neutral-200">
                       <i className="fa-solid fa-dollar-sign"></i>{" "}
-                      {Number(carData.value).toLocaleString("nb-NO")}
+                      {valueAfterDamage(
+                        carData.value,
+                        carData.damage
+                      ).toLocaleString("nb-NO")}
                     </strong>
                   </p>
                 </div>

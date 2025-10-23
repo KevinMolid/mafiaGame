@@ -269,3 +269,28 @@ export async function grantItemsToInventory(
     }
   }
 }
+
+// Calculate damaged objects
+export type Damageable = { value?: number | null; damage?: number | null };
+
+/** Clamp damage to 0–100 (integer). */
+export function dmgPercent(damage: number | null | undefined): number {
+  const n = Math.floor(Number(damage ?? 0));
+  return Math.min(100, Math.max(0, n));
+}
+
+/** Calculate value after damage using: value * (100 - damage) / 100. Rounded to nearest int. */
+export function valueAfterDamage(
+  baseValue: number | null | undefined,
+  damage: number | null | undefined
+): number {
+  const v = Math.max(0, Number(baseValue ?? 0));
+  const d = dmgPercent(damage);
+  return Math.round((v * (100 - d)) / 100);
+}
+
+/** Convenience: pass a car-like object { value, damage }. */
+export function carValue(car: Damageable | null | undefined): number {
+  if (!car) return 0;
+  return valueAfterDamage(car.value, car.damage);
+}
