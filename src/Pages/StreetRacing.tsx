@@ -596,8 +596,6 @@ const StreetRacing = () => {
         let newChallWins = challWins;
         let newCreatorLosses = creatorLosses;
         let newChallLosses = challLosses;
-        const creatorRatingDelta = newCreatorRating - creatorRating;
-        const challengerRatingDelta = newChallRating - challRating;
 
         if (winnerId === v.creator.id) {
           newCreatorRating += winDelta(creatorRating);
@@ -612,6 +610,9 @@ const StreetRacing = () => {
         }
         newCreatorRating = Math.max(0, newCreatorRating);
         newChallRating = Math.max(0, newChallRating);
+
+        const creatorRatingDelta = newCreatorRating - creatorRating;
+        const challengerRatingDelta = newChallRating - challRating;
 
         // damage increments
         const creatorInc = randDamage();
