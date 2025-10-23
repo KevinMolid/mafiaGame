@@ -75,7 +75,7 @@ const NoFamily = ({
   const [invitesLoading, setInvitesLoading] = useState<boolean>(true);
   const [invitesError, setInvitesError] = useState<string | null>(null);
 
-  const createFamilyCost = 250_000_000;
+  const createFamilyCost = 10_000_000;
 
   // Fetch all families from Firestore
   useEffect(() => {
