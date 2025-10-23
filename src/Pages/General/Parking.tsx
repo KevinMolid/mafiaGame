@@ -21,7 +21,6 @@ import {
   where,
   onSnapshot,
   doc as fsDoc,
-  deleteDoc,
   writeBatch,
   getFirestore,
   doc,
@@ -54,6 +53,7 @@ const Parking = () => {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [showConfirmSellAll, setShowConfirmSellAll] = useState(false);
   const [sellAllBusy, setSellAllBusy] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   if (!userCharacter) {
     return null;
@@ -142,6 +142,26 @@ const Parking = () => {
   const effectiveValue = (car: Car & { damage?: number }) =>
     Math.round((Number(car.value || 0) * (100 - dmgPct(car))) / 100);
 
+  const anySelected = selectedIds.size > 0;
+
+  const selectedCars = useMemo(
+    () => cars.filter((c) => selectedIds.has(c.id)),
+    [cars, selectedIds]
+  );
+
+  const selectedTotalValue = useMemo(
+    () => selectedCars.reduce((sum, c) => sum + effectiveValue(c), 0),
+    [selectedCars]
+  );
+
+  const toggleSelected = (id: string) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
   // Total value of cars in the current city (from subcollection)
   const totalValue = useMemo(
     () => cars.reduce((sum, c) => sum + effectiveValue(c), 0),
@@ -163,55 +183,50 @@ const Parking = () => {
     return arr;
   }, [cars, sortKey, sortDir]);
 
-  // Sell a single car: delete doc + add money
-  const sellCar = async (car: Car & { id: string }) => {
+  // Sell Selected cars
+  const sellSelectedCars = async () => {
+    if (selectedCars.length === 0) {
+      setMessageType("info");
+      setMessage("Ingen biler valgt.");
+      return;
+    }
+
+    setSellAllBusy(true);
     const characterRef = fsDoc(db, "Characters", userCharacter.id);
-    const carRef = fsDoc(db, "Characters", userCharacter.id, "cars", car.id);
+    const batch = writeBatch(db);
+
+    let totalSoldValue = 0;
+    for (const car of selectedCars) {
+      totalSoldValue += effectiveValue(car);
+      const carRef = fsDoc(db, "Characters", userCharacter.id, "cars", car.id);
+      batch.delete(carRef);
+    }
 
     try {
-      await deleteDoc(carRef);
+      await batch.commit();
       await updateDoc(characterRef, {
-        "stats.money": (userCharacter.stats.money || 0) + effectiveValue(car),
+        "stats.money": (userCharacter.stats.money || 0) + totalSoldValue,
       });
-
-      const catalog = car.key ? getCarByKey(car.key) : getCarByName(car.name);
 
       setMessageType("success");
       setMessage(
-        <div>
+        <p>
           Du solgte{" "}
-          <Item
-            name={car.name}
-            tier={car.tier}
-            tooltipImg={catalog?.img && catalog.img}
-            tooltipContent={
-              <div>
-                <p>
-                  Effekt:{" "}
-                  <strong className="text-neutral-200">{car.hp} hk</strong>
-                </p>
-                <p>
-                  Skade:{" "}
-                  <strong className="text-neutral-200">{dmgPct(car)}%</strong>
-                </p>
-                <p>
-                  Verdi:{" "}
-                  <strong className="text-neutral-200">
-                    <i className="fa-solid fa-dollar-sign"></i>{" "}
-                    {effectiveValue(car).toLocaleString("nb-NO")}
-                  </strong>
-                </p>
-              </div>
-            }
-          />{" "}
+          <strong>
+            {selectedCars.length} {selectedCars.length === 1 ? "bil" : "biler"}
+          </strong>{" "}
           for <i className="fa-solid fa-dollar-sign"></i>{" "}
-          <strong>{(effectiveValue(car) || 0).toLocaleString("nb-NO")}</strong>.
-        </div>
+          <strong>{totalSoldValue.toLocaleString("nb-NO")}</strong>.
+        </p>
       );
     } catch (err) {
-      console.error("Feil ved salg av bil: ", err);
+      console.error("Feil ved salg av valgte biler: ", err);
       setMessageType("failure");
-      setMessage("En ukjent feil dukket opp ved salg av bil.");
+      setMessage("En ukjent feil dukket opp ved salg av valgte biler.");
+    } finally {
+      setSellAllBusy(false);
+      setShowConfirmSellAll(false);
+      setSelectedIds(new Set()); // clear selection after selling
     }
   };
 
@@ -289,13 +304,16 @@ const Parking = () => {
 
         <ConfirmDialog
           open={showConfirmSellAll}
-          title="Selg alle biler?"
+          title={anySelected ? "Selg valgte biler?" : "Selg alle biler?"}
           description={
             <div className="text-sm text-neutral-300 space-y-1">
               <p>
                 Dette vil selge{" "}
                 <strong>
-                  {cars.length} {cars.length === 1 ? "bil" : "biler"}
+                  {anySelected ? selectedCars.length : cars.length}{" "}
+                  {(anySelected ? selectedCars.length : cars.length) === 1
+                    ? "bil"
+                    : "biler"}
                 </strong>{" "}
                 i <strong>{userCharacter.location}</strong>.
               </p>
@@ -303,16 +321,19 @@ const Parking = () => {
                 Forventet inntekt:{" "}
                 <strong>
                   <i className="fa-solid fa-dollar-sign" />{" "}
-                  {totalValue.toLocaleString("nb-NO")}
+                  {(anySelected
+                    ? selectedTotalValue
+                    : totalValue
+                  ).toLocaleString("nb-NO")}
                 </strong>
               </p>
               <p className="text-neutral-400">Handlingen kan ikke angres.</p>
             </div>
           }
-          confirmLabel="Ja, selg alle"
+          confirmLabel={anySelected ? "Ja, selg valgte" : "Ja, selg alle"}
           cancelLabel="Avbryt"
           loading={sellAllBusy}
-          onConfirm={sellAllCars}
+          onConfirm={() => (anySelected ? sellSelectedCars() : sellAllCars())}
           onCancel={() => setShowConfirmSellAll(false)}
         />
 
@@ -444,8 +465,28 @@ const Parking = () => {
         {!upgrading && (
           <div>
             <table className="w-full table-auto border border-collapse text-left">
+              <colgroup>
+                <col className="w-8" /> {/* checkbox */}
+                <col /> {/* Bil (auto takes remaining) */}
+                <col className="w-24" /> {/* Effekt */}
+                <col className="w-20 hidden sm:table-cell" /> {/* Skade */}
+                <col className="w-32" /> {/* Verdi */}
+              </colgroup>
+
               <thead>
                 <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
+                  <th className="px-2 py-1 w-8">
+                    <input
+                      type="checkbox"
+                      aria-label="Velg alle"
+                      checked={anySelected && selectedIds.size === cars.length}
+                      onChange={(e) => {
+                        if (e.target.checked)
+                          setSelectedIds(new Set(cars.map((c) => c.id)));
+                        else setSelectedIds(new Set());
+                      }}
+                    />
+                  </th>
                   <th className="px-2 py-1">
                     <button
                       type="button"
@@ -469,7 +510,7 @@ const Parking = () => {
                     </button>
                   </th>
 
-                  <th className="px-2 py-1">
+                  <th className="px-2 py-1 whitespace-nowrap">
                     <button
                       type="button"
                       onClick={() => requestSort("hp")}
@@ -492,7 +533,7 @@ const Parking = () => {
                     </button>
                   </th>
 
-                  <th className="px-2 py-1">
+                  <th className="px-2 py-1 whitespace-nowrap hidden sm:table-cell">
                     <button
                       type="button"
                       onClick={() => requestSort("damage")}
@@ -515,7 +556,7 @@ const Parking = () => {
                     </button>
                   </th>
 
-                  <th className="px-2 py-1">
+                  <th className="px-2 py-1 whitespace-nowrap">
                     <button
                       type="button"
                       onClick={() => requestSort("value")}
@@ -537,8 +578,6 @@ const Parking = () => {
                       </span>
                     </button>
                   </th>
-
-                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -547,50 +586,63 @@ const Parking = () => {
                     const catalog = car.key
                       ? getCarByKey(car.key)
                       : getCarByName(car.name);
+                    const checked = selectedIds.has(car.id);
                     return (
                       <tr
                         className="border bg-neutral-800 border-neutral-700"
                         key={car.id}
                       >
+                        <td className="px-2 py-1 w-8">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleSelected(car.id)}
+                            aria-label={`Velg ${car.name}`}
+                          />
+                        </td>
                         <td className="px-2 py-1 text-sm sm:text-base">
-                          <div className="flex items-center gap-2">
-                            <Item
-                              name={car.name}
-                              tier={car.tier}
-                              tooltipImg={catalog?.img && catalog.img}
-                              tooltipContent={
-                                <div>
-                                  <p>
-                                    Effekt:{" "}
-                                    <strong className="text-neutral-200">
-                                      {car.hp} hk
-                                    </strong>
-                                  </p>
-                                  <p>
-                                    Skade:{" "}
-                                    <strong className="text-neutral-200">
-                                      {dmgPct(car)}%
-                                    </strong>
-                                  </p>
-                                  <p>
-                                    Verdi:{" "}
-                                    <strong className="text-neutral-200">
-                                      <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                      {effectiveValue(car).toLocaleString(
-                                        "nb-NO"
-                                      )}
-                                    </strong>
-                                  </p>
-                                </div>
-                              }
-                            />
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="truncate">
+                              <Item
+                                name={car.name}
+                                tier={car.tier}
+                                tooltipImg={catalog?.img && catalog.img}
+                                tooltipContent={
+                                  <div>
+                                    <p>
+                                      Effekt:{" "}
+                                      <strong className="text-neutral-200">
+                                        {car.hp} hk
+                                      </strong>
+                                    </p>
+                                    <p>
+                                      Skade:{" "}
+                                      <strong className="text-neutral-200">
+                                        {dmgPct(car)}%
+                                      </strong>
+                                    </p>
+                                    <p>
+                                      Verdi:{" "}
+                                      <strong className="text-neutral-200">
+                                        <i className="fa-solid fa-dollar-sign"></i>{" "}
+                                        {effectiveValue(car).toLocaleString(
+                                          "nb-NO"
+                                        )}
+                                      </strong>
+                                    </p>
+                                  </div>
+                                }
+                              />
+                            </div>
                           </div>
                         </td>
-                        <td className="px-2 py-1 text-sm sm:text-base">
-                          {car.hp} hk
+                        <td className="px-2 py-1 text-sm sm:text-base whitespace-nowrap">
+                          <strong className="text-neutral-200">
+                            {car.hp} hk
+                          </strong>
                         </td>
 
-                        <td className="px-2 py-1 text-sm sm:text-base">
+                        <td className="px-2 py-1 text-sm sm:text-base whitespace-nowrap hidden sm:table-cell">
                           <span
                             className={
                               Number(car.damage ?? 0) >= 100
@@ -602,65 +654,84 @@ const Parking = () => {
                           </span>
                         </td>
 
-                        <td className="px-2 py-1 text-sm sm:text-base">
-                          <i className="fa-solid fa-dollar-sign"></i>{" "}
-                          {effectiveValue(car).toLocaleString("nb-NO")}
-                        </td>
-
-                        <td className="px-2 py-1">
-                          <button
-                            onClick={() => sellCar(car)}
-                            className="font-medium text-neutral-200 hover:text-white text-sm sm:text-base"
-                          >
-                            Selg
-                          </button>
+                        <td className="px-2 py-1 text-sm sm:text-base whitespace-nowrap">
+                          <strong className="text-neutral-200">
+                            <i className="fa-solid fa-dollar-sign"></i>{" "}
+                            {effectiveValue(car).toLocaleString("nb-NO")}
+                          </strong>
                         </td>
                       </tr>
                     );
                   })
                 ) : (
                   <tr className="border bg-neutral-800 border-neutral-700">
-                    <td colSpan={4} className="px-2 py-1">
+                    <td colSpan={5} className="px-2 py-1">
                       Du har ingen biler.
                     </td>
                   </tr>
                 )}
               </tbody>
               <tfoot>
-                <tr className="border border-neutral-700 bg-neutral-950 text-stone-200">
+                <tr className="border border-neutral-700 bg-neutral-950">
                   <td className="px-2 py-1"></td>
-
                   <td className="px-2 py-1"></td>
-                  <td className="px-2 py-1">Total verdi</td>
+                  <td className="px-2 py-1 hidden sm:table-cell"></td>
                   <td className="px-2 py-1">
-                    <i className="fa-solid fa-dollar-sign"></i>{" "}
-                    {totalValue.toLocaleString("nb-NO")}
+                    <p className="text-sm sm:text-base">
+                      {anySelected ? "Verdi valgte" : "Total verdi"}
+                    </p>
                   </td>
-                  <td className="px-2 py-1">
-                    <button
-                      onClick={() => {
-                        if (cars.length === 0) {
-                          setMessageType("info");
-                          setMessage("Du har ingen biler å selge.");
-                          return;
-                        }
-                        setShowConfirmSellAll(true);
-                      }}
-                      className="font-medium text-neutral-200 hover:text-white"
-                    >
-                      Selg alle
-                    </button>
+                  <td className="px-2 py-1 text-sm sm:text-base">
+                    <strong className="text-neutral-200">
+                      <i className="fa-solid fa-dollar-sign"></i>{" "}
+                      {(anySelected
+                        ? selectedTotalValue
+                        : totalValue
+                      ).toLocaleString("nb-NO")}
+                    </strong>
                   </td>
                 </tr>
               </tfoot>
             </table>
-            <p>
-              <strong className="text-neutral-200">{cars.length}</strong> av{" "}
-              <strong className="text-neutral-200">
-                {parking !== null ? ParkingTypes[parking].slots : "Loading..."}
-              </strong>{" "}
-              plasser brukt.
-            </p>
+
+            <div className="flex justify-between mt-4">
+              <p>
+                <strong className="text-neutral-200">{cars.length}</strong> av{" "}
+                <strong className="text-neutral-200">
+                  {parking !== null
+                    ? ParkingTypes[parking].slots
+                    : "Loading..."}
+                </strong>{" "}
+                plasser brukt.
+              </p>
+              {anySelected ? (
+                <Button
+                  onClick={() => {
+                    if (selectedCars.length === 0) {
+                      setMessageType("info");
+                      setMessage("Ingen biler valgt.");
+                      return;
+                    }
+                    setShowConfirmSellAll(true); // reuse the dialog
+                  }}
+                >
+                  Selg valgte
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => {
+                    if (cars.length === 0) {
+                      setMessageType("info");
+                      setMessage("Du har ingen biler å selge.");
+                      return;
+                    }
+                    setShowConfirmSellAll(true);
+                  }}
+                >
+                  Selg alle
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </div>
