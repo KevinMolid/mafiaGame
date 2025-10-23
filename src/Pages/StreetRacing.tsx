@@ -91,6 +91,10 @@ type RaceDoc = {
   };
   winnerId?: string;
   result?: { totalCreator: number; totalChallenger: number };
+  effects?: {
+    creator: { ratingDelta: number; damageDelta: number };
+    challenger: { ratingDelta: number; damageDelta: number };
+  };
 };
 
 // ---------- tiny deterministic RNG helpers (for stage logs) ----------
@@ -195,7 +199,12 @@ const StreetRacing = () => {
       name: string;
     };
     winnerId: string;
+    effects?: {
+      creator: { ratingDelta: number; damageDelta: number };
+      challenger: { ratingDelta: number; damageDelta: number };
+    };
   } | null;
+
   const [raceView, setRaceView] = useState<RaceView>(null);
   const [racePositions, setRacePositions] = useState<{
     creator: number;
@@ -587,6 +596,8 @@ const StreetRacing = () => {
         let newChallWins = challWins;
         let newCreatorLosses = creatorLosses;
         let newChallLosses = challLosses;
+        const creatorRatingDelta = newCreatorRating - creatorRating;
+        const challengerRatingDelta = newChallRating - challRating;
 
         if (winnerId === v.creator.id) {
           newCreatorRating += winDelta(creatorRating);
@@ -694,6 +705,16 @@ const StreetRacing = () => {
           },
           winnerId,
           result: { totalCreator, totalChallenger },
+          effects: {
+            creator: {
+              ratingDelta: creatorRatingDelta,
+              damageDelta: creatorInc,
+            },
+            challenger: {
+              ratingDelta: challengerRatingDelta,
+              damageDelta: challengerInc,
+            },
+          },
         });
       });
 
@@ -726,6 +747,7 @@ const StreetRacing = () => {
             name: v.challenger.car?.name ?? "Bil",
           },
           winnerId: v.winnerId!,
+          effects: v.effects,
         });
       }
 
@@ -767,6 +789,7 @@ const StreetRacing = () => {
           name: r.challenger.car?.name ?? "Bil",
         },
         winnerId: r.winnerId!,
+        effects: r.effects,
       });
     }
     mountPending();
@@ -930,6 +953,12 @@ const StreetRacing = () => {
       : racingStats.rating >= 500
       ? racingBadgeII
       : racingBadgeI;
+
+  const mySide =
+    userCharacter?.id === raceView?.creator.id ? "creator" : "challenger";
+  const myEffects = raceView?.effects?.[mySide as "creator" | "challenger"];
+  const oppSide = mySide === "creator" ? "challenger" : "creator";
+  const oppEffects = raceView?.effects?.[oppSide as "creator" | "challenger"];
 
   return (
     <Main>
@@ -1223,6 +1252,30 @@ const StreetRacing = () => {
                 </InfoBox>
               ) : (
                 <InfoBox type="info">Løpet pågår...</InfoBox>
+              )}
+
+              {raceFinished && myEffects && (
+                <div className="text-sm text-neutral-300 -mt-2 mb-2">
+                  <div>
+                    Rating:{" "}
+                    <strong className="text-neutral-100">
+                      {myEffects.ratingDelta > 0 ? "+" : ""}
+                      {myEffects.ratingDelta}
+                    </strong>{" "}
+                    &nbsp;•&nbsp; Skade på bilen:{" "}
+                    <strong className="text-neutral-100">
+                      +{myEffects.damageDelta}%
+                    </strong>
+                  </div>
+
+                  {/* Optional: also show opponent for transparency */}
+                  {oppEffects && (
+                    <div className="text-neutral-400">
+                      Motstander: rating {oppEffects.ratingDelta > 0 ? "+" : ""}
+                      {oppEffects.ratingDelta}, skade +{oppEffects.damageDelta}%
+                    </div>
+                  )}
+                </div>
               )}
 
               <div className="w-full min-h-4 grid grid-cols-[auto_auto_auto] relative rounded-xl p-2 gap-3">
