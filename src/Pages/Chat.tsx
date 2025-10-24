@@ -7,6 +7,8 @@ import ChatMessage from "../components/ChatMessage";
 import ScrollArea from "../components/ScrollArea";
 import InfoBox from "../components/InfoBox";
 
+import Username from "../components/Typography/Username";
+
 // Types
 import { Message } from "../Functions/messageService";
 
@@ -26,6 +28,7 @@ import {
   doc,
   writeBatch,
   serverTimestamp,
+  limit,
 } from "firebase/firestore";
 
 // Context
@@ -69,6 +72,10 @@ const Chat = () => {
   const [newMessage, setNewMessage] = useState<string>("");
   const [isCreatingChat, setIsCreatingChat] = useState<boolean>(false);
   const [receiver, setReceiver] = useState<string>("");
+  const [receiverCharacter, setReceiverCharacter] = useState<{
+    id: string;
+    username: string;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [unreadByConv, setUnreadByConv] = useState<Record<string, number>>({});
@@ -77,6 +84,13 @@ const Chat = () => {
   // New: input + validation error for creating chat
   const [newChatName, setNewChatName] = useState<string>("");
   const [createChatError, setCreateChatError] = useState<string | null>(null);
+
+  // avatar for each username
+  const [avatarByUser, setAvatarByUser] = useState<Record<string, string>>({});
+  // last message (text + sender) for each conversation
+  const [lastMsgByConv, setLastMsgByConv] = useState<
+    Record<string, { text: string; senderId: string }>
+  >({});
 
   const totalUnread = useMemo(
     () => Object.values(unreadByConv).reduce((a, b) => a + b, 0),
@@ -134,66 +148,146 @@ const Chat = () => {
     );
 
     const perConvCounts: Record<string, number> = {};
-    const msgUnsubs = new Map<string, () => void>();
+    const unreadUnsubs = new Map<string, () => void>();
+    const lastUnsubs = new Map<string, () => void>();
 
     const unsubConvs = onSnapshot(
       convQ,
-      (convSnap) => {
-        // remove listeners for deleted conversations
-        const existing = new Set(convSnap.docs.map((d) => d.id));
-        for (const [cid, unsub] of msgUnsubs) {
-          if (!existing.has(cid)) {
+      async (convSnap) => {
+        const currentIds = new Set(convSnap.docs.map((d) => d.id));
+
+        // Clean up removed convs
+        for (const [cid, unsub] of unreadUnsubs) {
+          if (!currentIds.has(cid)) {
             unsub();
-            msgUnsubs.delete(cid);
+            unreadUnsubs.delete(cid);
             delete perConvCounts[cid];
           }
         }
+        for (const [cid, unsub] of lastUnsubs) {
+          if (!currentIds.has(cid)) {
+            unsub();
+            lastUnsubs.delete(cid);
+            setLastMsgByConv((prev) => {
+              const next = { ...prev };
+              delete next[cid];
+              return next;
+            });
+          }
+        }
 
-        // add listeners for new conversations
-        convSnap.docs.forEach((convDoc) => {
+        // Ensure listeners per conv
+        convSnap.docs.forEach(async (convDoc) => {
           const cid = convDoc.id;
-          if (msgUnsubs.has(cid)) return;
+          const data = convDoc.data() as { participants?: unknown };
+          const participants = Array.isArray(data.participants)
+            ? (data.participants as string[])
+            : [];
 
-          const msgQ = query(
-            collection(db, "Conversations", cid, "Messages"),
-            where("isRead", "==", false)
+          // --- unread listener (kept as before) ---
+          if (!unreadUnsubs.has(cid)) {
+            const unreadQ = query(
+              collection(db, "Conversations", cid, "Messages"),
+              where("isRead", "==", false)
+            );
+            const unreadUnsub = onSnapshot(
+              unreadQ,
+              (msgSnap) => {
+                const cnt = msgSnap.docs.reduce((acc, d) => {
+                  const m = d.data() as any;
+                  return m.senderId !== userCharacter.id ? acc + 1 : acc;
+                }, 0);
+                perConvCounts[cid] = cnt;
+                setUnreadByConv({ ...perConvCounts });
+              },
+              () => {
+                perConvCounts[cid] = 0;
+                setUnreadByConv({ ...perConvCounts });
+              }
+            );
+            unreadUnsubs.set(cid, unreadUnsub);
+          }
+
+          // --- last message listener (NEW) ---
+          if (!lastUnsubs.has(cid)) {
+            const lastQ = query(
+              collection(db, "Conversations", cid, "Messages"),
+              orderBy("timestamp", "desc"),
+              limit(1)
+            );
+            const lastUnsub = onSnapshot(lastQ, (snap) => {
+              const doc0 = snap.docs[0];
+              const lm = doc0?.data() as any;
+              setLastMsgByConv((prev) => ({
+                ...prev,
+                [cid]: {
+                  text: lm?.text ?? "",
+                  senderId: lm?.senderId ?? "",
+                },
+              }));
+            });
+            lastUnsubs.set(cid, lastUnsub);
+          }
+
+          // --- avatar fetch (once per username) ---
+          const other = getOtherParticipant(
+            participants,
+            userCharacter.username
           );
-
-          const unsub = onSnapshot(
-            msgQ,
-            (msgSnap) => {
-              const cnt = msgSnap.docs.reduce((acc, d) => {
-                const m = d.data() as any;
-                return m.senderId !== userCharacter.id ? acc + 1 : acc;
-              }, 0);
-              perConvCounts[cid] = cnt;
-              // push a new object to trigger render
-              setUnreadByConv({ ...perConvCounts });
-            },
-            (err) => {
-              console.error("Unread messages listener error:", err);
-              perConvCounts[cid] = 0;
-              setUnreadByConv({ ...perConvCounts });
+          if (other && !avatarByUser[other]) {
+            try {
+              const charactersRef = collection(db, "Characters");
+              const qChar = query(
+                charactersRef,
+                where("username_lowercase", "==", other.toLowerCase())
+              );
+              const shot = await getDocs(qChar);
+              if (!shot.empty) {
+                const cData = shot.docs[0].data() as any;
+                const imgUrl =
+                  cData?.character?.img || cData?.img || cData?.image || "";
+                if (imgUrl) {
+                  setAvatarByUser((prev) => ({ ...prev, [other]: imgUrl }));
+                }
+              }
+            } catch (e) {
+              // swallow; avatar optional
             }
-          );
-
-          msgUnsubs.set(cid, unsub);
+          }
         });
       },
       (err) => {
         console.error("Conversations listener error:", err);
-        for (const [, unsub] of msgUnsubs) unsub();
-        msgUnsubs.clear();
+        for (const [, unsub] of unreadUnsubs) unsub();
+        for (const [, unsub] of lastUnsubs) unsub();
+        unreadUnsubs.clear();
+        lastUnsubs.clear();
         setUnreadByConv({});
+        setLastMsgByConv({});
       }
     );
 
     return () => {
       unsubConvs();
-      for (const [, unsub] of msgUnsubs) unsub();
-      msgUnsubs.clear();
+      for (const [, unsub] of unreadUnsubs) unsub();
+      for (const [, unsub] of lastUnsubs) unsub();
+      unreadUnsubs.clear();
+      lastUnsubs.clear();
     };
-  }, [userCharacter?.username, userCharacter?.id]);
+  }, [userCharacter?.username, userCharacter?.id, avatarByUser]);
+
+  async function resolveCharacterByUsername(u: string) {
+    const snap = await getDocs(
+      query(
+        collection(db, "Characters"),
+        where("username_lowercase", "==", u.toLowerCase())
+      )
+    );
+    if (snap.empty) return null;
+    const doc0 = snap.docs[0];
+    const data = doc0.data() as any;
+    return { id: doc0.id, username: data.username || u };
+  }
 
   function ChatTimeDivider({ label }: { label: string }) {
     return (
@@ -262,6 +356,9 @@ const Chat = () => {
       conv.participants.find((p) => p !== userCharacter.username) || "";
     setConversationId(conv.id);
     setReceiver(other);
+    resolveCharacterByUsername(other)
+      .then(setReceiverCharacter)
+      .catch(() => setReceiverCharacter(null));
     localStorage.setItem(LS_KEY, JSON.stringify({ id: conv.id, other }));
     setIsDropdownActive(false); // close dropdown when selecting
     markConversationAsRead(conv.id, userCharacter.id);
@@ -272,6 +369,12 @@ const Chat = () => {
     setCreateChatError(null);
     setNewChatName("");
   };
+
+  const getOtherParticipant = (parts: string[], me: string) =>
+    parts.find((p) => p !== me) || "";
+
+  const truncate = (s: string, n: number) =>
+    s.length > n ? s.slice(0, n) + "..." : s;
 
   // ---- Fetch conversations for user + restore last open ----
   useEffect(() => {
@@ -314,6 +417,10 @@ const Chat = () => {
                   ) ||
                   "";
                 setReceiver(other);
+                if (other)
+                  resolveCharacterByUsername(other)
+                    .then(setReceiverCharacter)
+                    .catch(() => setReceiverCharacter(null));
               } else {
                 localStorage.removeItem(LS_KEY);
               }
@@ -338,6 +445,9 @@ const Chat = () => {
     try {
       // Show receiver in header immediately
       setReceiver(username);
+      resolveCharacterByUsername(username)
+        .then(setReceiverCharacter)
+        .catch(() => setReceiverCharacter(null));
 
       // Find an existing conversation with both participants
       const conversationQuery = query(
@@ -415,6 +525,7 @@ const Chat = () => {
       const targetUsername: string = targetData.username || candidateRaw;
 
       setCreateChatError(null);
+      setReceiverCharacter({ id: targetDoc.id, username: targetUsername });
       await handlePlayerClick(targetUsername);
     } catch (e) {
       console.error(e);
@@ -594,7 +705,7 @@ const Chat = () => {
           {isDropdownActive && conversations.length > 0 && (
             <section
               id="dropdown"
-              className="absolute min-w-32 md:min-w-36 lg:min-w-40 py-6 bg-neutral-800 p-2 top-12 right-0 z-10 rounded-xl shadow-lg"
+              className="absolute min-w-32 md:min-w-36 lg:min-w-40 w-max bg-neutral-800 p-2 top-12 right-0 z-10 rounded-xl shadow-lg"
               role="menu"
             >
               <ul>
@@ -613,20 +724,47 @@ const Chat = () => {
                   return (
                     <li key={conversation.id}>
                       <button
-                        className={`flex gap-2 items-center px-2 min-h-8 font-medium hover:text-white w-full text-left ${
-                          isActive
-                            ? "text-neutral-200"
-                            : "text-neutral-400 pl-2"
+                        className={`flex items-center gap-2 px-2 py-1 min-h-12 w-full text-left hover:bg-neutral-700 rounded-lg ${
+                          isActive ? "text-neutral-200" : "text-neutral-400"
                         }`}
                         onClick={() => selectConversationByObject(conversation)}
                         role="menuitem"
                       >
-                        {otherParticipant}
-                        {unread > 0 && (
-                          <span className="bg-neutral-600 w-5 h-5 flex justify-center items-center rounded-full ml-auto text-sky-400 font-bold">
-                            {unread}
-                          </span>
-                        )}
+                        {/* Avatar */}
+                        <img
+                          src={
+                            otherParticipant
+                              ? avatarByUser[otherParticipant]
+                              : "/placeholder-avatar.png"
+                          }
+                          alt={otherParticipant}
+                          className="w-10 h-10 rounded-full object-cover"
+                          loading="lazy"
+                        />
+
+                        {/* Name + preview */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium truncate">
+                              {otherParticipant}
+                            </span>
+                            {unread > 0 && (
+                              <span className="bg-neutral-600 px-1.5 h-5 min-w-5 flex justify-center items-center rounded-full ml-auto text-sky-400 text-xs font-bold">
+                                {unread}
+                              </span>
+                            )}
+                          </div>
+                          {/* Preview line */}
+                          <div className="text-sm text-stone-400 truncate mr-1">
+                            {(() => {
+                              const lm = lastMsgByConv[conversation.id];
+                              if (!lm || !lm.text) return "";
+                              const mine = lm.senderId === userCharacter.id;
+                              const preview = truncate(lm.text, 20);
+                              return mine ? `Du: ${preview}` : preview;
+                            })()}
+                          </div>
+                        </div>
                       </button>
                     </li>
                   );
@@ -671,7 +809,13 @@ const Chat = () => {
                 </div>
               </div>
             ) : (
-              <H3>{receiver}</H3>
+              <H3>
+                {receiverCharacter ? (
+                  <Username character={receiverCharacter} />
+                ) : (
+                  <p className="font-bold">{receiver}</p>
+                )}
+              </H3>
             )}
           </div>
 
