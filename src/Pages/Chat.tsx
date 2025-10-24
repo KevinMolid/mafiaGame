@@ -751,7 +751,7 @@ const Chat = () => {
                     }
                   }}
                   onChange={handleInputChange}
-                  className="w-full bg-neutral-800 outline-none resize-none rounded-3xl px-4 py-2 leading-normal"
+                  className="w-full bg-neutral-800 outline-none placeholder-neutral-500 text-neutral-200 resize-none rounded-3xl px-4 py-2 leading-normal"
                   style={{ minHeight: 0 }}
                 ></textarea>
 
