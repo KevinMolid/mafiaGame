@@ -19,7 +19,7 @@ import racingBadgeV from "/images/streetracing/RacingVsmall.png";
 import { useCharacter } from "../CharacterContext";
 import { getCarByKey, getCarByName } from "../Data/Cars";
 
-// ➜ Use GTA-style helpers for damage/value display
+// GTA-style helpers for damage/value display
 import { dmgPercent, valueAfterDamage } from "../Functions/RewardFunctions";
 
 // Firestore
@@ -150,7 +150,7 @@ function renderCarTooltip(args: {
   value?: number | null;
 }) {
   const hp = args.hp ?? null;
-  const dmg = dmgPercent(args.damage); // <- normalized % as in GTA
+  const dmg = dmgPercent(args.damage); // normalized % as in GTA
   const baseVal = args.value ?? null;
   const valAfter =
     baseVal != null ? valueAfterDamage(Number(baseVal) || 0, dmg) : null;
@@ -543,7 +543,7 @@ const StreetRacing = () => {
     }
   }
 
-  // Click "Ta utfordringen" → switch right box into "Aktivt løp" (selection) mode
+  // Click "Ta utfordringen" → switch into take-on view (selection) mode
   function beginAcceptFlow(r: RaceDoc) {
     if (!hasUsableCar) {
       setNewRaceMesssage("Du trenger en bil for å delta.");
@@ -829,38 +829,39 @@ const StreetRacing = () => {
 
       // Fetch final race to render animation (fresh source of truth)
       const finalSnap = await getDoc(ref);
-      const v = finalSnap.data() as RaceDoc;
+      const data = finalSnap.data() as RaceDoc | undefined;
       if (
-        v &&
-        v.status === "finished" &&
-        v.winnerId &&
-        v.creator &&
-        v.challenger
+        data &&
+        data.status === "finished" &&
+        data.winnerId &&
+        data.creator &&
+        data.challenger
       ) {
+        // IMPORTANT: use finalSnap.id as raceId to avoid "Ugyldig løps-ID"
         setRaceView({
-          raceId: v.id,
+          raceId: finalSnap.id,
           creator: {
-            id: v.creator.id,
-            username: v.creator.username,
-            img: v.creator.car?.img ?? null,
-            hp: Number(v.creator.car?.hp ?? 0),
-            tier: Number(v.creator.car?.tier ?? 1),
-            name: v.creator.car?.name ?? "Bil",
-            damage: Number(v.creator.car?.damage ?? 0),
-            value: Number(v.creator.car?.value ?? 0),
+            id: data.creator.id,
+            username: data.creator.username,
+            img: data.creator.car?.img ?? null,
+            hp: Number(data.creator.car?.hp ?? 0),
+            tier: Number(data.creator.car?.tier ?? 1),
+            name: data.creator.car?.name ?? "Bil",
+            damage: Number(data.creator.car?.damage ?? 0),
+            value: Number(data.creator.car?.value ?? 0),
           },
           challenger: {
-            id: v.challenger!.id,
-            username: v.challenger!.username,
-            img: v.challenger?.car?.img ?? null,
-            hp: Number(v.challenger?.car?.hp ?? 0),
-            tier: Number(v.challenger?.car?.tier ?? 1),
-            name: v.challenger?.car?.name ?? "Bil",
-            damage: Number(v.challenger?.car?.damage ?? 0),
-            value: Number(v.challenger?.car?.value ?? 0),
+            id: data.challenger!.id,
+            username: data.challenger!.username,
+            img: data.challenger?.car?.img ?? null,
+            hp: Number(data.challenger?.car?.hp ?? 0),
+            tier: Number(data.challenger?.car?.tier ?? 1),
+            name: data.challenger?.car?.name ?? "Bil",
+            damage: Number(data.challenger?.car?.damage ?? 0),
+            value: Number(data.challenger?.car?.value ?? 0),
           },
-          winnerId: v.winnerId!,
-          effects: v.effects,
+          winnerId: data.winnerId!,
+          effects: data.effects,
         });
       }
 
@@ -882,31 +883,35 @@ const StreetRacing = () => {
       if (!myPendingFinished || !userCharacter?.id) return;
       const r = myPendingFinished;
       if (!r.creator || !r.challenger || !r.winnerId) return;
-      setRaceView({
-        raceId: r.id,
-        creator: {
-          id: r.creator.id,
-          username: r.creator.username,
-          img: r.creator.car?.img ?? null,
-          hp: Number(r.creator.car?.hp ?? 0),
-          tier: Number(r.creator.car?.tier ?? 1),
-          name: r.creator.car?.name ?? "Bil",
-          damage: Number(r.creator.car?.damage ?? 0),
-          value: Number(r.creator.car?.value ?? 0),
-        },
-        challenger: {
-          id: r.challenger.id!,
-          username: r.challenger.username!,
-          img: r.challenger.car?.img ?? null,
-          hp: Number(r.challenger.car?.hp ?? 0),
-          tier: Number(r.challenger.car?.tier ?? 1),
-          name: r.challenger.car?.name ?? "Bil",
-          damage: Number(r.challenger.car?.damage ?? 0),
-          value: Number(r.challenger.car?.value ?? 0),
-        },
-        winnerId: r.winnerId!,
-        effects: r.effects,
-      });
+      setRaceView((prev) =>
+        prev?.raceId === r.id
+          ? prev
+          : {
+              raceId: r.id, // always use doc id we subscribed to
+              creator: {
+                id: r.creator.id,
+                username: r.creator.username,
+                img: r.creator.car?.img ?? null,
+                hp: Number(r.creator.car?.hp ?? 0),
+                tier: Number(r.creator.car?.tier ?? 1),
+                name: r.creator.car?.name ?? "Bil",
+                damage: Number(r.creator.car?.damage ?? 0),
+                value: Number(r.creator.car?.value ?? 0),
+              },
+              challenger: {
+                id: r.challenger?.id!,
+                username: r.challenger?.username!,
+                img: r.challenger?.car?.img ?? null,
+                hp: Number(r.challenger?.car?.hp ?? 0),
+                tier: Number(r.challenger?.car?.tier ?? 1),
+                name: r.challenger?.car?.name ?? "Bil",
+                damage: Number(r.challenger?.car?.damage ?? 0),
+                value: Number(r.challenger?.car?.value ?? 0),
+              },
+              winnerId: r.winnerId!,
+              effects: r.effects,
+            }
+      );
     }
     mountPending();
   }, [myPendingFinished, userCharacter?.id]);
@@ -917,9 +922,7 @@ const StreetRacing = () => {
     setAcceptCarId(null);
   }
 
-  // Acknowledge finished race: mark my `done=true`.
-  // Immediately unlock *my* car on acknowledge (if ids exist).
-  // When both are done -> archive & (ensure) unlock opponent too.
+  // Acknowledge finished race
   async function handleAcknowledgeRace() {
     if (!raceView || !userCharacter?.id) return;
 
@@ -1078,28 +1081,32 @@ const StreetRacing = () => {
       raceView.creator.id,
       raceView.challenger.id
     );
+    // Only re-run when the race *document* changes (prevents restarts on unrelated updates)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [raceView?.raceId]);
 
   // ---------------------------------------------------------------------------
+  // ---------- UI State Machine (5 views) -------------------------------------
+  type UiMode = "standard" | "create";
+  const [uiMode, setUiMode] = useState<UiMode>("standard");
 
-  const hasOwnOpenRace = !!myOpenRace;
-  const hasUnackedFinished = !!myPendingFinished;
+  // What view is visible now? Exactly one.
+  type View =
+    | "race" // Active race animation
+    | "take" // Take on challenge (select car)
+    | "activeChallenge" // I have an open challenge
+    | "create" // Start new challenge
+    | "standard"; // Stats + active challenges
 
-  // What mode is the right-side box in?
-  // - "own-active": you have your own open challenge
-  // - "accept-active": you are choosing a car for someone else's challenge
-  // - "race-view": you have a finished race that isn't acknowledged (or just finished)
-  // - "create": default create-a-challenge
-  const mode: "own-active" | "accept-active" | "race-view" | "create" = raceView
-    ? "race-view"
-    : hasOwnOpenRace
-    ? "own-active"
+  const view: View = raceView
+    ? "race"
     : pendingRace
-    ? "accept-active"
-    : hasUnackedFinished
-    ? "race-view"
-    : "create";
+    ? "take"
+    : myOpenRace
+    ? "activeChallenge"
+    : uiMode === "create"
+    ? "create"
+    : "standard";
 
   const raceFinished =
     racePositions.creator >= 1 || racePositions.challenger >= 1;
@@ -1126,16 +1133,16 @@ const StreetRacing = () => {
 
   return (
     <Main>
-      <H1>Street Racing</H1>
+      <div className="flex justify-between mb-4 gap-x-8 gap-y-2 flex-wrap">
+        <div>
+          <H1>Street Racing</H1>
+          <p>Her kan du kjøre gateløp mot andre spillere.</p>
+        </div>
 
-      <div className="flex flex-wrap gap-4">
-        <p className="mb-4 w-full">
-          Her kan du konkurrere i gateløp mot andre spillere.
-        </p>
-
-        <Box className="flex-1 min-w-max">
-          <div className="flex gap-6 items-center">
-            <img className="w-24" src={badgeSrc} alt="" />
+        {/* Stats */}
+        <Box>
+          <div className="flex gap-2 items-center mr-2">
+            <img className="w-16" src={badgeSrc} alt="" />
 
             <div>
               <p>
@@ -1164,77 +1171,164 @@ const StreetRacing = () => {
             </div>
           </div>
         </Box>
+      </div>
 
-        {/* Aktive utfordringer (car-secret UI) */}
+      {/* Exactly one view below the heading */}
+      {view === "race" && raceView && (
         <Box className="flex-1">
-          <H2>Aktive utfordringer</H2>
-          {openRaces.length === 0 ? (
-            <p className="text-neutral-400 mt-2">
-              Det er for øyeblikket ingen aktive utfordringer.
-            </p>
+          <H2>Aktivt løp</H2>
+
+          {/* Single message area for this view */}
+          {raceFinished && myEffects ? (
+            <InfoBox type={didIWin ? "success" : "failure"}>
+              {didIWin ? (
+                <p>
+                  <strong>Gratulerer, du vant løpet!</strong>
+                  <br />
+                  <small>
+                    <strong className="text-neutral-100">
+                      {myEffects.ratingDelta > 0 ? "+" : ""}
+                      {myEffects.ratingDelta}
+                    </strong>{" "}
+                    rating og{" "}
+                    <strong className="text-neutral-100">
+                      +{myEffects.damageDelta}%
+                    </strong>{" "}
+                    skade på bilen.
+                  </small>
+                </p>
+              ) : (
+                <>
+                  <strong>Beklager, {winnerName} vant løpet!</strong>
+                  <br />
+                  <small>
+                    Du mistet{" "}
+                    <strong className="text-neutral-100">
+                      {myEffects.ratingDelta > 0 ? "+" : ""}
+                      {myEffects.ratingDelta}
+                    </strong>{" "}
+                    rating og fikk{" "}
+                    <strong className="text-neutral-100">
+                      +{myEffects.damageDelta}%
+                    </strong>{" "}
+                    skade på bilen.
+                  </small>
+                </>
+              )}
+            </InfoBox>
           ) : (
-            <ul className="mt-2 grid gap-2">
-              {openRaces.map((r) => (
-                <li
-                  key={r.id}
-                  className="rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 flex gap-2 items-center justify-between text-nowrap"
-                >
-                  <div className="flex items-center gap-3">
-                    <Username
-                      character={{
-                        id: r.creator.id,
-                        username: r.creator.username,
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="small"
-                      disabled={
-                        r.creator.id === userCharacter?.id ||
-                        !hasUsableCar ||
-                        hasOwnOpenRace ||
-                        !!pendingRace ||
-                        hasUnackedFinished ||
-                        !!raceView
-                      }
-                      onClick={() => beginAcceptFlow(r)}
-                    >
-                      <p>Ta utfordringen</p>
-                    </Button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <InfoBox type="info">Løpet pågår...</InfoBox>
           )}
+
+          <div className="w-full min-h-4 grid grid-cols-[128px_auto_128px] sm:grid-cols-[192px_100px_192px] relative rounded-xl p-2 sm:gap-3">
+            <section id="player1">
+              <div className="text-left">
+                <p className="border-b-2 mb-1 px-2 py-0.5 border-red-500 bg-gradient-to-t from-red-950/0 to-red-900 rounded-t-lg w-32 sm:w-48">
+                  <Username
+                    character={{
+                      id: raceView.creator.id,
+                      username: raceView.creator.username,
+                    }}
+                  />
+                </p>
+              </div>
+              <img
+                src={raceView.creator.img || ""}
+                alt=""
+                className="w-32 sm:w-48 object-cover rounded-md"
+              />
+              <Item
+                className="text-sm sm:text-base w-32 sm:w-48 text-wrap"
+                name={raceView.creator.name}
+                tier={raceView.creator.tier}
+                tooltipImg={raceView.creator.img || undefined}
+                tooltipContent={renderCarTooltip({
+                  hp: raceView.creator.hp,
+                  damage: raceView.creator.damage,
+                  value: raceView.creator.value,
+                })}
+              />
+              <p>{raceView.creator.hp} hk</p>
+            </section>
+
+            <div className="h-36 sm:h-48 flex items-center justify-center">
+              <p className="text-2xl sm:text-4xl font-extrabold text-neutral-200 z-10 ">
+                VS
+              </p>
+            </div>
+
+            <section id="player2">
+              <div className="text-right">
+                <p className="border-b-2 mb-1 px-2 py-0.5 border-blue-500 bg-gradient-to-t from-blue-950/0 to-blue-900 rounded-t-lg w-32 sm:w-48">
+                  <Username
+                    character={{
+                      id: raceView.challenger.id,
+                      username: raceView.challenger.username,
+                    }}
+                  />
+                </p>
+              </div>
+              <img
+                src={raceView.challenger.img || ""}
+                alt=""
+                className="w-32 sm:w-48 object-cover rounded-md"
+              />
+              <div className="text-right">
+                <Item
+                  className="text-sm sm:text-base max-w-32 sm:max-w-48 text-wrap"
+                  name={raceView.challenger.name}
+                  tier={raceView.challenger.tier}
+                  tooltipImg={raceView.challenger.img || undefined}
+                  tooltipContent={renderCarTooltip({
+                    hp: raceView.challenger.hp,
+                    damage: raceView.challenger.damage,
+                    value: raceView.challenger.value,
+                  })}
+                />
+                <p>{raceView.challenger.hp} hk</p>
+              </div>
+            </section>
+
+            {/* Track + cars */}
+            <div className="relative col-span-3 w-full h-28 rounded-lg overflow-hidden">
+              <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[2px] mr-6 bg-neutral-600" />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-300 text-xs">
+                Mål
+              </div>
+
+              {/* Creator car (red) */}
+              <div
+                className="absolute top-4 h-6 w-10 rounded-sm bg-gradient-to-r from-red-600 to-red-500"
+                style={{
+                  left: `calc(2px + ${racePositions.creator * 100}% - 20px)`,
+                }}
+                title={raceView.creator.name}
+              />
+
+              {/* Challenger car (blue) */}
+              <div
+                className="absolute bottom-4 h-6 w-10 rounded-sm bg-gradient-to-r from-blue-600 to-blue-500"
+                style={{
+                  left: `calc(2px + ${racePositions.challenger * 100}% - 20px)`,
+                }}
+                title={raceView.challenger.name}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Button onClick={handleAcknowledgeRace} disabled={!raceFinished}>
+              {raceFinished ? "Avslutt løp" : "Løpet pågår..."}
+            </Button>
+          </div>
         </Box>
+      )}
 
-        {/* Right column: create / own active / accept active / race view */}
+      {view === "take" && (
         <Box className="flex-1">
-          <H2>
-            {mode === "own-active"
-              ? "Aktiv utfordring"
-              : mode === "accept-active" || mode === "race-view"
-              ? "Aktivt løp"
-              : "Start utfordring"}
-          </H2>
+          <H2>Ta utfordring</H2>
 
-          <p className="mb-2">
-            {mode === "own-active" ? (
-              "Du har en aktiv utfordring. Vent på en motstander, eller avbryt."
-            ) : mode === "accept-active" ? (
-              <>
-                Du tar utfordringen fra{" "}
-                <strong>{pendingRace?.creator.username}</strong>. Velg bil og
-                start løpet.
-              </>
-            ) : mode === "race-view" ? (
-              ""
-            ) : (
-              "Når du starter et løp vil det være mulig for hvem som helst å ta utfordringen."
-            )}
-          </p>
-
+          {/* Single message area for this view */}
           {newRaceMessage && (
             <InfoBox
               type={newRacemessageType}
@@ -1244,404 +1338,338 @@ const StreetRacing = () => {
             </InfoBox>
           )}
 
-          {/* OWN ACTIVE */}
-          {mode === "own-active" && (
-            <>
-              <div className="flex gap-8 flex-wrap">
-                <div className="min-w-72">
-                  <H3>Bil</H3>
-                  {activeCar ? (
-                    <div className="mt-2 flex flex-col items-start gap-3">
-                      {activeCar.img && (
-                        <img
-                          src={activeCar.img}
-                          alt=""
-                          className="w-56 h-32 object-cover rounded-lg border border-neutral-700"
-                        />
-                      )}
-                      <div>
-                        <Item
-                          name={activeCar.displayName}
-                          tier={activeCar.tier}
-                          tooltipImg={activeCar.img || undefined}
-                          tooltipContent={renderCarTooltip({
-                            hp: activeCar.hp,
-                            damage: activeCar.damage,
-                            value: activeCar.value,
-                          })}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-neutral-400 mt-1">
-                      Ingen aktiv bil valgt.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <Button style="danger" onClick={handleCancelMyRace}>
-                  Avbryt utfordring
-                </Button>
-              </div>
-            </>
-          )}
-
-          {/* ACCEPT ACTIVE (choose car, then Start løp) */}
-          {mode === "accept-active" && (
-            <>
-              <div className="flex gap-8 flex-wrap">
-                <div className="grow min-w-72">
-                  <H3>Velg bil</H3>
-                  {!hasUsableCar ? (
-                    <p className="text-neutral-400 mt-1">
-                      Du har ingen biler i denne byen.
-                    </p>
-                  ) : (
-                    <ul className="mt-2 grid gap-1">
-                      {enriched.map((c) => {
-                        const isBroken = (c.damage ?? 0) >= 100;
-                        const isChosen = c.id === acceptCarId;
-                        return (
-                          <li
-                            key={c.id}
-                            className={`rounded-lg border px-2 py-1 flex items-center justify-between ${
-                              isBroken
-                                ? "opacity-50 cursor-not-allowed"
-                                : "cursor-pointer"
-                            } ${
-                              isChosen
-                                ? "border-neutral-600 bg-neutral-800"
-                                : "border-neutral-800 bg-neutral-900 hover:bg-neutral-800"
-                            }`}
-                            onClick={() => !isBroken && setAcceptCarId(c.id)}
-                            title={
-                              isBroken
-                                ? "Denne bilen har 100% skade og kan ikke brukes."
-                                : ""
-                            }
-                          >
-                            <div className="flex items-center gap-3">
-                              <Item
-                                name={`${c.displayName} ${
-                                  isBroken ? "(Ødelagt)" : ""
-                                }`}
-                                tier={c.tier}
-                                tooltipImg={c.img || undefined}
-                                tooltipContent={renderCarTooltip({
-                                  hp: c.hp,
-                                  damage: c.damage,
-                                  value: c.value,
-                                })}
-                              />
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-4 flex gap-2">
-                <Button style="secondary" onClick={cancelAcceptFlow}>
-                  Avbryt
-                </Button>
-                <Button disabled={!acceptCarId} onClick={confirmAcceptRace}>
-                  Start løp
-                </Button>
-              </div>
-            </>
-          )}
-
-          {/* RACE VIEW (animation + result) */}
-          {mode === "race-view" && raceView && (
-            <div className="w-full flex flex-col gap-2">
-              {/* Winner banner when race stops */}
-              {raceFinished && myEffects ? (
-                <InfoBox type={didIWin ? "success" : "failure"}>
-                  {didIWin ? (
-                    <p>
-                      <strong>Gratulerer, du vant løpet!</strong>
-                      <br />
-                      <small>
-                        <strong className="text-neutral-100">
-                          {myEffects.ratingDelta > 0 ? "+" : ""}
-                          {myEffects.ratingDelta}
-                        </strong>{" "}
-                        rating og{" "}
-                        <strong className="text-neutral-100">
-                          +{myEffects.damageDelta}%
-                        </strong>{" "}
-                        skade på bilen.
-                      </small>
-                    </p>
-                  ) : (
-                    <>
-                      <strong>Beklager, {winnerName} vant løpet!</strong>
-                      <br />
-                      <small>
-                        Du mistet{" "}
-                        <strong className="text-neutral-100">
-                          {myEffects.ratingDelta > 0 ? "+" : ""}
-                          {myEffects.ratingDelta}
-                        </strong>{" "}
-                        rating og fikk{" "}
-                        <strong className="text-neutral-100">
-                          +{myEffects.damageDelta}%
-                        </strong>{" "}
-                        skade på bilen.
-                      </small>
-                    </>
-                  )}
-                </InfoBox>
+          <div className="flex gap-8 flex-wrap">
+            <div className="grow min-w-72">
+              <H3>Velg bil</H3>
+              {!hasUsableCar ? (
+                <p className="text-neutral-400 mt-1">
+                  Du har ingen biler i denne byen.
+                </p>
               ) : (
-                <InfoBox type="info">Løpet pågår...</InfoBox>
+                <ul className="mt-2 grid gap-1">
+                  {enriched.map((c) => {
+                    const isBroken = (c.damage ?? 0) >= 100;
+                    const isChosen = c.id === acceptCarId;
+                    return (
+                      <li
+                        key={c.id}
+                        className={`rounded-lg border px-2 py-1 flex items-center justify-between ${
+                          isBroken
+                            ? "opacity-50 cursor-not-allowed"
+                            : "cursor-pointer"
+                        } ${
+                          isChosen
+                            ? "border-neutral-600 bg-neutral-800"
+                            : "border-neutral-800 bg-neutral-900 hover:bg-neutral-800"
+                        }`}
+                        onClick={() => !isBroken && setAcceptCarId(c.id)}
+                        title={
+                          isBroken
+                            ? "Denne bilen har 100% skade og kan ikke brukes."
+                            : ""
+                        }
+                      >
+                        <div className="flex items-center gap-3">
+                          <Item
+                            name={`${c.displayName} ${
+                              isBroken ? "(Ødelagt)" : ""
+                            }`}
+                            tier={c.tier}
+                            tooltipImg={c.img || undefined}
+                            tooltipContent={renderCarTooltip({
+                              hp: c.hp,
+                              damage: c.damage,
+                              value: c.value,
+                            })}
+                          />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
+            </div>
+          </div>
 
-              <div className="w-full min-h-4 grid grid-cols-[128px_auto_128px] sm:grid-cols-[192px_100px_192px] relative rounded-xl p-2 sm:gap-3">
-                <section id="player1">
-                  <div className="text-left">
-                    <p className="border-b-2 mb-1 px-2 py-0.5 border-red-500 bg-gradient-to-t from-red-950/0 to-red-900 rounded-t-lg w-32 sm:w-48">
-                      <Username
-                        character={{
-                          id: raceView.creator.id,
-                          username: raceView.creator.username,
-                        }}
-                      />
-                    </p>
-                  </div>
-                  <img
-                    src={raceView.creator.img || ""}
-                    alt=""
-                    className="w-32 sm:w-48 object-cover rounded-md"
-                  />
-                  <Item
-                    className="text-sm sm:text-base w-32 sm:w-48 text-wrap"
-                    name={raceView.creator.name}
-                    tier={raceView.creator.tier}
-                    tooltipImg={raceView.creator.img || undefined}
-                    tooltipContent={renderCarTooltip({
-                      hp: raceView.creator.hp,
-                      damage: raceView.creator.damage,
-                      value: raceView.creator.value,
-                    })}
-                  />
-                  <p>{raceView.creator.hp} hk</p>
-                </section>
+          <div className="mt-4 flex gap-2">
+            <Button style="secondary" onClick={cancelAcceptFlow}>
+              Avbryt
+            </Button>
+            <Button disabled={!acceptCarId} onClick={confirmAcceptRace}>
+              Start løp
+            </Button>
+          </div>
+        </Box>
+      )}
 
-                <div className="h-36 sm:h-48 flex items-center justify-center">
-                  <p className="text-2xl sm:text-4xl font-extrabold text-neutral-200 z-10 ">
-                    VS
-                  </p>
-                </div>
+      {view === "activeChallenge" && (
+        <Box className="flex-1">
+          <H2>Aktiv utfordring</H2>
 
-                <section id="player2">
-                  <div className="text-right">
-                    <p className="border-b-2 mb-1 px-2 py-0.5 border-blue-500 bg-gradient-to-t from-blue-950/0 to-blue-900 rounded-t-lg w-32 sm:w-48">
-                      <Username
-                        character={{
-                          id: raceView.challenger.id,
-                          username: raceView.challenger.username,
-                        }}
-                      />
-                    </p>
-                  </div>
-                  <img
-                    src={raceView.challenger.img || ""}
-                    alt=""
-                    className="w-32 sm:w-48 object-cover rounded-md"
-                  />
-                  <div className="text-right">
+          {/* Single message area for this view */}
+          {newRaceMessage && (
+            <InfoBox
+              type={newRacemessageType}
+              onClose={() => setNewRaceMesssage("")}
+            >
+              {newRaceMessage}
+            </InfoBox>
+          )}
+
+          <div className="flex gap-8 flex-wrap">
+            <div className="min-w-72">
+              <H3>Bil</H3>
+              {activeCar ? (
+                <div className="mt-2 flex flex-col items-start gap-3">
+                  {activeCar.img && (
+                    <img
+                      src={activeCar.img}
+                      alt=""
+                      className="w-56 h-32 object-cover rounded-lg border border-neutral-700"
+                    />
+                  )}
+                  <div>
                     <Item
-                      className="text-sm sm:text-base max-w-32 sm:max-w-48 text-wrap"
-                      name={raceView.challenger.name}
-                      tier={raceView.challenger.tier}
-                      tooltipImg={raceView.challenger.img || undefined}
+                      name={activeCar.displayName}
+                      tier={activeCar.tier}
+                      tooltipImg={activeCar.img || undefined}
                       tooltipContent={renderCarTooltip({
-                        hp: raceView.challenger.hp,
-                        damage: raceView.challenger.damage,
-                        value: raceView.challenger.value,
+                        hp: activeCar.hp,
+                        damage: activeCar.damage,
+                        value: activeCar.value,
                       })}
                     />
-                    <p>{raceView.challenger.hp} hk</p>
                   </div>
-                </section>
-
-                {/* Track + cars */}
-                <div className="relative col-span-3 w-full h-28 rounded-lg overflow-hidden">
-                  {/* Track line */}
-                  <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[2px] mr-6 bg-neutral-600" />
-
-                  {/* Finish flag */}
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-300 text-xs">
-                    Mål
-                  </div>
-
-                  {/* Creator car (red) - top */}
-                  <div
-                    className="absolute top-4 h-6 w-10 rounded-sm bg-gradient-to-r from-red-600 to-red-500"
-                    style={{
-                      left: `calc(2px + ${
-                        racePositions.creator * 100
-                      }% - 20px)`,
-                    }}
-                    title={raceView.creator.name}
-                  />
-
-                  {/* Challenger car (blue) - bottom */}
-                  <div
-                    className="absolute bottom-4 h-6 w-10 rounded-sm bg-gradient-to-r from-blue-600 to-blue-500"
-                    style={{
-                      left: `calc(2px + ${
-                        racePositions.challenger * 100
-                      }% - 20px)`,
-                    }}
-                    title={raceView.challenger.name}
-                  />
                 </div>
-              </div>
-
-              <div>
-                <Button
-                  onClick={handleAcknowledgeRace}
-                  disabled={!raceFinished}
-                >
-                  {raceFinished ? "Avslutt løp" : "Løpet pågår..."}
-                </Button>
-              </div>
+              ) : (
+                <p className="text-neutral-400 mt-1">Ingen aktiv bil valgt.</p>
+              )}
             </div>
-          )}
+          </div>
 
-          {/* CREATE (default) */}
-          {mode === "create" && (
-            <>
-              <div className="flex gap-8 flex-wrap">
-                <div className="min-w-72">
-                  <H3>Aktiv bil</H3>
-                  {activeCar ? (
-                    <div className="mt-2 flex flex-col items-start gap-3">
-                      {activeCar.img && (
-                        <img
-                          src={activeCar.img}
-                          alt=""
-                          className="w-56 h-32 object-cover rounded-lg border border-neutral-700"
-                        />
-                      )}
-                      <div>
-                        <Item
-                          name={activeCar.displayName}
-                          tier={activeCar.tier}
-                          tooltipImg={activeCar.img || undefined}
-                          tooltipContent={
-                            <div>
-                              {activeCar.hp != null && (
-                                <p>
-                                  Effekt:{" "}
-                                  <strong className="text-neutral-200">
-                                    {activeCar.hp} hk
-                                  </strong>
-                                </p>
-                              )}
-                              <p>
-                                Skade:{" "}
-                                <strong className="text-neutral-200">
-                                  {dmgPercent(activeCar.damage)}%
-                                </strong>
-                              </p>
-                              {activeCar.value != null && (
-                                <p>
-                                  Verdi:{" "}
-                                  <strong className="text-neutral-200">
-                                    <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                    {valueAfterDamage(
-                                      Number(activeCar.value) || 0,
-                                      dmgPercent(activeCar.damage)
-                                    ).toLocaleString("nb-NO")}
-                                  </strong>
-                                </p>
-                              )}
-                            </div>
-                          }
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-neutral-400 mt-1">
-                      Ingen aktiv bil valgt.
-                    </p>
-                  )}
-                </div>
-
-                <div className="grow min-w-72">
-                  <H3>Velg bil</H3>
-                  {enriched.length === 0 ? (
-                    <p className="text-neutral-400 mt-1">
-                      Du har ingen biler i denne byen.
-                    </p>
-                  ) : (
-                    <ul className="mt-2 grid gap-1">
-                      {enriched.map((c) => {
-                        const isActive = c.id === activeCarId;
-                        const isBroken = (c.damage ?? 0) >= 100;
-                        return (
-                          <li
-                            key={c.id}
-                            className={`rounded-lg border px-2 py-1 flex items-center justify-between ${
-                              isBroken
-                                ? "opacity-50 cursor-not-allowed"
-                                : "cursor-pointer"
-                            } ${
-                              isActive
-                                ? "border-neutral-600 bg-neutral-800"
-                                : "border-neutral-800 bg-neutral-900 hover:bg-neutral-800"
-                            }`}
-                            onClick={() => !isBroken && setActiveCar(c.id)}
-                            title={
-                              isBroken
-                                ? "Denne bilen har 100% skade og kan ikke brukes."
-                                : ""
-                            }
-                          >
-                            <div className="flex items-center gap-3">
-                              <Item
-                                name={`${c.displayName} ${
-                                  isBroken ? "(Ødelagt)" : ""
-                                }`}
-                                tier={c.tier}
-                                tooltipImg={c.img || undefined}
-                                tooltipContent={renderCarTooltip({
-                                  hp: c.hp,
-                                  damage: c.damage,
-                                  value: c.value,
-                                })}
-                              />
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <Button
-                  disabled={
-                    !activeCarId ||
-                    hasUnackedFinished ||
-                    (activeCar ? (activeCar.damage ?? 0) >= 100 : false)
-                  }
-                  onClick={handleStartRace}
-                >
-                  Start løp
-                </Button>
-              </div>
-            </>
-          )}
+          <div className="mt-4">
+            <Button style="danger" onClick={handleCancelMyRace}>
+              Avbryt utfordring
+            </Button>
+          </div>
         </Box>
-      </div>
+      )}
+
+      {view === "create" && (
+        <Box className="flex-1">
+          <H2>Start utfordring</H2>
+
+          {/* Single message area for this view */}
+          {newRaceMessage && (
+            <InfoBox
+              type={newRacemessageType}
+              onClose={() => setNewRaceMesssage("")}
+            >
+              {newRaceMessage}
+            </InfoBox>
+          )}
+
+          <div className="flex gap-8 flex-wrap">
+            <div className="min-w-72">
+              <H3>Aktiv bil</H3>
+              {activeCar ? (
+                <div className="mt-2 flex flex-col items-start gap-3">
+                  {activeCar.img && (
+                    <img
+                      src={activeCar.img}
+                      alt=""
+                      className="w-56 h-32 object-cover rounded-lg border border-neutral-700"
+                    />
+                  )}
+                  <div>
+                    <Item
+                      name={activeCar.displayName}
+                      tier={activeCar.tier}
+                      tooltipImg={activeCar.img || undefined}
+                      tooltipContent={
+                        <div>
+                          {activeCar.hp != null && (
+                            <p>
+                              Effekt:{" "}
+                              <strong className="text-neutral-200">
+                                {activeCar.hp} hk
+                              </strong>
+                            </p>
+                          )}
+                          <p>
+                            Skade:{" "}
+                            <strong className="text-neutral-200">
+                              {dmgPercent(activeCar.damage)}%
+                            </strong>
+                          </p>
+                          {activeCar.value != null && (
+                            <p>
+                              Verdi:{" "}
+                              <strong className="text-neutral-200">
+                                <i className="fa-solid fa-dollar-sign"></i>{" "}
+                                {valueAfterDamage(
+                                  Number(activeCar.value) || 0,
+                                  dmgPercent(activeCar.damage)
+                                ).toLocaleString("nb-NO")}
+                              </strong>
+                            </p>
+                          )}
+                        </div>
+                      }
+                    />
+                  </div>
+                </div>
+              ) : (
+                <p className="text-neutral-400 mt-1">Ingen aktiv bil valgt.</p>
+              )}
+            </div>
+
+            <div className="grow min-w-72">
+              <H3>Velg bil</H3>
+              {enriched.length === 0 ? (
+                <p className="text-neutral-400 mt-1">
+                  Du har ingen biler i denne byen.
+                </p>
+              ) : (
+                <ul className="mt-2 grid gap-1">
+                  {enriched.map((c) => {
+                    const isActive = c.id === activeCarId;
+                    const isBroken = (c.damage ?? 0) >= 100;
+                    return (
+                      <li
+                        key={c.id}
+                        className={`rounded-lg border px-2 py-1 flex items-center justify-between ${
+                          isBroken
+                            ? "opacity-50 cursor-not-allowed"
+                            : "cursor-pointer"
+                        } ${
+                          isActive
+                            ? "border-neutral-600 bg-neutral-800"
+                            : "border-neutral-800 bg-neutral-900 hover:bg-neutral-800"
+                        }`}
+                        onClick={() => !isBroken && setActiveCar(c.id)}
+                        title={
+                          isBroken
+                            ? "Denne bilen har 100% skade og kan ikke brukes."
+                            : ""
+                        }
+                      >
+                        <div className="flex items-center gap-3">
+                          <Item
+                            name={`${c.displayName} ${
+                              isBroken ? "(Ødelagt)" : ""
+                            }`}
+                            tier={c.tier}
+                            tooltipImg={c.img || undefined}
+                            tooltipContent={renderCarTooltip({
+                              hp: c.hp,
+                              damage: c.damage,
+                              value: c.value,
+                            })}
+                          />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4 flex gap-2">
+            <Button style="secondary" onClick={() => setUiMode("standard")}>
+              Tilbake
+            </Button>
+            <Button
+              disabled={
+                !activeCarId ||
+                Boolean(myPendingFinished) ||
+                (activeCar ? (activeCar.damage ?? 0) >= 100 : false)
+              }
+              onClick={async () => {
+                await handleStartRace();
+                // Let subscription to myOpenRace switch the view to "activeChallenge"
+                setUiMode("standard");
+              }}
+            >
+              Start løp
+            </Button>
+          </div>
+        </Box>
+      )}
+
+      {view === "standard" && (
+        <div className="flex flex-wrap gap-4">
+          {/* Active challenges list with Start button */}
+          <Box className="flex-1">
+            <div className="flex items-center justify-between">
+              <H2>Aktive utfordringer</H2>
+            </div>
+
+            {/* Single message area for this view */}
+            {newRaceMessage && (
+              <InfoBox
+                type={newRacemessageType}
+                onClose={() => setNewRaceMesssage("")}
+              >
+                {newRaceMessage}
+              </InfoBox>
+            )}
+
+            <Button
+              onClick={() => setUiMode("create")}
+              disabled={
+                !!raceView ||
+                !!pendingRace ||
+                !!myOpenRace ||
+                !!myPendingFinished
+              }
+            >
+              Start utfordring
+            </Button>
+
+            {openRaces.length === 0 ? (
+              <p className="text-neutral-400 mt-2">
+                Det er for øyeblikket ingen aktive utfordringer.
+              </p>
+            ) : (
+              <ul className="mt-2 grid gap-2">
+                {openRaces.map((r) => (
+                  <li
+                    key={r.id}
+                    className="rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 flex gap-2 items-center justify-between text-nowrap"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Username
+                        character={{
+                          id: r.creator.id,
+                          username: r.creator.username,
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="small"
+                        disabled={
+                          r.creator.id === userCharacter?.id ||
+                          !hasUsableCar ||
+                          !!myOpenRace ||
+                          !!pendingRace ||
+                          !!myPendingFinished ||
+                          !!raceView
+                        }
+                        onClick={() => beginAcceptFlow(r)}
+                      >
+                        <p>Ta utfordringen</p>
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Box>
+        </div>
+      )}
     </Main>
   );
 };
