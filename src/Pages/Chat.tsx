@@ -245,7 +245,10 @@ const Chat = () => {
               if (!shot.empty) {
                 const cData = shot.docs[0].data() as any;
                 const imgUrl =
-                  cData?.character?.img || cData?.img || cData?.image || "";
+                  cData?.character?.img ||
+                  cData?.img ||
+                  cData?.image ||
+                  "/default.jpg";
                 if (imgUrl) {
                   setAvatarByUser((prev) => ({ ...prev, [other]: imgUrl }));
                 }
@@ -735,7 +738,7 @@ const Chat = () => {
                           src={
                             otherParticipant
                               ? avatarByUser[otherParticipant]
-                              : "/placeholder-avatar.png"
+                              : "/default.jpg"
                           }
                           alt={otherParticipant}
                           className="w-10 h-10 rounded-full object-cover"
