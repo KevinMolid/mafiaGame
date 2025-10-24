@@ -1,8 +1,11 @@
 // Components
+import Main from "../components/Main";
+import H1 from "../components/Typography/H1";
 import H3 from "../components/Typography/H3";
 import Button from "../components/Button";
 import ChatMessage from "../components/ChatMessage";
 import ScrollArea from "../components/ScrollArea";
+import InfoBox from "../components/InfoBox";
 
 // Types
 import { Message } from "../Functions/messageService";
@@ -60,7 +63,6 @@ function isNewDay(currMs: number, prevMs: number) {
 
 const Chat = () => {
   const { userCharacter } = useCharacter();
-  const [players, setPlayers] = useState<any[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [conversationId, setConversationId] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -72,6 +74,15 @@ const Chat = () => {
   const [unreadByConv, setUnreadByConv] = useState<Record<string, number>>({});
   const [isDropdownActive, setIsDropdownActive] = useState<boolean>(false);
 
+  // New: input + validation error for creating chat
+  const [newChatName, setNewChatName] = useState<string>("");
+  const [createChatError, setCreateChatError] = useState<string | null>(null);
+
+  const totalUnread = useMemo(
+    () => Object.values(unreadByConv).reduce((a, b) => a + b, 0),
+    [unreadByConv]
+  );
+
   if (!userCharacter) return null;
 
   // Per-user storage key so multiple accounts don't collide
@@ -80,9 +91,10 @@ const Chat = () => {
     [userCharacter.id]
   );
 
-  // ---- Textarea autosize ----
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const controlsRef = useRef<HTMLDivElement | null>(null);
 
+  // ---- Textarea autosize ----
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "0px";
@@ -99,6 +111,19 @@ const Chat = () => {
     setNewMessage(e.target.value);
     adjustTextareaHeight();
   };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (!isDropdownActive) return;
+      const el = controlsRef.current;
+      if (el && !el.contains(e.target as Node)) {
+        setIsDropdownActive(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [isDropdownActive]);
 
   useEffect(() => {
     if (!userCharacter?.username || !userCharacter?.id) return;
@@ -238,11 +263,14 @@ const Chat = () => {
     setConversationId(conv.id);
     setReceiver(other);
     localStorage.setItem(LS_KEY, JSON.stringify({ id: conv.id, other }));
+    setIsDropdownActive(false); // close dropdown when selecting
     markConversationAsRead(conv.id, userCharacter.id);
   };
 
   const handleNewChatClick = () => {
     setIsCreatingChat(true);
+    setCreateChatError(null);
+    setNewChatName("");
   };
 
   // ---- Fetch conversations for user + restore last open ----
@@ -305,27 +333,6 @@ const Chat = () => {
     fetchUserConversations();
   }, [LS_KEY, userCharacter.username]);
 
-  // ---- (Optional) Fetch all players when creating a chat ----
-  useEffect(() => {
-    const fetchAllPlayers = async () => {
-      try {
-        const playersSnapshot = await getDocs(collection(db, "Characters"));
-        const players = playersSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setPlayers(players);
-      } catch (err) {
-        console.error("Error fetching players:", err);
-        setError("Feil ved lasting av spillere.");
-      }
-    };
-
-    if (isCreatingChat) {
-      fetchAllPlayers();
-    }
-  }, [isCreatingChat]);
-
   // ---- Find or start conversation with a given username ----
   const handlePlayerClick = async (username: string) => {
     try {
@@ -370,6 +377,48 @@ const Chat = () => {
     } catch (err) {
       console.error("Error finding conversation:", err);
       setError("Feil ved henting av samtale.");
+    }
+  };
+
+  // New: Start new chat by validating input username
+  const handleStartNewChat = async () => {
+    const candidateRaw = newChatName.trim();
+    const candidate = candidateRaw.toLowerCase();
+
+    if (!candidate) {
+      setCreateChatError("Skriv inn spillernavn.");
+      return;
+    }
+
+    if (candidate === userCharacter.username.toLowerCase()) {
+      setCreateChatError("Du kan ikke starte en chat med deg selv.");
+      return;
+    }
+
+    try {
+      // Case-insensitive lookup via username_lowercase
+      const charactersRef = collection(db, "Characters");
+      const targetQuery = query(
+        charactersRef,
+        where("username_lowercase", "==", candidate)
+      );
+      const targetQuerySnapshot = await getDocs(targetQuery);
+
+      if (targetQuerySnapshot.empty) {
+        setCreateChatError("Spilleren finnes ikke.");
+        return;
+      }
+
+      // Use the canonical username casing from the character doc
+      const targetDoc = targetQuerySnapshot.docs[0];
+      const targetData = targetDoc.data() as any;
+      const targetUsername: string = targetData.username || candidateRaw;
+
+      setCreateChatError(null);
+      await handlePlayerClick(targetUsername);
+    } catch (e) {
+      console.error(e);
+      setCreateChatError("Noe gikk galt ved oppretting av chat.");
     }
   };
 
@@ -501,176 +550,222 @@ const Chat = () => {
   }
 
   return (
-    <div className="flex flex-grow h-full relative px-4 lg:px-8 xl:px-12">
-      <div className="absolute top-6 right-8 lg:right-12 xl:right-16">
-        <Button
-          style="black"
-          size="square"
-          onClick={() => setIsDropdownActive(!isDropdownActive)}
-        >
-          <i className="text-lg fa-solid fa-comment-dots"></i>
-        </Button>
-      </div>
-
-      {/* Dropdown panel */}
-      {isDropdownActive && (
-        <section
-          id="dropdown"
-          className="min-w-32 md:min-w-36 lg:min-w-40 py-6 bg-neutral-800 absolute top-20 right-20 z-10 rounded-xl shadow-lg"
-        >
-          <div className="mb-4 flex justify-center">
-            <Button size="small" style="secondary" onClick={handleNewChatClick}>
-              <i className="fa-solid fa-plus"></i> Ny chat
+    <Main>
+      <div className="flex items-baseline justify-between gap-4">
+        <H1>Meldinger</H1>
+        <div className="relative flex gap-1" ref={controlsRef}>
+          {isCreatingChat ? (
+            <Button
+              style="black"
+              size="square"
+              onClick={() => setIsCreatingChat(false)}
+            >
+              <i className="text-lg fa-solid fa-x"></i>
             </Button>
-          </div>
-          <ul>
-            {conversations.map((conversation) => {
-              const otherParticipant = conversation.participants.find(
-                (participant: string) => participant !== userCharacter.username
-              );
+          ) : (
+            <Button style="black" size="square" onClick={handleNewChatClick}>
+              <i className="text-lg fa-solid fa-plus"></i>
+            </Button>
+          )}
 
-              const isActive =
-                conversation.id === conversationId ||
-                (receiver && otherParticipant === receiver);
+          {/* Hide the dropdown button if there are no conversations */}
+          {conversations.length > 0 && (
+            <div className="relative">
+              <Button
+                style="black"
+                size="square"
+                onClick={() => setIsDropdownActive(!isDropdownActive)}
+                aria-expanded={isDropdownActive}
+                aria-haspopup="menu"
+              >
+                <i className="text-lg fa-solid fa-comment-dots"></i>
+              </Button>
 
-              const unread = unreadByConv[conversation.id] || 0;
+              {/* Unread messages badge (bottom-right like in Header, adjust position if you prefer) */}
+              {totalUnread > 0 && (
+                <span className="absolute bottom-0 right-0 bg-neutral-600 translate-x-1 translate-y-1 text-sky-400 text-s font-bold rounded-full w-5 h-5 flex justify-center items-center">
+                  {totalUnread > 99 ? "99+" : totalUnread}
+                </span>
+              )}
+            </div>
+          )}
 
-              return (
-                <li key={conversation.id}>
-                  <button
-                    className={`flex items-center px-2 min-h-8 font-medium hover:text-white w-full text-left ${
-                      isActive
-                        ? "bg-neutral-700/50 text-neutral-200 border-l-4 border-sky-500 pl-2"
-                        : "text-neutral-400 pl-2"
-                    }`}
-                    onClick={() => selectConversationByObject(conversation)}
-                  >
-                    {otherParticipant}
-                    {unread > 0 && (
-                      <span className="ml-auto text-sky-400 font-bold">
-                        {unread}
-                      </span>
-                    )}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
+          {/* Dropdown panel */}
+          {isDropdownActive && conversations.length > 0 && (
+            <section
+              id="dropdown"
+              className="absolute min-w-32 md:min-w-36 lg:min-w-40 py-6 bg-neutral-800 p-2 top-12 right-0 z-10 rounded-xl shadow-lg"
+              role="menu"
+            >
+              <ul>
+                {conversations.map((conversation) => {
+                  const otherParticipant = conversation.participants.find(
+                    (participant: string) =>
+                      participant !== userCharacter.username
+                  );
 
-      {/* Chat panel */}
-      <section
-        id="chat"
-        className="flex flex-col px-4 pt-8 pb-16 w-full flex-grow mb-4 lg:mb-6 xl:mb-8"
-      >
-        <div id="chat_heading" className="border-b border-neutral-600 mb-2">
-          {isCreatingChat ? <H3>Velg spiller</H3> : <H3>{receiver}</H3>}
-        </div>
+                  const isActive =
+                    conversation.id === conversationId ||
+                    (receiver && otherParticipant === receiver);
 
-        {/* Render list of all players if creating a chat */}
-        {isCreatingChat ? (
-          <ul>
-            {players.map((player) => (
-              <li key={player.id}>
-                <button
-                  className="hover:text-white w-full text-left"
-                  onClick={() => handlePlayerClick(player.username)}
-                >
-                  {player.username}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div id="messages_div" className="mb-4 mr-2 flex-grow">
-            <ScrollArea className="" contentClassName="pr-4" stickToBottom>
-              <ul className="flex flex-col">
-                {messages.map((m, i) => {
-                  const isOwn = m.senderId === userCharacter.id;
-
-                  // group header only if previous sender is different
-                  const prev = messages[i - 1];
-                  const showMeta = !prev || prev.senderId !== m.senderId;
-
-                  // time divider logic
-                  const curMs = tsToMs(m.timestamp);
-                  const prevMs = prev ? tsToMs(prev.timestamp) : null;
-                  const showTime =
-                    curMs !== null &&
-                    (!prev ||
-                      prevMs === null ||
-                      isNewDay(curMs, prevMs) ||
-                      curMs - prevMs >= MIN_GAP_MS);
-
-                  // Show exactly one "Lest" (on the last read own msg),
-                  // and one "Sendt" (on the very last own msg). If they coincide, "Lest" wins.
-                  let statusBelow: "sent" | "read" | null = null;
-                  if (isOwn) {
-                    if (i === lastReadOwnIdx) statusBelow = "read";
-                    else if (i === lastOwnIdx) statusBelow = "sent";
-                  }
+                  const unread = unreadByConv[conversation.id] || 0;
 
                   return (
-                    <Fragment key={m.id}>
-                      {showTime && curMs !== null && (
-                        <ChatTimeDivider label={fmtDividerLabel(curMs)} />
-                      )}
-                      <ChatMessage
-                        {...m}
-                        isOwn={isOwn}
-                        showMeta={showMeta}
-                        statusBelow={statusBelow}
-                      />
-                    </Fragment>
+                    <li key={conversation.id}>
+                      <button
+                        className={`flex gap-2 items-center px-2 min-h-8 font-medium hover:text-white w-full text-left ${
+                          isActive
+                            ? "text-neutral-200"
+                            : "text-neutral-400 pl-2"
+                        }`}
+                        onClick={() => selectConversationByObject(conversation)}
+                        role="menuitem"
+                      >
+                        {otherParticipant}
+                        {unread > 0 && (
+                          <span className="bg-neutral-600 w-5 h-5 flex justify-center items-center rounded-full ml-auto text-sky-400 font-bold">
+                            {unread}
+                          </span>
+                        )}
+                      </button>
+                    </li>
                   );
                 })}
               </ul>
-            </ScrollArea>
-          </div>
-        )}
+            </section>
+          )}
+        </div>
+      </div>
 
-        {/* Textarea */}
-        {isCreatingChat || !receiver ? (
-          <></>
-        ) : (
-          <div id="new_message_div">
-            <form
-              action=""
-              onSubmit={submitNewMessage}
-              className="grid grid-cols-[auto_min-content] gap-2 pr-2"
-            >
-              <textarea
-                ref={textareaRef}
-                rows={1}
-                value={newMessage}
-                placeholder="Melding"
-                spellCheck={false}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    if (e.shiftKey) {
-                      return;
-                    } else {
-                      e.preventDefault();
-                      submitNewMessage(e);
-                    }
-                  }
-                }}
-                onChange={handleInputChange}
-                className="w-full bg-neutral-800 outline-none resize-none rounded-3xl px-4 py-2 leading-normal"
-                style={{ minHeight: 0 }}
-              ></textarea>
-
-              <div className="mt-auto">
-                <Button type="submit" size="square">
-                  <i className=" fa-solid fa-paper-plane"></i>
-                </Button>
+      <div className="flex flex-grow h-full relative">
+        {/* Chat panel */}
+        <section
+          id="chat"
+          className="flex flex-col pb-16 w-full flex-grow mb-4 lg:mb-6 xl:mb-8"
+        >
+          <div id="chat_heading" className="mb-2">
+            {/* When creating a chat, render input + button instead of "Velg spiller" */}
+            {isCreatingChat ? (
+              <div className="py-2 flex flex-col gap-2">
+                {createChatError && (
+                  <InfoBox
+                    type="failure"
+                    onClose={() => setCreateChatError("")}
+                  >
+                    {createChatError}
+                  </InfoBox>
+                )}
+                <H3>Ny chat</H3>
+                <div className="grid grid-cols-[1fr_auto] gap-2 pr-2">
+                  <input
+                    type="text"
+                    value={newChatName}
+                    onChange={(e) => setNewChatName(e.target.value)}
+                    placeholder="Brukernavn"
+                    className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleStartNewChat();
+                    }}
+                  />
+                  <Button onClick={handleStartNewChat}>Skriv melding</Button>
+                </div>
               </div>
-            </form>
+            ) : (
+              <H3>{receiver}</H3>
+            )}
           </div>
-        )}
-      </section>
-    </div>
+
+          {!isCreatingChat ? (
+            <div id="messages_div" className="mb-4 mr-2 flex-grow">
+              <ScrollArea className="" contentClassName="pr-4" stickToBottom>
+                <ul className="flex flex-col">
+                  {messages.map((m, i) => {
+                    const isOwn = m.senderId === userCharacter.id;
+
+                    // group header only if previous sender is different
+                    const prev = messages[i - 1];
+                    const showMeta = !prev || prev.senderId !== m.senderId;
+
+                    // time divider logic
+                    const curMs = tsToMs(m.timestamp);
+                    const prevMs = prev ? tsToMs(prev.timestamp) : null;
+                    const showTime =
+                      curMs !== null &&
+                      (!prev ||
+                        prevMs === null ||
+                        isNewDay(curMs, prevMs) ||
+                        curMs - prevMs >= MIN_GAP_MS);
+
+                    // Show exactly one "Lest" (on the last read own msg),
+                    // and one "Sendt" (on the very last own msg). If they coincide, "Lest" wins.
+                    let statusBelow: "sent" | "read" | null = null;
+                    if (isOwn) {
+                      if (i === lastReadOwnIdx) statusBelow = "read";
+                      else if (i === lastOwnIdx) statusBelow = "sent";
+                    }
+
+                    return (
+                      <Fragment key={m.id}>
+                        {showTime && curMs !== null && (
+                          <ChatTimeDivider label={fmtDividerLabel(curMs)} />
+                        )}
+                        <ChatMessage
+                          {...m}
+                          isOwn={isOwn}
+                          showMeta={showMeta}
+                          statusBelow={statusBelow}
+                        />
+                      </Fragment>
+                    );
+                  })}
+                </ul>
+              </ScrollArea>
+            </div>
+          ) : (
+            <></>
+          )}
+
+          {/* Textarea */}
+          {isCreatingChat || !receiver ? (
+            <></>
+          ) : (
+            <div id="new_message_div">
+              <form
+                onSubmit={submitNewMessage}
+                className="grid grid-cols-[auto_min-content] gap-2 pr-2"
+              >
+                <textarea
+                  ref={textareaRef}
+                  rows={1}
+                  value={newMessage}
+                  placeholder="Melding"
+                  spellCheck={false}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      if (e.shiftKey) {
+                        return;
+                      } else {
+                        e.preventDefault();
+                        submitNewMessage(e);
+                      }
+                    }
+                  }}
+                  onChange={handleInputChange}
+                  className="w-full bg-neutral-800 outline-none resize-none rounded-3xl px-4 py-2 leading-normal"
+                  style={{ minHeight: 0 }}
+                ></textarea>
+
+                <div className="mt-auto">
+                  <Button type="submit" size="square">
+                    <i className=" fa-solid fa-paper-plane"></i>
+                  </Button>
+                </div>
+              </form>
+            </div>
+          )}
+        </section>
+      </div>
+    </Main>
   );
 };
 

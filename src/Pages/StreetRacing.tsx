@@ -543,7 +543,7 @@ const StreetRacing = () => {
     }
   }
 
-  // Click "Ta utfordringen" → switch into take-on view (selection) mode
+  // Click "Ta utfordring" → switch into take-on view (selection) mode
   function beginAcceptFlow(r: RaceDoc) {
     if (!hasUsableCar) {
       setNewRaceMesssage("Du trenger en bil for å delta.");
@@ -1660,7 +1660,7 @@ const StreetRacing = () => {
                         }
                         onClick={() => beginAcceptFlow(r)}
                       >
-                        <p>Ta utfordringen</p>
+                        Ta utfordring
                       </Button>
                     </div>
                   </li>

@@ -31,7 +31,7 @@ const Header = () => {
   const { playing, setPlaying, volume, setVolume, audioElement } =
     useMusicContext();
   const [unreadAlertCount, setUnreadAlertCount] = useState(0);
-  const [unreadMessageCount, setUnreadMessageCount] = useState(0); // <-- NEW
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
   useEffect(() => {
     if (!userCharacter || !userCharacter.id) return;
@@ -265,14 +265,14 @@ const Header = () => {
             <i className="text-3xl fa-solid fa-bars pointer-events-none"></i>
             {/* Unread alerts (top-right, yellow) */}
             {unreadAlertCount > 0 && (
-              <span className="absolute top-0 right-0 bg-neutral-600 -translate-y-2 translate-x-2 text-yellow-400 text-s font-bold rounded-full w-5 h-5 flex justify-center items-center">
+              <span className="absolute top-0 right-0 bg-neutral-600 -translate-y-1 translate-x-1 text-yellow-400 text-s font-bold rounded-full w-5 h-5 flex justify-center items-center">
                 {unreadAlertCount}
               </span>
             )}
 
             {/* Unread messages (bottom-right, sky-400) */}
             {unreadMessageCount > 0 && (
-              <span className="absolute bottom-0 right-0 bg-neutral-600 translate-x-2 translate-y-2 text-sky-400 text-s font-bold rounded-full w-5 h-5 flex justify-center items-center">
+              <span className="absolute bottom-0 right-0 bg-neutral-600 translate-x-1 translate-y-1 text-sky-400 text-s font-bold rounded-full w-5 h-5 flex justify-center items-center">
                 {unreadMessageCount}
               </span>
             )}
