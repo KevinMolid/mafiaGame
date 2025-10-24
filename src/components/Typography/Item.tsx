@@ -178,7 +178,7 @@ const Item = ({
   return (
     <span
       ref={triggerRef}
-      className={`relative inline-flex items-center font-bold group text-${color} ${className} cursor-pointer text-nowrap`}
+      className={`relative inline-flex items-center font-bold group text-${color} ${className} cursor-pointer`}
       tabIndex={hasTooltip ? 0 : undefined}
       aria-describedby={hasTooltip ? tooltipId : undefined}
       onMouseEnter={open}
