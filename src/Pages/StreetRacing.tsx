@@ -19,6 +19,9 @@ import racingBadgeV from "/images/streetracing/RacingVsmall.png";
 import { useCharacter } from "../CharacterContext";
 import { getCarByKey, getCarByName } from "../Data/Cars";
 
+// ➜ Use GTA-style helpers for damage/value display
+import { dmgPercent, valueAfterDamage } from "../Functions/RewardFunctions";
+
 // Firestore
 import {
   getFirestore,
@@ -147,8 +150,10 @@ function renderCarTooltip(args: {
   value?: number | null;
 }) {
   const hp = args.hp ?? null;
-  const dmg = clamp0to100(args.damage);
-  const val = args.value ?? null;
+  const dmg = dmgPercent(args.damage); // <- normalized % as in GTA
+  const baseVal = args.value ?? null;
+  const valAfter =
+    baseVal != null ? valueAfterDamage(Number(baseVal) || 0, dmg) : null;
 
   return (
     <div>
@@ -160,12 +165,12 @@ function renderCarTooltip(args: {
       <p>
         Skade: <strong className="text-neutral-200">{dmg}%</strong>
       </p>
-      {val != null && (
+      {valAfter != null && (
         <p>
           Verdi:{" "}
           <strong className="text-neutral-200">
             <i className="fa-solid fa-dollar-sign"></i>{" "}
-            {Number(val).toLocaleString("nb-NO")}
+            {Number(valAfter).toLocaleString("nb-NO")}
           </strong>
         </p>
       )}
@@ -912,35 +917,61 @@ const StreetRacing = () => {
     setAcceptCarId(null);
   }
 
-  // Acknowledge finished race: mark my `done=true`. If both done -> archive & unlock.
+  // Acknowledge finished race: mark my `done=true`.
+  // Immediately unlock *my* car on acknowledge (if ids exist).
+  // When both are done -> archive & (ensure) unlock opponent too.
   async function handleAcknowledgeRace() {
     if (!raceView || !userCharacter?.id) return;
-    const ref = doc(db, "Streetraces", raceView.raceId);
+
+    // Guard raceId before building a ref
+    if (typeof raceView.raceId !== "string" || !raceView.raceId) {
+      console.error("handleAcknowledgeRace: invalid raceId", raceView?.raceId);
+      setNewRaceMesssage("Ugyldig løps-ID. Last siden på nytt og prøv igjen.");
+      setNewRaceMessageType("failure");
+      return;
+    }
+
+    const raceRef = doc(db, "Streetraces", raceView.raceId);
+
+    // Small helper: only create a car ref if both ids are valid strings
+    const mkCarRef = (userId?: any, carId?: any) => {
+      if (
+        typeof userId === "string" &&
+        userId &&
+        typeof carId === "string" &&
+        carId
+      ) {
+        return doc(db, "Characters", userId, "cars", carId);
+      }
+      return null;
+    };
 
     try {
       await runTransaction(db, async (tx) => {
-        const snap = await tx.get(ref);
+        const snap = await tx.get(raceRef);
         if (!snap.exists()) return;
         const v = snap.data() as any;
 
-        const isCreator = v.creator?.id === userCharacter.id;
-        const isChallenger = v.challenger?.id === userCharacter.id;
-
+        const isCreator = v?.creator?.id === userCharacter.id;
+        const isChallenger = v?.challenger?.id === userCharacter.id;
         if (!isCreator && !isChallenger) return; // shouldn't happen
 
         const myRole = isCreator ? "creator" : "challenger";
         const otherRole = isCreator ? "challenger" : "creator";
 
-        const updates: any = {};
+        const updates: Record<string, any> = {};
         updates[`${myRole}.done`] = true;
 
-        // --- Immediately unlock *my* car on acknowledge ---
-        const myCarId: string | undefined = v?.[myRole]?.carId;
-        const myUserId: string | undefined = v?.[myRole]?.id;
-        if (myCarId && myUserId) {
-          const myCarRef = doc(db, "Characters", myUserId, "cars", myCarId);
-          // It's safe to update directly; car doc must exist because we raced with it.
+        // --- Immediately unlock *my* car on acknowledge (if we have ids) ---
+        const myCarRef = mkCarRef(v?.[myRole]?.id, v?.[myRole]?.carId);
+        if (myCarRef) {
           tx.update(myCarRef, { inRace: null });
+        } else {
+          console.warn(
+            "handleAcknowledgeRace: missing my car ref",
+            v?.[myRole]?.id,
+            v?.[myRole]?.carId
+          );
         }
 
         // Has the opponent already acknowledged?
@@ -951,22 +982,22 @@ const StreetRacing = () => {
           updates["status"] = "archived";
           updates["archivedAt"] = serverTimestamp();
 
-          // Opponent car unlock (in case it wasn't unlocked yet on their side)
-          const otherCarId: string | undefined = v?.[otherRole]?.carId;
-          const otherUserId: string | undefined = v?.[otherRole]?.id;
-          if (otherCarId && otherUserId) {
-            const otherCarRef = doc(
-              db,
-              "Characters",
-              otherUserId,
-              "cars",
-              otherCarId
-            );
+          const otherCarRef = mkCarRef(
+            v?.[otherRole]?.id,
+            v?.[otherRole]?.carId
+          );
+          if (otherCarRef) {
             tx.update(otherCarRef, { inRace: null });
+          } else {
+            console.warn(
+              "handleAcknowledgeRace: missing opponent car ref",
+              v?.[otherRole]?.id,
+              v?.[otherRole]?.carId
+            );
           }
         }
 
-        tx.update(ref, updates);
+        tx.update(raceRef, updates);
       });
 
       // Clear local view; subscriptions will unblock UI
@@ -1391,39 +1422,11 @@ const StreetRacing = () => {
                     name={raceView.creator.name}
                     tier={raceView.creator.tier}
                     tooltipImg={raceView.creator.img || undefined}
-                    tooltipContent={
-                      <div>
-                        {raceView.creator.hp != null && (
-                          <p>
-                            Effekt:{" "}
-                            <strong className="text-neutral-200">
-                              {raceView.creator.hp} hk
-                            </strong>
-                          </p>
-                        )}
-                        <p>
-                          Skade:{" "}
-                          <strong className="text-neutral-200">
-                            {Math.min(
-                              100,
-                              Number(raceView.creator.damage ?? 0)
-                            )}
-                            %
-                          </strong>
-                        </p>
-                        {raceView.creator.value != null && (
-                          <p>
-                            Verdi:{" "}
-                            <strong className="text-neutral-200">
-                              <i className="fa-solid fa-dollar-sign"></i>{" "}
-                              {Number(raceView.creator.value).toLocaleString(
-                                "nb-NO"
-                              )}
-                            </strong>
-                          </p>
-                        )}
-                      </div>
-                    }
+                    tooltipContent={renderCarTooltip({
+                      hp: raceView.creator.hp,
+                      damage: raceView.creator.damage,
+                      value: raceView.creator.value,
+                    })}
                   />
                   <p>{raceView.creator.hp} hk</p>
                 </section>
@@ -1455,40 +1458,12 @@ const StreetRacing = () => {
                       className="text-sm sm:text-base max-w-32 sm:max-w-48 text-wrap"
                       name={raceView.challenger.name}
                       tier={raceView.challenger.tier}
-                      tooltipImg={raceView.creator.img || undefined}
-                      tooltipContent={
-                        <div>
-                          {raceView.creator.hp != null && (
-                            <p>
-                              Effekt:{" "}
-                              <strong className="text-neutral-200">
-                                {raceView.creator.hp} hk
-                              </strong>
-                            </p>
-                          )}
-                          <p>
-                            Skade:{" "}
-                            <strong className="text-neutral-200">
-                              {Math.min(
-                                100,
-                                Number(raceView.creator.damage ?? 0)
-                              )}
-                              %
-                            </strong>
-                          </p>
-                          {raceView.creator.value != null && (
-                            <p>
-                              Verdi:{" "}
-                              <strong className="text-neutral-200">
-                                <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                {Number(raceView.creator.value).toLocaleString(
-                                  "nb-NO"
-                                )}
-                              </strong>
-                            </p>
-                          )}
-                        </div>
-                      }
+                      tooltipImg={raceView.challenger.img || undefined}
+                      tooltipContent={renderCarTooltip({
+                        hp: raceView.challenger.hp,
+                        damage: raceView.challenger.damage,
+                        value: raceView.challenger.value,
+                      })}
                     />
                     <p>{raceView.challenger.hp} hk</p>
                   </div>
@@ -1572,8 +1547,7 @@ const StreetRacing = () => {
                               <p>
                                 Skade:{" "}
                                 <strong className="text-neutral-200">
-                                  {Math.min(100, Number(activeCar.damage ?? 0))}
-                                  %
+                                  {dmgPercent(activeCar.damage)}%
                                 </strong>
                               </p>
                               {activeCar.value != null && (
@@ -1581,9 +1555,10 @@ const StreetRacing = () => {
                                   Verdi:{" "}
                                   <strong className="text-neutral-200">
                                     <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                    {Number(activeCar.value).toLocaleString(
-                                      "nb-NO"
-                                    )}
+                                    {valueAfterDamage(
+                                      Number(activeCar.value) || 0,
+                                      dmgPercent(activeCar.damage)
+                                    ).toLocaleString("nb-NO")}
                                   </strong>
                                 </p>
                               )}
@@ -1636,35 +1611,11 @@ const StreetRacing = () => {
                                 }`}
                                 tier={c.tier}
                                 tooltipImg={c.img || undefined}
-                                tooltipContent={
-                                  <div>
-                                    {c.hp != null && (
-                                      <p>
-                                        Effekt:{" "}
-                                        <strong className="text-neutral-200">
-                                          {c.hp} hk
-                                        </strong>
-                                      </p>
-                                    )}
-                                    <p>
-                                      Skade:{" "}
-                                      <strong className="text-neutral-200">
-                                        {Math.min(100, Number(c.damage ?? 0))}%
-                                      </strong>
-                                    </p>
-                                    {c.value != null && (
-                                      <p>
-                                        Verdi:{" "}
-                                        <strong className="text-neutral-200">
-                                          <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                          {Number(c.value).toLocaleString(
-                                            "nb-NO"
-                                          )}
-                                        </strong>
-                                      </p>
-                                    )}
-                                  </div>
-                                }
+                                tooltipContent={renderCarTooltip({
+                                  hp: c.hp,
+                                  damage: c.damage,
+                                  value: c.value,
+                                })}
                               />
                             </div>
                           </li>

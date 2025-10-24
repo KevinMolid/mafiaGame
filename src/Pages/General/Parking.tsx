@@ -150,6 +150,14 @@ const Parking = () => {
     [cars, selectedIds]
   );
 
+  const parkingTableCols = [
+    "w-8", // checkbox
+    "", // Bil (auto takes remaining)
+    "w-24", // Effekt
+    "w-20 hidden sm:table-cell", // Skade
+    "w-32", // Verdi
+  ];
+
   // Sellable (not in a race)
   const sellableCars = useMemo(() => cars.filter((c) => !isLocked(c)), [cars]);
   const selectedSellableCars = useMemo(
@@ -503,11 +511,9 @@ const Parking = () => {
           <div>
             <table className="w-full table-auto border border-collapse text-left">
               <colgroup>
-                <col className="w-8" /> {/* checkbox */}
-                <col /> {/* Bil (auto takes remaining) */}
-                <col className="w-24" /> {/* Effekt */}
-                <col className="w-20 hidden sm:table-cell" /> {/* Skade */}
-                <col className="w-32" /> {/* Verdi */}
+                {parkingTableCols.map((cls, i) => (
+                  <col key={i} className={cls || undefined} />
+                ))}
               </colgroup>
 
               <thead>
