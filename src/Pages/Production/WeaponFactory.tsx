@@ -43,7 +43,7 @@ const WeaponFactory: React.FC<Props> = ({
       fallbackItemId="iw0001"
       slotCount={2}
       slotDurationMs={FOUR_HOURS_MS}
-      resetSelectionsOnClaim={false} // keep selections like your old behavior
+      resetSelectionsOnClaim={true}
       onGrant={async (characterId, entries) => {
         // Weapons are individual items written as documents
         const batch = writeBatch(db);
