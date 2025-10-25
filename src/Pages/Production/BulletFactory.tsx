@@ -58,13 +58,13 @@ const BulletFactory: React.FC<Props> = ({
           <div className="flex flex-col justify-center leading-5">
             <Item name={b.name} tier={b.tier} />
             <p className="text-sm">
-              Pris:{" "}
+              Verdi:{" "}
               <strong className="text-neutral-200">
                 <i className="fa-solid fa-dollar-sign" /> {b.value}
               </strong>
             </p>
             <p className="text-sm">
-              Skade: <strong className="text-neutral-200">+{b.attack}</strong>
+              Skade: <strong className="text-neutral-200">{b.attack}</strong>
             </p>
           </div>
         </>

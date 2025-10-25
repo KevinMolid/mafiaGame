@@ -72,6 +72,15 @@ const WeaponFactory: React.FC<Props> = ({
           <ItemTile name={w.name} tier={w.tier || 1} img={w.img || ""} />
           <div className="flex flex-col justify-center leading-5">
             <Item name={w.name} tier={w.tier} />
+            <p className="text-sm">
+              Verdi:{" "}
+              <strong className="text-neutral-200">
+                <i className="fa-solid fa-dollar-sign" /> {w.value}
+              </strong>
+            </p>
+            <p className="text-sm">
+              Skade: <strong className="text-neutral-200">{w.attack}</strong>
+            </p>
           </div>
         </>
       )}
