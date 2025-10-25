@@ -7,6 +7,9 @@ import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
 import Box from "../../components/Box";
 
+// functions
+import { compactMmSs } from "../../Functions/TimeFunctions";
+
 import { arrest } from "../../Functions/RewardFunctions";
 
 // React
@@ -263,9 +266,9 @@ const StreetCrime = () => {
         <p className="mb-4 text-stone-400">
           Du må vente{" "}
           <span className="font-bold text-neutral-200">
-            {cooldowns["crime"]}
+            {compactMmSs(cooldowns["crime"])}
           </span>{" "}
-          sekunder før du kan gjøre en kriminell handling.
+          før du kan gjøre en kriminell handling.
         </p>
       )}
 

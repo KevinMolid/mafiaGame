@@ -4,6 +4,8 @@ import { useRef, useEffect } from "react";
 import { useCooldown } from "../CooldownContext";
 import { useMenuContext } from "../MenuContext";
 
+import { compactMmSs } from "../Functions/TimeFunctions";
+
 const DropdownLeft = () => {
   const { actionsOpen, toggleActions, closeMenus } = useMenuContext();
   const { cooldowns } = useCooldown();
@@ -85,7 +87,7 @@ const DropdownLeft = () => {
             <div>Kriminalitet</div>
             {cooldowns["crime"] > 0 ? (
               <div className="text-neutral-200 font-medium pr-4">
-                {cooldowns["crime"]}
+                {compactMmSs(cooldowns["crime"])}
               </div>
             ) : (
               <div className="text-green-400 pr-4">
@@ -98,7 +100,7 @@ const DropdownLeft = () => {
             <div>Biltyveri</div>
             {cooldowns["gta"] > 0 ? (
               <div className="text-neutral-200 font-medium pr-4">
-                {cooldowns["gta"]}
+                {compactMmSs(cooldowns["gta"])}
               </div>
             ) : (
               <div className="text-green-400 pr-4">
@@ -111,7 +113,7 @@ const DropdownLeft = () => {
             <div>Ran spiller</div>
             {cooldowns["robbery"] > 0 ? (
               <div className="text-neutral-200 font-medium pr-4">
-                {cooldowns["robbery"]}
+                {compactMmSs(cooldowns["robbery"])}
               </div>
             ) : (
               <div className="text-green-400 pr-4">
@@ -121,7 +123,16 @@ const DropdownLeft = () => {
           </DropdownOption>
 
           <DropdownOption to="/drep" icon="gun" onClick={toggleActions}>
-            Drep spiller
+            <div>Drep spiller</div>
+            {cooldowns["attack"] > 0 ? (
+              <div className="text-neutral-200 font-medium pr-4">
+                {compactMmSs(cooldowns["attack"])}
+              </div>
+            ) : (
+              <div className="text-green-400 pr-4">
+                <i className="fa-solid fa-check"></i>
+              </div>
+            )}
           </DropdownOption>
 
           <hr className="border-neutral-700 my-2 sm:hidden" />

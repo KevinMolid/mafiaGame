@@ -23,6 +23,7 @@ const COOLDOWN_SECONDS: Record<string, number> = {
   crime: 90,
   gta: 130,
   robbery: 150,
+  attack: 28800, // 60s * 60m * 8 = 8 hours
 };
 
 type CooldownContextType = {

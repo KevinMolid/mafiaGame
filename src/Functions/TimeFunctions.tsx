@@ -11,11 +11,23 @@ export const mmss = (totalSeconds: number) => {
 // "m:ss" when >= 1 minute (no leading 0 for minutes)
 // "s"       when < 1 minute (no colon, no leading 0)
 export const compactMmSs = (totalSeconds: number) => {
-  const secs = Math.max(0, Math.floor(totalSeconds)); // safety
-  if (secs < 60) return String(secs);
-  const m = Math.floor(secs / 60); // no pad for minutes
+  const secs = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
   const s = secs % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
+
+  if (h > 0) {
+    // H:MM:SS
+    return `${h}:${m.toString().padStart(2, "0")}:${s
+      .toString()
+      .padStart(2, "0")}`;
+  }
+  if (secs >= 60) {
+    // M:SS
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  }
+  // SS
+  return String(s);
 };
 
 export const timeAgo = (timestamp: number) => {

@@ -16,6 +16,8 @@ import {
   arrest,
 } from "../../Functions/RewardFunctions";
 
+import { compactMmSs } from "../../Functions/TimeFunctions";
+
 // Context
 import { useAuth } from "../../AuthContext";
 import { useCooldown } from "../../CooldownContext";
@@ -370,9 +372,9 @@ const Robbery = () => {
         <p className="mb-4 text-stone-400">
           Du må vente{" "}
           <span className="font-bold text-neutral-200">
-            {cooldowns["robbery"]}
+            {compactMmSs(cooldowns["robbery"])}
           </span>{" "}
-          sekunder før du kan rane en spiller.
+          før du kan rane en spiller.
         </p>
       )}
 

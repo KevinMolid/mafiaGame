@@ -19,6 +19,8 @@ import {
 } from "../../Functions/RewardFunctions";
 import { getCarByName, getCarByKey } from "../../Data/Cars";
 
+import { compactMmSs } from "../../Functions/TimeFunctions";
+
 // Data
 import ParkingTypes from "../../Data/ParkingTypes";
 import Cars from "../../Data/Cars";
@@ -635,8 +637,10 @@ const GTA = () => {
       {cooldowns["gta"] > 0 && (
         <p className="mb-4 text-stone-400">
           Du må vente{" "}
-          <span className="font-bold text-neutral-200">{cooldowns["gta"]}</span>{" "}
-          sekunder før du kan stjele en bil.
+          <span className="font-bold text-neutral-200">
+            {compactMmSs(cooldowns["gta"])}
+          </span>{" "}
+          før du kan stjele en bil.
         </p>
       )}
 
