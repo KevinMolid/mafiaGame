@@ -665,252 +665,264 @@ const Chat = () => {
 
   return (
     <Main>
-      <div className="flex items-baseline justify-between gap-4">
-        <H1>Meldinger</H1>
-        <div className="relative flex gap-1" ref={controlsRef}>
-          {isCreatingChat ? (
-            <Button
-              style="black"
-              size="square"
-              onClick={() => setIsCreatingChat(false)}
-            >
-              <i className="text-lg fa-solid fa-x"></i>
-            </Button>
-          ) : (
-            <Button style="black" size="square" onClick={handleNewChatClick}>
-              <i className="text-lg fa-solid fa-plus"></i>
-            </Button>
-          )}
-
-          {/* Hide the dropdown button if there are no conversations */}
-          {conversations.length > 0 && (
-            <div className="relative">
+      <div
+        className={
+          "h-[calc(85vh-100px)] min-h-[600px] overflow-hidden flex flex-col"
+        }
+      >
+        <div className="flex items-baseline justify-between gap-4">
+          <H1>Meldinger</H1>
+          <div className="relative flex gap-1" ref={controlsRef}>
+            {isCreatingChat ? (
               <Button
                 style="black"
                 size="square"
-                onClick={() => setIsDropdownActive(!isDropdownActive)}
-                aria-expanded={isDropdownActive}
-                aria-haspopup="menu"
+                onClick={() => setIsCreatingChat(false)}
               >
-                <i className="text-lg fa-solid fa-comment-dots"></i>
+                <i className="text-lg fa-solid fa-x"></i>
               </Button>
-
-              {/* Unread messages badge (bottom-right like in Header, adjust position if you prefer) */}
-              {totalUnread > 0 && (
-                <span className="absolute bottom-0 right-0 bg-neutral-600 translate-x-1 translate-y-1 text-sky-400 text-s font-bold rounded-full w-5 h-5 flex justify-center items-center">
-                  {totalUnread > 99 ? "99+" : totalUnread}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Dropdown panel */}
-          {isDropdownActive && conversations.length > 0 && (
-            <section
-              id="dropdown"
-              className="absolute min-w-32 md:min-w-36 lg:min-w-40 w-max bg-neutral-800 p-2 top-12 right-0 z-10 rounded-xl shadow-lg"
-              role="menu"
-            >
-              <ul>
-                {conversations.map((conversation) => {
-                  const otherParticipant = conversation.participants.find(
-                    (participant: string) =>
-                      participant !== userCharacter.username
-                  );
-
-                  const isActive =
-                    conversation.id === conversationId ||
-                    (receiver && otherParticipant === receiver);
-
-                  const unread = unreadByConv[conversation.id] || 0;
-
-                  return (
-                    <li key={conversation.id}>
-                      <button
-                        className={`flex items-center gap-2 px-2 py-1 min-h-12 w-full text-left hover:bg-neutral-700 rounded-lg ${
-                          isActive ? "text-neutral-200" : "text-neutral-400"
-                        }`}
-                        onClick={() => selectConversationByObject(conversation)}
-                        role="menuitem"
-                      >
-                        {/* Avatar */}
-                        <img
-                          src={
-                            otherParticipant
-                              ? avatarByUser[otherParticipant]
-                              : "/default.jpg"
-                          }
-                          alt={otherParticipant}
-                          className="w-10 h-10 rounded-full object-cover"
-                          loading="lazy"
-                        />
-
-                        {/* Name + preview */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium truncate">
-                              {otherParticipant}
-                            </span>
-                            {unread > 0 && (
-                              <span className="bg-neutral-600 px-1.5 h-5 min-w-5 flex justify-center items-center rounded-full ml-auto text-sky-400 text-xs font-bold">
-                                {unread}
-                              </span>
-                            )}
-                          </div>
-                          {/* Preview line */}
-                          <div className="text-sm text-stone-400 truncate mr-1">
-                            {(() => {
-                              const lm = lastMsgByConv[conversation.id];
-                              if (!lm || !lm.text) return "";
-                              const mine = lm.senderId === userCharacter.id;
-                              const preview = truncate(lm.text, 20);
-                              return mine ? `Du: ${preview}` : preview;
-                            })()}
-                          </div>
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-grow h-full relative">
-        {/* Chat panel */}
-        <section
-          id="chat"
-          className="flex flex-col pb-16 w-full flex-grow mb-4 lg:mb-6 xl:mb-8"
-        >
-          <div id="chat_heading" className="mb-2">
-            {/* When creating a chat, render input + button instead of "Velg spiller" */}
-            {isCreatingChat ? (
-              <div className="py-2 flex flex-col gap-2">
-                {createChatError && (
-                  <InfoBox
-                    type="failure"
-                    onClose={() => setCreateChatError("")}
-                  >
-                    {createChatError}
-                  </InfoBox>
-                )}
-                <H3>Ny chat</H3>
-                <div className="grid grid-cols-[1fr_auto] gap-2 pr-2">
-                  <input
-                    type="text"
-                    value={newChatName}
-                    onChange={(e) => setNewChatName(e.target.value)}
-                    placeholder="Brukernavn"
-                    className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleStartNewChat();
-                    }}
-                  />
-                  <Button onClick={handleStartNewChat}>Skriv melding</Button>
-                </div>
-              </div>
             ) : (
-              <H3>
-                {receiverCharacter ? (
-                  <Username character={receiverCharacter} />
-                ) : (
-                  <p className="font-bold">{receiver}</p>
-                )}
-              </H3>
+              <Button style="black" size="square" onClick={handleNewChatClick}>
+                <i className="text-lg fa-solid fa-plus"></i>
+              </Button>
             )}
-          </div>
 
-          {!isCreatingChat ? (
-            <div id="messages_div" className="mb-4 mr-2 flex-grow">
-              <ScrollArea className="" contentClassName="pr-4" stickToBottom>
-                <ul className="flex flex-col">
-                  {messages.map((m, i) => {
-                    const isOwn = m.senderId === userCharacter.id;
+            {/* Hide the dropdown button if there are no conversations */}
+            {conversations.length > 0 && (
+              <div className="relative">
+                <Button
+                  style="black"
+                  size="square"
+                  onClick={() => setIsDropdownActive(!isDropdownActive)}
+                  aria-expanded={isDropdownActive}
+                  aria-haspopup="menu"
+                >
+                  <i className="text-lg fa-solid fa-comment-dots"></i>
+                </Button>
 
-                    // group header only if previous sender is different
-                    const prev = messages[i - 1];
-                    const showMeta = !prev || prev.senderId !== m.senderId;
+                {/* Unread messages badge (bottom-right like in Header, adjust position if you prefer) */}
+                {totalUnread > 0 && (
+                  <span className="absolute bottom-0 right-0 bg-neutral-600 translate-x-1 translate-y-1 text-sky-400 text-s font-bold rounded-full w-5 h-5 flex justify-center items-center">
+                    {totalUnread > 99 ? "99+" : totalUnread}
+                  </span>
+                )}
+              </div>
+            )}
 
-                    // time divider logic
-                    const curMs = tsToMs(m.timestamp);
-                    const prevMs = prev ? tsToMs(prev.timestamp) : null;
-                    const showTime =
-                      curMs !== null &&
-                      (!prev ||
-                        prevMs === null ||
-                        isNewDay(curMs, prevMs) ||
-                        curMs - prevMs >= MIN_GAP_MS);
+            {/* Dropdown panel */}
+            {isDropdownActive && conversations.length > 0 && (
+              <section
+                id="dropdown"
+                className="absolute min-w-32 md:min-w-36 lg:min-w-40 w-max bg-neutral-800 p-2 top-12 right-0 z-10 rounded-xl shadow-lg"
+                role="menu"
+              >
+                <ul>
+                  {conversations.map((conversation) => {
+                    const otherParticipant = conversation.participants.find(
+                      (participant: string) =>
+                        participant !== userCharacter.username
+                    );
 
-                    // Show exactly one "Lest" (on the last read own msg),
-                    // and one "Sendt" (on the very last own msg). If they coincide, "Lest" wins.
-                    let statusBelow: "sent" | "read" | null = null;
-                    if (isOwn) {
-                      if (i === lastReadOwnIdx) statusBelow = "read";
-                      else if (i === lastOwnIdx) statusBelow = "sent";
-                    }
+                    const isActive =
+                      conversation.id === conversationId ||
+                      (receiver && otherParticipant === receiver);
+
+                    const unread = unreadByConv[conversation.id] || 0;
 
                     return (
-                      <Fragment key={m.id}>
-                        {showTime && curMs !== null && (
-                          <ChatTimeDivider label={fmtDividerLabel(curMs)} />
-                        )}
-                        <ChatMessage
-                          {...m}
-                          isOwn={isOwn}
-                          showMeta={showMeta}
-                          statusBelow={statusBelow}
-                        />
-                      </Fragment>
+                      <li key={conversation.id}>
+                        <button
+                          className={`flex items-center gap-2 px-2 py-1 min-h-12 w-full text-left hover:bg-neutral-700 rounded-lg ${
+                            isActive ? "text-neutral-200" : "text-neutral-400"
+                          }`}
+                          onClick={() =>
+                            selectConversationByObject(conversation)
+                          }
+                          role="menuitem"
+                        >
+                          {/* Avatar */}
+                          <img
+                            src={
+                              otherParticipant
+                                ? avatarByUser[otherParticipant]
+                                : "/default.jpg"
+                            }
+                            alt={otherParticipant}
+                            className="w-10 h-10 rounded-full object-cover"
+                            loading="lazy"
+                          />
+
+                          {/* Name + preview */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium truncate">
+                                {otherParticipant}
+                              </span>
+                              {unread > 0 && (
+                                <span className="bg-neutral-600 px-1.5 h-5 min-w-5 flex justify-center items-center rounded-full ml-auto text-sky-400 text-xs font-bold">
+                                  {unread}
+                                </span>
+                              )}
+                            </div>
+                            {/* Preview line */}
+                            <div className="text-sm text-stone-400 truncate mr-1">
+                              {(() => {
+                                const lm = lastMsgByConv[conversation.id];
+                                if (!lm || !lm.text) return "";
+                                const mine = lm.senderId === userCharacter.id;
+                                const preview = truncate(lm.text, 20);
+                                return mine ? `Du: ${preview}` : preview;
+                              })()}
+                            </div>
+                          </div>
+                        </button>
+                      </li>
                     );
                   })}
                 </ul>
-              </ScrollArea>
-            </div>
-          ) : (
-            <></>
-          )}
+              </section>
+            )}
+          </div>
+        </div>
 
-          {/* Textarea */}
-          {isCreatingChat || !receiver ? (
-            <></>
-          ) : (
-            <div id="new_message_div">
-              <form
-                onSubmit={submitNewMessage}
-                className="grid grid-cols-[auto_min-content] gap-2 pr-2"
-              >
-                <textarea
-                  ref={textareaRef}
-                  rows={1}
-                  value={newMessage}
-                  placeholder="Melding"
-                  spellCheck={false}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      if (e.shiftKey) {
-                        return;
-                      } else {
-                        e.preventDefault();
-                        submitNewMessage(e);
-                      }
-                    }
-                  }}
-                  onChange={handleInputChange}
-                  className="w-full bg-neutral-800 outline-none placeholder-neutral-500 text-neutral-200 resize-none rounded-3xl px-4 py-2 leading-normal"
-                  style={{ minHeight: 0 }}
-                ></textarea>
-
-                <div className="mt-auto">
-                  <Button type="submit" size="square">
-                    <i className=" fa-solid fa-paper-plane"></i>
-                  </Button>
+        <div className="flex flex-grow min-h-0 relative">
+          {/* Chat panel */}
+          <section id="chat" className="flex flex-1 min-h-0 flex-col w-full">
+            <div id="chat_heading" className="mb-2">
+              {/* When creating a chat, render input + button instead of "Velg spiller" */}
+              {isCreatingChat ? (
+                <div className="py-2 flex flex-col gap-2">
+                  {createChatError && (
+                    <InfoBox
+                      type="failure"
+                      onClose={() => setCreateChatError("")}
+                    >
+                      {createChatError}
+                    </InfoBox>
+                  )}
+                  <H3>Ny chat</H3>
+                  <div className="grid grid-cols-[1fr_auto] gap-2 pr-2">
+                    <input
+                      type="text"
+                      value={newChatName}
+                      onChange={(e) => setNewChatName(e.target.value)}
+                      placeholder="Brukernavn"
+                      className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleStartNewChat();
+                      }}
+                    />
+                    <Button onClick={handleStartNewChat}>Skriv melding</Button>
+                  </div>
                 </div>
-              </form>
+              ) : (
+                <H3>
+                  {receiverCharacter ? (
+                    <Username character={receiverCharacter} />
+                  ) : (
+                    <p className="font-bold">{receiver}</p>
+                  )}
+                </H3>
+              )}
             </div>
-          )}
-        </section>
+
+            {!isCreatingChat ? (
+              <div
+                id="messages_div"
+                className="mb-4 mr-2 flex-1 min-h-0 overflow-hidden"
+              >
+                <ScrollArea
+                  className="h-full"
+                  contentClassName="h-full pr-4"
+                  stickToBottom
+                >
+                  <ul className="flex flex-col">
+                    {messages.map((m, i) => {
+                      const isOwn = m.senderId === userCharacter.id;
+
+                      // group header only if previous sender is different
+                      const prev = messages[i - 1];
+                      const showMeta = !prev || prev.senderId !== m.senderId;
+
+                      // time divider logic
+                      const curMs = tsToMs(m.timestamp);
+                      const prevMs = prev ? tsToMs(prev.timestamp) : null;
+                      const showTime =
+                        curMs !== null &&
+                        (!prev ||
+                          prevMs === null ||
+                          isNewDay(curMs, prevMs) ||
+                          curMs - prevMs >= MIN_GAP_MS);
+
+                      // Show exactly one "Lest" (on the last read own msg),
+                      // and one "Sendt" (on the very last own msg). If they coincide, "Lest" wins.
+                      let statusBelow: "sent" | "read" | null = null;
+                      if (isOwn) {
+                        if (i === lastReadOwnIdx) statusBelow = "read";
+                        else if (i === lastOwnIdx) statusBelow = "sent";
+                      }
+
+                      return (
+                        <Fragment key={m.id}>
+                          {showTime && curMs !== null && (
+                            <ChatTimeDivider label={fmtDividerLabel(curMs)} />
+                          )}
+                          <ChatMessage
+                            {...m}
+                            isOwn={isOwn}
+                            showMeta={showMeta}
+                            statusBelow={statusBelow}
+                          />
+                        </Fragment>
+                      );
+                    })}
+                  </ul>
+                </ScrollArea>
+              </div>
+            ) : (
+              <></>
+            )}
+
+            {/* Textarea */}
+            {isCreatingChat || !receiver ? (
+              <></>
+            ) : (
+              <div id="new_message_div">
+                <form
+                  onSubmit={submitNewMessage}
+                  className="grid grid-cols-[auto_min-content] gap-2 pr-2"
+                >
+                  <textarea
+                    ref={textareaRef}
+                    rows={1}
+                    value={newMessage}
+                    placeholder="Melding"
+                    spellCheck={false}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        if (e.shiftKey) {
+                          return;
+                        } else {
+                          e.preventDefault();
+                          submitNewMessage(e);
+                        }
+                      }
+                    }}
+                    onChange={handleInputChange}
+                    className="w-full bg-neutral-800 outline-none placeholder-neutral-500 text-neutral-200 resize-none rounded-3xl px-4 py-2 leading-normal"
+                    style={{ minHeight: 0 }}
+                  ></textarea>
+
+                  <div className="mt-auto">
+                    <Button type="submit" size="square">
+                      <i className=" fa-solid fa-paper-plane"></i>
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </section>
+        </div>
       </div>
     </Main>
   );
