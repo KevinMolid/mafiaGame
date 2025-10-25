@@ -18,8 +18,13 @@ import j8 from "/images/items/j8.jpg";
 import w1 from "/images/items/Knife1.png";
 import w2 from "/images/items/Knife2.jpg";
 import w3 from "/images/items/w3.jpg";
+import w4 from "/images/items/ColtM1911.jpg";
+import w5 from "/images/items/Beretta92FS.jpg";
+import w6 from "/images/items/DesertEagle50AE.jpg";
+import w7 from "/images/items/Remington870.jpg";
+import w8 from "/images/items/Uzi.jpg";
 
-// Narcotics
+// Bullets
 import b1 from "/images/items/b1.jpg";
 import b2 from "/images/items/b2.jpg";
 
@@ -53,6 +58,7 @@ export interface WeaponItem extends BaseItem {
   slot: "weapon";
   attack: number;
   usingBullets: boolean;
+  capacity?: number;
 }
 
 export interface BulletItem extends BaseItem {
@@ -215,9 +221,65 @@ export const Weapons: WeaponItem[] = [
     slot: "weapon",
     tier: 3,
     value: 1500,
-    attack: 7,
+    attack: 8,
     img: w3,
     usingBullets: true,
+    capacity: 17,
+  },
+  {
+    id: "iw0004",
+    name: "Colt M1911",
+    slot: "weapon",
+    tier: 3,
+    value: 1500,
+    attack: 14,
+    img: w4,
+    usingBullets: true,
+    capacity: 7,
+  },
+  {
+    id: "iw0005",
+    name: "Beretta 92FS",
+    slot: "weapon",
+    tier: 3,
+    value: 1500,
+    attack: 12,
+    img: w5,
+    usingBullets: true,
+    capacity: 15,
+  },
+  {
+    id: "iw0006",
+    name: "Desert Eagle .50 AE",
+    slot: "weapon",
+    tier: 3,
+    value: 1500,
+    attack: 22,
+    img: w6,
+    usingBullets: true,
+    capacity: 7,
+  },
+  {
+    id: "iw0007",
+    name: "Remington 870",
+    slot: "weapon",
+    tier: 4,
+    value: 1500,
+    attack: 36,
+    img: w7,
+    usingBullets: true,
+    capacity: 5,
+  },
+  {
+    id: "iw0008",
+    name: "Uzi",
+    slot: "weapon",
+    tier: 4,
+    value: 1500,
+    attack: 10,
+    img: w8,
+    usingBullets: true,
+    capacity: 25,
   },
 ];
 
