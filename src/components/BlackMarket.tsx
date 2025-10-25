@@ -9,6 +9,7 @@ import Button from "../components/Button";
 import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
 import Item from "../components/Typography/Item";
+import ItemTile from "../components/ItemTile"; // <— NEW
 
 // Functions
 import { getCarByName, getCarByKey } from "../Data/Cars";
@@ -28,8 +29,6 @@ import {
   writeBatch,
   query,
   where,
-  getDoc,
-  deleteDoc,
   runTransaction,
 } from "firebase/firestore";
 
@@ -64,6 +63,17 @@ type CarDoc = {
   [key: string]: any;
 };
 
+type BulletDoc = {
+  docId: string;
+  type: "bullet";
+  attack?: number;
+  name?: string;
+  quantity?: number;
+  tier: number;
+  value: number;
+  img: string;
+};
+
 // Helpers
 const fmt = (n: number) => n.toLocaleString("nb-NO");
 const carBaseName = (c: CarDoc) =>
@@ -95,9 +105,11 @@ const BlackMarket = () => {
   const [quantity, setQuantity] = useState<number>(1);
   const [price, setPrice] = useState<number>(0);
 
-  // Cars owned by player (subcollection)
+  // Items owned by player (subcollection)
   const [cars, setCars] = useState<CarDoc[]>([]);
   const [selectedCar, setSelectedCar] = useState<CarDoc | null>(null);
+  const [bullets, setBullets] = useState<BulletDoc[]>([]);
+  const [selectedBullet, setSelectedBullet] = useState<BulletDoc | null>(null);
 
   // Local listing data
   const [allListings, setAllListings] = useState<Listing[]>([]);
@@ -120,7 +132,6 @@ const BlackMarket = () => {
       setCars([]);
       return;
     }
-    // NOTE: use your exact subcollection name here ("Cars" vs "cars")
     const carsRef = collection(db, "Characters", userCharacter.id, "cars");
     const unsub = onSnapshot(
       carsRef,
@@ -139,20 +150,45 @@ const BlackMarket = () => {
     return () => unsub();
   }, [userCharacter?.id]);
 
-  // --- Subscribe to my Auctions ------------------------------------------------
+  // --- Subscribe to the user's Bullets (items subcollection, type == "bullet")
+  useEffect(() => {
+    if (!userCharacter?.id) {
+      setBullets([]);
+      return;
+    }
+    const itemsRef = collection(db, "Characters", userCharacter.id, "items");
+    const qBullets = query(itemsRef, where("type", "==", "bullet"));
+    const unsub = onSnapshot(
+      qBullets,
+      (snap) => {
+        const list: BulletDoc[] = snap.docs.map((d) => ({
+          docId: d.id, // << keep doc id here
+          ...(d.data() as any), // item data (may include its own "id" field)
+        }));
+        setBullets(list);
+      },
+      (err) => {
+        console.error("Failed to subscribe to bullets:", err);
+        setBullets([]);
+      }
+    );
+    return () => unsub();
+  }, [userCharacter?.id]);
+
+  // --- Subscribe to my Auctions --------------------------------------------
   useEffect(() => {
     if (!userCharacter?.id) {
       setMyListings([]);
       return;
     }
 
-    const q = query(
+    const qMine = query(
       collection(db, "Auctions"),
       where("sellerId", "==", userCharacter.id)
     );
 
     const unsub = onSnapshot(
-      q,
+      qMine,
       (snap) => {
         const items: Listing[] = snap.docs
           .map((d) => {
@@ -169,7 +205,7 @@ const BlackMarket = () => {
               createdAt: v.createdAt?.toMillis
                 ? v.createdAt.toMillis()
                 : Date.now(),
-              car: v.carId ? { id: v.carId, ...(v.car || {}) } : undefined, // <-- here
+              car: v.carId ? { id: v.carId, ...(v.car || {}) } : undefined,
               location: v.location ?? null,
             };
           })
@@ -193,7 +229,7 @@ const BlackMarket = () => {
     return cars.filter((c) => (c.city ? c.city === city : true));
   }, [cars, userCharacter?.location]);
 
-  // Seed mocked market list (remove once you read from Firestore)
+  // Market list (Auctions, status = active)
   useEffect(() => {
     const qAll = query(
       collection(db, "Auctions"),
@@ -258,6 +294,7 @@ const BlackMarket = () => {
       return;
     }
 
+    // ----- Cars -----
     if (category === "cars") {
       if (!selectedCar) {
         setMessageType("warning");
@@ -273,7 +310,6 @@ const BlackMarket = () => {
       const display = carBaseName(selectedCar);
 
       try {
-        // Move car: Characters/{uid}/cars/{carId} -> Auctions/{newId}
         const batch = writeBatch(db);
 
         const carRef = doc(
@@ -290,14 +326,12 @@ const BlackMarket = () => {
           status: "active",
           category: "cars",
           itemType: "Car",
-          name: display, // for quick listing display
+          name: display,
           price,
           sellerId: userCharacter.id,
           sellerName: userCharacter.username,
           createdAt: serverTimestamp(),
           location: selectedCar.city ?? userCharacter.location ?? null,
-
-          // keep a quick reference + ALL original car fields
           carId: selectedCar.id,
           car: { ...selectedCar },
         });
@@ -306,7 +340,6 @@ const BlackMarket = () => {
 
         await batch.commit();
 
-        // UI: add to local lists so it shows immediately
         const now = Date.now();
         const listing: Listing = {
           id: auctionRef.id,
@@ -323,7 +356,6 @@ const BlackMarket = () => {
         setAllListings((prev) => [listing, ...prev]);
         setMyListings((prev) => [listing, ...prev]);
 
-        // Clear selection & price
         setSelectedCar(null);
         setPrice(0);
 
@@ -346,7 +378,108 @@ const BlackMarket = () => {
       return;
     }
 
-    // Non-car categories
+    // ----- Bullets -----
+    if (category === "bullets") {
+      if (!selectedBullet) {
+        setMessageType("warning");
+        setMessage("Velg en kule-stabel du vil selge.");
+        return;
+      }
+      if (!itemName.trim()) {
+        setMessageType("warning");
+        setMessage("Skriv inn et varenavn.");
+        return;
+      }
+      if (quantity <= 0) {
+        setMessageType("warning");
+        setMessage("Antall må være større enn 0.");
+        return;
+      }
+      if (price <= 0) {
+        setMessageType("warning");
+        setMessage("Du må skrive en pris.");
+        return;
+      }
+
+      try {
+        await runTransaction(db, async (tx) => {
+          // Use the real document id from Firestore
+          const itemRef = doc(
+            db,
+            "Characters",
+            userCharacter.id,
+            "items",
+            selectedBullet.docId
+          );
+
+          const snap = await tx.get(itemRef);
+          if (!snap.exists()) {
+            throw new Error("Kule-stabelen finnes ikke lenger.");
+          }
+
+          const data = snap.data() as any;
+          const owned: number = Number(data.quantity ?? 0);
+          if (owned < quantity) {
+            throw new Error(`Du har bare ${owned} kuler i denne stabelen.`);
+          }
+
+          // Create auction listing for the SOLD portion
+          const auctionRef = doc(collection(db, "Auctions"));
+          tx.set(auctionRef, {
+            status: "active",
+            category: "bullets",
+            itemType: "Ammo",
+            name: itemName.trim(),
+            quantity,
+            price,
+            sellerId: userCharacter.id,
+            sellerName: userCharacter.username,
+            createdAt: serverTimestamp(),
+            location: userCharacter.location ?? null,
+
+            // Keep references for easy cancel/restore
+            bulletId: selectedBullet.docId,
+            bullet: {
+              name: selectedBullet.name ?? itemName.trim(),
+              tier: selectedBullet.tier ?? null,
+              attack: selectedBullet.attack ?? null,
+              img: selectedBullet.img ?? null,
+              // you can keep type-id too if you store it in the item
+              typeId: (data as any)?.id ?? null,
+            },
+          });
+
+          // Split the stack: decrement player's remaining stack
+          const newQty = owned - quantity;
+          if (newQty <= 0) {
+            // selling whole stack -> remove the doc
+            tx.delete(itemRef);
+          } else {
+            // selling part of stack -> keep doc with remainder
+            tx.update(itemRef, {
+              quantity: newQty,
+              lastUpdated: serverTimestamp(),
+            });
+          }
+        });
+
+        setMessageType("success");
+        setMessage("Kulene ble lagt ut for salg.");
+
+        setSelectedBullet(null);
+        setItemName("");
+        setQuantity(1);
+        setPrice(0);
+      } catch (e: any) {
+        console.error("Kunne ikke publisere kule-annonse:", e);
+        setMessageType("failure");
+        setMessage(e?.message || "Noe gikk galt. Prøv igjen.");
+      }
+
+      return;
+    }
+
+    // ----- Generic (weapons/items) -----
     if (!itemName.trim()) {
       setMessageType("warning");
       setMessage("Skriv inn et varenavn.");
@@ -364,16 +497,15 @@ const BlackMarket = () => {
     }
 
     try {
-      const docRef = await addDoc(collection(db, "BlackMarketListings"), {
+      const docRef = await addDoc(collection(db, "Auctions"), {
+        status: "active",
         category,
         itemType,
         name: itemName.trim(),
         quantity,
         price,
-        seller: {
-          id: userCharacter.id,
-          username: userCharacter.username,
-        },
+        sellerId: userCharacter.id,
+        sellerName: userCharacter.username,
         createdAt: serverTimestamp(),
         location: userCharacter.location ?? null,
       });
@@ -415,34 +547,70 @@ const BlackMarket = () => {
     }
 
     try {
-      const auctionRef = doc(db, "Auctions", auctionId);
-      const snap = await getDoc(auctionRef);
-      if (!snap.exists()) {
-        setMessageType("warning");
-        setMessage("Annonsen finnes ikke lenger.");
-        return;
-      }
+      await runTransaction(db, async (tx) => {
+        const auctionRef = doc(db, "Auctions", auctionId);
+        const snap = await tx.get(auctionRef);
+        if (!snap.exists()) {
+          throw new Error("Annonsen finnes ikke lenger.");
+        }
+        const v = snap.data() as any;
 
-      const v = snap.data() as any;
+        if (v.category === "cars" && v.carId && v.car) {
+          const carRef = doc(
+            db,
+            "Characters",
+            userCharacter.id,
+            "cars",
+            v.carId
+          );
+          tx.set(carRef, v.car);
+          tx.delete(auctionRef);
+          return;
+        }
 
-      // Only cars need to be moved back to the seller's garage
-      if (v.category === "cars" && v.carId && v.car) {
-        const batch = writeBatch(db);
-        const carRef = doc(db, "Characters", userCharacter.id, "cars", v.carId);
-        batch.set(carRef, v.car); // put car back
-        batch.delete(auctionRef); // remove auction
-        await batch.commit();
-      } else {
-        // Non-car: just remove the auction
-        await deleteDoc(auctionRef);
-      }
+        if (v.category === "bullets" && v.bulletId && v.quantity > 0) {
+          const itemRef = doc(
+            db,
+            "Characters",
+            userCharacter.id,
+            "items",
+            v.bulletId // this is the inventory doc id we stored earlier
+          );
+
+          const itemSnap = await tx.get(itemRef);
+          if (itemSnap.exists()) {
+            const cur = itemSnap.data() as any;
+            const curQty = Number(cur.quantity ?? 0);
+            tx.update(itemRef, {
+              quantity: curQty + Number(v.quantity),
+              lastUpdated: serverTimestamp(),
+            });
+          } else {
+            // Item doc no longer exists — recreate it with the returned quantity
+            tx.set(itemRef, {
+              type: "bullet",
+              name: v?.bullet?.name ?? "Kuler",
+              quantity: Number(v.quantity),
+              tier: v?.bullet?.tier ?? null,
+              attack: v?.bullet?.attack ?? null,
+              img: v?.bullet?.img ?? null,
+              createdAt: serverTimestamp(),
+              lastUpdated: serverTimestamp(),
+            });
+          }
+          tx.delete(auctionRef);
+          return;
+        }
+
+        tx.delete(auctionRef);
+      });
 
       setMessageType("success");
       setMessage("Annonsen ble fjernet.");
-    } catch (e) {
+    } catch (e: any) {
       console.error("handleCancelListing failed:", e);
       setMessageType("failure");
-      setMessage("Kunne ikke fjerne annonsen.");
+      setMessage(e?.message || "Kunne ikke fjerne annonsen.");
     }
   };
 
@@ -465,6 +633,8 @@ const BlackMarket = () => {
         if (a.sellerId === userCharacter.id) {
           throw new Error("Du kan ikke kjøpe fra deg selv");
         }
+
+        // Still limited to cars (unchanged)
         if (a.category !== "cars" || !a.carId || !a.car)
           throw new Error("Kjøp støttes kun for biler akkurat nå.");
 
@@ -477,13 +647,11 @@ const BlackMarket = () => {
         const money: number = buyer?.stats?.money ?? 0;
         if (money < price) throw new Error("Du har ikke nok penger.");
 
-        // subtract money
         tx.update(buyerCharRef, {
           "stats.money": money - price,
           lastActive: serverTimestamp(),
         });
 
-        // move car to buyer's garage
         const buyerCarRef = doc(
           db,
           "Characters",
@@ -493,7 +661,6 @@ const BlackMarket = () => {
         );
         tx.set(buyerCarRef, a.car);
 
-        // delete the auction
         tx.delete(auctionRef);
       });
 
@@ -674,6 +841,10 @@ const BlackMarket = () => {
                     setCategory("cars");
                     setItemType("Car");
                     setSelectedCar(null);
+                    setSelectedBullet(null);
+                    setItemName("");
+                    setQuantity(1);
+                    setPrice(0);
                   }}
                 >
                   Biler
@@ -685,6 +856,10 @@ const BlackMarket = () => {
                     setCategory("bullets");
                     setItemType("Ammo");
                     setSelectedCar(null);
+                    setSelectedBullet(null);
+                    setItemName("");
+                    setQuantity(1);
+                    setPrice(0);
                   }}
                 >
                   Kuler
@@ -696,6 +871,10 @@ const BlackMarket = () => {
                     setCategory("weapons");
                     setItemType("Gun");
                     setSelectedCar(null);
+                    setSelectedBullet(null);
+                    setItemName("");
+                    setQuantity(1);
+                    setPrice(0);
                   }}
                 >
                   Våpen
@@ -707,13 +886,17 @@ const BlackMarket = () => {
                     setCategory("items");
                     setItemType("Item");
                     setSelectedCar(null);
+                    setSelectedBullet(null);
+                    setItemName("");
+                    setQuantity(1);
+                    setPrice(0);
                   }}
                 >
                   Annet
                 </Button>
               </div>
 
-              {/* Cars: list cars in same city; click to pick one; then show only price */}
+              {/* Cars: unchanged */}
               {category === "cars" ? (
                 <div className="grid gap-2">
                   {!selectedCar ? (
@@ -735,7 +918,7 @@ const BlackMarket = () => {
                                   style="text"
                                   onClick={() => {
                                     setSelectedCar(c);
-                                    setItemName(carBaseName(c)); // store base name
+                                    setItemName(carBaseName(c));
                                   }}
                                   title="Velg bil"
                                 >
@@ -824,7 +1007,164 @@ const BlackMarket = () => {
                         </Button>
                       </div>
 
-                      {/* Price only (no Antall for cars) */}
+                      {/* Price */}
+                      <div className="grid gap-1">
+                        <label
+                          htmlFor="bm-price"
+                          className="text-sm text-neutral-400"
+                        >
+                          Pris
+                        </label>
+                        <input
+                          id="bm-price"
+                          inputMode="numeric"
+                          className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none w-44"
+                          value={price === 0 ? "" : fmt(price)}
+                          placeholder="0"
+                          onChange={(e) => {
+                            const n = parseInt(
+                              e.target.value.replace(/[^\d]/g, ""),
+                              10
+                            );
+                            setPrice(Number.isFinite(n) ? n : 0);
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button onClick={handlePostListing}>
+                          <i className="fa-solid fa-plus" /> Publiser
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : category === "bullets" ? (
+                // BULLETS: render as ItemTile grid (select one -> qty+price form)
+                <div className="grid gap-2">
+                  {!selectedBullet ? (
+                    bullets.length === 0 ? (
+                      <p className="text-neutral-400">Du har ingen kuler.</p>
+                    ) : (
+                      <ul className="flex flex-wrap gap-x-1 gap-y-0 max-w-[500px]">
+                        {bullets.map((b, idx) => {
+                          const qty = Number(b.quantity ?? 0);
+                          return (
+                            <li key={b.docId + ":" + idx}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedBullet(b);
+                                  setItemName(b.name ?? "Kuler");
+                                  setQuantity(qty > 0 ? 1 : 0);
+                                }}
+                                className="focus:outline-none"
+                                title="Velg kule-stabel"
+                              >
+                                <ItemTile
+                                  name={b.name ?? "Kuler"}
+                                  img={b.img}
+                                  tier={b.tier}
+                                  qty={qty}
+                                  tooltipImg={b.img ?? undefined}
+                                  tooltipContent={
+                                    <ul className="space-y-0.5">
+                                      {"attack" in b && (
+                                        <li>
+                                          Angrep:{" "}
+                                          <strong className="text-neutral-200">
+                                            +{b.attack ?? 0}
+                                          </strong>
+                                        </li>
+                                      )}
+                                      <li>
+                                        Antall:{" "}
+                                        <strong className="text-neutral-200">
+                                          {qty.toLocaleString("nb-NO")}
+                                        </strong>
+                                      </li>
+                                    </ul>
+                                  }
+                                />
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )
+                  ) : (
+                    <>
+                      {/* Selected bullet header */}
+                      <div className="flex items-center gap-3">
+                        <ItemTile
+                          name={selectedBullet.name ?? "Kuler"}
+                          img={selectedBullet.img ?? undefined}
+                          tier={selectedBullet.tier}
+                          qty={Number(selectedBullet.quantity ?? 0)}
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-neutral-100 font-semibold">
+                            {selectedBullet.name ?? "Kuler"}
+                          </span>
+                        </div>
+                        <Button
+                          size="text"
+                          style="text"
+                          onClick={() => {
+                            setSelectedBullet(null);
+                            setItemName("");
+                            setQuantity(1);
+                            setPrice(0);
+                          }}
+                        >
+                          Bytt
+                        </Button>
+                      </div>
+
+                      {/* Name */}
+                      <div className="grid gap-1">
+                        <label
+                          htmlFor="bm-name"
+                          className="text-sm text-neutral-400"
+                        >
+                          Varenavn
+                        </label>
+                        <input
+                          id="bm-name"
+                          className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+                          value={itemName}
+                          onChange={(e) => setItemName(e.target.value)}
+                        />
+                      </div>
+
+                      {/* Quantity (cap to owned) */}
+                      <div className="grid gap-1">
+                        <label
+                          htmlFor="bm-qty"
+                          className="text-sm text-neutral-400"
+                        >
+                          Antall
+                        </label>
+                        <input
+                          id="bm-qty"
+                          inputMode="numeric"
+                          className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none w-28"
+                          value={quantity === 0 ? "" : quantity.toString()}
+                          placeholder="1"
+                          onChange={(e) => {
+                            const owned = Number(selectedBullet?.quantity ?? 0);
+                            let n = parseInt(
+                              e.target.value.replace(/[^\d]/g, ""),
+                              10
+                            );
+                            if (!Number.isFinite(n)) n = 0;
+                            n = Math.max(0, Math.min(n, owned));
+                            setQuantity(n);
+                          }}
+                        />
+                      </div>
+
+                      {/* Price */}
                       <div className="grid gap-1">
                         <label
                           htmlFor="bm-price"
@@ -857,7 +1197,7 @@ const BlackMarket = () => {
                   )}
                 </div>
               ) : (
-                // Non-car categories: generic fields
+                // Non-car, non-bullets: generic fields
                 <>
                   <div className="grid gap-1">
                     <label
@@ -870,11 +1210,7 @@ const BlackMarket = () => {
                       id="bm-name"
                       className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
                       placeholder={
-                        category === "bullets"
-                          ? "Eks: 9mm kuler"
-                          : category === "weapons"
-                          ? "Eks: Uzi"
-                          : "Eks: Diamanter"
+                        category === "weapons" ? "Eks: Uzi" : "Eks: Diamanter"
                       }
                       value={itemName}
                       onChange={(e) => setItemName(e.target.value)}

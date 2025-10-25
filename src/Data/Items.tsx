@@ -56,6 +56,7 @@ export interface WeaponItem extends BaseItem {
 }
 
 export interface BulletItem extends BaseItem {
+  type: "bullet";
   attack: number;
   stackable: true;
 }
@@ -229,6 +230,7 @@ export const Bullets: BulletItem[] = [
     attack: 1,
     img: b1,
     stackable: true,
+    type: "bullet",
   },
   {
     id: "ib0002",
@@ -238,6 +240,7 @@ export const Bullets: BulletItem[] = [
     attack: 2,
     img: b2,
     stackable: true,
+    type: "bullet",
   },
 ];
 
