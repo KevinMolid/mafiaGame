@@ -69,6 +69,11 @@ interface Reply {
   editedAt?: any;
   reactions?: Partial<Record<ReactionKey, number>>;
   reactionsByUser?: Record<string, ReactionKey>;
+  censored?: boolean;
+  censoredBy?: string;
+  censoredAt?: any;
+  censoredReason?: string;
+  deleted?: boolean;
 }
 
 /** Small card that shows a reply author's avatar + family, live */
@@ -514,6 +519,62 @@ const ForumThread = () => {
     }
   };
 
+  const deleteReply = async (replyId: string) => {
+    if (!postId) return;
+
+    const reply = replies.find((r) => r.id === replyId);
+    const canDelete = !!userCharacter && reply?.authorId === userCharacter.id;
+    const canStaffDelete = isStaff; // optional: allow staff too
+    if (!canDelete && !canStaffDelete) {
+      setMessageType("warning");
+      setMessage("Du har ikke tilgang til å slette dette svaret.");
+      return;
+    }
+
+    if (!confirm("Slette svaret? Dette kan ikke angres.")) return;
+
+    try {
+      await updateDoc(doc(db, "ForumThreads", postId, "Replies", replyId), {
+        // soft-delete? If you want hard delete, use writeBatch delete instead.
+        deleted: true,
+        deletedAt: serverTimestamp(),
+        deletedBy: userCharacter?.id ?? null,
+        content: "[slettet]",
+        reactions: {}, // clear counts
+        reactionsByUser: {}, // clear who reacted
+      });
+      setMessageType("success");
+      setMessage("Svaret ble slettet.");
+    } catch (e) {
+      console.error(e);
+      setMessageType("failure");
+      setMessage("Kunne ikke slette svaret. Prøv igjen.");
+    }
+  };
+
+  const toggleCensorReply = async (replyId: string) => {
+    if (!postId || !isStaff) return;
+
+    const r = replies.find((x) => x.id === replyId);
+    const next = !r?.censored;
+
+    try {
+      await updateDoc(doc(db, "ForumThreads", postId, "Replies", replyId), {
+        censored: next,
+        censoredBy: next ? userCharacter?.id ?? null : null,
+        censoredAt: next ? serverTimestamp() : null,
+        // Optionally keep a reason text; wire a UI input if needed:
+        // censoredReason: next ? "Regelbrudd" : null,
+      });
+      setMessageType("success");
+      setMessage(next ? "Svaret er sensurert." : "Sensuren er fjernet.");
+    } catch (e) {
+      console.error(e);
+      setMessageType("failure");
+      setMessage("Kunne ikke oppdatere sensur. Prøv igjen.");
+    }
+  };
+
   const startEditReply = (reply: Reply) => {
     setEditingReplyId(reply.id);
     setEditReplyContent(reply.content || "");
@@ -944,73 +1005,121 @@ const ForumThread = () => {
                     </p>
                   </div>
 
-                  {isOwnReply && !isEditingThis && !thread.isClosed && (
-                    <Button
-                      size="small-square"
-                      style="secondary"
-                      onClick={() => startEditReply(reply)}
-                    >
-                      <i className="fa-solid fa-pen" />
-                    </Button>
-                  )}
+                  <div className="flex gap-1">
+                    {isOwnReply && !isEditingThis && !thread.isClosed && (
+                      <Button
+                        size="small-square"
+                        style="secondary"
+                        onClick={() => startEditReply(reply)}
+                        title="Rediger svar"
+                      >
+                        <i className="fa-solid fa-pen" />
+                      </Button>
+                    )}
+
+                    {/* NEW: Author delete (and optionally allow staff too) */}
+                    {(isOwnReply || isStaff) && !isEditingThis && (
+                      <Button
+                        size="small-square"
+                        style="danger"
+                        onClick={() => deleteReply(reply.id)}
+                        title="Slett svar"
+                      >
+                        <i className="fa-solid fa-trash" />
+                      </Button>
+                    )}
+
+                    {/* NEW: Staff censor/uncensor */}
+                    {isStaff && (
+                      <Button
+                        size="small-square"
+                        style="helpActive"
+                        onClick={() => toggleCensorReply(reply.id)}
+                        title={reply.censored ? "Fjern sensur" : "Sensurer"}
+                      >
+                        <i
+                          className={`fa-solid ${
+                            reply.censored ? "fa-eye" : "fa-eye-slash"
+                          }`}
+                        />
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Innhold / Redigering */}
                 {!isEditingThis ? (
                   <div className="flex flex-col flex-1">
                     <div className="pb-4 prose prose-invert max-w-none text-stone-300">
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: bbcodeToHtml(
-                            (reply.content ?? "").toString()
-                          ),
-                        }}
-                      />
-                    </div>
-                    {/* Reactions: counts (hide 0) + chosen highlight + conditionally show "+" */}
-                    <div className="flex flex-1 items-end text-neutral-200 font-medium">
-                      {reply.reactions && (
-                        <div className="flex items-center text-sm text-neutral-300">
-                          <ReactionChip
-                            icon="👍"
-                            label="Liker"
-                            count={reply.reactions?.like}
-                            highlight={replyUserReaction === "like"}
-                          />
-                          <ReactionChip
-                            icon="👎"
-                            label="Misliker"
-                            count={reply.reactions?.dislike}
-                            highlight={replyUserReaction === "dislike"}
-                          />
-                          <ReactionChip
-                            icon="❤️"
-                            label="Hjerte"
-                            count={reply.reactions?.heart}
-                            highlight={replyUserReaction === "heart"}
-                          />
-                          <ReactionChip
-                            icon="🔥"
-                            label="Flamme"
-                            count={reply.reactions?.fire}
-                            highlight={replyUserReaction === "fire"}
-                          />
-                          <ReactionChip
-                            icon="💩"
-                            label="Dritt"
-                            count={reply.reactions?.poop}
-                            highlight={replyUserReaction === "poop"}
-                          />
-                        </div>
-                      )}
-
-                      {/* Hide plus if already reacted OR if this reply is by the current user */}
-                      {!replyAlreadyReacted && !isOwnReply && (
-                        <ReactionMenu
-                          onReact={(r) => addReactionToReply(reply.id, r)}
+                      {reply.censored ? (
+                        <InfoBox type="warning">
+                          Dette svaret er sensurert av staben
+                          {reply.censoredAt?.toDate && (
+                            <> ({timeAgo(reply.censoredAt.toDate())} siden)</>
+                          )}
+                          .{/* Optional: reason */}{" "}
+                          {reply.censoredReason && (
+                            <> Årsak: {reply.censoredReason}</>
+                          )}
+                        </InfoBox>
+                      ) : reply.deleted ? (
+                        <i className="text-neutral-400">[slettet]</i>
+                      ) : (
+                        <div
+                          dangerouslySetInnerHTML={{
+                            __html: bbcodeToHtml(
+                              (reply.content ?? "").toString()
+                            ),
+                          }}
                         />
                       )}
                     </div>
+
+                    {/* Reactions */}
+                    {!reply.censored && !reply.deleted && (
+                      <div className="flex flex-1 items-end text-neutral-200 font-medium">
+                        {reply.reactions && (
+                          <div className="flex items-center text-sm text-neutral-300">
+                            <ReactionChip
+                              icon="👍"
+                              label="Liker"
+                              count={reply.reactions?.like}
+                              highlight={replyUserReaction === "like"}
+                            />
+                            <ReactionChip
+                              icon="👎"
+                              label="Misliker"
+                              count={reply.reactions?.dislike}
+                              highlight={replyUserReaction === "dislike"}
+                            />
+                            <ReactionChip
+                              icon="❤️"
+                              label="Hjerte"
+                              count={reply.reactions?.heart}
+                              highlight={replyUserReaction === "heart"}
+                            />
+                            <ReactionChip
+                              icon="🔥"
+                              label="Flamme"
+                              count={reply.reactions?.fire}
+                              highlight={replyUserReaction === "fire"}
+                            />
+                            <ReactionChip
+                              icon="💩"
+                              label="Dritt"
+                              count={reply.reactions?.poop}
+                              highlight={replyUserReaction === "poop"}
+                            />
+                          </div>
+                        )}
+
+                        {!replyAlreadyReacted && !isOwnReply && (
+                          <ReactionMenu
+                            onReact={(r) => addReactionToReply(reply.id, r)}
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2 my-2">

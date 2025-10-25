@@ -1616,20 +1616,8 @@ const StreetRacing = () => {
               </InfoBox>
             )}
 
-            <Button
-              onClick={() => setUiMode("create")}
-              disabled={
-                !!raceView ||
-                !!pendingRace ||
-                !!myOpenRace ||
-                !!myPendingFinished
-              }
-            >
-              Start utfordring
-            </Button>
-
             {openRaces.length === 0 ? (
-              <p className="text-neutral-400 mt-2">
+              <p className="text-neutral-400 mb-4">
                 Det er for øyeblikket ingen aktive utfordringer.
               </p>
             ) : (
@@ -1667,6 +1655,20 @@ const StreetRacing = () => {
                 ))}
               </ul>
             )}
+
+            <Button
+              size="small"
+              style="black"
+              onClick={() => setUiMode("create")}
+              disabled={
+                !!raceView ||
+                !!pendingRace ||
+                !!myOpenRace ||
+                !!myPendingFinished
+              }
+            >
+              <i className="fa-solid fa-plus"></i> Start ny utfordring
+            </Button>
           </Box>
         </div>
       )}

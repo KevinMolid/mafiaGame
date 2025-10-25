@@ -27,6 +27,7 @@ const Button = ({
   style = "primary",
   size = "normal",
   disabled = false,
+  title = "",
 }: ButtonInterface) => {
   const sizeClasses =
     size === "small"
@@ -74,6 +75,7 @@ const Button = ({
         variantClasses,
         disabledOverrides,
       ].join(" ")}
+      title={title}
     >
       {children}
     </button>
