@@ -576,6 +576,7 @@ const ForumThread = () => {
   };
 
   const startEditReply = (reply: Reply) => {
+    if (reply.deleted && !isStaff) return; // author cannot edit deleted
     setEditingReplyId(reply.id);
     setEditReplyContent(reply.content || "");
     setMessage("");
@@ -589,6 +590,13 @@ const ForumThread = () => {
 
   const saveEditReply = async (replyId: string) => {
     if (!postId) return;
+
+    const r = replies.find((x) => x.id === replyId);
+    if (r?.deleted) {
+      setMessageType("warning");
+      setMessage("Kan ikke redigere et slettet svar.");
+      return;
+    }
 
     const content = editReplyContent.trim();
     if (content.length === 0) {
@@ -694,6 +702,11 @@ const ForumThread = () => {
     if (!postId) return;
 
     const reply = replies.find((r) => r.id === replyId);
+    if (!reply || reply.deleted || reply.censored) {
+      setMessageType("warning");
+      setMessage("Du kan ikke reagere på dette svaret.");
+      return;
+    }
     if (reply && reply.authorId === userCharacter.id) {
       setMessageType("warning");
       setMessage("Du kan ikke reagere på ditt eget svar.");
@@ -972,6 +985,12 @@ const ForumThread = () => {
           const isOwnReply =
             !!userCharacter && reply.authorId === userCharacter.id;
           const isEditingThis = editingReplyId === reply.id;
+          const isDeleted = !!reply.deleted;
+
+          const canEdit = isOwnReply && !thread.isClosed && !isDeleted; // author only, not when deleted
+          const canDelete = (isOwnReply && !isDeleted) || isStaff; // author (if not deleted) OR staff always
+          const canCensor = isStaff; // staff always
+          const canReact = !isDeleted && !reply.censored && !isOwnReply; // players only when visible
 
           const replyUserReaction: ReactionKey | undefined =
             (userId && reply.reactionsByUser?.[userId]) || undefined;
@@ -1005,8 +1024,9 @@ const ForumThread = () => {
                     </p>
                   </div>
 
+                  {/* Buttons */}
                   <div className="flex gap-1">
-                    {isOwnReply && !isEditingThis && !thread.isClosed && (
+                    {canEdit && !isEditingThis && (
                       <Button
                         size="small-square"
                         style="secondary"
@@ -1017,8 +1037,7 @@ const ForumThread = () => {
                       </Button>
                     )}
 
-                    {/* NEW: Author delete (and optionally allow staff too) */}
-                    {(isOwnReply || isStaff) && !isEditingThis && (
+                    {canDelete && !isEditingThis && (
                       <Button
                         size="small-square"
                         style="danger"
@@ -1029,8 +1048,7 @@ const ForumThread = () => {
                       </Button>
                     )}
 
-                    {/* NEW: Staff censor/uncensor */}
-                    {isStaff && (
+                    {canCensor && (
                       <Button
                         size="small-square"
                         style="helpActive"
