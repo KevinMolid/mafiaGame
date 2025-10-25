@@ -990,7 +990,6 @@ const ForumThread = () => {
           const canEdit = isOwnReply && !thread.isClosed && !isDeleted; // author only, not when deleted
           const canDelete = (isOwnReply && !isDeleted) || isStaff; // author (if not deleted) OR staff always
           const canCensor = isStaff; // staff always
-          const canReact = !isDeleted && !reply.censored && !isOwnReply; // players only when visible
 
           const replyUserReaction: ReactionKey | undefined =
             (userId && reply.reactionsByUser?.[userId]) || undefined;
