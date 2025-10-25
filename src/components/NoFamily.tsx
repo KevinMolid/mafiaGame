@@ -249,7 +249,40 @@ const NoFamily = ({
 
       setFamilyName("");
       setMessageType("success");
-      setMessage(`Du opprettet ${familyName} for $${cost.toLocaleString()}.`);
+      setMessage(
+        <p>
+          Du opprettet{" "}
+          <Familyname
+            family={
+              {
+                id: familyId,
+                name: familyName,
+                leaderName: userCharacter.username,
+                leaderId: userCharacter.id,
+                members: [
+                  {
+                    id: userCharacter.id,
+                    name: userCharacter.username,
+                    rank: "Boss",
+                  },
+                ],
+                createdAt: new Date(),
+                rules: "",
+                img: "",
+                profileText: "",
+                wealth: 0,
+                events: [],
+              } as FamilyData
+            }
+          />{" "}
+          for{" "}
+          <strong>
+            <i className="fa-solid fa-dollar-sign"></i>
+            {cost.toLocaleString("NO-nb")}
+          </strong>
+          .
+        </p>
+      );
     } catch (error) {
       console.error("createFamily error:", error);
       setMessageType("failure");
