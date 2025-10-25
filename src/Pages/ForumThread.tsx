@@ -70,7 +70,7 @@ interface Reply {
   reactions?: Partial<Record<ReactionKey, number>>;
   reactionsByUser?: Record<string, ReactionKey>;
   censored?: boolean;
-  censoredBy?: string;
+  censoredBy?: { id: string; username: string } | null;
   censoredAt?: any;
   censoredReason?: string;
   deleted?: boolean;
@@ -259,6 +259,7 @@ const ForumThread = () => {
   const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
   const [editReplyContent, setEditReplyContent] = useState<string>("");
   const [savingReplyId, setSavingReplyId] = useState<string | null>(null);
+  const [censorDraft, setCensorDraft] = useState<Record<string, string>>({});
 
   const { userCharacter } = useCharacter();
 
@@ -561,10 +562,15 @@ const ForumThread = () => {
     try {
       await updateDoc(doc(db, "ForumThreads", postId, "Replies", replyId), {
         censored: next,
-        censoredBy: next ? userCharacter?.id ?? null : null,
+        censoredBy: next
+          ? {
+              id: userCharacter?.id ?? "",
+              username: userCharacter?.username ?? "",
+            }
+          : null,
         censoredAt: next ? serverTimestamp() : null,
-        // Optionally keep a reason text; wire a UI input if needed:
-        // censoredReason: next ? "Regelbrudd" : null,
+        // when removing censor, also clear reason
+        censoredReason: next ? r?.censoredReason ?? "" : null,
       });
       setMessageType("success");
       setMessage(next ? "Svaret er sensurert." : "Sensuren er fjernet.");
@@ -572,6 +578,34 @@ const ForumThread = () => {
       console.error(e);
       setMessageType("failure");
       setMessage("Kunne ikke oppdatere sensur. Prøv igjen.");
+    }
+  };
+
+  const saveCensorReason = async (replyId: string) => {
+    if (!postId || !isStaff) return;
+
+    const r = replies.find((x) => x.id === replyId);
+    if (!r?.censored) return;
+
+    // only the original censurer can edit the reason
+    const meId = userCharacter?.id;
+    if (!r.censoredBy || r.censoredBy.id !== meId) {
+      setMessageType("warning");
+      setMessage("Bare den som sensurerte kan sette/endre årsak.");
+      return;
+    }
+
+    const reason = (censorDraft[replyId] || "").trim();
+    try {
+      await updateDoc(doc(db, "ForumThreads", postId, "Replies", replyId), {
+        censoredReason: reason || null,
+      });
+      setMessageType("success");
+      setMessage("Årsak oppdatert.");
+    } catch (e) {
+      console.error(e);
+      setMessageType("failure");
+      setMessage("Kunne ikke lagre årsaken. Prøv igjen.");
     }
   };
 
@@ -1069,16 +1103,76 @@ const ForumThread = () => {
                   <div className="flex flex-col flex-1">
                     <div className="pb-4 prose prose-invert max-w-none text-stone-300">
                       {reply.censored ? (
-                        <InfoBox type="warning">
-                          Dette svaret er sensurert av staben
-                          {reply.censoredAt?.toDate && (
-                            <> ({timeAgo(reply.censoredAt.toDate())} siden)</>
-                          )}
-                          .{/* Optional: reason */}{" "}
-                          {reply.censoredReason && (
-                            <> Årsak: {reply.censoredReason}</>
-                          )}
-                        </InfoBox>
+                        <div className="space-y-2">
+                          <InfoBox type="warning">
+                            Dette svaret er sensurert av{" "}
+                            {reply.censoredBy &&
+                            reply.censoredBy.id &&
+                            reply.censoredBy.username ? (
+                              <Username character={reply.censoredBy} />
+                            ) : (
+                              // fallback if older docs only have a string (back-compat)
+                              <>
+                                {typeof (reply as any).censoredBy === "string"
+                                  ? (reply as any).censoredBy
+                                  : "stab"}
+                              </>
+                            )}
+                            {reply.censoredAt?.toDate && (
+                              <> ({timeAgo(reply.censoredAt.toDate())} siden)</>
+                            )}
+                            .
+                            {reply.censoredReason && (
+                              <>
+                                {" "}
+                                Årsak:{" "}
+                                <span className="italic">
+                                  {reply.censoredReason}
+                                </span>
+                              </>
+                            )}
+                          </InfoBox>
+
+                          {/* Only the original censurer can set/update the reason */}
+                          {isStaff &&
+                            reply.censored &&
+                            reply.censoredBy &&
+                            reply.censoredBy.id === userCharacter?.id && (
+                              <div className="border border-neutral-700 rounded-md p-2">
+                                <label
+                                  htmlFor={`censor-reason-${reply.id}`}
+                                  className="block text-sm mb-1"
+                                >
+                                  Oppgi / endre sensur-Årsak (synlig for alle):
+                                </label>
+                                <textarea
+                                  id={`censor-reason-${reply.id}`}
+                                  rows={3}
+                                  className="w-full bg-neutral-900 text-white placeholder-neutral-500 p-2 resize-none rounded"
+                                  placeholder="Kort begrunnelse (regelbrudd, språk, personangrep, etc.)"
+                                  value={
+                                    censorDraft[reply.id] ??
+                                    reply.censoredReason ??
+                                    ""
+                                  }
+                                  onChange={(e) =>
+                                    setCensorDraft((prev) => ({
+                                      ...prev,
+                                      [reply.id]: e.target.value,
+                                    }))
+                                  }
+                                />
+                                <div className="mt-2">
+                                  <Button
+                                    size="small"
+                                    onClick={() => saveCensorReason(reply.id)}
+                                  >
+                                    Lagre årsak
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                        </div>
                       ) : reply.deleted ? (
                         <i className="text-neutral-400">[slettet]</i>
                       ) : (
