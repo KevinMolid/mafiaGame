@@ -26,6 +26,11 @@ export function bbcodeToHtml(input: string): string {
   s = s.replace(/\[u\](.*?)\[\/u\]/gis, "<u>$1</u>");
   s = s.replace(/\[s\](.*?)\[\/s\]/gis, "<s>$1</s>");
 
+  // 2.1) Alignment blocks: [left]...[left], [center]...[/center], [right]...[/right]
+  s = s.replace(/\[left\](.*?)\[\/left\]/gis, `<div class="text-left">$1</div>`);
+  s = s.replace(/\[center\](.*?)\[\/center\]/gis, `<div class="text-center">$1</div>`);
+  s = s.replace(/\[right\](.*?)\[\/right\]/gis, `<div class="text-right">$1</div>`);
+
   // 3) Color (whitelisted hex only)
   s = s.replace(
     /\[color=([#0-9a-fA-F]{3,9})\](.*?)\[\/color\]/gis,
@@ -50,12 +55,20 @@ export function bbcodeToHtml(input: string): string {
   /\[url\](https?:\/\/[^\s\]]+)\[\/url\]/gis,
   (_m, href) =>
     `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline break-words">${href}</a>`
-);
-s = s.replace(
-  /\[url=(https?:\/\/[^\s\]]+)\](.*?)\[\/url\]/gis,
-  (_m, href, text) =>
-    `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline break-words">${text}</a>`
-);
+  );
+  s = s.replace(
+    /\[url=(https?:\/\/[^\s\]]+)\](.*?)\[\/url\]/gis,
+    (_m, href, text) =>
+      `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline break-words">${text}</a>`
+  );
+
+  // 5.1) Images (http/https only). Keeps it safe and responsive.
+  s = s.replace(
+    // Accept common image extensions; tweak as needed
+    /\[img\]\s*(https?:\/\/[^\s\]]+\.(?:png|jpe?g|gif|webp|svg))\s*\[\/img\]/gis,
+    (_m, src) =>
+      `<img src="${src}" alt="" loading="lazy" referrerpolicy="no-referrer" class="max-w-full h-auto rounded" />`
+  );
 
   // 6) Line breaks
   s = s.replace(/\r\n|\r|\n/g, "<br/>");
