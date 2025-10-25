@@ -46,6 +46,7 @@ export default function CharacterListAdmin() {
             familyId: v.familyId,
             familyName: v.familyName,
             role: v.role || "",
+            hp: v.stats?.hp ?? 0,
             xp: v.stats?.xp ?? 0,
             money: v.stats?.money ?? 0,
             bank: v.stats?.bank ?? 0,
@@ -226,12 +227,12 @@ export default function CharacterListAdmin() {
   return (
     <section>
       {message && <InfoBox type={messageType}>{message}</InfoBox>}
-      <ul>
+      <ul className="flex flex-col gap-0.5">
         {sortedCharacters.map((character) => (
           <li key={character.id}>
             <div
               className={
-                "grid grid-cols-3 sm:grid-cols-[96px_80px_100px_110px_120px] gap-x-1 cursor-pointer " +
+                "grid grid-cols-3 sm:grid-cols-[130px_80px_60px_100px_110px_120px] gap-x-2 cursor-pointer " +
                 (selectedCharacterId === character.id
                   ? "bg-neutral-800"
                   : "hover:bg-neutral-800")
@@ -251,6 +252,18 @@ export default function CharacterListAdmin() {
                   }}
                 />
               </p>
+
+              <div className="flex gap-2 items-center">
+                <div className="bg-neutral-700 h-1 w-full">
+                  <div
+                    className="h-1 bg-green-500 transition-all duration-300"
+                    style={{ width: `${character.hp}%` }}
+                  ></div>
+                </div>
+                <p className="w-12">
+                  <small>{character.hp}%</small>
+                </p>
+              </div>
 
               <p>
                 <span
