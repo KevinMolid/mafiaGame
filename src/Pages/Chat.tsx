@@ -733,7 +733,9 @@ const Chat = () => {
                       <li key={conversation.id}>
                         <button
                           className={`flex items-center gap-2 px-2 py-1 min-h-12 w-full text-left hover:bg-neutral-700 rounded-lg ${
-                            isActive ? "text-neutral-200" : "text-neutral-400"
+                            isActive
+                              ? "text-neutral-200 bg-neutral-700/50"
+                              : "text-neutral-400"
                           }`}
                           onClick={() =>
                             selectConversationByObject(conversation)
@@ -741,16 +743,21 @@ const Chat = () => {
                           role="menuitem"
                         >
                           {/* Avatar */}
-                          <img
-                            src={
-                              otherParticipant
-                                ? avatarByUser[otherParticipant]
-                                : "/default.jpg"
-                            }
-                            alt={otherParticipant}
-                            className="w-10 h-10 rounded-full object-cover"
-                            loading="lazy"
-                          />
+                          {otherParticipant && (
+                            <img
+                              src={
+                                avatarByUser[otherParticipant] || "/default.jpg"
+                              }
+                              alt={otherParticipant}
+                              className="w-10 h-10 rounded-full object-cover"
+                              loading="lazy"
+                              onError={(e) => {
+                                const img = e.currentTarget;
+                                if (img.src.includes("/default.jpg")) return; // avoid loops
+                                img.src = "/default.jpg";
+                              }}
+                            />
+                          )}
 
                           {/* Name + preview */}
                           <div className="flex-1 min-w-0">
