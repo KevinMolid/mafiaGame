@@ -220,6 +220,7 @@ export async function grantItemToInventory(
         value: it.value ?? 0,
         img: (it as any).img ?? null,
         attack: (it as any).attack ?? 0,
+        type: (it as any).type ?? null,
 
         // stack data
         quantity: qty,
