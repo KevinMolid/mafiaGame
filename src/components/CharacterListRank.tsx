@@ -5,7 +5,7 @@ import { collection, getDocs, getFirestore } from "firebase/firestore";
 import Username from "./Typography/Username";
 import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";
 
-type SortBy = "username" | "xp" | "money";
+type SortBy = "username" | "xp" | "money" | "racing";
 
 export default function CharacterListRank({
   sortBy = "username",
@@ -23,6 +23,7 @@ export default function CharacterListRank({
       money: number;
       bank: number;
       status: string;
+      racingRating: number; // NEW
     }[]
   >([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +44,7 @@ export default function CharacterListRank({
             money: v.stats?.money ?? 0,
             bank: v.stats?.bank ?? 0,
             status: v.status ?? "alive",
+            racingRating: v.racingStats?.rating ?? 0, // NEW
           };
         });
         setCharacters(data);
@@ -63,6 +65,15 @@ export default function CharacterListRank({
     if (sortBy === "xp") return arr.sort((a, b) => b.xp - a.xp);
     if (sortBy === "money")
       return arr.sort((a, b) => b.money + b.bank - (a.money + a.bank));
+    if (sortBy === "racing")
+      // Higher rating first; tie-break by XP, then username
+      return arr.sort(
+        (a, b) =>
+          b.racingRating - a.racingRating ||
+          b.xp - a.xp ||
+          a.username.localeCompare(b.username)
+      );
+
     return arr.sort((a, b) => a.username.localeCompare(b.username));
   }, [characters, sortBy]);
 
@@ -89,7 +100,13 @@ export default function CharacterListRank({
         <li className="grid grid-cols-[40px_130px_auto] gap-2 border-b border-neutral-700 mb-2 font-bold text-neutral-200">
           <p>#</p>
           <p>Spiller</p>
-          <p>Rank</p>
+          <p>
+            {sortBy === "racing"
+              ? "Racingpoeng"
+              : sortBy === "money"
+              ? "Pengerank"
+              : "Rank"}
+          </p>
         </li>
         {rankedCharacters.map((character, index) => (
           <li
@@ -123,7 +140,8 @@ export default function CharacterListRank({
             {sortBy === "money" && (
               <p>{getMoneyRank(character.money + character.bank)}</p>
             )}
-            {sortBy !== "xp" && sortBy !== "money" && (
+            {sortBy === "racing" && <p>{character.racingRating}</p>}
+            {sortBy !== "xp" && sortBy !== "money" && sortBy !== "racing" && (
               <p>{getCurrentRank(character.xp)}</p>
             )}
           </li>
