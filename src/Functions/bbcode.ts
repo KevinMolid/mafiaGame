@@ -47,13 +47,15 @@ export function bbcodeToHtml(input: string): string {
   // [url]https://example.com[/url]  OR  [url=https://example.com]text[/url]
   // Only allow http(s)
   s = s.replace(
-    /\[url\](https?:\/\/[^\s\]]+)\[\/url\]/gis,
-    (_m, href) => `<a href="${href}" target="_blank" rel="noopener noreferrer">${href}</a>`
-  );
-  s = s.replace(
-    /\[url=(https?:\/\/[^\s\]]+)\](.*?)\[\/url\]/gis,
-    (_m, href, text) => `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`
-  );
+  /\[url\](https?:\/\/[^\s\]]+)\[\/url\]/gis,
+  (_m, href) =>
+    `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline break-words">${href}</a>`
+);
+s = s.replace(
+  /\[url=(https?:\/\/[^\s\]]+)\](.*?)\[\/url\]/gis,
+  (_m, href, text) =>
+    `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline break-words">${text}</a>`
+);
 
   // 6) Line breaks
   s = s.replace(/\r\n|\r|\n/g, "<br/>");

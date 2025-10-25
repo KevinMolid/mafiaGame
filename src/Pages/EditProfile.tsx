@@ -1,6 +1,8 @@
 import { useState } from "react";
 
 import H2 from "../components/Typography/H2";
+import H4 from "../components/Typography/H4";
+import Box from "../components/Box";
 import Button from "../components/Button";
 import InfoBox from "../components/InfoBox";
 
@@ -25,6 +27,7 @@ const EditProfile = () => {
   const [messageType, setMessageType] = useState<
     "success" | "failure" | "info"
   >("info");
+  const [helpActive, setHelpActive] = useState<boolean>(false);
 
   const handleImgChange = (e: any) => {
     setimgUrl(e.target.value);
@@ -56,12 +59,144 @@ const EditProfile = () => {
 
   return (
     <section>
-      <H2>Endre profil</H2>
+      <div className="flex items-baseline justify-between gap-4">
+        <H2>Endre profil</H2>
+        {helpActive ? (
+          <Button
+            size="small-square"
+            style="helpActive"
+            onClick={() => setHelpActive(!helpActive)}
+          >
+            <i className="fa-solid fa-question"></i>
+          </Button>
+        ) : (
+          <Button
+            size="small-square"
+            style="help"
+            onClick={() => setHelpActive(!helpActive)}
+          >
+            <i className="fa-solid fa-question"></i>
+          </Button>
+        )}
+      </div>
 
       {message && (
         <InfoBox type={messageType} onClose={() => setMessage("")}>
           {message}
         </InfoBox>
+      )}
+
+      {helpActive && (
+        <div className="mb-4">
+          <Box type="help" className="text-sm">
+            <article>
+              <H4>Formatering av tekst med BB-koder</H4>
+              <p className="mb-2">
+                Du kan bruke BB-koder for å formatere tekst og legge til lenker
+                i profilen din.
+              </p>
+
+              <table className="w-full border-collapse border border-neutral-700 text-left">
+                <thead className="bg-neutral-800">
+                  <tr>
+                    <th className="p-2 border border-neutral-700 w-[40%]">
+                      BB-kode
+                    </th>
+                    <th className="p-2 border border-neutral-700">Resultat</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="p-2 border border-neutral-700">
+                      [b]fet[/b]
+                    </td>
+                    <td className="p-2 border border-neutral-700">
+                      <strong>fet</strong>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 border border-neutral-700">
+                      [i]skrå[/i]
+                    </td>
+                    <td className="p-2 border border-neutral-700">
+                      <em>skrå</em>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 border border-neutral-700">
+                      [u]understreket[/u]
+                    </td>
+                    <td className="p-2 border border-neutral-700">
+                      <u>understreket</u>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 border border-neutral-700">
+                      [s]gjennomstreket[/s]
+                    </td>
+                    <td className="p-2 border border-neutral-700">
+                      <s>gjennomstreket</s>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 border border-neutral-700">
+                      [color=#ff0000]farget[/color]
+                    </td>
+                    <td className="p-2 border border-neutral-700">
+                      <span className="text-[#ff0000]">farget</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 border border-neutral-700">
+                      [size=8]liten[/size]
+                    </td>
+                    <td className="p-2 border border-neutral-700">
+                      <span className="text-[8px]">liten</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 border border-neutral-700">
+                      [size=48]stor[/size]
+                    </td>
+                    <td className="p-2 border border-neutral-700">
+                      <span className="text-[48px] leading-none">stor</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 border border-neutral-700">
+                      [url]https://example.com[/url]
+                    </td>
+                    <td className="p-2 border border-neutral-700">
+                      <a
+                        href="https://example.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sky-400 hover:underline"
+                      >
+                        https://example.com
+                      </a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 border border-neutral-700">
+                      [url=https://example.com]klikk her[/url]
+                    </td>
+                    <td className="p-2 border border-neutral-700">
+                      <a
+                        href="https://example.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sky-400 hover:underline"
+                      >
+                        klikk her
+                      </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </article>
+          </Box>
+        </div>
       )}
 
       <form action="" className="flex flex-col gap-4 mb-4">

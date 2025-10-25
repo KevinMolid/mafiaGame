@@ -1621,7 +1621,7 @@ const StreetRacing = () => {
                 Det er for øyeblikket ingen aktive utfordringer.
               </p>
             ) : (
-              <ul className="mt-2 grid gap-2">
+              <ul className="mt-2 grid gap-2 mb-4">
                 {openRaces.map((r) => (
                   <li
                     key={r.id}
@@ -1657,7 +1657,6 @@ const StreetRacing = () => {
             )}
 
             <Button
-              size="small"
               style="black"
               onClick={() => setUiMode("create")}
               disabled={
