@@ -501,6 +501,9 @@ const FamilyApplications = ({
               aria-invalid={
                 inviteUsername.trim().length === 0 ? true : undefined
               }
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleInvite();
+              }}
             />
             <div>
               <Button onClick={handleInvite} disabled={inviting}>
