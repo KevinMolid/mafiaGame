@@ -207,7 +207,6 @@ const Production: React.FC = () => {
       case "weapons":
         return (
           <Weapons
-            onSell={sellFactory}
             onSetMessage={setMessage}
             onSetMessageType={setMessageType}
           />
@@ -215,7 +214,6 @@ const Production: React.FC = () => {
       case "bullets":
         return (
           <Bullets
-            onSell={sellFactory}
             // If Bullets will also need messages, pass these too:
             onSetMessage={setMessage}
             onSetMessageType={setMessageType}
