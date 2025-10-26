@@ -342,6 +342,7 @@ const Alerts = () => {
                     <Item
                       name={alert.car.name}
                       tier={alert.car.tier}
+                      itemType="car"
                       tooltipImg={alert.car.img ?? undefined}
                       tooltipContent={
                         <div>

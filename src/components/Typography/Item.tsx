@@ -13,6 +13,7 @@ type ItemProps = React.HTMLAttributes<HTMLSpanElement> & {
   tooltipImg?: string;
   tooltipContent?: React.ReactNode;
   tooltipWidthClass?: string; // e.g. "w-72"
+  itemType?: string;
 };
 
 const TIER_CLASSES: Record<number, string> = {
@@ -34,6 +35,7 @@ const Item = ({
   tooltipImg,
   tooltipContent,
   tooltipWidthClass = "min-w-72 w-max max-w-[90vw] sm:max-w-md",
+  itemType = "item",
   ...rest
 }: ItemProps) => {
   const color = TIER_CLASSES[tier] ?? "neutral-300";
@@ -46,6 +48,8 @@ const Item = ({
   const [mounted, setMounted] = useState(false); // actually render tooltip?
   const [visible, setVisible] = useState(false); // play fade
   const hideTimer = useRef<number | null>(null);
+
+  const imgWidthClass = itemType === "item" ? "w-16" : "w-24";
 
   // computed placement
   const [coords, setCoords] = useState<{ left: number; top: number }>({
@@ -79,7 +83,7 @@ const Item = ({
       <article class="text-stone-400 leading-snug flex gap-2">
         ${
           tooltipImg
-            ? `<img src="${tooltipImg}" class="w-24 h-16 object-cover border-2 rounded-xl" />`
+            ? `<img src="${tooltipImg}" class="${imgWidthClass} h-16 object-cover border-2 rounded-xl" />`
             : ""
         }
         <section class="whitespace-normal break-words">
@@ -219,7 +223,7 @@ const Item = ({
                 <img
                   src={tooltipImg}
                   alt=""
-                  className={`w-24 h-16 object-cover border-2 border-${color} rounded-xl`}
+                  className={`${imgWidthClass} h-16 object-cover border-2 border-${color} rounded-xl`}
                   onLoad={() => mounted && computePlacement()}
                 />
               )}

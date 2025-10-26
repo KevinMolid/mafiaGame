@@ -1241,6 +1241,7 @@ const StreetRacing = () => {
                 className="text-sm sm:text-base w-32 sm:w-48 text-wrap"
                 name={raceView.creator.name}
                 tier={raceView.creator.tier}
+                itemType="car"
                 tooltipImg={raceView.creator.img || undefined}
                 tooltipContent={renderCarTooltip({
                   hp: raceView.creator.hp,
@@ -1278,6 +1279,7 @@ const StreetRacing = () => {
                   className="text-sm sm:text-base max-w-32 sm:max-w-48 text-wrap"
                   name={raceView.challenger.name}
                   tier={raceView.challenger.tier}
+                  itemType="car"
                   tooltipImg={raceView.challenger.img || undefined}
                   tooltipContent={renderCarTooltip({
                     hp: raceView.challenger.hp,
@@ -1375,6 +1377,7 @@ const StreetRacing = () => {
                               isBroken ? "(Ødelagt)" : ""
                             }`}
                             tier={c.tier}
+                            itemType="car"
                             tooltipImg={c.img || undefined}
                             tooltipContent={renderCarTooltip({
                               hp: c.hp,
@@ -1432,6 +1435,7 @@ const StreetRacing = () => {
                     <Item
                       name={activeCar.displayName}
                       tier={activeCar.tier}
+                      itemType="car"
                       tooltipImg={activeCar.img || undefined}
                       tooltipContent={renderCarTooltip({
                         hp: activeCar.hp,
@@ -1485,6 +1489,7 @@ const StreetRacing = () => {
                     <Item
                       name={activeCar.displayName}
                       tier={activeCar.tier}
+                      itemType="car"
                       tooltipImg={activeCar.img || undefined}
                       tooltipContent={
                         <div>
@@ -1560,6 +1565,7 @@ const StreetRacing = () => {
                               isBroken ? "(Ødelagt)" : ""
                             }`}
                             tier={c.tier}
+                            itemType="car"
                             tooltipImg={c.img || undefined}
                             tooltipContent={renderCarTooltip({
                               hp: c.hp,

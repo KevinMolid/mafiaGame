@@ -659,6 +659,7 @@ const Parking = () => {
                               <Item
                                 name={locked ? `${car.name}` : car.name}
                                 tier={car.tier}
+                                itemType="car"
                                 tooltipImg={catalog?.img && catalog.img}
                                 tooltipContent={
                                   <div>

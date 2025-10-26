@@ -49,6 +49,13 @@ type Listing = {
   expiresAt?: number;
   car?: CarDoc;
   location?: string | null;
+  bullet?: {
+    name?: string | null;
+    tier?: number | null;
+    attack?: number | null;
+    img?: string | null;
+    typeId?: string | null;
+  };
 };
 
 type CarDoc = {
@@ -206,6 +213,7 @@ const BlackMarket = () => {
                 ? v.createdAt.toMillis()
                 : Date.now(),
               car: v.carId ? { id: v.carId, ...(v.car || {}) } : undefined,
+              bullet: v.bullet ?? undefined,
               location: v.location ?? null,
             };
           })
@@ -257,6 +265,7 @@ const BlackMarket = () => {
                 ? v.createdAt.toMillis()
                 : Date.now(),
               car: v.carId ? { id: v.carId, ...(v.car || {}) } : undefined,
+              bullet: v.bullet ?? undefined,
               location: v.location ?? null,
             };
           })
@@ -747,6 +756,7 @@ const BlackMarket = () => {
             <ul className="mt-3 flex flex-col gap-2">
               {filteredMarket.map((l) => {
                 const isCar = l.category === "cars";
+                const isBullet = l.category === "bullets";
                 const nameNoTier = stripTierSuffix(l.name);
                 return (
                   <li
@@ -759,6 +769,7 @@ const BlackMarket = () => {
                           <Item
                             name={nameNoTier}
                             tier={l.car?.tier ?? undefined}
+                            itemType="car"
                             tooltipImg={l.car?.img}
                             tooltipContent={
                               <div>
@@ -785,6 +796,30 @@ const BlackMarket = () => {
                                   </strong>
                                 </p>
                               </div>
+                            }
+                          />
+                        ) : isBullet ? (
+                          <Item
+                            name={nameNoTier}
+                            tier={l.bullet?.tier ?? undefined}
+                            tooltipImg={l.bullet?.img ?? undefined}
+                            tooltipContent={
+                              <ul className="space-y-0.5">
+                                {"attack" in (l.bullet ?? {}) && (
+                                  <li>
+                                    Angrep:{" "}
+                                    <strong className="text-neutral-200">
+                                      +{l.bullet?.attack ?? 0}
+                                    </strong>
+                                  </li>
+                                )}
+                                <li>
+                                  Antall:{" "}
+                                  <strong className="text-neutral-200">
+                                    {(l.quantity ?? 0).toLocaleString("nb-NO")}
+                                  </strong>
+                                </li>
+                              </ul>
                             }
                           />
                         ) : (
@@ -925,6 +960,7 @@ const BlackMarket = () => {
                                   <Item
                                     name={c.name || "car"}
                                     tier={c.tier}
+                                    itemType="car"
                                     tooltipImg={catalog?.img}
                                     tooltipContent={
                                       <div>
@@ -966,6 +1002,7 @@ const BlackMarket = () => {
                         <Item
                           name={selectedCar.name || "car"}
                           tier={selectedCar.tier}
+                          itemType="car"
                           tooltipImg={selectedCatalog?.img}
                           tooltipContent={
                             <div>
@@ -1283,6 +1320,7 @@ const BlackMarket = () => {
               <ul className="mt-2 flex flex-col gap-2">
                 {myListings.map((l) => {
                   const isCar = l.category === "cars";
+                  const isBullet = l.category === "bullets";
                   const nameNoTier = stripTierSuffix(l.name);
                   return (
                     <li
@@ -1295,6 +1333,7 @@ const BlackMarket = () => {
                             <Item
                               name={nameNoTier}
                               tier={l.car?.tier ?? undefined}
+                              itemType="car"
                               tooltipImg={l.car?.img && l.car.img}
                               tooltipContent={
                                 <div>
@@ -1321,6 +1360,32 @@ const BlackMarket = () => {
                                     </strong>
                                   </p>
                                 </div>
+                              }
+                            />
+                          ) : isBullet ? (
+                            <Item
+                              name={nameNoTier}
+                              tier={l.bullet?.tier ?? undefined}
+                              tooltipImg={l.bullet?.img ?? undefined}
+                              tooltipContent={
+                                <ul className="space-y-0.5">
+                                  {"attack" in (l.bullet ?? {}) && (
+                                    <li>
+                                      Angrep:{" "}
+                                      <strong className="text-neutral-200">
+                                        +{l.bullet?.attack ?? 0}
+                                      </strong>
+                                    </li>
+                                  )}
+                                  <li>
+                                    Antall:{" "}
+                                    <strong className="text-neutral-200">
+                                      {(l.quantity ?? 0).toLocaleString(
+                                        "nb-NO"
+                                      )}
+                                    </strong>
+                                  </li>
+                                </ul>
                               }
                             />
                           ) : (
