@@ -212,6 +212,24 @@ const Equipment: React.FC = () => {
     return <EquipmentBox icon={icon} span={span} />;
   }
 
+  const totals = useMemo(() => {
+    let attack = 0;
+    let defense = 0;
+
+    Object.values(eq ?? {}).forEach((raw) => {
+      const item = resolveEquipped(raw);
+      if (!item) return;
+
+      const a = Number(item.attack ?? 0);
+      const d = Number(item.defense ?? 0);
+
+      if (Number.isFinite(a)) attack += a;
+      if (Number.isFinite(d)) defense += d;
+    });
+
+    return { attack, defense };
+  }, [eq]);
+
   return (
     <>
       <section
@@ -247,10 +265,16 @@ const Equipment: React.FC = () => {
         {/* Row 5 */}
         <div className="h-16 flex flex-col justify-end">
           <p>
-            Angrep: <strong className="text-neutral-200">0</strong>
+            Angrep:{" "}
+            <strong className="text-neutral-200">
+              {totals.attack.toLocaleString("nb-NO")}
+            </strong>
           </p>
           <p>
-            Beskyttelse: <strong className="text-neutral-200">0</strong>
+            Beskyttelse:{" "}
+            <strong className="text-neutral-200">
+              {totals.defense.toLocaleString("nb-NO")}
+            </strong>
           </p>
         </div>
         <div></div>
