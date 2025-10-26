@@ -654,6 +654,38 @@ const Assassinate = () => {
                           name={userCharacter.equipment.weapon.name}
                           img={userCharacter.equipment.weapon.img}
                           tier={userCharacter.equipment.weapon.tier}
+                          tooltipImg={userCharacter.equipment.weapon.img}
+                          tooltipContent={
+                            <ul className="space-y-0.5">
+                              {"attack" in userCharacter.equipment.weapon && (
+                                <li>
+                                  Angrep:{" "}
+                                  <strong className="text-neutral-200">
+                                    +
+                                    {userCharacter.equipment.weapon.attack ?? 1}
+                                  </strong>
+                                </li>
+                              )}
+                              {"capacity" in userCharacter.equipment.weapon && (
+                                <li>
+                                  Kapasitet:{" "}
+                                  <strong className="text-neutral-200">
+                                    {userCharacter.equipment.weapon.capacity ??
+                                      1}
+                                  </strong>
+                                </li>
+                              )}
+                              <li>
+                                Verdi:{" "}
+                                <strong className="text-neutral-200">
+                                  $
+                                  {Number(
+                                    userCharacter.equipment.weapon.value ?? 0
+                                  ).toLocaleString("nb-NO")}
+                                </strong>
+                              </li>
+                            </ul>
+                          }
                         />
 
                         {/* Show selected bullet NEXT TO the weapon when it uses bullets */}
@@ -666,6 +698,28 @@ const Assassinate = () => {
                                 img={activeBullet.img || "/default.jpg"}
                                 tier={activeBullet.tier || 1}
                                 qty={effectiveQty}
+                                tooltipImg={activeBullet.img}
+                                tooltipContent={
+                                  <ul className="space-y-0.5">
+                                    {"attack" in activeBullet && (
+                                      <li>
+                                        Angrep:{" "}
+                                        <strong className="text-neutral-200">
+                                          +{activeBullet.attack ?? 1}
+                                        </strong>
+                                      </li>
+                                    )}
+                                    <li>
+                                      Verdi:{" "}
+                                      <strong className="text-neutral-200">
+                                        $
+                                        {Number(
+                                          activeBullet.value ?? 0
+                                        ).toLocaleString("nb-NO")}
+                                      </strong>
+                                    </li>
+                                  </ul>
+                                }
                               />
                             ) : (
                               <span className="text-neutral-500 text-sm">
@@ -705,6 +759,28 @@ const Assassinate = () => {
                                       img={b.img || ""}
                                       tier={b.tier || 1}
                                       qty={qty}
+                                      tooltipImg={b.img}
+                                      tooltipContent={
+                                        <ul className="space-y-0.5">
+                                          {"attack" in b && (
+                                            <li>
+                                              Angrep:{" "}
+                                              <strong className="text-neutral-200">
+                                                +{b.attack ?? 1}
+                                              </strong>
+                                            </li>
+                                          )}
+                                          <li>
+                                            Verdi:{" "}
+                                            <strong className="text-neutral-200">
+                                              $
+                                              {Number(
+                                                b.value ?? 0
+                                              ).toLocaleString("nb-NO")}
+                                            </strong>
+                                          </li>
+                                        </ul>
+                                      }
                                     />
                                   </button>
                                 </li>
