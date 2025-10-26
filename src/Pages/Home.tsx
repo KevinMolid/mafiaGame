@@ -104,6 +104,9 @@ const Home = () => {
           tier: item.tier ?? 1,
           slot,
           value: item.value ?? 0,
+          attack: item.attack ?? 1,
+          capacity: item.capacity ?? 0,
+          usingBullets: item.usingBullets ?? false,
           // helpful bookkeeping
           fromDocId: item.docId, // the inventory doc this came from
           equippedAt: serverTimestamp(),
@@ -475,7 +478,15 @@ const Home = () => {
                             <li>
                               Angrep:{" "}
                               <strong className="text-neutral-200">
-                                +{item.attack ?? 0}
+                                +{item.attack ?? 1}
+                              </strong>
+                            </li>
+                          )}
+                          {"capacity" in item && (
+                            <li>
+                              Kapasitet:{" "}
+                              <strong className="text-neutral-200">
+                                {item.capacity ?? 1}
                               </strong>
                             </li>
                           )}

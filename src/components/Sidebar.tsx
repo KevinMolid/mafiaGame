@@ -85,15 +85,6 @@ const Sidebar = () => {
 
         <SidebarLink to="drep" icon="gun">
           <div>Drep spiller</div>
-          {cooldowns["attack"] > 0 ? (
-            <div className="text-neutral-200 font-medium">
-              {compactMmSs(cooldowns["attack"])}
-            </div>
-          ) : (
-            <div className="text-green-400">
-              <i className="fa-solid fa-check"></i>
-            </div>
-          )}
         </SidebarLink>
 
         <hr className="border-neutral-600 my-2 mx-4" />

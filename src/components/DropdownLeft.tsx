@@ -124,15 +124,6 @@ const DropdownLeft = () => {
 
           <DropdownOption to="/drep" icon="gun" onClick={toggleActions}>
             <div>Drep spiller</div>
-            {cooldowns["attack"] > 0 ? (
-              <div className="text-neutral-200 font-medium pr-4">
-                {compactMmSs(cooldowns["attack"])}
-              </div>
-            ) : (
-              <div className="text-green-400 pr-4">
-                <i className="fa-solid fa-check"></i>
-              </div>
-            )}
           </DropdownOption>
 
           <hr className="border-neutral-700 my-2 sm:hidden" />
