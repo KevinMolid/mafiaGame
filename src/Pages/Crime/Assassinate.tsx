@@ -563,6 +563,9 @@ const Assassinate = () => {
 
   // Equipped weapon
   const equippedWeapon = userCharacter?.equipment?.weapon || null;
+  const capacity = equippedWeapon?.usingBullets
+    ? Math.max(1, Number((equippedWeapon as any).capacity ?? 1))
+    : 1;
 
   // Attack numbers for UI preview
   const weaponAttack = equippedWeapon
@@ -583,7 +586,11 @@ const Assassinate = () => {
   // Effective quantity: if ammo is required but none selected, qty = 0 (so damage=0)
   const effectiveQty = needsAmmo
     ? activeBullet
-      ? clamp(activeAmmoQty, 1, Math.max(1, Number(activeBullet.quantity ?? 1)))
+      ? clamp(
+          activeAmmoQty,
+          1,
+          Math.min(capacity, Math.max(1, Number(activeBullet.quantity ?? 1)))
+        )
       : 0
     : 1;
 
@@ -798,9 +805,10 @@ const Assassinate = () => {
                                 const sel = bulletStacks.find(
                                   (b) => b.docId === activeAmmoDocId
                                 );
-                                const maxSellable = sel
+                                const ownedMax = sel
                                   ? Number(sel.quantity ?? 1)
                                   : 1;
+                                const maxAllowed = Math.min(ownedMax, capacity);
                                 return (
                                   <>
                                     <Button
@@ -808,7 +816,7 @@ const Assassinate = () => {
                                       style="secondary"
                                       onClick={() =>
                                         setActiveAmmoQty((q) =>
-                                          clamp(q - 1, 1, maxSellable)
+                                          clamp(q - 1, 1, maxAllowed)
                                         )
                                       }
                                       disabled={activeAmmoQty <= 1}
@@ -820,7 +828,7 @@ const Assassinate = () => {
                                       type="number"
                                       className="w-16 bg-transparent py-1 border-b border-neutral-600 text-neutral-200 text-center"
                                       min={1}
-                                      max={maxSellable}
+                                      max={maxAllowed}
                                       value={activeAmmoQty}
                                       onChange={(e) => {
                                         const v = Number(e.target.value);
@@ -828,7 +836,7 @@ const Assassinate = () => {
                                           clamp(
                                             isFinite(v) ? v : 1,
                                             1,
-                                            maxSellable
+                                            maxAllowed
                                           )
                                         );
                                       }}
@@ -838,10 +846,10 @@ const Assassinate = () => {
                                       style="secondary"
                                       onClick={() =>
                                         setActiveAmmoQty((q) =>
-                                          clamp(q + 1, 1, maxSellable)
+                                          clamp(q + 1, 1, maxAllowed)
                                         )
                                       }
-                                      disabled={activeAmmoQty >= maxSellable}
+                                      disabled={activeAmmoQty >= maxAllowed}
                                       aria-label="Mer"
                                     >
                                       +
