@@ -201,6 +201,7 @@ const GTA = () => {
             <Item
               name={randomCar.name}
               tier={randomCar.tier}
+              itemType="car"
               tooltipImg={catalog?.img && catalog.img}
               tooltipContent={
                 <div>
@@ -467,6 +468,7 @@ const GTA = () => {
             <Item
               name={carData.name}
               tier={carData.tier}
+              itemType="car"
               tooltipImg={catalogForMsg?.img && catalogForMsg.img}
               tooltipContent={
                 <div>
