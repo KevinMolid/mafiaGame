@@ -47,8 +47,9 @@ import FamilyProfile from "./Pages/FamilyProfile.tsx";
 import Influence from "./Pages/Reputation/Influence";
 // Crimes ______________________________________
 import StreetCrime from "./Pages/Crime/StreetCrime.tsx";
-import Robbery from "./Pages/Crime/Robbery.tsx";
 import GTA from "./Pages/Crime/GTA.tsx";
+import Robbery from "./Pages/Crime/Robbery.tsx";
+import Heist from "./Pages/Crime/Heist.tsx";
 import Assassinate from "./Pages/Crime/Assassinate.tsx";
 // General ______________________________________
 import Travel from "./Pages/General/Travel.tsx";
@@ -254,6 +255,15 @@ function App() {
                           />
 
                           <Route
+                            path="/biltyveri"
+                            element={
+                              <ProtectedRoute>
+                                <GTA />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
                             path="/ran"
                             element={
                               <ProtectedRoute>
@@ -263,10 +273,10 @@ function App() {
                           />
 
                           <Route
-                            path="/biltyveri"
+                            path="/brekk"
                             element={
                               <ProtectedRoute>
-                                <GTA />
+                                <Heist />
                               </ProtectedRoute>
                             }
                           />

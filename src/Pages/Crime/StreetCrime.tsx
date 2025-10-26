@@ -57,7 +57,6 @@ const StreetCrime = () => {
   }, [selectedCrime]);
 
   // Function for comitting a crime
-  // Function for committing a crime
   const handleClick = async () => {
     if (cooldowns["crime"] > 0) {
       setMessageType("warning");

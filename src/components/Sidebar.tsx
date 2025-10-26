@@ -83,6 +83,10 @@ const Sidebar = () => {
           )}
         </SidebarLink>
 
+        <SidebarLink to="brekk" icon="sitemap">
+          <div>Brekk</div>
+        </SidebarLink>
+
         <SidebarLink to="drep" icon="gun">
           <div>Drep spiller</div>
         </SidebarLink>

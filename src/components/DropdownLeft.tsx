@@ -122,6 +122,10 @@ const DropdownLeft = () => {
             )}
           </DropdownOption>
 
+          <DropdownOption to="/brekk" icon="sitemap" onClick={toggleActions}>
+            <div>Brekk</div>
+          </DropdownOption>
+
           <DropdownOption to="/drep" icon="gun" onClick={toggleActions}>
             <div>Drep spiller</div>
           </DropdownOption>
