@@ -151,7 +151,7 @@ export const arrest = async (character: any) => {
   try {
     await serverTimeReady;
     const characterRef = doc(db, "Characters", character.id);
-    const jailDurationMs = 10_000 + (character?.stats?.heat ?? 0) * 5_000;
+    const jailDurationMs = 300_000 + (character?.stats?.heat ?? 0) * 5_000;
     const releaseMs = serverNow() + jailDurationMs;
 
     await runTransaction(db, async (tx) => {

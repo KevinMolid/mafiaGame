@@ -4,6 +4,10 @@ import Button from "./Button";
 import Main from "./Main";
 import CharacterList from "./CharacterList";
 import ChatMessage from "./ChatMessage";
+import ScrollArea from "./ScrollArea";
+
+// Functions
+import { compactMmSs } from "../Functions/TimeFunctions";
 
 import { releaseIfExpired } from "../Functions/JailFunctions";
 
@@ -45,6 +49,8 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
   const [error, setError] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState<string>("");
 
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+
   const channelId = "EivoYnQQVwVQvnMctcXN";
 
   useEffect(() => {
@@ -80,6 +86,13 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      // instant on first load; smooth after sending
+      bottomRef.current?.scrollIntoView({ behavior: "instant", block: "end" });
+    }
+  }, [loading, messages]);
 
   // Ref for the textarea
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -128,91 +141,112 @@ const JailBox = ({ message, messageType }: JailBoxInterface) => {
   return (
     <Main img="PrisonBg">
       <div className="my-4">
-        <H2>Du er i fengsel!</H2>
-        <p className="mb-4">
-          Du kan ikke gjøre noen handlinger mens du sitter i fengsel.
-        </p>
-        <p className="mb-4">
-          Tid som gjenstår:{" "}
-          <strong className="text-neutral-200">
-            {jailRemainingSeconds} sekunder
-          </strong>
-        </p>
+        <div className="flex justify-between mb-2">
+          <H2>Du er i fengsel!</H2>
+          <div className="grid grid-cols-[auto_auto] gap-2">
+            <div className="flex justify-center items-center text-neutral-500 text-xl">
+              <i className="fa-solid fa-clock mt-1"></i>
+            </div>
+
+            <div className="flex justify-center items-center">
+              <p className="text-4xl">
+                <strong className="text-neutral-200">
+                  {compactMmSs(jailRemainingSeconds)}
+                </strong>
+              </p>
+            </div>
+          </div>
+        </div>
 
         {message && <InfoBox type={messageType}>{message}</InfoBox>}
 
         {/* CHAT */}
         {error && <p>Feil: {error}</p>}
 
-        <div className="mb-4 flex flex-col gap-4">
-          <Box>
-            <H2>Fengselschatten</H2>
-
-            {/* Messages */}
-            <div
-              id="messages_div"
-              className="mb-4 pb-2 border-b border-neutral-600"
-            >
-              {loading && (
-                <div className="min-h-60">
-                  <p>Laster Fengsel...</p>
+        <div
+          id="main-content"
+          className="flex flex-wrap sm:grid sm:grid-cols-[3fr_2fr] gap-4"
+        >
+          <div id="chat-box" className="flex-grow bg-neutral-900">
+            <Box>
+              {/* Messages */}
+              <div className="mb-4 flex h-[300px] flex-col">
+                {" "}
+                {/* <- choose any height */}
+                {/* MESSAGES AREA */}
+                <div className="flex-grow min-h-0">
+                  {" "}
+                  {/* <- critical for scrolling */}
+                  {loading ? (
+                    <div className="min-h-60">
+                      <p>Laster Fengsel...</p>
+                    </div>
+                  ) : !error ? (
+                    <ScrollArea className="h-full flex-grow">
+                      {" "}
+                      <ul className="pr-4">
+                        {messages.map((m) => (
+                          <ChatMessage
+                            key={m.id}
+                            id={m.id}
+                            senderId={m.senderId}
+                            senderName={m.senderName}
+                            timestamp={m.timestamp}
+                            text={m.text}
+                          />
+                        ))}
+                      </ul>
+                      <div ref={bottomRef} />
+                    </ScrollArea>
+                  ) : null}
                 </div>
-              )}
-              {!loading && !error && (
-                <ul>
-                  {messages.map((message) => (
-                    <ChatMessage
-                      key={message.id}
-                      id={message.id}
-                      senderId={message.senderId}
-                      senderName={message.senderName}
-                      timestamp={message.timestamp}
-                      text={message.text}
-                    />
-                  ))}
-                </ul>
-              )}
-            </div>
+              </div>
 
-            <div id="new_message_div">
-              <form
-                action=""
-                onSubmit={submitNewMessage}
-                className="grid grid-cols-[auto_min-content] gap-2 pr-2"
-              >
-                <textarea
-                  ref={textareaRef}
-                  rows={1}
-                  value={newMessage}
-                  placeholder="Melding"
-                  spellCheck={false}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      if (e.shiftKey) return;
-                      e.preventDefault();
-                      submitNewMessage(e);
-                    }
-                  }}
-                  onChange={handleInputChange}
-                  className="w-full bg-neutral-800 outline-none resize-none rounded-3xl px-4 py-2 leading-normal"
-                ></textarea>
+              <div id="new_message_div" className="">
+                <form
+                  action=""
+                  onSubmit={submitNewMessage}
+                  className="grid grid-cols-[auto_min-content] gap-2 pr-2"
+                >
+                  <textarea
+                    ref={textareaRef}
+                    rows={1}
+                    value={newMessage}
+                    placeholder="Melding"
+                    spellCheck={false}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        if (e.shiftKey) return;
+                        e.preventDefault();
+                        submitNewMessage(e);
+                      }
+                    }}
+                    onChange={handleInputChange}
+                    className="bg-neutral-800 outline-none resize-none rounded-3xl px-4 py-2 leading-normal"
+                  />
 
-                <Button type="submit" size="square">
-                  <i className=" text-xl fa-solid fa-paper-plane"></i>
+                  <Button type="submit" size="square">
+                    <i className=" text-xl fa-solid fa-paper-plane"></i>
+                  </Button>
+                </form>
+              </div>
+            </Box>
+          </div>
+
+          <div className="flex-grow flex flex-col gap-4">
+            <Box className="w-full">
+              <H2>Spillere i fengsel</H2>
+              <CharacterList type="jail" inJail />
+            </Box>
+            {userCharacter && userData.type === "admin" && (
+              <div>
+                <Button onClick={() => breakOut(userCharacter.id)}>
+                  Stikk av
                 </Button>
-              </form>
-            </div>
-          </Box>
-
-          <Box>
-            <H2>Spillere i fengsel</H2>
-            <CharacterList type="jail" inJail />
-          </Box>
+              </div>
+            )}
+          </div>
         </div>
-
-        {userCharacter && userData.type === "admin" && (
-          <Button onClick={() => breakOut(userCharacter.id)}>Stikk av</Button>
-        )}
       </div>
     </Main>
   );

@@ -306,12 +306,14 @@ export default function CharacterListJail({
         onBreakout={handleBreakout}
         inJail={inJail}
       />
-      <p className="text-xs text-neutral-500 mt-2">
-        Sjanser: Bestikk {Math.round(CHANCE_BRIBE * 100)}%, Bryt ut{" "}
-        {Math.round(CHANCE_BREAKOUT * 100)}%. Bestikkelse koster{" "}
-        <i className="fa-solid fa-dollar-sign"></i>{" "}
-        <strong>{BRIBE_COST.toLocaleString("nb-NO")}</strong>.
-      </p>
+      {!inJail && (
+        <p className="text-xs text-neutral-500 mt-2">
+          Sjanser: Bestikk {Math.round(CHANCE_BRIBE * 100)}%, Bryt ut{" "}
+          {Math.round(CHANCE_BREAKOUT * 100)}%. Bestikkelse koster{" "}
+          <i className="fa-solid fa-dollar-sign"></i>{" "}
+          <strong>{BRIBE_COST.toLocaleString("nb-NO")}</strong>.
+        </p>
+      )}
     </section>
   );
 }
