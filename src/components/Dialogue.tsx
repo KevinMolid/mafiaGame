@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Button from "./Button";
 
 type DialogueProps = {
   imageSrc: string;
@@ -29,7 +30,15 @@ const Dialogue = ({
   const isLast = i >= lines.length - 1;
 
   function goNext() {
-    if (lines.length === 0 || isLast) return;
+    // if no lines, do nothing
+    if (lines.length === 0) return;
+
+    // if we're on the last line, finish
+    if (isLast) {
+      onComplete?.();
+      return;
+    }
+
     const next = i + 1;
     setI(next);
     onNext?.(next);
@@ -41,7 +50,7 @@ const Dialogue = ({
     setI(prev);
   }
 
-  // Keyboard: Enter/Space/ArrowRight => Neste, ArrowLeft => Forrige
+  // Keyboard: Enter/Space/ArrowRight => Neste/Ferdig, ArrowLeft => Forrige
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Enter" || e.key === " " || e.key === "ArrowRight") {
@@ -54,25 +63,20 @@ const Dialogue = ({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [i, lines.length]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Optional: fire onComplete when user reaches the last line
-  useEffect(() => {
-    if (i === lines.length - 1) onComplete?.();
-  }, [i, lines.length, onComplete]);
+  }, [i, lines.length, isLast]); // include isLast so effect has latest logic
 
   if (!lines || lines.length === 0) return null;
 
   return (
-    <div className={`w-[200px] ${className}`}>
+    <div className={`w-[300px] ${className}`}>
       <img
         src={imageSrc}
         alt={imageAlt}
-        className="w-[200px] h-[150px] object-cover border-2 border-sky-400"
+        className="w-[300px] h-[225px] object-cover object-top rounded-lg border border-neutral-600 mb-1"
       />
 
       {speaker && (
-        <p className="font-medium bg-sky-950 text-neutral-200 py-0.5 px-2 text-center border-l-2 border-r-2 border-b-2 border-sky-400 mb-1">
+        <p className="font-medium bg-neutral-800 text-neutral-200 py-1 px-2 text-center rounded-lg border border-neutral-600">
           {speaker}
         </p>
       )}
@@ -81,9 +85,8 @@ const Dialogue = ({
       <button
         type="button"
         onClick={goNext}
-        className="w-full min-h-32 border-2 bg-sky-950 text-sky-200 text-center border-sky-400 p-2"
-        aria-label="Neste linje"
-        disabled={isLast}
+        className="w-full text-neutral-200 text-lg min-h-32 text-center p-2"
+        aria-label={isLast ? "Ferdig" : "Neste linje"}
       >
         <span>{lines[i]}</span>
       </button>
@@ -95,7 +98,7 @@ const Dialogue = ({
             <span
               key={idx}
               className={`h-1.5 w-1.5 rounded-full ${
-                idx === i ? "bg-sky-400" : "bg-neutral-600"
+                idx === i ? "bg-neutral-400" : "bg-neutral-600"
               }`}
               aria-hidden
             />
@@ -103,22 +106,18 @@ const Dialogue = ({
         </div>
 
         <div className="flex gap-1">
-          <button
+          <Button
             type="button"
+            size="small"
+            style="black"
             onClick={goPrev}
             disabled={isFirst}
-            className="bg-neutral-900 text-neutral-200 font-semibold text-sm px-2 py-0.5 border-2 border-sky-400 rounded disabled:opacity-50 hover:bg-neutral-900 disabled:hover:bg-transparent"
           >
             Forrige
-          </button>
-          <button
-            type="button"
-            onClick={goNext}
-            disabled={isLast}
-            className="bg-neutral-900 text-neutral-200 font-semibold text-sm px-2 py-0.5 border-2 border-sky-400 rounded disabled:opacity-50 hover:bg-neutral-900 disabled:hover:bg-transparent"
-          >
-            Neste
-          </button>
+          </Button>
+          <Button type="button" size="small" style="black" onClick={goNext}>
+            {isLast ? "Ferdig" : "Neste"}
+          </Button>
         </div>
       </div>
     </div>

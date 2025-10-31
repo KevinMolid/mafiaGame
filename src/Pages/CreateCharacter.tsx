@@ -1,12 +1,11 @@
 // Components
 import Main from "../components/Main";
-import H1 from "../components/Typography/H1";
 import H3 from "../components/Typography/H3";
 import Button from "../components/Button";
 
 import Dialogue from "../components/Dialogue";
 
-import Christian from "/images/characters/Christian3.jpg";
+import Lisa from "/images/characters/Lisa.png";
 
 // React
 import { useState, useEffect, useRef } from "react";
@@ -46,6 +45,7 @@ const CreateCharacter = () => {
   });
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
+  const [isIntroActive, setIsIntroActive] = useState(true);
 
   type NameStatus = "idle" | "checking" | "available" | "taken" | "invalid";
   const [nameStatus, setNameStatus] = useState<NameStatus>("idle");
@@ -219,74 +219,81 @@ const CreateCharacter = () => {
 
   return (
     <Main img="MafiaBg">
-      <div className="grid sm:grid-cols-[auto_200px] gap-8">
-        <Dialogue
-          className="order-1 sm:order-2 mx-auto sm:mx-0"
-          imageSrc={Christian}
-          imageAlt="Don Romano"
-          speaker="Don Romano"
-          lines={[
-            "Så, du har bestemt deg for å trå inn i denne verdenen...",
-            "Her finnes ingen regler, bare makt og penger. Før vi går videre, hvem er du?",
-          ]}
-        />
-        <div className="order-2 sm:order-1">
-          <H1>Velkommen til Den Siste Don!</H1>
-          <p className="mb-6">Lag din spillkarakter og kom i gang!</p>
-          <form action="" className="flex flex-col mb-4 gap-2">
-            <label htmlFor="username"></label>
-            <input
-              className={
-                "bg-transparent border-b py-1 text-2xl font-medium text-white placeholder-neutral-500 focus:outline-none " +
-                (nameStatus === "taken"
-                  ? "border-red-500 focus:border-red-500"
-                  : nameStatus === "available"
-                  ? "border-emerald-500 focus:border-emerald-500"
-                  : "border-neutral-600 focus:border-white")
-              }
-              id="username"
-              type="text"
-              placeholder="Brukernavn"
-              value={username}
-              onChange={handleUsernameChange}
-              maxLength={11}
-              autoComplete="off"
-              spellCheck={false}
-            />
-            <div className="min-h-[1.5rem] mb-4">
-              {/* Live hint or error */}
-              {error ? (
-                <span className="text-red-500">{error}</span>
-              ) : (
-                <UsernameHint />
-              )}
-            </div>
-
-            <H3>Startområde</H3>
-            <ul className="flex gap-2 flex-wrap">
-              {cities.map((city) => (
-                <li
-                  key={city}
-                  className={
-                    "border px-4 py-2 flex-grow text-center cursor-pointer " +
-                    (city === location
-                      ? "bg-neutral-900 border-neutral-600"
-                      : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
-                  }
-                  onClick={() => setLocation(city)}
-                >
-                  <p className={city === location ? "text-white" : ""}>
-                    {city}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </form>
-          <Button onClick={handleClick} disabled={isSubmitDisabled}>
-            Start spillet!
-          </Button>
+      {isIntroActive ? (
+        <div
+          id="modal"
+          className="w-full h-full flex justify-center left-0 top-0 z-50"
+        >
+          <Dialogue
+            className="order-1 sm:order-2 mx-auto sm:mx-0"
+            imageSrc={Lisa}
+            imageAlt="Lisa"
+            speaker="Lisa"
+            lines={[
+              "Hei! Jeg er Lisa...",
+              "Om du skal ha en sjanse her, må du lære raskt!",
+              "Jeg skal vise deg rundt, men først; hvem er du?",
+            ]}
+            onComplete={() => setIsIntroActive(false)}
+          />
         </div>
-      </div>
+      ) : (
+        <div className="gap-8">
+          <div className="order-2 sm:order-1">
+            <form action="" className="flex flex-col mt-4 mb-4">
+              <input
+                className={
+                  "bg-transparent border-b py-1 text-2xl font-medium text-white placeholder-neutral-500 focus:outline-none " +
+                  (nameStatus === "taken"
+                    ? "border-red-500 focus:border-red-500"
+                    : nameStatus === "available"
+                    ? "border-emerald-500 focus:border-emerald-500"
+                    : "border-neutral-600 focus:border-white")
+                }
+                id="username"
+                type="text"
+                placeholder="Brukernavn"
+                value={username}
+                onChange={handleUsernameChange}
+                maxLength={11}
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <div className="min-h-[1.5rem] mb-2">
+                {/* Live hint or error */}
+                {error ? (
+                  <span className="text-red-500">{error}</span>
+                ) : (
+                  <UsernameHint />
+                )}
+              </div>
+
+              <H3>Startområde</H3>
+              <ul className="flex gap-2 flex-wrap">
+                {cities.map((city) => (
+                  <li
+                    key={city}
+                    className={
+                      "border px-4 py-2 flex-grow text-center cursor-pointer " +
+                      (city === location
+                        ? "bg-neutral-900 border-neutral-600"
+                        : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
+                    }
+                    onClick={() => setLocation(city)}
+                  >
+                    <p className={city === location ? "text-white" : ""}>
+                      {city}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </form>
+            <Button onClick={handleClick} disabled={isSubmitDisabled}>
+              Start spillet!
+            </Button>
+          </div>
+        </div>
+      )}
     </Main>
   );
 };

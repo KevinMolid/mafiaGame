@@ -189,7 +189,12 @@ const Header = () => {
         {/* Logo */}
         <div className="hidden sm:flex">
           <Link to="/">
-            <img className="h-16" src={logo} alt="Den siste Don Logo" />
+            <img
+              className="h-16 select-none"
+              src={logo}
+              alt="Den siste Don Logo"
+              draggable={false}
+            />
           </Link>
         </div>
 
