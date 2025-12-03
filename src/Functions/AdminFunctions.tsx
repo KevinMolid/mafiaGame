@@ -49,10 +49,16 @@ async function logGameEvent(
   });
 }
 
+export async function setHp(characterId: string, newValue: number) {
+  const db = getFirestore();
+  await updateDoc(doc(db, "Characters", characterId), { "stats.hp": newValue });
+}
+
 export async function setXp(characterId: string, newValue: number) {
   const db = getFirestore();
   await updateDoc(doc(db, "Characters", characterId), { "stats.xp": newValue });
 }
+
 export async function setMoney(characterId: string, newValue: number) {
   const db = getFirestore();
   await updateDoc(doc(db, "Characters", characterId), {

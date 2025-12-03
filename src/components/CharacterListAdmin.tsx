@@ -13,6 +13,7 @@ import { getCurrentRank } from "../Functions/RankFunctions";
 // Use the admin helpers for core updates
 import {
   setXp as setXpFn,
+  setHp as setHpFn,
   setMoney as setMoneyFn,
   setBank as setBankFn,
   setRole as setRoleFn, // role: "admin" | "moderator" | ""
@@ -83,6 +84,19 @@ export default function CharacterListAdmin() {
   };
 
   // ---- Admin Actions (UI state updates mirror original) ----
+  const setHp = async (character: any, value: number) => {
+    await setHpFn(character.id, value);
+    setCharacters((prev) =>
+      prev.map((c) => (c.id === character.id ? { ...c, hp: value } : c))
+    );
+    setMessageType("success");
+    setMessage(
+      `Hp oppdatert for ${character.username} til ${value.toLocaleString(
+        "nb-NO"
+      )}.`
+    );
+  };
+
   const setXp = async (character: any, value: number) => {
     await setXpFn(character.id, value);
     setCharacters((prev) =>
@@ -120,6 +134,19 @@ export default function CharacterListAdmin() {
         "nb-NO"
       )}.`
     );
+  };
+
+  const handleSetHp = (character: any) => {
+    if (newValue === "") {
+      setMessageType("warning");
+      setMessage("Du må skrive inn en verdi.");
+    } else if (newValue > 100) {
+      setMessageType("warning");
+      setMessage("Brukeren kan ikke ha mer enn 100 hp.");
+    } else {
+      setHp(character, newValue as number);
+      setNewValue("");
+    }
   };
 
   const handleSetXp = (character: any) => {
@@ -322,6 +349,12 @@ export default function CharacterListAdmin() {
                     onChange={handleAdminNumberChange}
                     className="bg-transparent border-b border-neutral-600 py-0.5 text-md w-32 font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
                   />
+                  <Button size="small" onClick={() => handleSetHp(character)}>
+                    Sett{" "}
+                    <strong>
+                      <i className="fa-solid fa-heart"></i>
+                    </strong>
+                  </Button>
                   <Button size="small" onClick={() => handleSetXp(character)}>
                     Sett <strong>XP</strong>
                   </Button>

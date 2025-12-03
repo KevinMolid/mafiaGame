@@ -54,6 +54,7 @@ import Assassinate from "./Pages/Crime/Assassinate.tsx";
 // General ______________________________________
 import Travel from "./Pages/General/Travel.tsx";
 import Prison from "./Pages/General/Prison.tsx";
+import Hospital from "./Pages/General/Hospital.tsx";
 import Parking from "./Pages/General/Parking.tsx";
 // Gambling ______________________________________
 import Casino from "./Pages/Gambling/Casino.tsx";
@@ -304,6 +305,15 @@ function App() {
                             element={
                               <ProtectedRoute>
                                 <Parking />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="/sykehus"
+                            element={
+                              <ProtectedRoute>
+                                <Hospital />
                               </ProtectedRoute>
                             }
                           />

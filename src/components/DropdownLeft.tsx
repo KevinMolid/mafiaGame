@@ -60,13 +60,13 @@ const DropdownLeft = () => {
             Bank
           </DropdownOption>
 
-          <hr className="border-neutral-700 my-2 sm:hidden" />
+          <hr className="border-neutral-700 my-2" />
 
           <DropdownOption to="/familie" icon="users" onClick={toggleActions}>
             Familie
           </DropdownOption>
 
-          <hr className="border-neutral-700 my-2 sm:hidden" />
+          <hr className="border-neutral-700 my-2" />
 
           {/*<DropdownOption
           to="/innflytelse"
@@ -75,7 +75,7 @@ const DropdownLeft = () => {
         >
           Innflytelse
 
-        <hr className="border-neutral-700 my-2 sm:hidden" />
+        <hr className="border-neutral-700 my-2" />
 
         </DropdownOption>*/}
 
@@ -130,7 +130,7 @@ const DropdownLeft = () => {
             <div>Drep spiller</div>
           </DropdownOption>
 
-          <hr className="border-neutral-700 my-2 sm:hidden" />
+          <hr className="border-neutral-700 my-2" />
 
           <DropdownOption
             to="streetracing"
@@ -152,7 +152,15 @@ const DropdownLeft = () => {
             Hacking
           </DropdownOption>
 
-          <hr className="border-neutral-700 my-2 sm:hidden" />
+          <hr className="border-neutral-700 my-2" />
+
+          <DropdownOption
+            to="/sykehus"
+            icon="heart-pulse"
+            onClick={toggleActions}
+          >
+            Sykehus
+          </DropdownOption>
 
           <DropdownOption
             to="/fengsel"
@@ -181,7 +189,7 @@ const DropdownLeft = () => {
             Flyplass
           </DropdownOption>
 
-          <hr className="border-neutral-700 my-2 sm:hidden" />
+          <hr className="border-neutral-700 my-2" />
 
           <DropdownOption to="/casino" icon="coins" onClick={toggleActions}>
             Casino

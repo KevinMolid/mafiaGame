@@ -237,7 +237,7 @@ const StreetCrime = () => {
           <Box type="help" className="text-sm flex gap-x-8 flex-wrap">
             <article>
               <H4>Hvordan utføre kriminalitet</H4>
-              <p>
+              <p className="mb-2">
                 Velg ønsket kriminell handling, og trykk på "Utfør handling". Du
                 kan velge mellom "Lommetyveri", "Herverk", "Stjel verdisaker"
                 eller "Ran butikk".

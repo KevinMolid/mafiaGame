@@ -107,6 +107,10 @@ const Sidebar = () => {
 
         <hr className="border-neutral-600 my-2 mx-4" />
 
+        <SidebarLink to="sykehus" icon="heart-pulse">
+          Sykehus
+        </SidebarLink>
+
         <SidebarLink to="fengsel" icon={`handcuffs`}>
           <div>Fengsel</div>
           {jailRemainingSeconds > 0 ? (

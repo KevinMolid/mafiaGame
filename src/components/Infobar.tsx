@@ -1,5 +1,4 @@
 import Tooltip from "./Tooltip";
-
 import { Link } from "react-router-dom";
 
 // Context
@@ -7,6 +6,9 @@ import { useCharacter } from "../CharacterContext";
 
 // Functions
 import { getRankProgress } from "../Functions/RankFunctions";
+
+const clampPercentage = (value: number) =>
+  Math.min(100, Math.max(0, Math.round(value)));
 
 const Infobar = () => {
   const { userCharacter } = useCharacter();
@@ -21,25 +23,28 @@ const Infobar = () => {
   }
 
   const maxHealth = 100;
-  const healthPercentage = userCharacter
+  const rawHealthPct = userCharacter
     ? (userCharacter.stats.hp / maxHealth) * 100
     : 0;
+  const healthPercentage = clampPercentage(rawHealthPct);
 
   const { progress, minXP, maxXP } = getRankProgress(userCharacter.stats.xp);
+  const xpPercentage = clampPercentage(progress);
 
   const maxHeat = 100;
   const rawHeatPct = userCharacter
     ? (userCharacter.stats.heat / maxHeat) * 100
     : 0;
-  const heatPercentage = Math.min(100, Math.max(0, Math.round(rawHeatPct)));
+  const heatPercentage = clampPercentage(rawHeatPct);
 
   return (
     <section className="bg-neutral-700 px-4 sm:px-8 py-2 flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 justify-center text-stone-400 text-sm sm:text-base">
+      {/* Health */}
       <div>
         <Tooltip label={`Helse: ${userCharacter.stats.hp}/${maxHealth}`}>
           <Link to="/" className="flex items-center gap-1 sm:gap-2">
             <i className="fa-solid fa-heart"></i>
-            <div className="bg-neutral-800 h-1 w-20 sm:w-36">
+            <div className="bg-neutral-800 h-1 w-20 sm:w-36 overflow-hidden">
               <div
                 className="h-1 bg-green-500 transition-all duration-300"
                 style={{ width: `${healthPercentage}%` }}
@@ -49,6 +54,7 @@ const Infobar = () => {
         </Tooltip>
       </div>
 
+      {/* XP */}
       <div>
         <Tooltip
           label={`Xp: ${userCharacter.stats.xp - minXP} / ${maxXP - minXP}`}
@@ -56,21 +62,22 @@ const Infobar = () => {
           <Link to="/" className="flex items-center gap-1 sm:gap-2">
             <p className="text-sm font-bold">XP</p>
 
-            <div className="bg-neutral-800 h-1 w-20 sm:w-36">
+            <div className="bg-neutral-800 h-1 w-20 sm:w-36 overflow-hidden">
               <div
                 className="h-1 bg-slate-400 transition-all duration-300"
-                style={{ width: `${progress}%` }}
+                style={{ width: `${xpPercentage}%` }}
               ></div>
             </div>
           </Link>
         </Tooltip>
       </div>
 
+      {/* Heat */}
       <div>
         <Tooltip label={`Ettersøkt: ${heatPercentage}%`}>
           <Link to="/" className="flex items-center gap-1 sm:gap-2">
             <i className="fa-solid fa-fire-flame-curved"></i>{" "}
-            <div className="bg-neutral-800 h-1 w-20 sm:w-36">
+            <div className="bg-neutral-800 h-1 w-20 sm:w-36 overflow-hidden">
               <div
                 className={
                   "h-1 transition-all duration-300 " +
@@ -87,6 +94,7 @@ const Infobar = () => {
         </Tooltip>
       </div>
 
+      {/* Family */}
       <Link to="/familie" className="flex items-center gap-1 sm:gap-2">
         <Tooltip label="Familie">
           <p>
@@ -96,6 +104,7 @@ const Infobar = () => {
         </Tooltip>
       </Link>
 
+      {/* Location */}
       <Link to="/flyplass" className="flex items-center gap-1 sm:gap-2">
         <Tooltip label="Lokasjon">
           <p>
@@ -105,6 +114,7 @@ const Infobar = () => {
         </Tooltip>
       </Link>
 
+      {/* Money */}
       <Link to="/bank" className="flex items-center gap-1 sm:gap-2">
         <Tooltip label="Penger">
           <div className="flex items-center">
@@ -116,6 +126,7 @@ const Infobar = () => {
         </Tooltip>
       </Link>
 
+      {/* Protection */}
       <Link to="/" className="flex items-center gap-1 sm:gap-2">
         <Tooltip label="Beskyttelse">
           <p>

@@ -67,6 +67,8 @@ export interface PersonBase {
   familyId?: string | null;
   familyName?: string | null;
   activeFamilyApplication?: ActiveFamilyApplication | null;
+  inHospital?: boolean | null;
+  hospitalDebt?: number | null;
   inJail?: boolean | null;
   jailReleaseTime?: any;
   conversations?: any;
