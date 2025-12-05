@@ -7,6 +7,7 @@ import Suitcases from "../components/Suitcases";
 import Cardealer from "../components/Cardealer";
 import Airplanedealer from "../components/Airplanedealer";
 import BlackMarket from "../components/BlackMarket";
+import Diamonds from "../components/Diamonds";
 
 type Panel = "suitcases" | "cars" | "airplanes" | "diamonds" | "blackMarket";
 
@@ -41,6 +42,12 @@ const Market = () => {
       {/* Tabs */}
       <ul className="mb-8 flex flex-wrap">
         <Tab
+          active={activePanel === "blackMarket"}
+          onClick={() => setActivePanel("blackMarket")}
+        >
+          Svartebørs
+        </Tab>
+        <Tab
           active={activePanel === "suitcases"}
           onClick={() => setActivePanel("suitcases")}
         >
@@ -64,18 +71,13 @@ const Market = () => {
         >
           Diamanter
         </Tab>
-        <Tab
-          active={activePanel === "blackMarket"}
-          onClick={() => setActivePanel("blackMarket")}
-        >
-          Svartebørs
-        </Tab>
       </ul>
 
       {activePanel === "suitcases" && <Suitcases />}
       {activePanel === "cars" && <Cardealer />}
       {activePanel === "airplanes" && <Airplanedealer />}
       {activePanel === "blackMarket" && <BlackMarket />}
+      {activePanel === "diamonds" && <Diamonds />}
     </Main>
   );
 };
