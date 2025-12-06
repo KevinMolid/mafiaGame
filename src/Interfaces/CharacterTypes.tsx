@@ -6,6 +6,7 @@ export interface Stats {
   heat: number;
   bank: number;
   money: number;
+  diamonds?: number;
   protection: number;
 }
 

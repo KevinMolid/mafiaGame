@@ -23,43 +23,34 @@ import { getItemById } from "../Data/Items";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+/**
+ * Simple XP reward helper – kept for backwards compatibility.
+ * Uses applyStatRewards under the hood.
+ */
 export const rewardXp = async (character: any, xp: number) => {
-  const newXp = character.stats.xp + xp;
-  const characterRef = doc(db, "Characters", character.id);
-  await updateDoc(characterRef, {
-    "stats.xp": newXp,
-  });
+  if (!character?.id || xp === 0) return;
+  await applyStatRewards(character.id, { xp });
 };
 
-// Update XP and Money in Firestore
+/**
+ * Generic reward for XP, money and diamonds.
+ * Uses Firestore increment() to avoid race conditions.
+ */
 export const giveReward = async (
-  character: any,
   characterID: string,
   xp: number = 0,
-  money: number = 0
+  money: number = 0,
+  diamonds: number = 0
 ) => {
-  try {
-    const characterRef = doc(db, "Characters", characterID);
-
-    const newXp = character.stats.xp + xp;
-    const newMoney = character.stats.money + money;
-
-    await updateDoc(characterRef, {
-      "stats.xp": newXp,
-      "stats.money": newMoney,
-    });
-
-    return { xp: newXp, money: newMoney };
-  } catch (error) {
-    console.error("Feil ved oppdatering av belønning:", error);
-  }
+  await applyStatRewards(characterID, { xp, money, diamonds });
 };
 
 interface GainRewardParams {
-  character: any;
+  character: any; // kept for compatibility, currently not used
   activeCharacter: string;
   xpReward?: number;
   moneyReward?: number;
+  diamondsReward?: number;
   successMessage: string;
   failureMessage: string;
   successRate: number;
@@ -67,11 +58,57 @@ interface GainRewardParams {
   setMessageType: (type: "success" | "failure" | "info" | "warning") => void;
 }
 
+interface StatRewardOptions {
+  xp?: number;
+  money?: number;
+  diamonds?: number;
+}
+
+/**
+ * Core stat-reward function. One Firestore write, atomic update.
+ */
+export const applyStatRewards = async (
+  characterID: string,
+  rewards: StatRewardOptions
+) => {
+  if (!characterID) return;
+
+  const { xp = 0, money = 0, diamonds = 0 } = rewards;
+
+  // If nothing to give, skip the write
+  if (xp === 0 && money === 0 && diamonds === 0) return;
+
+  try {
+    const characterRef = doc(db, "Characters", characterID);
+
+    const updates: Record<string, any> = {};
+
+    if (xp !== 0) {
+      updates["stats.xp"] = increment(xp);
+    }
+    if (money !== 0) {
+      updates["stats.money"] = increment(money);
+    }
+    if (diamonds !== 0) {
+      updates["stats.diamonds"] = increment(diamonds);
+    }
+
+    await updateDoc(characterRef, updates);
+  } catch (error) {
+    console.error("Feil ved oppdatering av belønning:", error);
+    throw error;
+  }
+};
+
+/**
+ * Attempt a reward with successRate.
+ * On success, applies XP/money/diamonds and sets a formatted message.
+ */
 export const attemptReward = async ({
-  character,
   activeCharacter,
-  xpReward = 0, // Default to 0 if not provided
-  moneyReward = 0, // Default to 0 if not provided
+  xpReward = 0,
+  moneyReward = 0,
+  diamondsReward = 0,
   successMessage,
   failureMessage,
   successRate,
@@ -80,38 +117,29 @@ export const attemptReward = async ({
 }: GainRewardParams) => {
   const success = Math.random() < successRate;
 
-  if (success) {
-    // Call giveReward and handle the result safely
-    const rewardResult = await giveReward(
-      character,
-      activeCharacter,
-      xpReward,
-      moneyReward
-    );
-
-    // Ensure rewardResult is not undefined before destructuring
-    if (rewardResult) {
-      // Format the success message to include both XP and money (if applicable)
-      const rewardMessage = `${successMessage}${
-        xpReward && moneyReward
-          ? ` Du fikk $${moneyReward} og ${xpReward} XP`
-          : xpReward
-          ? ` Du fikk ${xpReward} XP`
-          : moneyReward
-          ? ` Du fikk $${moneyReward}`
-          : ""
-      }!`;
-
-      setMessage(rewardMessage.trim());
-      setMessageType("success");
-    } else {
-      // Handle the case where rewardResult is undefined (e.g., an error occurred)
-      setMessage("Feil ved oppdatering av belønning. Prøv igjen.");
-      setMessageType("failure");
-    }
-  } else {
-    // Set failure message
+  if (!success) {
     setMessage(failureMessage);
+    setMessageType("failure");
+    return;
+  }
+
+  try {
+    await giveReward(activeCharacter, xpReward, moneyReward, diamondsReward);
+
+    const rewardParts: string[] = [];
+
+    if (moneyReward) rewardParts.push(`$${moneyReward}`);
+    if (xpReward) rewardParts.push(`${xpReward} XP`);
+    if (diamondsReward) rewardParts.push(`${diamondsReward} diamanter`);
+
+    const extra =
+      rewardParts.length > 0 ? ` Du fikk ${rewardParts.join(" og ")}!` : "!";
+
+    setMessage(`${successMessage}${extra}`);
+    setMessageType("success");
+  } catch (error) {
+    console.error("Feil ved oppdatering av belønning:", error);
+    setMessage("Feil ved oppdatering av belønning. Prøv igjen.");
     setMessageType("failure");
   }
 };
@@ -234,7 +262,6 @@ export async function grantItemToInventory(
   }
 
   // Non-stackable: create one doc per unit
-  // (You can batch these for efficiency if qty is large.)
   const batch = writeBatch(db);
   for (let i = 0; i < qty; i++) {
     const ref = doc(itemsCol); // auto-id

@@ -37,6 +37,8 @@ const Infobar = () => {
     : 0;
   const heatPercentage = clampPercentage(rawHeatPct);
 
+  const diamonds = userCharacter.stats.diamonds ?? 0;
+
   return (
     <section className="bg-neutral-700 px-4 sm:px-8 py-2 flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 justify-center text-stone-400 text-sm sm:text-base">
       {/* Health */}
@@ -126,12 +128,12 @@ const Infobar = () => {
         </Tooltip>
       </Link>
 
-      {/* Protection */}
+      {/* Diamonds */}
       <Link to="/" className="flex items-center gap-1 sm:gap-2">
-        <Tooltip label="Beskyttelse">
-          <p>
-            <i className="fa-solid fa-shield-halved"></i>{" "}
-            {userCharacter.stats.protection}%
+        <Tooltip label="Diamanter">
+          <p className="flex items-center gap-1">
+            <i className="fa-solid fa-gem" />
+            <span className="">{diamonds.toLocaleString("nb-NO")}</span>
           </p>
         </Tooltip>
       </Link>
