@@ -248,7 +248,7 @@ const Equipment: React.FC = () => {
         <Slot slotKey="glasses" icon="glasses" />
 
         {/* Row 2 */}
-        <Slot slotKey="shirt" icon="shirt" />
+        <Slot slotKey="jacket" icon="shirt" />
         <div></div>
         <Slot slotKey="neck" icon="ribbon" />
 

@@ -9,6 +9,8 @@ interface ShopBoxProps {
   priceColor: string;
   selected: boolean;
   onSelect: () => void;
+  onBuy: () => void;
+  isBuying?: boolean;
 }
 
 const ShopBox: React.FC<ShopBoxProps> = ({
@@ -19,6 +21,8 @@ const ShopBox: React.FC<ShopBoxProps> = ({
   priceColor,
   selected,
   onSelect,
+  onBuy,
+  isBuying = false,
 }) => (
   <li
     onClick={onSelect}
@@ -32,11 +36,20 @@ const ShopBox: React.FC<ShopBoxProps> = ({
     <p className="text-center mb-4">{title}</p>
     <img src={image} className="mb-4" alt={title} />
     <p className={selected ? `${priceColor}` : "text-neutral-400"}>
-      <i className={currencyIcon}></i> <strong>{price.toLocaleString()}</strong>
+      <i className={currencyIcon}></i>{" "}
+      <strong>{price.toLocaleString("nb-NO")}</strong>
     </p>
     {selected && (
       <div className="mt-2">
-        <Button>Kjøp</Button>
+        <Button
+          onClick={(e) => {
+            e.stopPropagation();
+            onBuy();
+          }}
+          disabled={isBuying}
+        >
+          {isBuying ? "Kjøper..." : "Kjøp"}
+        </Button>
       </div>
     )}
   </li>
