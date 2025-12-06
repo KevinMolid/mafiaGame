@@ -14,6 +14,46 @@ import j2 from "/images/items/j2.jpg";
 import j6 from "/images/items/j6.jpg";
 import j8 from "/images/items/j8.jpg";
 
+// Feet
+import f1 from "/images/items/j2.jpg";
+import f2 from "/images/items/j6.jpg";
+import f3 from "/images/items/j8.jpg";
+import f4 from "/images/items/j8.jpg";
+import f5 from "/images/items/j8.jpg";
+
+// Face
+import fa1 from "/images/items/j2.jpg";
+import fa2 from "/images/items/j6.jpg";
+import fa3 from "/images/items/j8.jpg";
+import fa4 from "/images/items/j8.jpg";
+import fa5 from "/images/items/j8.jpg";
+
+// Face
+import nk1 from "/images/items/j2.jpg";
+import nk2 from "/images/items/j6.jpg";
+import nk3 from "/images/items/j8.jpg";
+import nk4 from "/images/items/j8.jpg";
+import nk5 from "/images/items/j8.jpg";
+
+// Hands
+import hd1 from "/images/items/j2.jpg";
+import hd2 from "/images/items/j6.jpg";
+import hd3 from "/images/items/j8.jpg";
+import hd4 from "/images/items/j8.jpg";
+import hd5 from "/images/items/j8.jpg";
+
+// Rings
+import r1 from "/images/items/j2.jpg";
+import r2 from "/images/items/j2.jpg";
+import r3 from "/images/items/j2.jpg";
+import r4 from "/images/items/j2.jpg";
+import r5 from "/images/items/j2.jpg";
+import r6 from "/images/items/j2.jpg";
+import r7 from "/images/items/j2.jpg";
+import r8 from "/images/items/j2.jpg";
+import r9 from "/images/items/j2.jpg";
+import r10 from "/images/items/j2.jpg";
+
 // Weapons
 import w1 from "/images/items/Knife1.png";
 import w2 from "/images/items/Knife2.jpg";
@@ -33,7 +73,17 @@ import n1 from "/images/items/n1.png";
 import n2 from "/images/items/n2.png";
 
 // ---------- Types ----------
-export type Slot = "hat" | "jacket" | "weapon" | "bullet" | "narcotic";
+export type Slot =
+  | "hat"
+  | "jacket"
+  | "feet"
+  | "weapon"
+  | "face"
+  | "neck"
+  | "hands"
+  | "ring"
+  | "bullet"
+  | "narcotic";
 
 interface BaseItem {
   id: string;
@@ -52,6 +102,32 @@ export interface HatItem extends BaseItem {
 export interface JacketItem extends BaseItem {
   slot: "jacket";
   hp: number;
+}
+
+export interface FeetItem extends BaseItem {
+  slot: "feet";
+  hp: number;
+}
+
+export interface FaceItem extends BaseItem {
+  slot: "face";
+  hp: number;
+}
+
+export interface NeckItem extends BaseItem {
+  slot: "neck";
+  hp: number;
+}
+
+export interface HandsItem extends BaseItem {
+  slot: "hands";
+  hp: number;
+}
+
+export interface RingItem extends BaseItem {
+  slot: "ring";
+  hp?: number;
+  attack?: number;
 }
 
 export interface WeaponItem extends BaseItem {
@@ -75,7 +151,12 @@ export interface NarcoticItem extends BaseItem {
 export type Item =
   | HatItem
   | JacketItem
+  | FeetItem
   | WeaponItem
+  | FaceItem
+  | NeckItem
+  | HandsItem
+  | RingItem
   | BulletItem
   | NarcoticItem;
 
@@ -283,6 +364,300 @@ export const Weapons: WeaponItem[] = [
   },
 ];
 
+export const Feet: FeetItem[] = [
+  {
+    id: "if0001",
+    name: "Slitte boots",
+    slot: "feet",
+    tier: 1,
+    value: 200,
+    hp: 5,
+    img: f1,
+  },
+  {
+    id: "if0002",
+    name: "Arbeidssko",
+    slot: "feet",
+    tier: 2,
+    value: 450,
+    hp: 15,
+    img: f2,
+  },
+  {
+    id: "if0003",
+    name: "Skinnstøvler",
+    slot: "feet",
+    tier: 3,
+    value: 900,
+    hp: 30,
+    img: f3,
+  },
+  {
+    id: "if0004",
+    name: "Pimp Boots",
+    slot: "feet",
+    tier: 4,
+    value: 1800,
+    hp: 55,
+    img: f4,
+  },
+  {
+    id: "if0005",
+    name: "Diamantbesatte boots",
+    slot: "feet",
+    tier: 5,
+    value: 3500,
+    hp: 90,
+    img: f5,
+  },
+];
+
+export const Face: FaceItem[] = [
+  {
+    id: "ifa001",
+    name: "Bandana",
+    slot: "face",
+    tier: 1,
+    value: 150,
+    hp: 5,
+    img: fa1,
+  },
+  {
+    id: "ifa002",
+    name: "Skimaske",
+    slot: "face",
+    tier: 2,
+    value: 500,
+    hp: 15,
+    img: fa2,
+  },
+  {
+    id: "ifa003",
+    name: "Sorte solbriller",
+    slot: "face",
+    tier: 3,
+    value: 1200,
+    hp: 30,
+    img: fa3,
+  },
+  {
+    id: "ifa004",
+    name: "Mafiabriller",
+    slot: "face",
+    tier: 4,
+    value: 2000,
+    hp: 50,
+    img: fa4,
+  },
+  {
+    id: "ifa005",
+    name: "Gullbelagte solbriller",
+    slot: "face",
+    tier: 5,
+    value: 4000,
+    hp: 75,
+    img: fa5,
+  },
+];
+
+export const Neck: NeckItem[] = [
+  {
+    id: "in001",
+    name: "Lærhalskjede",
+    slot: "neck",
+    tier: 1,
+    value: 200,
+    hp: 5,
+    img: nk1,
+  },
+  {
+    id: "in002",
+    name: "Sølvkjede",
+    slot: "neck",
+    tier: 2,
+    value: 500,
+    hp: 15,
+    img: nk2,
+  },
+  {
+    id: "in003",
+    name: "Gullkjede",
+    slot: "neck",
+    tier: 3,
+    value: 1200,
+    hp: 30,
+    img: nk3,
+  },
+  {
+    id: "in004",
+    name: "Pimp-kjede",
+    slot: "neck",
+    tier: 4,
+    value: 2500,
+    hp: 55,
+    img: nk4,
+  },
+  {
+    id: "in005",
+    name: "Diamantkjede",
+    slot: "neck",
+    tier: 5,
+    value: 5000,
+    hp: 100,
+    img: nk5,
+  },
+];
+
+export const Hands: HandsItem[] = [
+  {
+    id: "ihd001",
+    name: "Tynne hansker",
+    slot: "hands",
+    tier: 1,
+    value: 150,
+    hp: 5,
+    img: hd1,
+  },
+  {
+    id: "ihd002",
+    name: "Skinnhansker",
+    slot: "hands",
+    tier: 2,
+    value: 350,
+    hp: 15,
+    img: hd2,
+  },
+  {
+    id: "ihd003",
+    name: "Knyttnevehansker",
+    slot: "hands",
+    tier: 3,
+    value: 900,
+    hp: 30,
+    img: hd3,
+  },
+  {
+    id: "ihd004",
+    name: "Mafia-hansker",
+    slot: "hands",
+    tier: 4,
+    value: 2000,
+    hp: 55,
+    img: hd4,
+  },
+  {
+    id: "ihd005",
+    name: "Gullforede hansker",
+    slot: "hands",
+    tier: 5,
+    value: 4000,
+    hp: 90,
+    img: hd5,
+  },
+];
+
+export const Rings: RingItem[] = [
+  // Tier 1
+  {
+    id: "ir0001",
+    name: "Enkel ring",
+    slot: "ring",
+    tier: 1,
+    value: 200,
+    hp: 5,
+    img: r1,
+  },
+  {
+    id: "ir0002",
+    name: "Slitt signetring",
+    slot: "ring",
+    tier: 1,
+    value: 220,
+    attack: 1,
+    img: r2,
+  },
+
+  // Tier 2
+  {
+    id: "ir0003",
+    name: "Sølvring",
+    slot: "ring",
+    tier: 2,
+    value: 400,
+    hp: 10,
+    img: r3,
+  },
+  {
+    id: "ir0004",
+    name: "Sølv signetring",
+    slot: "ring",
+    tier: 2,
+    value: 500,
+    attack: 2,
+    img: r4,
+  },
+
+  // Tier 3
+  {
+    id: "ir0005",
+    name: "Gullring",
+    slot: "ring",
+    tier: 3,
+    value: 900,
+    hp: 20,
+    img: r5,
+  },
+  {
+    id: "ir0006",
+    name: "Gull signetring",
+    slot: "ring",
+    tier: 3,
+    value: 1300,
+    attack: 4,
+    img: r6,
+  },
+
+  // Tier 4
+  {
+    id: "ir0007",
+    name: "Mafiaring",
+    slot: "ring",
+    tier: 4,
+    value: 1800,
+    hp: 35,
+    img: r7,
+  },
+  {
+    id: "ir0008",
+    name: "Bossens signetring",
+    slot: "ring",
+    tier: 4,
+    value: 2400,
+    attack: 6,
+    img: r8,
+  },
+
+  // Tier 5
+  {
+    id: "ir0009",
+    name: "Diamantbesatt ring",
+    slot: "ring",
+    tier: 5,
+    value: 3500,
+    hp: 50,
+    img: r9,
+  },
+  {
+    id: "ir0010",
+    name: "Dons diamantring",
+    slot: "ring",
+    tier: 5,
+    value: 5000,
+    attack: 10,
+    img: r10,
+  },
+];
+
 export const Bullets: BulletItem[] = [
   {
     id: "ib0001",
@@ -329,6 +704,10 @@ export const Narcotics: NarcoticItem[] = [
 export const Items: Item[] = [
   ...Hats,
   ...Jackets,
+  ...Feet,
+  ...Face,
+  ...Hands,
+  ...Rings,
   ...Weapons,
   ...Bullets,
   ...Narcotics,
