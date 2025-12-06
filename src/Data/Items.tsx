@@ -10,49 +10,51 @@ import h8 from "/images/items/h8.jpg";
 import h9 from "/images/items/h9.jpg";
 
 // Jackets
+import j1 from "/images/items/j1.jpg";
 import j2 from "/images/items/j2.jpg";
 import j6 from "/images/items/j6.jpg";
 import j8 from "/images/items/j8.jpg";
+import j5 from "/images/items/j5.jpg";
 
 // Feet
-import f1 from "/images/items/j2.jpg";
-import f2 from "/images/items/j6.jpg";
-import f3 from "/images/items/j8.jpg";
-import f4 from "/images/items/j8.jpg";
-import f5 from "/images/items/j8.jpg";
+import f1 from "/images/items/f1.jpg";
+import f2 from "/images/items/f2.jpg";
+import f3 from "/images/items/f3.jpg";
+import f4 from "/images/items/f4.jpg";
+import f5 from "/images/items/f5.jpg";
 
 // Face
-import fa1 from "/images/items/j2.jpg";
-import fa2 from "/images/items/j6.jpg";
-import fa3 from "/images/items/j8.jpg";
-import fa4 from "/images/items/j8.jpg";
-import fa5 from "/images/items/j8.jpg";
+import fa1 from "/images/items/fa1.jpg";
+import fa2 from "/images/items/fa2.jpg";
+import fa3 from "/images/items/fa3.jpg";
+import fa4 from "/images/items/fa4.jpg";
+import fa5 from "/images/items/fa5.jpg";
 
-// Face
-import nk1 from "/images/items/j2.jpg";
-import nk2 from "/images/items/j6.jpg";
-import nk3 from "/images/items/j8.jpg";
-import nk4 from "/images/items/j8.jpg";
-import nk5 from "/images/items/j8.jpg";
+// Neck
+import nk1 from "/images/items/nk1.jpg";
+import nk2 from "/images/items/nk2.jpg";
+import nk3 from "/images/items/nk3.jpg";
+import nk4 from "/images/items/nk4.jpg";
+import nk5 from "/images/items/nk5.jpg";
 
 // Hands
-import hd1 from "/images/items/j2.jpg";
-import hd2 from "/images/items/j6.jpg";
-import hd3 from "/images/items/j8.jpg";
-import hd4 from "/images/items/j8.jpg";
-import hd5 from "/images/items/j8.jpg";
+import hd1 from "/images/items/hd1.jpg";
+import hd2 from "/images/items/hd2.jpg";
+import hd3 from "/images/items/hd3.jpg";
+import hd4 from "/images/items/hd4.jpg";
+import hd5 from "/images/items/hd5.jpg";
 
 // Rings
-import r1 from "/images/items/j2.jpg";
-import r2 from "/images/items/j2.jpg";
-import r3 from "/images/items/j2.jpg";
-import r4 from "/images/items/j2.jpg";
-import r5 from "/images/items/j2.jpg";
-import r6 from "/images/items/j2.jpg";
-import r7 from "/images/items/j2.jpg";
-import r8 from "/images/items/j2.jpg";
-import r9 from "/images/items/j2.jpg";
-import r10 from "/images/items/j2.jpg";
+import r1 from "/images/items/r1.jpg";
+import r2 from "/images/items/r2.jpg";
+import r3 from "/images/items/r3.jpg";
+import r4 from "/images/items/r4.jpg";
+import r5 from "/images/items/r5.jpg";
+import r6 from "/images/items/r6.jpg";
+import r7 from "/images/items/r7.jpg";
+import r8 from "/images/items/r8.jpg";
+import r9 from "/images/items/r9.jpg";
+import r10 from "/images/items/r10.jpg";
 
 // Weapons
 import w1 from "/images/items/Knife1.png";
@@ -63,6 +65,8 @@ import w5 from "/images/items/Beretta92FS.jpg";
 import w6 from "/images/items/DesertEagle50AE.jpg";
 import w7 from "/images/items/Remington870.jpg";
 import w8 from "/images/items/Uzi.jpg";
+import w9 from "/images/items/w9.jpg";
+import w10 from "/images/items/w10.jpg";
 
 // Bullets
 import b1 from "/images/items/b1.jpg";
@@ -248,15 +252,24 @@ export const Hats: HatItem[] = [
 export const Jackets: JacketItem[] = [
   {
     id: "ij0001",
-    name: "Skrukket jakke",
+    name: "Hettegenser",
     slot: "jacket",
     tier: 1,
     value: 250,
     hp: 10,
-    img: j2,
+    img: j1,
   },
   {
     id: "ij0002",
+    name: "Slitt dressjakke",
+    slot: "jacket",
+    tier: 2,
+    value: 250,
+    hp: 25,
+    img: j2,
+  },
+  {
+    id: "ij0003",
     name: "Tykk frakk",
     slot: "jacket",
     tier: 3,
@@ -265,13 +278,22 @@ export const Jackets: JacketItem[] = [
     img: j6,
   },
   {
-    id: "ij0003",
+    id: "ij0004",
     name: "Pimp Jakke",
     slot: "jacket",
     tier: 4,
-    value: 1000,
-    hp: 50,
+    value: 2500,
+    hp: 60,
     img: j8,
+  },
+  {
+    id: "ij0005",
+    name: "Mafiafrakk",
+    slot: "jacket",
+    tier: 5,
+    value: 10000,
+    hp: 90,
+    img: j5,
   },
 ];
 
@@ -361,6 +383,28 @@ export const Weapons: WeaponItem[] = [
     img: w8,
     usingBullets: true,
     capacity: 25,
+  },
+  {
+    id: "iw0009",
+    name: "Skarpskytterrifle",
+    slot: "weapon",
+    tier: 5,
+    value: 8000,
+    attack: 55,
+    img: w9,
+    usingBullets: true,
+    capacity: 10,
+  },
+  {
+    id: "iw0010",
+    name: "Rakettkaster",
+    slot: "weapon",
+    tier: 5,
+    value: 12000,
+    attack: 80,
+    img: w10,
+    usingBullets: true,
+    capacity: 5,
   },
 ];
 
@@ -706,6 +750,7 @@ export const Items: Item[] = [
   ...Jackets,
   ...Feet,
   ...Face,
+  ...Neck,
   ...Hands,
   ...Rings,
   ...Weapons,

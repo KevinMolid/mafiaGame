@@ -245,7 +245,7 @@ const Equipment: React.FC = () => {
         {/* Row 1 */}
         <Slot slotKey="hat" icon="hat-cowboy" />
         <div></div>
-        <Slot slotKey="glasses" icon="glasses" />
+        <Slot slotKey="face" icon="glasses" />
 
         {/* Row 2 */}
         <Slot slotKey="jacket" icon="shirt" />
@@ -253,14 +253,14 @@ const Equipment: React.FC = () => {
         <Slot slotKey="neck" icon="ribbon" />
 
         {/* Row 3 */}
-        <Slot slotKey="boots" icon="socks" />
+        <Slot slotKey="feet" icon="socks" />
         <div></div>
-        <Slot slotKey="gloves" icon="mitten" />
+        <Slot slotKey="hands" icon="mitten" />
 
         {/* Row 4 */}
         <Slot slotKey="weapon" icon="gun" />
         <div></div>
-        <Slot slotKey="ringLeft" fallbackKey="ring" icon="ring" />
+        <Slot slotKey="ring" icon="ring" />
 
         {/* Row 5 */}
         <div className="h-16 flex flex-col justify-end">
@@ -278,7 +278,7 @@ const Equipment: React.FC = () => {
           </p>
         </div>
         <div></div>
-        <Slot slotKey="ringRight" fallbackKey="ring2" icon="ring" />
+        <Slot slotKey="ring2" icon="ring" />
       </section>
 
       {/* --- Equipped item modal (Unequip) --- */}

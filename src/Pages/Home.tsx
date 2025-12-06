@@ -66,8 +66,8 @@ const Home = () => {
   const equipItem = async (item: ItemDoc) => {
     if (!userCharacter?.id) return;
 
-    const slot = (item.slot || "").trim();
-    if (!slot) {
+    const baseSlot = (item.slot || "").trim();
+    if (!baseSlot) {
       setMessageType("warning");
       setMessage("Denne gjenstanden kan ikke utstyres (mangler slot).");
       return;
@@ -80,41 +80,76 @@ const Home = () => {
       await runTransaction(db, async (tx) => {
         const snap = await tx.get(charRef);
         const data = (snap.data() || {}) as any;
+        const equipment = data.equipment || {};
 
-        const currentlyEquipped = data?.equipment?.[slot] || null;
+        let targetSlot = baseSlot;
 
-        // If something is already equipped in this slot, move it back to inventory (optional).
+        // --- Special logic for rings (ring + ring2) ---
+        if (baseSlot === "ring") {
+          const ring1 = equipment.ring || null;
+          const ring2 = equipment.ring2 || null;
+
+          if (!ring1 && !ring2) {
+            // both empty -> use ring
+            targetSlot = "ring";
+          } else if (ring1 && !ring2) {
+            // ring filled, ring2 empty -> use ring2
+            targetSlot = "ring2";
+          } else if (!ring1 && ring2) {
+            // ring empty, ring2 filled -> use ring
+            targetSlot = "ring";
+          } else {
+            // both filled -> replace lowest tier
+            const tier1 = ring1.tier ?? 1;
+            const tier2 = ring2.tier ?? 1;
+
+            if (tier1 === tier2) {
+              // same tier -> replace ring
+              targetSlot = "ring";
+            } else if (tier1 < tier2) {
+              // ring is weaker -> replace ring
+              targetSlot = "ring";
+            } else {
+              // ring2 is weaker -> replace ring2
+              targetSlot = "ring2";
+            }
+          }
+        }
+
+        const currentlyEquipped = equipment[targetSlot] || null;
+
+        // If something is already equipped in the target slot, move it back to inventory
         if (currentlyEquipped) {
           const backToInvRef = doc(
             collection(db, "Characters", userCharacter.id, "items")
           );
           tx.set(backToInvRef, {
             ...currentlyEquipped,
-            returnedFromSlot: slot,
+            // normalize slot back to "ring" so equip logic works again later
+            slot: baseSlot,
+            returnedFromSlot: targetSlot,
             returnedAt: serverTimestamp(),
           });
         }
 
-        // Write the new equipment to the slot
+        // New equipment payload
         const equipPayload = {
-          // keep whatever fields you want visible in Equipment UI
           id: item.id, // type id
           name: item.name,
           img: item.img ?? null,
           tier: item.tier ?? 1,
-          slot,
+          slot: targetSlot, // IMPORTANT: actual equipped slot (ring or ring2)
           value: item.value ?? 0,
           attack: item.attack ?? 1,
           capacity: item.capacity ?? 0,
           usingBullets: item.usingBullets ?? false,
-          // helpful bookkeeping
-          fromDocId: item.docId, // the inventory doc this came from
+          fromDocId: item.docId,
           equippedAt: serverTimestamp(),
         };
 
-        tx.update(charRef, { [`equipment.${slot}`]: equipPayload });
+        tx.update(charRef, { [`equipment.${targetSlot}`]: equipPayload });
 
-        // Remove from inventory
+        // Remove original inventory doc
         tx.delete(invRef);
       });
 
