@@ -20,7 +20,6 @@ import { useCharacter } from "../CharacterContext";
 
 // Firestore
 import {
-  addDoc,
   collection,
   getFirestore,
   onSnapshot,
@@ -122,7 +121,6 @@ const BlackMarket = () => {
   // New listing form state
   const [category, setCategory] = useState<Category>("cars");
   const [itemName, setItemName] = useState("");
-  const [itemType, setItemType] = useState("Car");
   const [quantity, setQuantity] = useState<number>(1);
   const [price, setPrice] = useState<number>(0);
 
@@ -1164,7 +1162,6 @@ const BlackMarket = () => {
                   style={category === "cars" ? "primary" : "text"}
                   onClick={() => {
                     setCategory("cars");
-                    setItemType("Car");
                     setSelectedCar(null);
                     setSelectedBullet(null);
                     setSelectedEquip(null);
@@ -1181,7 +1178,6 @@ const BlackMarket = () => {
                   style={category === "bullets" ? "primary" : "text"}
                   onClick={() => {
                     setCategory("bullets");
-                    setItemType("Ammo");
                     setSelectedCar(null);
                     setSelectedBullet(null);
                     setSelectedEquip(null);
@@ -1198,7 +1194,6 @@ const BlackMarket = () => {
                   style={category === "weapons" ? "primary" : "text"}
                   onClick={() => {
                     setCategory("weapons");
-                    setItemType("Equipment");
                     setSelectedCar(null);
                     setSelectedBullet(null);
                     setSelectedEquip(null);
@@ -1215,7 +1210,6 @@ const BlackMarket = () => {
                   style={category === "items" ? "primary" : "text"}
                   onClick={() => {
                     setCategory("items");
-                    setItemType("Narcotic");
                     setSelectedCar(null);
                     setSelectedBullet(null);
                     setSelectedEquip(null);
