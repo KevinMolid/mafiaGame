@@ -9,7 +9,7 @@ import Button from "../components/Button";
 import InfoBox from "../components/InfoBox";
 import Username from "../components/Typography/Username";
 import Item from "../components/Typography/Item";
-import ItemTile from "../components/ItemTile"; // <— NEW
+import ItemTile from "../components/ItemTile";
 
 // Functions
 import { getCarByName, getCarByKey } from "../Data/Cars";
@@ -56,6 +56,17 @@ type Listing = {
     img?: string | null;
     typeId?: string | null;
   };
+  item?: {
+    name?: string | null;
+    tier?: number | null;
+    attack?: number | null;
+    hp?: number | null;
+    img?: string | null;
+    slot?: string | null;
+    typeId?: string | null;
+    type?: string | null;
+    value?: number | null;
+  };
 };
 
 type CarDoc = {
@@ -81,6 +92,9 @@ type BulletDoc = {
   img: string;
 };
 
+// Alle andre items i inventory (utstyr + narkotika + kuler, vi filtrerer senere)
+type ItemDoc = { docId: string } & Record<string, any>;
+
 // Helpers
 const fmt = (n: number) => n.toLocaleString("nb-NO");
 const carBaseName = (c: CarDoc) =>
@@ -90,8 +104,8 @@ const stripTierSuffix = (s: string) => s.replace(/\s*\(T\d+\)\s*$/, "");
 function labelForCategory(c: Category) {
   if (c === "cars") return "Biler";
   if (c === "bullets") return "Kuler";
-  if (c === "weapons") return "Våpen";
-  return "Annet";
+  if (c === "weapons") return "Utstyr";
+  return "Narkotika";
 }
 
 // -----------------------------------------------------------------------------
@@ -115,8 +129,14 @@ const BlackMarket = () => {
   // Items owned by player (subcollection)
   const [cars, setCars] = useState<CarDoc[]>([]);
   const [selectedCar, setSelectedCar] = useState<CarDoc | null>(null);
+
   const [bullets, setBullets] = useState<BulletDoc[]>([]);
   const [selectedBullet, setSelectedBullet] = useState<BulletDoc | null>(null);
+
+  // Alle items i inventory (inkludert kuler, utstyr, narkotika)
+  const [inventoryItems, setInventoryItems] = useState<ItemDoc[]>([]);
+  const [selectedEquip, setSelectedEquip] = useState<ItemDoc | null>(null);
+  const [selectedDrug, setSelectedDrug] = useState<ItemDoc | null>(null);
 
   // Local listing data
   const [allListings, setAllListings] = useState<Listing[]>([]);
@@ -169,8 +189,8 @@ const BlackMarket = () => {
       qBullets,
       (snap) => {
         const list: BulletDoc[] = snap.docs.map((d) => ({
-          docId: d.id, // << keep doc id here
-          ...(d.data() as any), // item data (may include its own "id" field)
+          docId: d.id,
+          ...(d.data() as any),
         }));
         setBullets(list);
       },
@@ -181,6 +201,51 @@ const BlackMarket = () => {
     );
     return () => unsub();
   }, [userCharacter?.id]);
+
+  // --- Subscribe til alle items (utstyr + narkotika + kuler) ------------
+  useEffect(() => {
+    if (!userCharacter?.id) {
+      setInventoryItems([]);
+      return;
+    }
+
+    const itemsRef = collection(db, "Characters", userCharacter.id, "items");
+    const unsub = onSnapshot(
+      itemsRef,
+      (snap) => {
+        const list: ItemDoc[] = snap.docs.map((d) => ({
+          docId: d.id,
+          ...(d.data() as any),
+        }));
+        setInventoryItems(list);
+      },
+      (err) => {
+        console.error("Failed to subscribe to items:", err);
+        setInventoryItems([]);
+      }
+    );
+
+    return () => unsub();
+  }, [userCharacter?.id]);
+
+  // Utstyr = alle items med slot (hat, jacket, weapon, feet, face, neck, hands, ring)
+  const equipmentItems = useMemo(
+    () =>
+      inventoryItems.filter(
+        (i) =>
+          i.type !== "bullet" &&
+          i.type !== "narcotic" &&
+          typeof i.slot === "string" &&
+          i.slot.trim().length > 0
+      ),
+    [inventoryItems]
+  );
+
+  // Narkotika = items med type === "narcotic"
+  const narcoticItems = useMemo(
+    () => inventoryItems.filter((i) => i.type === "narcotic"),
+    [inventoryItems]
+  );
 
   // --- Subscribe to my Auctions --------------------------------------------
   useEffect(() => {
@@ -214,6 +279,7 @@ const BlackMarket = () => {
                 : Date.now(),
               car: v.carId ? { id: v.carId, ...(v.car || {}) } : undefined,
               bullet: v.bullet ?? undefined,
+              item: v.item ?? undefined,
               location: v.location ?? null,
             };
           })
@@ -266,6 +332,7 @@ const BlackMarket = () => {
                 : Date.now(),
               car: v.carId ? { id: v.carId, ...(v.car || {}) } : undefined,
               bullet: v.bullet ?? undefined,
+              item: v.item ?? undefined,
               location: v.location ?? null,
             };
           })
@@ -412,7 +479,6 @@ const BlackMarket = () => {
 
       try {
         await runTransaction(db, async (tx) => {
-          // Use the real document id from Firestore
           const itemRef = doc(
             db,
             "Characters",
@@ -446,14 +512,12 @@ const BlackMarket = () => {
             createdAt: serverTimestamp(),
             location: userCharacter.location ?? null,
 
-            // Keep references for easy cancel/restore
             bulletId: selectedBullet.docId,
             bullet: {
               name: selectedBullet.name ?? itemName.trim(),
               tier: selectedBullet.tier ?? null,
               attack: selectedBullet.attack ?? null,
               img: selectedBullet.img ?? null,
-              // you can keep type-id too if you store it in the item
               typeId: (data as any)?.id ?? null,
             },
           });
@@ -461,10 +525,8 @@ const BlackMarket = () => {
           // Split the stack: decrement player's remaining stack
           const newQty = owned - quantity;
           if (newQty <= 0) {
-            // selling whole stack -> remove the doc
             tx.delete(itemRef);
           } else {
-            // selling part of stack -> keep doc with remainder
             tx.update(itemRef, {
               quantity: newQty,
               lastUpdated: serverTimestamp(),
@@ -488,63 +550,177 @@ const BlackMarket = () => {
       return;
     }
 
-    // ----- Generic (weapons/items) -----
-    if (!itemName.trim()) {
-      setMessageType("warning");
-      setMessage("Skriv inn et varenavn.");
+    // ----- Utstyr (alle items med slot: våpen, klær, ringer, osv.) -----
+    if (category === "weapons") {
+      if (!selectedEquip) {
+        setMessageType("warning");
+        setMessage("Velg et utstyr du vil selge.");
+        return;
+      }
+      const name = (itemName || selectedEquip.name || "Utstyr").trim();
+      if (!name) {
+        setMessageType("warning");
+        setMessage("Skriv inn et varenavn.");
+        return;
+      }
+      if (price <= 0) {
+        setMessageType("warning");
+        setMessage("Du må skrive en pris.");
+        return;
+      }
+
+      try {
+        await runTransaction(db, async (tx) => {
+          const itemRef = doc(
+            db,
+            "Characters",
+            userCharacter.id,
+            "items",
+            selectedEquip.docId
+          );
+          const snap = await tx.get(itemRef);
+          if (!snap.exists()) {
+            throw new Error("Gjenstanden finnes ikke lenger.");
+          }
+          const data = snap.data() as any;
+
+          const auctionRef = doc(collection(db, "Auctions"));
+          tx.set(auctionRef, {
+            status: "active",
+            category: "weapons",
+            itemType: "Equipment",
+            name,
+            quantity: 1,
+            price,
+            sellerId: userCharacter.id,
+            sellerName: userCharacter.username,
+            createdAt: serverTimestamp(),
+            location: userCharacter.location ?? null,
+            itemDocId: selectedEquip.docId,
+            item: {
+              name: data.name ?? selectedEquip.name ?? name,
+              tier: data.tier ?? selectedEquip.tier ?? null,
+              attack: data.attack ?? null,
+              hp: data.hp ?? null,
+              img: data.img ?? selectedEquip.img ?? null,
+              slot: data.slot ?? null,
+              type: data.type ?? null,
+              typeId: data.id ?? null,
+              value: data.value ?? null,
+            },
+          });
+
+          // Hele gjenstanden flyttes ut av inventory
+          tx.delete(itemRef);
+        });
+
+        setMessageType("success");
+        setMessage("Utstyret ble lagt ut for salg.");
+
+        setSelectedEquip(null);
+        setItemName("");
+        setPrice(0);
+      } catch (e: any) {
+        console.error("Kunne ikke publisere utstyrs-annonse:", e);
+        setMessageType("failure");
+        setMessage(e?.message || "Noe gikk galt. Prøv igjen.");
+      }
+
       return;
     }
-    if (quantity <= 0) {
-      setMessageType("warning");
-      setMessage("Antall må være større enn 0.");
+
+    // ----- Narkotika (stackable, type === 'narcotic') -----
+    if (category === "items") {
+      if (!selectedDrug) {
+        setMessageType("warning");
+        setMessage("Velg narkotika du vil selge.");
+        return;
+      }
+      const name = (itemName || selectedDrug.name || "Narkotika").trim();
+      if (!name) {
+        setMessageType("warning");
+        setMessage("Skriv inn et varenavn.");
+        return;
+      }
+      if (quantity <= 0) {
+        setMessageType("warning");
+        setMessage("Antall må være større enn 0.");
+        return;
+      }
+      if (price <= 0) {
+        setMessageType("warning");
+        setMessage("Du må skrive en pris.");
+        return;
+      }
+
+      try {
+        await runTransaction(db, async (tx) => {
+          const itemRef = doc(
+            db,
+            "Characters",
+            userCharacter.id,
+            "items",
+            selectedDrug.docId
+          );
+
+          const snap = await tx.get(itemRef);
+          if (!snap.exists()) {
+            throw new Error("Gjenstanden finnes ikke lenger.");
+          }
+          const data = snap.data() as any;
+          const owned: number = Number(data.quantity ?? 0);
+          if (owned < quantity) {
+            throw new Error(`Du har bare ${owned} stk av denne varen.`);
+          }
+
+          const auctionRef = doc(collection(db, "Auctions"));
+          tx.set(auctionRef, {
+            status: "active",
+            category: "items",
+            itemType: "Narcotic",
+            name,
+            quantity,
+            price,
+            sellerId: userCharacter.id,
+            sellerName: userCharacter.username,
+            createdAt: serverTimestamp(),
+            location: userCharacter.location ?? null,
+            itemDocId: selectedDrug.docId,
+            item: {
+              name: data.name ?? selectedDrug.name ?? name,
+              tier: data.tier ?? selectedDrug.tier ?? null,
+              img: data.img ?? selectedDrug.img ?? null,
+              type: data.type ?? "narcotic",
+              value: data.value ?? null,
+              stackable: true,
+            },
+          });
+
+          const newQty = owned - quantity;
+          if (newQty <= 0) {
+            tx.delete(itemRef);
+          } else {
+            tx.update(itemRef, {
+              quantity: newQty,
+              lastUpdated: serverTimestamp(),
+            });
+          }
+        });
+
+        setMessageType("success");
+        setMessage("Narkotikaen ble lagt ut for salg.");
+
+        setSelectedDrug(null);
+        setItemName("");
+        setQuantity(1);
+        setPrice(0);
+      } catch (e: any) {
+        console.error("Kunne ikke publisere narkotika-annonse:", e);
+        setMessageType("failure");
+        setMessage(e?.message || "Noe gikk galt. Prøv igjen.");
+      }
+
       return;
-    }
-    if (price <= 0) {
-      setMessageType("warning");
-      setMessage("Du må skrive en pris.");
-      return;
-    }
-
-    try {
-      const docRef = await addDoc(collection(db, "Auctions"), {
-        status: "active",
-        category,
-        itemType,
-        name: itemName.trim(),
-        quantity,
-        price,
-        sellerId: userCharacter.id,
-        sellerName: userCharacter.username,
-        createdAt: serverTimestamp(),
-        location: userCharacter.location ?? null,
-      });
-
-      const now = Date.now();
-      const listing: Listing = {
-        id: docRef.id,
-        category,
-        itemType,
-        name: itemName.trim(),
-        quantity,
-        price,
-        seller: { id: userCharacter.id, username: userCharacter.username },
-        createdAt: now,
-        location: userCharacter.location ?? null,
-      };
-
-      setAllListings((prev) => [listing, ...prev]);
-      setMyListings((prev) => [listing, ...prev]);
-
-      setItemName("");
-      setQuantity(1);
-      setPrice(0);
-
-      setMessageType("success");
-      setMessage("Annonse publisert på svartebørsen.");
-    } catch (e) {
-      console.error("Kunne ikke publisere annonse:", e);
-      setMessageType("failure");
-      setMessage("Noe gikk galt. Prøv igjen.");
     }
   };
 
@@ -583,7 +759,7 @@ const BlackMarket = () => {
             "Characters",
             userCharacter.id,
             "items",
-            v.bulletId // this is the inventory doc id we stored earlier
+            v.bulletId
           );
 
           const itemSnap = await tx.get(itemRef);
@@ -595,7 +771,6 @@ const BlackMarket = () => {
               lastUpdated: serverTimestamp(),
             });
           } else {
-            // Item doc no longer exists — recreate it with the returned quantity
             tx.set(itemRef, {
               type: "bullet",
               name: v?.bullet?.name ?? "Kuler",
@@ -607,6 +782,70 @@ const BlackMarket = () => {
               lastUpdated: serverTimestamp(),
             });
           }
+          tx.delete(auctionRef);
+          return;
+        }
+
+        if (v.category === "weapons" && v.itemDocId && v.item) {
+          const itemRef = doc(
+            db,
+            "Characters",
+            userCharacter.id,
+            "items",
+            v.itemDocId
+          );
+
+          const payload = {
+            name: v.item.name ?? "Utstyr",
+            tier: v.item.tier ?? null,
+            img: v.item.img ?? null,
+            slot: v.item.slot ?? null,
+            type: v.item.type ?? null,
+            value: v.item.value ?? null,
+            attack: v.item.attack ?? null,
+            hp: v.item.hp ?? null,
+            quantity: 1,
+            createdAt: serverTimestamp(),
+            lastUpdated: serverTimestamp(),
+          };
+
+          tx.set(itemRef, payload);
+          tx.delete(auctionRef);
+          return;
+        }
+
+        if (v.category === "items" && v.itemDocId && v.item && v.quantity > 0) {
+          const itemRef = doc(
+            db,
+            "Characters",
+            userCharacter.id,
+            "items",
+            v.itemDocId
+          );
+
+          const itemSnap = await tx.get(itemRef);
+          const qtyToReturn = Number(v.quantity ?? 0);
+
+          if (itemSnap.exists()) {
+            const cur = itemSnap.data() as any;
+            const curQty = Number(cur.quantity ?? 0);
+            tx.update(itemRef, {
+              quantity: curQty + qtyToReturn,
+              lastUpdated: serverTimestamp(),
+            });
+          } else {
+            tx.set(itemRef, {
+              name: v.item.name ?? "Narkotika",
+              tier: v.item.tier ?? null,
+              img: v.item.img ?? null,
+              type: v.item.type ?? "narcotic",
+              value: v.item.value ?? null,
+              quantity: qtyToReturn,
+              createdAt: serverTimestamp(),
+              lastUpdated: serverTimestamp(),
+            });
+          }
+
           tx.delete(auctionRef);
           return;
         }
@@ -643,7 +882,7 @@ const BlackMarket = () => {
           throw new Error("Du kan ikke kjøpe fra deg selv");
         }
 
-        // Still limited to cars (unchanged)
+        // Fortsatt kun støtte for bil-kjøp
         if (a.category !== "cars" || !a.carId || !a.car)
           throw new Error("Kjøp støttes kun for biler akkurat nå.");
 
@@ -686,7 +925,7 @@ const BlackMarket = () => {
     <>
       <H2>Svartebørs</H2>
       <p className="mb-4">
-        Her kan du legge ut biler, våpen, kuler og andre varer for salg, eller
+        Her kan du legge ut biler, utstyr, kuler og narkotika for salg, eller
         kjøpe fra andre spillere.
       </p>
 
@@ -729,14 +968,14 @@ const BlackMarket = () => {
               style={filterCategory === "weapons" ? "primary" : "text"}
               onClick={() => setFilterCategory("weapons")}
             >
-              Våpen
+              Utstyr
             </Button>
             <Button
               size="small"
               style={filterCategory === "items" ? "primary" : "text"}
               onClick={() => setFilterCategory("items")}
             >
-              Annet
+              Narkotika
             </Button>
 
             <div className="ml-auto w-full sm:w-72">
@@ -757,6 +996,8 @@ const BlackMarket = () => {
               {filteredMarket.map((l) => {
                 const isCar = l.category === "cars";
                 const isBullet = l.category === "bullets";
+                const isEquip = l.category === "weapons";
+                const isDrug = l.category === "items";
                 const nameNoTier = stripTierSuffix(l.name);
                 return (
                   <li
@@ -822,6 +1063,55 @@ const BlackMarket = () => {
                               </ul>
                             }
                           />
+                        ) : isEquip || isDrug ? (
+                          <Item
+                            name={nameNoTier}
+                            tier={l.item?.tier ?? undefined}
+                            tooltipImg={l.item?.img ?? undefined}
+                            tooltipContent={
+                              <ul className="space-y-0.5">
+                                {"attack" in (l.item ?? {}) &&
+                                  l.item?.attack != null && (
+                                    <li>
+                                      Angrep:{" "}
+                                      <strong className="text-neutral-200">
+                                        +{l.item.attack}
+                                      </strong>
+                                    </li>
+                                  )}
+                                {"hp" in (l.item ?? {}) &&
+                                  l.item?.hp != null && (
+                                    <li>
+                                      Helse:{" "}
+                                      <strong className="text-neutral-200">
+                                        +{l.item.hp}
+                                      </strong>
+                                    </li>
+                                  )}
+                                {"value" in (l.item ?? {}) &&
+                                  l.item?.value != null && (
+                                    <li>
+                                      Verdi:{" "}
+                                      <strong className="text-neutral-200">
+                                        {Number(l.item.value).toLocaleString(
+                                          "nb-NO"
+                                        )}
+                                      </strong>
+                                    </li>
+                                  )}
+                                {isDrug && (
+                                  <li>
+                                    Antall:{" "}
+                                    <strong className="text-neutral-200">
+                                      {(l.quantity ?? 0).toLocaleString(
+                                        "nb-NO"
+                                      )}
+                                    </strong>
+                                  </li>
+                                )}
+                              </ul>
+                            }
+                          />
                         ) : (
                           nameNoTier
                         )}
@@ -877,6 +1167,8 @@ const BlackMarket = () => {
                     setItemType("Car");
                     setSelectedCar(null);
                     setSelectedBullet(null);
+                    setSelectedEquip(null);
+                    setSelectedDrug(null);
                     setItemName("");
                     setQuantity(1);
                     setPrice(0);
@@ -892,6 +1184,8 @@ const BlackMarket = () => {
                     setItemType("Ammo");
                     setSelectedCar(null);
                     setSelectedBullet(null);
+                    setSelectedEquip(null);
+                    setSelectedDrug(null);
                     setItemName("");
                     setQuantity(1);
                     setPrice(0);
@@ -904,34 +1198,38 @@ const BlackMarket = () => {
                   style={category === "weapons" ? "primary" : "text"}
                   onClick={() => {
                     setCategory("weapons");
-                    setItemType("Gun");
+                    setItemType("Equipment");
                     setSelectedCar(null);
                     setSelectedBullet(null);
+                    setSelectedEquip(null);
+                    setSelectedDrug(null);
                     setItemName("");
                     setQuantity(1);
                     setPrice(0);
                   }}
                 >
-                  Våpen
+                  Utstyr
                 </Button>
                 <Button
                   size="small"
                   style={category === "items" ? "primary" : "text"}
                   onClick={() => {
                     setCategory("items");
-                    setItemType("Item");
+                    setItemType("Narcotic");
                     setSelectedCar(null);
                     setSelectedBullet(null);
+                    setSelectedEquip(null);
+                    setSelectedDrug(null);
                     setItemName("");
                     setQuantity(1);
                     setPrice(0);
                   }}
                 >
-                  Annet
+                  Narkotika
                 </Button>
               </div>
 
-              {/* Cars: unchanged */}
+              {/* Cars */}
               {category === "cars" ? (
                 <div className="grid gap-2">
                   {!selectedCar ? (
@@ -1077,7 +1375,7 @@ const BlackMarket = () => {
                   )}
                 </div>
               ) : category === "bullets" ? (
-                // BULLETS: render as ItemTile grid (select one -> qty+price form)
+                // BULLETS
                 <div className="grid gap-2">
                   {!selectedBullet ? (
                     bullets.length === 0 ? (
@@ -1174,7 +1472,7 @@ const BlackMarket = () => {
                         />
                       </div>
 
-                      {/* Quantity (cap to owned) */}
+                      {/* Quantity */}
                       <div className="grid gap-1">
                         <label
                           htmlFor="bm-qty"
@@ -1233,79 +1531,316 @@ const BlackMarket = () => {
                     </>
                   )}
                 </div>
+              ) : category === "weapons" ? (
+                // UTSYR – alle items med slot (ikke-bullets, ikke-narkotika)
+                <div className="grid gap-2">
+                  {!selectedEquip ? (
+                    equipmentItems.length === 0 ? (
+                      <p className="text-neutral-400">
+                        Du har ikke noe utstyr å selge.
+                      </p>
+                    ) : (
+                      <ul className="flex flex-wrap gap-x-1 gap-y-0 max-w-[500px]">
+                        {equipmentItems.map((it, idx) => {
+                          const qty = Number(it.quantity ?? 1);
+                          return (
+                            <li key={it.docId + ":" + idx}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedEquip(it);
+                                  setItemName(it.name ?? "Utstyr");
+                                  setQuantity(1);
+                                }}
+                                className="focus:outline-none"
+                                title="Velg utstyr"
+                              >
+                                <ItemTile
+                                  name={it.name ?? "Utstyr"}
+                                  img={it.img}
+                                  tier={it.tier}
+                                  qty={qty > 1 ? qty : undefined}
+                                  tooltipImg={it.img ?? undefined}
+                                  tooltipContent={
+                                    <ul className="space-y-0.5">
+                                      {"attack" in it && (
+                                        <li>
+                                          Angrep:{" "}
+                                          <strong className="text-neutral-200">
+                                            +{it.attack ?? 0}
+                                          </strong>
+                                        </li>
+                                      )}
+                                      {"hp" in it && (
+                                        <li>
+                                          Helse:{" "}
+                                          <strong className="text-neutral-200">
+                                            +{it.hp ?? 0}
+                                          </strong>
+                                        </li>
+                                      )}
+                                      {"capacity" in it && (
+                                        <li>
+                                          Kapasitet:{" "}
+                                          <strong className="text-neutral-200">
+                                            {it.capacity ?? 0}
+                                          </strong>
+                                        </li>
+                                      )}
+                                      {"value" in it && (
+                                        <li>
+                                          Verdi:{" "}
+                                          <strong className="text-neutral-200">
+                                            {Number(
+                                              it.value ?? 0
+                                            ).toLocaleString("nb-NO")}
+                                          </strong>
+                                        </li>
+                                      )}
+                                    </ul>
+                                  }
+                                />
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <ItemTile
+                          name={selectedEquip.name ?? "Utstyr"}
+                          img={selectedEquip.img ?? undefined}
+                          tier={selectedEquip.tier}
+                          qty={Number(selectedEquip.quantity ?? 1) || undefined}
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-neutral-100 font-semibold">
+                            {selectedEquip.name ?? "Utstyr"}
+                          </span>
+                        </div>
+                        <Button
+                          size="text"
+                          style="text"
+                          onClick={() => {
+                            setSelectedEquip(null);
+                            setItemName("");
+                            setPrice(0);
+                          }}
+                        >
+                          Bytt
+                        </Button>
+                      </div>
+
+                      {/* Navn */}
+                      <div className="grid gap-1">
+                        <label
+                          htmlFor="bm-name"
+                          className="text-sm text-neutral-400"
+                        >
+                          Varenavn
+                        </label>
+                        <input
+                          id="bm-name"
+                          className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+                          value={itemName}
+                          onChange={(e) => setItemName(e.target.value)}
+                        />
+                      </div>
+
+                      {/* Pris */}
+                      <div className="grid gap-1">
+                        <label
+                          htmlFor="bm-price"
+                          className="text-sm text-neutral-400"
+                        >
+                          Pris
+                        </label>
+                        <input
+                          id="bm-price"
+                          inputMode="numeric"
+                          className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none w-44"
+                          value={price === 0 ? "" : fmt(price)}
+                          placeholder="0"
+                          onChange={(e) => {
+                            const n = parseInt(
+                              e.target.value.replace(/[^\d]/g, ""),
+                              10
+                            );
+                            setPrice(Number.isFinite(n) ? n : 0);
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button onClick={handlePostListing}>
+                          <i className="fa-solid fa-plus" /> Publiser
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
               ) : (
-                // Non-car, non-bullets: generic fields
-                <>
-                  <div className="grid gap-1">
-                    <label
-                      htmlFor="bm-name"
-                      className="text-sm text-neutral-400"
-                    >
-                      Varenavn
-                    </label>
-                    <input
-                      id="bm-name"
-                      className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-                      placeholder={
-                        category === "weapons" ? "Eks: Uzi" : "Eks: Diamanter"
-                      }
-                      value={itemName}
-                      onChange={(e) => setItemName(e.target.value)}
-                    />
-                  </div>
+                // NARKOTIKA – type === "narcotic", stackable
+                <div className="grid gap-2">
+                  {!selectedDrug ? (
+                    narcoticItems.length === 0 ? (
+                      <p className="text-neutral-400">
+                        Du har ingen narkotika å selge.
+                      </p>
+                    ) : (
+                      <ul className="flex flex-wrap gap-x-1 gap-y-0 max-w-[500px]">
+                        {narcoticItems.map((d, idx) => {
+                          const qty = Number(d.quantity ?? 0);
+                          return (
+                            <li key={d.docId + ":" + idx}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedDrug(d);
+                                  setItemName(d.name ?? "Narkotika");
+                                  setQuantity(qty > 0 ? 1 : 0);
+                                }}
+                                className="focus:outline-none"
+                                title="Velg narkotika"
+                              >
+                                <ItemTile
+                                  name={d.name ?? "Narkotika"}
+                                  img={d.img}
+                                  tier={d.tier}
+                                  qty={qty}
+                                  tooltipImg={d.img ?? undefined}
+                                  tooltipContent={
+                                    <ul className="space-y-0.5">
+                                      <li>
+                                        Antall:{" "}
+                                        <strong className="text-neutral-200">
+                                          {qty.toLocaleString("nb-NO")}
+                                        </strong>
+                                      </li>
+                                      {"value" in d && (
+                                        <li>
+                                          Verdi (per stk):{" "}
+                                          <strong className="text-neutral-200">
+                                            {Number(
+                                              d.value ?? 0
+                                            ).toLocaleString("nb-NO")}
+                                          </strong>
+                                        </li>
+                                      )}
+                                    </ul>
+                                  }
+                                />
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <ItemTile
+                          name={selectedDrug.name ?? "Narkotika"}
+                          img={selectedDrug.img ?? undefined}
+                          tier={selectedDrug.tier}
+                          qty={Number(selectedDrug.quantity ?? 0)}
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-neutral-100 font-semibold">
+                            {selectedDrug.name ?? "Narkotika"}
+                          </span>
+                        </div>
+                        <Button
+                          size="text"
+                          style="text"
+                          onClick={() => {
+                            setSelectedDrug(null);
+                            setItemName("");
+                            setQuantity(1);
+                            setPrice(0);
+                          }}
+                        >
+                          Bytt
+                        </Button>
+                      </div>
 
-                  <div className="grid gap-1">
-                    <label
-                      htmlFor="bm-qty"
-                      className="text-sm text-neutral-400"
-                    >
-                      Antall
-                    </label>
-                    <input
-                      id="bm-qty"
-                      inputMode="numeric"
-                      className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none w-28"
-                      value={quantity === 0 ? "" : quantity.toString()}
-                      placeholder="1"
-                      onChange={(e) => {
-                        const n = parseInt(
-                          e.target.value.replace(/[^\d]/g, ""),
-                          10
-                        );
-                        setQuantity(Number.isFinite(n) ? n : 0);
-                      }}
-                    />
-                  </div>
+                      {/* Navn */}
+                      <div className="grid gap-1">
+                        <label
+                          htmlFor="bm-name"
+                          className="text-sm text-neutral-400"
+                        >
+                          Varenavn
+                        </label>
+                        <input
+                          id="bm-name"
+                          className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+                          value={itemName}
+                          onChange={(e) => setItemName(e.target.value)}
+                        />
+                      </div>
 
-                  <div className="grid gap-1">
-                    <label
-                      htmlFor="bm-price"
-                      className="text-sm text-neutral-400"
-                    >
-                      Pris
-                    </label>
-                    <input
-                      id="bm-price"
-                      inputMode="numeric"
-                      className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none w-44"
-                      value={price === 0 ? "" : fmt(price)}
-                      placeholder="0"
-                      onChange={(e) => {
-                        const n = parseInt(
-                          e.target.value.replace(/[^\d]/g, ""),
-                          10
-                        );
-                        setPrice(Number.isFinite(n) ? n : 0);
-                      }}
-                    />
-                  </div>
+                      {/* Antall */}
+                      <div className="grid gap-1">
+                        <label
+                          htmlFor="bm-qty"
+                          className="text-sm text-neutral-400"
+                        >
+                          Antall
+                        </label>
+                        <input
+                          id="bm-qty"
+                          inputMode="numeric"
+                          className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none w-28"
+                          value={quantity === 0 ? "" : quantity.toString()}
+                          placeholder="1"
+                          onChange={(e) => {
+                            const owned = Number(selectedDrug?.quantity ?? 0);
+                            let n = parseInt(
+                              e.target.value.replace(/[^\d]/g, ""),
+                              10
+                            );
+                            if (!Number.isFinite(n)) n = 0;
+                            n = Math.max(0, Math.min(n, owned));
+                            setQuantity(n);
+                          }}
+                        />
+                      </div>
 
-                  <div className="flex gap-2 pt-2">
-                    <Button onClick={handlePostListing}>
-                      <i className="fa-solid fa-plus" /> Publiser
-                    </Button>
-                  </div>
-                </>
+                      {/* Pris */}
+                      <div className="grid gap-1">
+                        <label
+                          htmlFor="bm-price"
+                          className="text-sm text-neutral-400"
+                        >
+                          Pris
+                        </label>
+                        <input
+                          id="bm-price"
+                          inputMode="numeric"
+                          className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none w-44"
+                          value={price === 0 ? "" : fmt(price)}
+                          placeholder="0"
+                          onChange={(e) => {
+                            const n = parseInt(
+                              e.target.value.replace(/[^\d]/g, ""),
+                              10
+                            );
+                            setPrice(Number.isFinite(n) ? n : 0);
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button onClick={handlePostListing}>
+                          <i className="fa-solid fa-plus" /> Publiser
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
               )}
             </div>
           </Box>
@@ -1321,6 +1856,8 @@ const BlackMarket = () => {
                 {myListings.map((l) => {
                   const isCar = l.category === "cars";
                   const isBullet = l.category === "bullets";
+                  const isEquip = l.category === "weapons";
+                  const isDrug = l.category === "items";
                   const nameNoTier = stripTierSuffix(l.name);
                   return (
                     <li
@@ -1385,6 +1922,55 @@ const BlackMarket = () => {
                                       )}
                                     </strong>
                                   </li>
+                                </ul>
+                              }
+                            />
+                          ) : isEquip || isDrug ? (
+                            <Item
+                              name={nameNoTier}
+                              tier={l.item?.tier ?? undefined}
+                              tooltipImg={l.item?.img ?? undefined}
+                              tooltipContent={
+                                <ul className="space-y-0.5">
+                                  {"attack" in (l.item ?? {}) &&
+                                    l.item?.attack != null && (
+                                      <li>
+                                        Angrep:{" "}
+                                        <strong className="text-neutral-200">
+                                          +{l.item.attack}
+                                        </strong>
+                                      </li>
+                                    )}
+                                  {"hp" in (l.item ?? {}) &&
+                                    l.item?.hp != null && (
+                                      <li>
+                                        Helse:{" "}
+                                        <strong className="text-neutral-200">
+                                          +{l.item.hp}
+                                        </strong>
+                                      </li>
+                                    )}
+                                  {"value" in (l.item ?? {}) &&
+                                    l.item?.value != null && (
+                                      <li>
+                                        Verdi:{" "}
+                                        <strong className="text-neutral-200">
+                                          {Number(l.item.value).toLocaleString(
+                                            "nb-NO"
+                                          )}
+                                        </strong>
+                                      </li>
+                                    )}
+                                  {isDrug && (
+                                    <li>
+                                      Antall:{" "}
+                                      <strong className="text-neutral-200">
+                                        {(l.quantity ?? 0).toLocaleString(
+                                          "nb-NO"
+                                        )}
+                                      </strong>
+                                    </li>
+                                  )}
                                 </ul>
                               }
                             />

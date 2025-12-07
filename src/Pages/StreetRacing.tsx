@@ -40,16 +40,20 @@ const db = getFirestore();
 
 type CarDoc = {
   id: string;
-  key?: string;
+  // New schema:
+  modelKey?: string | null;
+  // Legacy support:
+  key?: string | null;
   name?: string;
   brand?: string;
   model?: string;
-  hp?: number;
-  value?: number;
-  tier?: number;
-  city?: string;
+  hp?: number | null;
+  value?: number | null;
+  tier?: number | null;
+  city?: string | null;
   img?: string | null;
-  damage?: number; // 0–100
+  damage?: number | null; // 0–100
+  displayName?: string;
   [k: string]: any;
   inRace?: {
     raceId: string;
@@ -176,6 +180,23 @@ function renderCarTooltip(args: {
       )}
     </div>
   );
+}
+
+// --- Catalog helper (new schema + legacy support) ---
+function getCatalogForCar(car: CarDoc) {
+  if (car.modelKey) {
+    const c = getCarByKey(car.modelKey);
+    if (c) return c;
+  }
+  if (car.key) {
+    const c = getCarByKey(car.key);
+    if (c) return c;
+  }
+  if (car.name) {
+    const c = getCarByName(car.name);
+    if (c) return c;
+  }
+  return undefined;
 }
 
 const StreetRacing = () => {
@@ -393,10 +414,13 @@ const StreetRacing = () => {
     };
   }, [userCharacter?.id]);
 
-  // Prepare garage with catalog meta
+  // Prepare garage with catalog meta (new + legacy)
   const withCatalog = (c: CarDoc) => {
-    const catalog = c.key ? getCarByKey(c.key) : getCarByName(c.name || "");
+    const catalog = getCatalogForCar(c);
     const damage = clamp0to100(c.damage);
+    const docName =
+      c.name || [c.brand, c.model].filter(Boolean).join(" ") || undefined;
+
     return {
       ...c,
       img: c.img ?? catalog?.img ?? null,
@@ -404,8 +428,7 @@ const StreetRacing = () => {
       value: c.value ?? catalog?.value ?? null,
       tier: c.tier ?? catalog?.tier ?? 1,
       damage,
-      displayName:
-        c.name || [c.brand, c.model].filter(Boolean).join(" ") || "Bil",
+      displayName: catalog?.name ?? docName ?? "Bil",
     };
   };
 
@@ -436,10 +459,21 @@ const StreetRacing = () => {
   );
 
   // Start my challenge (blocked if I have one, or if I have an unacknowledged finished race)
-  async function handleStartRace() {
-    if (!userCharacter?.id || !activeCar) return;
+  async function handleStartRace(): Promise<boolean> {
+    if (!userCharacter?.id) return false;
+
+    if (!activeCar) {
+      setNewRaceMesssage("Du må velge bil for å starte et løp.");
+      setNewRaceMessageType("warning");
+      return false;
+    }
+
     if ((activeCar.damage ?? 0) >= 100) {
-      return;
+      setNewRaceMesssage(
+        "Denne bilen har 100% skade og kan ikke brukes i løp."
+      );
+      setNewRaceMessageType("warning");
+      return false;
     }
 
     try {
@@ -495,10 +529,12 @@ const StreetRacing = () => {
         "Utfordring startet! Den er nå synlig for andre spillere."
       );
       setNewRaceMessageType("success");
+      return true;
     } catch (e: any) {
       console.error(e);
       setNewRaceMesssage(e?.message || "Klarte ikke å starte løp.");
       setNewRaceMessageType("failure");
+      return false;
     }
   }
 
@@ -1376,7 +1412,7 @@ const StreetRacing = () => {
                             name={`${c.displayName} ${
                               isBroken ? "(Ødelagt)" : ""
                             }`}
-                            tier={c.tier}
+                            tier={c.tier ?? undefined}
                             itemType="car"
                             tooltipImg={c.img || undefined}
                             tooltipContent={renderCarTooltip({
@@ -1433,8 +1469,8 @@ const StreetRacing = () => {
                   )}
                   <div>
                     <Item
-                      name={activeCar.displayName}
-                      tier={activeCar.tier}
+                      name={activeCar.displayName ?? "Bil"}
+                      tier={activeCar.tier ?? undefined}
                       itemType="car"
                       tooltipImg={activeCar.img || undefined}
                       tooltipContent={renderCarTooltip({
@@ -1487,8 +1523,8 @@ const StreetRacing = () => {
                   )}
                   <div>
                     <Item
-                      name={activeCar.displayName}
-                      tier={activeCar.tier}
+                      name={activeCar.displayName ?? "Bil"}
+                      tier={activeCar.tier ?? undefined}
                       itemType="car"
                       tooltipImg={activeCar.img || undefined}
                       tooltipContent={
@@ -1561,10 +1597,10 @@ const StreetRacing = () => {
                       >
                         <div className="flex items-center gap-3">
                           <Item
-                            name={`${c.displayName} ${
+                            name={`${c.displayName ?? "Bil"} ${
                               isBroken ? "(Ødelagt)" : ""
                             }`}
-                            tier={c.tier}
+                            tier={c.tier ?? undefined}
                             itemType="car"
                             tooltipImg={c.img || undefined}
                             tooltipContent={renderCarTooltip({
@@ -1588,14 +1624,16 @@ const StreetRacing = () => {
             </Button>
             <Button
               disabled={
-                !activeCarId ||
                 Boolean(myPendingFinished) ||
                 (activeCar ? (activeCar.damage ?? 0) >= 100 : false)
               }
               onClick={async () => {
-                await handleStartRace();
-                // Let subscription to myOpenRace switch the view to "activeChallenge"
-                setUiMode("standard");
+                const ok = await handleStartRace();
+                // Only go back if we actually started a race
+                if (ok) {
+                  // Let subscription to myOpenRace switch the view to "activeChallenge"
+                  setUiMode("standard");
+                }
               }}
             >
               Start løp

@@ -36,21 +36,61 @@ import ParkingTypes from "../../Data/ParkingTypes";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-import type { Car } from "../../Interfaces/Types";
 import { useCooldown } from "../../CooldownContext";
 
 type SortKey = "name" | "hp" | "value" | "damage";
 type SortDir = "asc" | "desc";
 
+/**
+ * Shape of car docs in Firestore.
+ * They now store only modelKey + dynamic fields (damage, city, etc.),
+ * but we also support legacy fields (name, hp, value, tier, key).
+ */
+type CarDoc = {
+  id: string;
+  modelKey?: string | null;
+  key?: string | null; // legacy field
+  name?: string;
+  hp?: number | null;
+  tier?: number | null;
+  value?: number | null;
+  damage?: number | null;
+  city?: string | null;
+  inRace?: any;
+  [key: string]: any;
+};
+
 const isLocked = (c: any) => Boolean(c?.inRace?.raceId);
+
+// Resolve catalog entry for a car (supports new + legacy docs)
+function getCatalogForCar(car: CarDoc) {
+  if (car.modelKey) {
+    const c = getCarByKey(car.modelKey);
+    if (c) return c;
+  }
+  if (car.key) {
+    const c = getCarByKey(car.key);
+    if (c) return c;
+  }
+  if (car.name) {
+    const c = getCarByName(car.name);
+    if (c) return c;
+  }
+  return undefined;
+}
+
+// Compute actual value using catalog value + damage
+function getCarTotalValue(car: CarDoc): number {
+  const catalog = getCatalogForCar(car);
+  const baseValue = catalog?.value ?? car.value ?? 0;
+  return carValue({ value: baseValue, damage: car.damage });
+}
 
 const Parking = () => {
   const { userCharacter } = useCharacter();
   const { jailRemainingSeconds } = useCooldown();
   const [parking, setParking] = useState<number | null>(null);
-  const [cars, setCars] = useState<(Car & { id: string } & { inRace?: any })[]>(
-    []
-  );
+  const [cars, setCars] = useState<CarDoc[]>([]);
   const [message, setMessage] = useState<React.ReactNode>("");
   const [upgrading, setUpgrading] = useState<boolean>(false);
   const [messageType, setMessageType] = useState<
@@ -85,8 +125,11 @@ const Parking = () => {
     const q = query(carsCol, where("city", "==", userCharacter.location));
 
     const unsub = onSnapshot(q, (snap) => {
-      const arr = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
-      setCars(arr as any);
+      const arr: CarDoc[] = snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as any),
+      }));
+      setCars(arr);
     });
 
     return () => unsub();
@@ -166,11 +209,11 @@ const Parking = () => {
   );
 
   const selectedTotalValue = useMemo(
-    () => selectedCars.reduce((sum, c) => sum + carValue(c as any), 0),
+    () => selectedCars.reduce((sum, c) => sum + getCarTotalValue(c), 0),
     [selectedCars]
   );
   const selectedSellableTotalValue = useMemo(
-    () => selectedSellableCars.reduce((sum, c) => sum + carValue(c as any), 0),
+    () => selectedSellableCars.reduce((sum, c) => sum + getCarTotalValue(c), 0),
     [selectedSellableCars]
   );
 
@@ -184,11 +227,11 @@ const Parking = () => {
 
   // Total value of cars in the current city (from subcollection)
   const totalValue = useMemo(
-    () => cars.reduce((sum, c) => sum + carValue(c as any), 0),
+    () => cars.reduce((sum, c) => sum + getCarTotalValue(c), 0),
     [cars]
   );
   const totalSellableValue = useMemo(
-    () => sellableCars.reduce((sum, c) => sum + carValue(c as any), 0),
+    () => sellableCars.reduce((sum, c) => sum + getCarTotalValue(c), 0),
     [sellableCars]
   );
 
@@ -197,11 +240,30 @@ const Parking = () => {
     const arr = [...cars];
     arr.sort((a, b) => {
       const dir = sortDir === "asc" ? 1 : -1;
-      if (sortKey === "name") return a.name.localeCompare(b.name, "nb") * dir;
-      if (sortKey === "hp") return ((a.hp || 0) - (b.hp || 0)) * dir;
-      if (sortKey === "damage")
-        return (dmgPercent(a.damage) - dmgPercent(b.damage)) * dir;
-      return (carValue(a as any) - carValue(b as any)) * dir; // value
+
+      const catalogA = getCatalogForCar(a);
+      const catalogB = getCatalogForCar(b);
+
+      if (sortKey === "name") {
+        const nameA = (catalogA?.name ?? a.name ?? "Bil").toString();
+        const nameB = (catalogB?.name ?? b.name ?? "Bil").toString();
+        return nameA.localeCompare(nameB, "nb") * dir;
+      }
+
+      if (sortKey === "hp") {
+        const hpA = catalogA?.hp ?? a.hp ?? 0;
+        const hpB = catalogB?.hp ?? b.hp ?? 0;
+        return (hpA - hpB) * dir;
+      }
+
+      if (sortKey === "damage") {
+        return (dmgPercent(a.damage ?? 0) - dmgPercent(b.damage ?? 0)) * dir;
+      }
+
+      // value
+      const valueA = getCarTotalValue(a);
+      const valueB = getCarTotalValue(b);
+      return (valueA - valueB) * dir;
     });
     return arr;
   }, [cars, sortKey, sortDir]);
@@ -226,7 +288,7 @@ const Parking = () => {
 
     let totalSoldValue = 0;
     for (const car of selectedSellableCars) {
-      totalSoldValue += carValue(car as any);
+      totalSoldValue += getCarTotalValue(car);
       const carRef = fsDoc(db, "Characters", userCharacter.id, "cars", car.id);
       batch.delete(carRef);
     }
@@ -280,7 +342,7 @@ const Parking = () => {
 
     let totalSoldValue = 0;
     for (const car of sellableCars) {
-      totalSoldValue += carValue(car as any);
+      totalSoldValue += getCarTotalValue(car);
       const carRef = fsDoc(db, "Characters", userCharacter.id, "cars", car.id);
       batch.delete(carRef);
     }
@@ -628,11 +690,16 @@ const Parking = () => {
               <tbody>
                 {sortedCars.length ? (
                   sortedCars.map((car) => {
-                    const catalog = car.key
-                      ? getCarByKey(car.key)
-                      : getCarByName(car.name);
+                    const catalog = getCatalogForCar(car);
                     const locked = isLocked(car);
                     const checked = selectedIds.has(car.id);
+
+                    const displayName = catalog?.name ?? car.name ?? "Bil";
+                    const tier = catalog?.tier ?? car.tier ?? undefined;
+                    const hp = catalog?.hp ?? car.hp ?? 0;
+                    const damagePct = dmgPercent(car.damage ?? 0);
+                    const totalCarValue = getCarTotalValue(car);
+
                     return (
                       <tr
                         className={`border bg-neutral-800 border-neutral-700 ${
@@ -649,7 +716,7 @@ const Parking = () => {
                             disabled={locked}
                             checked={locked ? false : checked}
                             onChange={() => toggleSelected(car.id)}
-                            aria-label={`Velg ${car.name}`}
+                            aria-label={`Velg ${displayName}`}
                             title={locked ? "Bilen er i et løp" : ""}
                           />
                         </td>
@@ -657,8 +724,8 @@ const Parking = () => {
                           <div className="flex items-center gap-2 min-w-0">
                             <div className="truncate">
                               <Item
-                                name={locked ? `${car.name}` : car.name}
-                                tier={car.tier}
+                                name={displayName}
+                                tier={tier}
                                 itemType="car"
                                 tooltipImg={catalog?.img && catalog.img}
                                 tooltipContent={
@@ -666,22 +733,20 @@ const Parking = () => {
                                     <p>
                                       Effekt:{" "}
                                       <strong className="text-neutral-200">
-                                        {car.hp} hk
+                                        {hp} hk
                                       </strong>
                                     </p>
                                     <p>
                                       Skade:{" "}
                                       <strong className="text-neutral-200">
-                                        {dmgPercent(car.damage)}%
+                                        {damagePct}%
                                       </strong>
                                     </p>
                                     <p>
                                       Verdi:{" "}
                                       <strong className="text-neutral-200">
                                         <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                        {carValue(car as any).toLocaleString(
-                                          "nb-NO"
-                                        )}
+                                        {totalCarValue.toLocaleString("nb-NO")}
                                       </strong>
                                     </p>
                                     {locked && (
@@ -696,27 +761,21 @@ const Parking = () => {
                           </div>
                         </td>
                         <td className="px-2 py-1 text-sm sm:text-base whitespace-nowrap">
-                          <strong className="text-neutral-200">
-                            {car.hp} hk
-                          </strong>
+                          <strong className="text-neutral-200">{hp} hk</strong>
                         </td>
 
                         <td className="px-2 py-1 text-sm sm:text-base whitespace-nowrap hidden sm:table-cell">
                           <span
-                            className={
-                              Number(car.damage ?? 0) >= 100
-                                ? "text-red-400"
-                                : ""
-                            }
+                            className={damagePct >= 100 ? "text-red-400" : ""}
                           >
-                            {Math.min(100, Number(car.damage ?? 0))}%
+                            {damagePct}%
                           </span>
                         </td>
 
                         <td className="px-2 py-1 text-sm sm:text-base whitespace-nowrap">
                           <strong className="text-neutral-200">
                             <i className="fa-solid fa-dollar-sign"></i>{" "}
-                            {carValue(car as any).toLocaleString("nb-NO")}
+                            {totalCarValue.toLocaleString("nb-NO")}
                           </strong>
                         </td>
                       </tr>

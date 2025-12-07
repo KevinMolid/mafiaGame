@@ -148,6 +148,7 @@ export interface BulletItem extends BaseItem {
 }
 
 export interface NarcoticItem extends BaseItem {
+  type: "narcotic";
   stackable: true;
   // add effect fields later if needed, e.g. duration, boost, etc.
 }
@@ -733,6 +734,7 @@ export const Narcotics: NarcoticItem[] = [
     value: 150,
     img: n1,
     stackable: true,
+    type: "narcotic",
   },
   {
     id: "in0002",
@@ -741,6 +743,7 @@ export const Narcotics: NarcoticItem[] = [
     value: 150,
     img: n2,
     stackable: true,
+    type: "narcotic",
   },
 ];
 

@@ -20,6 +20,8 @@ import { serverNow, serverTimeReady } from "./serverTime";
 
 import { getItemById } from "../Data/Items";
 
+import { getCarByKey } from "../Data/Cars";
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -216,6 +218,7 @@ export async function grantItemToInventory(
 ): Promise<void> {
   if (!characterId || !itemId || qty <= 0) return;
 
+  // Look up the canonical item definition from the catalog
   const it = getItemById(itemId);
   if (!it) throw new Error(`Unknown itemId: ${itemId}`);
 
@@ -223,9 +226,7 @@ export async function grantItemToInventory(
   const isStackable = !!(it as any).stackable;
 
   if (isStackable) {
-    // Find ANY existing stack doc for this itemId (by catalog id).
-    // We use a normal query here; if two clients race, at worst you’ll end up with 2 stacks,
-    // which is acceptable since you want the ability to split stacks later anyway.
+    // Find existing stack doc for this catalog id.
     const q = query(itemsCol, where("id", "==", it.id), limit(1));
     const snap = await getDocs(q);
 
@@ -240,17 +241,8 @@ export async function grantItemToInventory(
       // Create a new stack doc (auto-id)
       const newRef = doc(itemsCol);
       await setDoc(newRef, {
-        // canonical metadata
-        id: it.id,
-        name: it.name,
-        slot: (it as any).slot ?? null,
-        tier: it.tier ?? 1,
-        value: it.value ?? 0,
-        img: (it as any).img ?? null,
-        attack: (it as any).attack ?? 0,
-        type: (it as any).type ?? null,
-
-        // stack data
+        id: it.id, // catalog id – used to join with Items.tsx
+        type: (it as any).type ?? null, // e.g. "bullet" (useful for queries)
         quantity: qty,
 
         // bookkeeping
@@ -261,20 +253,15 @@ export async function grantItemToInventory(
     return;
   }
 
-  // Non-stackable: create one doc per unit
+  // Non-stackable: create one doc per unit (each can later have its own durability, etc.)
   const batch = writeBatch(db);
   for (let i = 0; i < qty; i++) {
     const ref = doc(itemsCol); // auto-id
     batch.set(ref, {
-      id: it.id,
-      name: it.name,
-      slot: (it as any).slot ?? null,
-      tier: it.tier ?? 1,
-      value: it.value ?? 0,
-      img: (it as any).img ?? null,
-      attack: (it as any).attack ?? 0,
-
+      id: it.id, // catalog id
+      type: (it as any).type ?? null,
       quantity: 1,
+
       createdAt: serverTimestamp(),
       lastAcquiredAt: serverTimestamp(),
     });
@@ -296,6 +283,56 @@ export async function grantItemsToInventory(
       await grantItemToInventory(characterId, itemId, qty);
     }
   }
+}
+
+export async function grantCarToCharacter(
+  characterId: string,
+  modelKey: string,
+  dynamic: {
+    city?: string | null;
+    damage?: number | null;
+    stolenFrom?: string | null;
+    [key: string]: any; // allow extra dynamic fields if needed later
+  } = {}
+): Promise<void> {
+  if (!characterId || !modelKey) return;
+
+  // Validate that the car exists in the catalog
+  const catalogCar = getCarByKey(modelKey);
+  if (!catalogCar) {
+    console.warn(`grantCarToCharacter: unknown modelKey "${modelKey}"`);
+    return;
+  }
+
+  const carsCol = collection(db, "Characters", characterId, "cars");
+
+  // Clamp damage 0–100
+  const rawDamage = dynamic.damage;
+  const damage =
+    typeof rawDamage === "number"
+      ? Math.min(100, Math.max(0, Math.floor(rawDamage)))
+      : 0;
+
+  const payload: Record<string, any> = {
+    // single source of truth: we only store the modelKey here
+    modelKey,
+
+    // dynamic, per-instance fields
+    city: dynamic.city ?? null,
+    damage,
+    stolenFrom: dynamic.stolenFrom ?? null,
+
+    acquiredAt: serverTimestamp(),
+  };
+
+  // Include any extra dynamic fields passed in, except the ones we already set
+  for (const [key, value] of Object.entries(dynamic)) {
+    if (["city", "damage", "stolenFrom"].includes(key)) continue;
+    payload[key] = value;
+  }
+
+  const carRef = doc(carsCol); // auto-id
+  await setDoc(carRef, payload);
 }
 
 // Calculate damaged objects

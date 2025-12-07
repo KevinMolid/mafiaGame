@@ -16,6 +16,7 @@ import {
   arrest,
   dmgPercent,
   valueAfterDamage,
+  grantCarToCharacter,
 } from "../../Functions/RewardFunctions";
 import { getCarByName, getCarByKey } from "../../Data/Cars";
 
@@ -109,7 +110,7 @@ const GTA = () => {
     return 1;
   };
 
-  // ---- FRA GATA (unchanged core) ----
+  // ---- FRA GATA ----
   const stealCarFromStreet = async () => {
     if (!userCharacter || !userCharacter.id) {
       setMessageType("failure");
@@ -175,24 +176,32 @@ const GTA = () => {
       const dmg = getRandom(0, 99);
 
       if (success) {
-        await addDoc(carsCol, {
-          modelKey: randomCar.key,
-          name: randomCar.name,
-          value: randomCar.value,
-          hp: randomCar.hp,
-          tier: randomCar.tier,
-          isElectric: !!randomCar.isElectric,
+        // Resolve modelKey safely
+        const modelKey = randomCar.key;
+        if (!modelKey) {
+          console.error(
+            "Random car is missing a model key, cannot grant car to character.",
+            randomCar
+          );
+          setMessageType("failure");
+          setMessage(
+            "Noe gikk galt med bilen du forsøkte å stjele. Prøv igjen."
+          );
+          return;
+        }
+
+        // 2.a) Grant the car using only modelKey + dynamic fields
+        await grantCarToCharacter(userCharacter.id, modelKey, {
           city: userCharacter.location,
-          acquiredAt: serverTimestamp(),
           damage: dmg,
         });
 
+        // 2.b) Rewards
         rewardXp(userCharacter, 10);
         increaseHeat(userCharacter, userCharacter.id, 1);
 
-        const catalog = randomCar.key
-          ? getCarByKey(randomCar.key)
-          : getCarByName(randomCar.name);
+        // 2.c) Use the catalog for messaging / tooltip
+        const catalog = getCarByKey(modelKey) ?? getCarByName(randomCar.name);
 
         setMessageType("success");
         setMessage(
@@ -410,37 +419,49 @@ const GTA = () => {
         const chosen = availableDocs[getRandom(0, availableDocs.length - 1)];
         const carData = chosen.data();
 
-        // Transfer: add to attacker
-        await addDoc(myCarsCol, {
-          modelKey: carData.modelKey ?? null,
-          name: carData.name,
-          value: carData.value,
-          hp: carData.hp,
-          tier: carData.tier,
-          isElectric: !!carData.isElectric,
+        // Resolve the modelKey robustly (supports older docs)
+        let modelKey: string | null = carData.modelKey ?? null;
+
+        if (!modelKey && carData.key) {
+          modelKey = carData.key;
+        }
+
+        if (!modelKey && carData.name) {
+          const catalogFromName = getCarByName(carData.name);
+          modelKey = catalogFromName?.key ?? null;
+        }
+
+        if (!modelKey) {
+          throw new Error(
+            "Kunne ikke finne modellnøkkel for bilen som skal stjeles."
+          );
+        }
+
+        const damage = typeof carData.damage === "number" ? carData.damage : 0;
+
+        // 1) Transfer to attacker using helper (id + dynamic fields only)
+        await grantCarToCharacter(userCharacter.id, modelKey, {
           city: attackerCity,
-          acquiredAt: serverTimestamp(),
+          damage,
           stolenFrom: target.id,
-          damage: typeof carData.damage === "number" ? carData.damage : 0,
         });
 
-        // Remove from target
+        // 2) Remove from target
         await deleteDoc(doc(db, "Characters", target.id, "cars", chosen.id));
 
-        // --- build car snapshot for alert and write alert ---
-        const catalog = carData.modelKey
-          ? getCarByKey(carData.modelKey)
-          : getCarByName(carData.name);
+        // 3) Build car snapshot for alert using catalog
+        const catalog = getCarByKey(modelKey);
 
         const carSnapshot = {
-          modelKey: carData.modelKey ?? null,
-          name: carData.name,
-          tier: carData.tier,
-          hp: carData.hp,
-          value: carData.value,
-          isElectric: !!carData.isElectric,
-          img: catalog?.img ?? null, // lets Item render a tooltip image
-          city: attackerCity, // optional
+          modelKey,
+          name: catalog?.name ?? carData.name ?? "Bil",
+          tier: catalog?.tier ?? carData.tier ?? null,
+          hp: catalog?.hp ?? carData.hp ?? null,
+          value: catalog?.value ?? carData.value ?? null,
+          isElectric: catalog?.isElectric ?? !!carData.isElectric,
+          img: catalog?.img ?? null,
+          city: attackerCity,
+          damage,
         };
 
         await addDoc(collection(db, "Characters", target.id, "alerts"), {
@@ -452,22 +473,20 @@ const GTA = () => {
           robberName: userCharacter.username,
           timestamp: serverTimestamp(),
         });
-        // --- END NEW ---
 
+        // 4) Rewards & message
         rewardXp(userCharacter, 15);
         increaseHeat(userCharacter, userCharacter.id, 2);
 
-        const catalogForMsg = carData.modelKey
-          ? getCarByKey(carData.modelKey)
-          : getCarByName(carData.name);
+        const catalogForMsg = catalog ?? getCarByKey(modelKey);
 
         setMessageType("success");
         setMessage(
           <div>
             Du stjal en{" "}
             <Item
-              name={carData.name}
-              tier={carData.tier}
+              name={carSnapshot.name}
+              tier={carSnapshot.tier ?? undefined}
               itemType="car"
               tooltipImg={catalogForMsg?.img && catalogForMsg.img}
               tooltipContent={
@@ -475,13 +494,13 @@ const GTA = () => {
                   <p>
                     Effekt:{" "}
                     <strong className="text-neutral-200">
-                      {carData.hp} hk
+                      {carSnapshot.hp ?? 0} hk
                     </strong>
                   </p>
                   <p>
                     Skade:{" "}
                     <strong className="text-neutral-200">
-                      {Number(carData.damage)}%
+                      {dmgPercent(damage)}%
                     </strong>
                   </p>
                   <p>
@@ -489,8 +508,8 @@ const GTA = () => {
                     <strong className="text-neutral-200">
                       <i className="fa-solid fa-dollar-sign"></i>{" "}
                       {valueAfterDamage(
-                        carData.value,
-                        carData.damage
+                        carSnapshot.value,
+                        damage
                       ).toLocaleString("nb-NO")}
                     </strong>
                   </p>
