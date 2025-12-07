@@ -153,7 +153,7 @@ const SidebarRight = () => {
           <Link to={`/profil/${userCharacter.id}`}>
             <img
               className="border border-neutral-500 w-[60px] h-[60px] object-cover hover:cursor-pointer"
-              src={userCharacter.img || "/default.jpg"}
+              src={userCharacter.img || "/DefaultAvatar.jpg"}
               alt="Profile picture"
             />
           </Link>

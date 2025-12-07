@@ -702,7 +702,7 @@ const Assassinate = () => {
                             {activeBullet ? (
                               <ItemTile
                                 name={activeBullet.name}
-                                img={activeBullet.img || "/default.jpg"}
+                                img={activeBullet.img || "/DefaultAvatar.jpg"}
                                 tier={activeBullet.tier || 1}
                                 qty={effectiveQty}
                                 tooltipImg={activeBullet.img}

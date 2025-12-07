@@ -305,7 +305,7 @@ const Home = () => {
           <Link to={`/profil/${userCharacter.id}`}>
             <img
               className="size-[160px] object-cover hover:cursor-pointer "
-              src={userCharacter.img || "/default.jpg"}
+              src={userCharacter.img || "/DefaultAvatar.jpg"}
               alt="Profile picture"
             />
           </Link>

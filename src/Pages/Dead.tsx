@@ -47,7 +47,7 @@ const Dead = () => {
           <Link to={`/profil/${userCharacter.id}`}>
             <img
               className="border border-neutral-500 w-[160px] h-[160px] object-cover m-auto hover:cursor-pointer"
-              src={userCharacter.img || "/default.jpg"}
+              src={userCharacter.img || "/DefaultAvatar.jpg"}
               alt="Profile picture"
             />
           </Link>

@@ -428,7 +428,7 @@ const Profile = () => {
       <div className="flex flex-col items-center md:grid md:grid-cols-[max-content_max-content] gap-4 lg:gap-8 pb-4 border-b border-neutral-700">
         <img
           className="w-[320px] h-[320px] object-cover"
-          src={characterData.img || "/default.jpg"}
+          src={characterData.img || "/DefaultAvatar.jpg"}
           alt=""
         />
 

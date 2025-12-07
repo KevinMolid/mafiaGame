@@ -6,7 +6,7 @@ import Familyname from "../components/Typography/Familyname";
 import Button from "../components/Button";
 import Label from "../components/Label";
 import InfoBox from "../components/InfoBox";
-import defaultImg from "/default.jpg";
+import defaultImg from "/DefaultAvatar.jpg";
 
 import { useEffect, useState, useRef } from "react";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";

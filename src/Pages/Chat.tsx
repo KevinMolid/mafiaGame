@@ -248,7 +248,7 @@ const Chat = () => {
                   cData?.character?.img ||
                   cData?.img ||
                   cData?.image ||
-                  "/default.jpg";
+                  "/DefaultAvatar.jpg";
                 if (imgUrl) {
                   setAvatarByUser((prev) => ({ ...prev, [other]: imgUrl }));
                 }
@@ -746,15 +746,17 @@ const Chat = () => {
                           {otherParticipant && (
                             <img
                               src={
-                                avatarByUser[otherParticipant] || "/default.jpg"
+                                avatarByUser[otherParticipant] ||
+                                "/DefaultAvatar.jpg"
                               }
                               alt={otherParticipant}
                               className="w-10 h-10 rounded-full object-cover"
                               loading="lazy"
                               onError={(e) => {
                                 const img = e.currentTarget;
-                                if (img.src.includes("/default.jpg")) return; // avoid loops
-                                img.src = "/default.jpg";
+                                if (img.src.includes("/DefaultAvatar.jpg"))
+                                  return; // avoid loops
+                                img.src = "/DefaultAvatar.jpg";
                               }}
                             />
                           )}
