@@ -3,9 +3,9 @@ import { useState, ReactNode } from "react";
 import H2 from "./Typography/H2";
 import H3 from "./Typography/H3";
 
-import d1 from "/images/boxes/Diamonds.png";
-import d2 from "/images/boxes/Diamonds2.png";
-import d3 from "/images/boxes/Diamonds3.png";
+import d1 from "/images/boxes/d1.png";
+import d2 from "/images/boxes/d2.png";
+import d3 from "/images/boxes/d3.png";
 
 import Button from "./Button";
 import InfoBox from "../components/InfoBox";
@@ -74,9 +74,13 @@ const Diamonds = () => {
 
       <ul className="flex gap-4">
         <li>
-          <div className="flex flex-col justify-center items-center text-center gap-1 bg-neutral-950 py-4 rounded-xl">
+          <div className="flex flex-col justify-center items-center text-center border border-neutral-600 pt-4 pb-6">
             <H3>Liten håndfull</H3>
-            <img src={d1} className="w-52 h-28 object-cover" alt="Diamonds" />
+            <img
+              src={d1}
+              className="w-36 h-32 mb-2 -mt-2 mx-10 object-cover"
+              alt="Diamonds"
+            />
             <p className="font-semibold text-neutral-200 text-xl">
               <i className="fa-solid fa-gem" /> 150
             </p>
@@ -88,9 +92,13 @@ const Diamonds = () => {
         </li>
 
         <li>
-          <div className="flex flex-col justify-center items-center text-center gap-1 bg-neutral-950 py-4 rounded-xl">
+          <div className="flex flex-col justify-center items-center text-center border border-neutral-600 pt-4 pb-6">
             <H3>Stor håndfull</H3>
-            <img src={d2} className="w-52 h-28 object-cover" alt="Diamonds" />
+            <img
+              src={d2}
+              className="w-48 h-36 -mt-4 mx-4 object-cover"
+              alt="Diamonds"
+            />
             <p className="font-semibold text-neutral-200 text-xl">
               <i className="fa-solid fa-gem" /> 450
             </p>
@@ -102,9 +110,13 @@ const Diamonds = () => {
         </li>
 
         <li>
-          <div className="flex flex-col justify-center items-center text-center gap-1 bg-neutral-950 py-4 rounded-xl">
+          <div className="flex flex-col justify-center items-center text-center border border-neutral-600 pt-4 pb-6">
             <H3>Bøttevis</H3>
-            <img src={d3} className="w-52 h-28 object-cover" alt="Diamonds" />
+            <img
+              src={d3}
+              className="w-48 h-36 -mt-4 mx-4 object-cover"
+              alt="Diamonds"
+            />
             <p className="font-semibold text-neutral-200 text-xl">
               <i className="fa-solid fa-gem" /> 1200
             </p>
