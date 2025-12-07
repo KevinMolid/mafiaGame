@@ -11,9 +11,13 @@ import Username from "../components/Typography/Username";
 import Item from "../components/Typography/Item";
 import ItemTile from "../components/ItemTile";
 
-// Functions
-import { getCarByName, getCarByKey } from "../Data/Cars";
-import { dmgPercent, valueAfterDamage } from "../Functions/RewardFunctions";
+// Inventory helpers
+import {
+  hydrateItemDoc,
+  hydrateCarDoc,
+  ItemDoc as RawItemDoc,
+  CarDoc as RawCarDoc,
+} from "../Functions/InventoryHelpers";
 
 // Context
 import { useCharacter } from "../CharacterContext";
@@ -36,6 +40,23 @@ const db = getFirestore();
 // ---- Types ------------------------------------------------------------------
 type Category = "cars" | "bullets" | "weapons" | "items";
 
+// Local view type for items: flattened catalog + raw + docId
+type ViewItem = { docId: string; quantity: number } & Record<string, any>;
+
+// Local view type for cars: hydrated via InventoryHelpers
+type ViewCar = {
+  docId: string;
+  raw: RawCarDoc;
+  catalog: any | null;
+  damage: number;
+  currentValue: number;
+};
+
+type BulletDoc = ViewItem;
+
+// Alle andre items i inventory (utstyr + narkotika + kuler, vi filtrerer senere)
+type ItemDoc = ViewItem;
+
 type Listing = {
   id: string;
   category: Category;
@@ -46,7 +67,12 @@ type Listing = {
   seller: { id: string; username: string };
   createdAt: number;
   expiresAt?: number;
-  car?: CarDoc;
+  car?: {
+    raw: RawCarDoc;
+    catalog: any | null;
+    damage: number;
+    currentValue: number;
+  };
   location?: string | null;
   bullet?: {
     name?: string | null;
@@ -68,37 +94,19 @@ type Listing = {
   };
 };
 
-type CarDoc = {
-  id: string;
-  name?: string;
-  brand?: string;
-  model?: string;
-  hp?: number;
-  value?: number;
-  tier?: number;
-  city?: string;
-  [key: string]: any;
-};
-
-type BulletDoc = {
-  docId: string;
-  type: "bullet";
-  attack?: number;
-  name?: string;
-  quantity?: number;
-  tier: number;
-  value: number;
-  img: string;
-};
-
-// Alle andre items i inventory (utstyr + narkotika + kuler, vi filtrerer senere)
-type ItemDoc = { docId: string } & Record<string, any>;
-
 // Helpers
 const fmt = (n: number) => n.toLocaleString("nb-NO");
-const carBaseName = (c: CarDoc) =>
-  c.name || [c.brand, c.model].filter(Boolean).join(" ") || "Bil";
 const stripTierSuffix = (s: string) => s.replace(/\s*\(T\d+\)\s*$/, "");
+
+// Flatten hydrated item into a convenient view shape
+function toViewItem(h: ReturnType<typeof hydrateItemDoc>): ViewItem {
+  return {
+    docId: h.docId,
+    quantity: h.quantity,
+    ...(h.catalog || {}),
+    ...(h.raw || {}),
+  };
+}
 
 function labelForCategory(c: Category) {
   if (c === "cars") return "Biler";
@@ -106,6 +114,15 @@ function labelForCategory(c: Category) {
   if (c === "weapons") return "Utstyr";
   return "Narkotika";
 }
+
+// Car display name from catalog + raw
+const carBaseName = (c: ViewCar) =>
+  c.raw.name ||
+  c.catalog?.name ||
+  [c.catalog?.brand, c.catalog?.model].filter(Boolean).join(" ") ||
+  c.raw.modelKey ||
+  c.raw.key ||
+  "Bil";
 
 // -----------------------------------------------------------------------------
 
@@ -125,8 +142,8 @@ const BlackMarket = () => {
   const [price, setPrice] = useState<number>(0);
 
   // Items owned by player (subcollection)
-  const [cars, setCars] = useState<CarDoc[]>([]);
-  const [selectedCar, setSelectedCar] = useState<CarDoc | null>(null);
+  const [cars, setCars] = useState<ViewCar[]>([]);
+  const [selectedCar, setSelectedCar] = useState<ViewCar | null>(null);
 
   const [bullets, setBullets] = useState<BulletDoc[]>([]);
   const [selectedBullet, setSelectedBullet] = useState<BulletDoc | null>(null);
@@ -144,13 +161,6 @@ const BlackMarket = () => {
   const [filterCategory, setFilterCategory] = useState<"all" | Category>("all");
   const [search, setSearch] = useState("");
 
-  const selectedCatalog = useMemo(() => {
-    if (!selectedCar) return null;
-    return selectedCar.key
-      ? getCarByKey(selectedCar.key)
-      : getCarByName(selectedCar.name || "car");
-  }, [selectedCar]);
-
   // --- Subscribe to the user's Cars subcollection ---------------------------
   useEffect(() => {
     if (!userCharacter?.id) {
@@ -161,10 +171,16 @@ const BlackMarket = () => {
     const unsub = onSnapshot(
       carsRef,
       (snap) => {
-        const list: CarDoc[] = snap.docs.map((d) => ({
-          id: d.id,
-          ...(d.data() as any),
-        }));
+        const list: ViewCar[] = snap.docs.map((d) => {
+          const h = hydrateCarDoc(d.id, d.data() as RawCarDoc);
+          return {
+            docId: h.docId,
+            raw: h.raw,
+            catalog: h.catalog,
+            damage: h.damage,
+            currentValue: h.currentValue,
+          };
+        });
         setCars(list);
       },
       (err) => {
@@ -186,10 +202,9 @@ const BlackMarket = () => {
     const unsub = onSnapshot(
       qBullets,
       (snap) => {
-        const list: BulletDoc[] = snap.docs.map((d) => ({
-          docId: d.id,
-          ...(d.data() as any),
-        }));
+        const list: BulletDoc[] = snap.docs.map((d) =>
+          toViewItem(hydrateItemDoc(d.id, d.data() as RawItemDoc))
+        );
         setBullets(list);
       },
       (err) => {
@@ -211,10 +226,9 @@ const BlackMarket = () => {
     const unsub = onSnapshot(
       itemsRef,
       (snap) => {
-        const list: ItemDoc[] = snap.docs.map((d) => ({
-          docId: d.id,
-          ...(d.data() as any),
-        }));
+        const list: ItemDoc[] = snap.docs.map((d) =>
+          toViewItem(hydrateItemDoc(d.id, d.data() as RawItemDoc))
+        );
         setInventoryItems(list);
       },
       (err) => {
@@ -263,19 +277,32 @@ const BlackMarket = () => {
         const items: Listing[] = snap.docs
           .map((d) => {
             const v = d.data() as any;
+
+            const carHydrated =
+              v.carId && v.car
+                ? (() => {
+                    const h = hydrateCarDoc(v.carId, v.car as RawCarDoc);
+                    return {
+                      raw: h.raw,
+                      catalog: h.catalog,
+                      damage: h.damage,
+                      currentValue: h.currentValue,
+                    };
+                  })()
+                : undefined;
+
             return {
               id: d.id,
               category: (v.category || "cars") as Category,
               itemType: v.itemType || "Car",
               name: v.name || "Ukjent",
-              img: v.img || "",
               quantity: v.quantity ?? 1,
               price: v.price ?? 0,
               seller: { id: v.sellerId, username: v.sellerName },
               createdAt: v.createdAt?.toMillis
                 ? v.createdAt.toMillis()
                 : Date.now(),
-              car: v.carId ? { id: v.carId, ...(v.car || {}) } : undefined,
+              car: carHydrated,
               bullet: v.bullet ?? undefined,
               item: v.item ?? undefined,
               location: v.location ?? null,
@@ -298,7 +325,7 @@ const BlackMarket = () => {
   const carsInMyCity = useMemo(() => {
     const city = userCharacter?.location;
     if (!city) return cars;
-    return cars.filter((c) => (c.city ? c.city === city : true));
+    return cars.filter((c) => (c.raw.city ? c.raw.city === city : true));
   }, [cars, userCharacter?.location]);
 
   // Market list (Auctions, status = active)
@@ -314,6 +341,20 @@ const BlackMarket = () => {
         const items: Listing[] = snap.docs
           .map((d) => {
             const v = d.data() as any;
+
+            const carHydrated =
+              v.carId && v.car
+                ? (() => {
+                    const h = hydrateCarDoc(v.carId, v.car as RawCarDoc);
+                    return {
+                      raw: h.raw,
+                      catalog: h.catalog,
+                      damage: h.damage,
+                      currentValue: h.currentValue,
+                    };
+                  })()
+                : undefined;
+
             return {
               id: d.id,
               category: (v.category || "items") as Category,
@@ -328,7 +369,7 @@ const BlackMarket = () => {
               createdAt: v.createdAt?.toMillis
                 ? v.createdAt.toMillis()
                 : Date.now(),
-              car: v.carId ? { id: v.carId, ...(v.car || {}) } : undefined,
+              car: carHydrated,
               bullet: v.bullet ?? undefined,
               item: v.item ?? undefined,
               location: v.location ?? null,
@@ -391,7 +432,7 @@ const BlackMarket = () => {
           "Characters",
           userCharacter.id,
           "cars",
-          selectedCar.id
+          selectedCar.docId
         );
 
         const auctionRef = doc(collection(db, "Auctions"));
@@ -405,9 +446,10 @@ const BlackMarket = () => {
           sellerId: userCharacter.id,
           sellerName: userCharacter.username,
           createdAt: serverTimestamp(),
-          location: selectedCar.city ?? userCharacter.location ?? null,
-          carId: selectedCar.id,
-          car: { ...selectedCar },
+          location: selectedCar.raw.city ?? userCharacter.location ?? null,
+          carId: selectedCar.docId,
+          // store ONLY raw compact car data in the auction doc
+          car: { ...selectedCar.raw },
         });
 
         batch.delete(carRef);
@@ -424,8 +466,13 @@ const BlackMarket = () => {
           price,
           seller: { id: userCharacter.id, username: userCharacter.username },
           createdAt: now,
-          car: { ...selectedCar },
-          location: selectedCar.city ?? userCharacter.location ?? null,
+          car: {
+            raw: selectedCar.raw,
+            catalog: selectedCar.catalog,
+            damage: selectedCar.damage,
+            currentValue: selectedCar.currentValue,
+          },
+          location: selectedCar.raw.city ?? userCharacter.location ?? null,
         };
         setAllListings((prev) => [listing, ...prev]);
         setMyListings((prev) => [listing, ...prev]);
@@ -437,8 +484,9 @@ const BlackMarket = () => {
         setMessage(
           <p>
             <Item
-              name={selectedCar.name || "Bilen"}
-              tier={selectedCar.tier || 1}
+              name={carBaseName(selectedCar)}
+              tier={selectedCar.catalog?.tier || 1}
+              itemType="car"
             />{" "}
             ble lagt ut for salg.
           </p>
@@ -746,6 +794,7 @@ const BlackMarket = () => {
             "cars",
             v.carId
           );
+          // v.car is the compact raw car shape
           tx.set(carRef, v.car);
           tx.delete(auctionRef);
           return;
@@ -778,6 +827,8 @@ const BlackMarket = () => {
               img: v?.bullet?.img ?? null,
               createdAt: serverTimestamp(),
               lastUpdated: serverTimestamp(),
+              // IMPORTANT: we also want the catalog id if present
+              id: v?.bullet?.typeId ?? null,
             });
           }
           tx.delete(auctionRef);
@@ -805,6 +856,7 @@ const BlackMarket = () => {
             quantity: 1,
             createdAt: serverTimestamp(),
             lastUpdated: serverTimestamp(),
+            id: v.item.typeId ?? null, // catalog id if present
           };
 
           tx.set(itemRef, payload);
@@ -841,6 +893,7 @@ const BlackMarket = () => {
               quantity: qtyToReturn,
               createdAt: serverTimestamp(),
               lastUpdated: serverTimestamp(),
+              id: v.item.typeId ?? null, // catalog id if present
             });
           }
 
@@ -905,6 +958,7 @@ const BlackMarket = () => {
           "cars",
           a.carId
         );
+        // a.car is the compact raw car shape
         tx.set(buyerCarRef, a.car);
 
         tx.delete(auctionRef);
@@ -1007,31 +1061,30 @@ const BlackMarket = () => {
                         {isCar ? (
                           <Item
                             name={nameNoTier}
-                            tier={l.car?.tier ?? undefined}
+                            tier={l.car?.catalog?.tier ?? undefined}
                             itemType="car"
-                            tooltipImg={l.car?.img}
+                            tooltipImg={l.car?.catalog?.img}
                             tooltipContent={
                               <div>
                                 <p>
                                   Effekt:{" "}
                                   <strong className="text-neutral-200">
-                                    {l.car?.hp ?? 0} hk
+                                    {l.car?.catalog?.hp ?? 0} hk
                                   </strong>
                                 </p>
                                 <p>
                                   Skade:{" "}
                                   <strong className="text-neutral-200">
-                                    {dmgPercent(l.car?.damage)}%
+                                    {l.car?.damage ?? 0}%
                                   </strong>
                                 </p>
                                 <p>
                                   Verdi:{" "}
                                   <strong className="text-neutral-200">
                                     <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                    {valueAfterDamage(
-                                      l.car?.value,
-                                      l.car?.damage
-                                    ).toLocaleString("nb-NO")}
+                                    {(l.car?.currentValue ?? 0).toLocaleString(
+                                      "nb-NO"
+                                    )}
                                   </strong>
                                 </p>
                               </div>
@@ -1234,57 +1287,51 @@ const BlackMarket = () => {
                         </p>
                       ) : (
                         <ul className="flex flex-col gap-1">
-                          {carsInMyCity.map((c) => {
-                            const catalog = c.key
-                              ? getCarByKey(c.key)
-                              : getCarByName(c.name || "car");
-                            return (
-                              <li key={c.id}>
-                                <Button
-                                  size="text"
-                                  style="text"
-                                  onClick={() => {
-                                    setSelectedCar(c);
-                                    setItemName(carBaseName(c));
-                                  }}
-                                  title="Velg bil"
-                                >
-                                  <Item
-                                    name={c.name || "car"}
-                                    tier={c.tier}
-                                    itemType="car"
-                                    tooltipImg={catalog?.img}
-                                    tooltipContent={
-                                      <div>
-                                        <p>
-                                          Effekt:{" "}
-                                          <strong className="text-neutral-200">
-                                            {c?.hp ?? 0} hk
-                                          </strong>
-                                        </p>
-                                        <p>
-                                          Skade:{" "}
-                                          <strong className="text-neutral-200">
-                                            {dmgPercent(c?.damage)}%
-                                          </strong>
-                                        </p>
-                                        <p>
-                                          Verdi:{" "}
-                                          <strong className="text-neutral-200">
-                                            <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                            {valueAfterDamage(
-                                              c?.value,
-                                              c?.damage
-                                            ).toLocaleString("nb-NO")}
-                                          </strong>
-                                        </p>
-                                      </div>
-                                    }
-                                  />
-                                </Button>
-                              </li>
-                            );
-                          })}
+                          {carsInMyCity.map((c) => (
+                            <li key={c.docId}>
+                              <Button
+                                size="text"
+                                style="text"
+                                onClick={() => {
+                                  setSelectedCar(c);
+                                  setItemName(carBaseName(c));
+                                }}
+                                title="Velg bil"
+                              >
+                                <Item
+                                  name={carBaseName(c)}
+                                  tier={c.catalog?.tier}
+                                  itemType="car"
+                                  tooltipImg={c.catalog?.img}
+                                  tooltipContent={
+                                    <div>
+                                      <p>
+                                        Effekt:{" "}
+                                        <strong className="text-neutral-200">
+                                          {c.catalog?.hp ?? 0} hk
+                                        </strong>
+                                      </p>
+                                      <p>
+                                        Skade:{" "}
+                                        <strong className="text-neutral-200">
+                                          {c.damage}%
+                                        </strong>
+                                      </p>
+                                      <p>
+                                        Verdi:{" "}
+                                        <strong className="text-neutral-200">
+                                          <i className="fa-solid fa-dollar-sign"></i>{" "}
+                                          {c.currentValue.toLocaleString(
+                                            "nb-NO"
+                                          )}
+                                        </strong>
+                                      </p>
+                                    </div>
+                                  }
+                                />
+                              </Button>
+                            </li>
+                          ))}
                         </ul>
                       )}
                     </>
@@ -1292,32 +1339,31 @@ const BlackMarket = () => {
                     <>
                       <div className="flex items-center gap-2">
                         <Item
-                          name={selectedCar.name || "car"}
-                          tier={selectedCar.tier}
+                          name={carBaseName(selectedCar)}
+                          tier={selectedCar.catalog?.tier}
                           itemType="car"
-                          tooltipImg={selectedCatalog?.img}
+                          tooltipImg={selectedCar.catalog?.img}
                           tooltipContent={
                             <div>
                               <p>
                                 Effekt:{" "}
                                 <strong className="text-neutral-200">
-                                  {selectedCar?.hp ?? 0} hk
+                                  {selectedCar.catalog?.hp ?? 0} hk
                                 </strong>
                               </p>
                               <p>
                                 Skade:{" "}
                                 <strong className="text-neutral-200">
-                                  {dmgPercent(selectedCar?.damage)}%
+                                  {selectedCar.damage}%
                                 </strong>
                               </p>
                               <p>
                                 Verdi:{" "}
                                 <strong className="text-neutral-200">
                                   <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                  {valueAfterDamage(
-                                    selectedCar?.value,
-                                    selectedCar?.damage
-                                  ).toLocaleString("nb-NO")}
+                                  {selectedCar.currentValue.toLocaleString(
+                                    "nb-NO"
+                                  )}
                                 </strong>
                               </p>
                             </div>
@@ -1863,30 +1909,29 @@ const BlackMarket = () => {
                           {isCar ? (
                             <Item
                               name={nameNoTier}
-                              tier={l.car?.tier ?? undefined}
+                              tier={l.car?.catalog?.tier ?? undefined}
                               itemType="car"
-                              tooltipImg={l.car?.img && l.car.img}
+                              tooltipImg={l.car?.catalog?.img}
                               tooltipContent={
                                 <div>
                                   <p>
                                     Effekt:{" "}
                                     <strong className="text-neutral-200">
-                                      {l.car?.hp ?? 0} hk
+                                      {l.car?.catalog?.hp ?? 0} hk
                                     </strong>
                                   </p>
                                   <p>
                                     Skade:{" "}
                                     <strong className="text-neutral-200">
-                                      {dmgPercent(l.car?.damage)}%
+                                      {l.car?.damage ?? 0}%
                                     </strong>
                                   </p>
                                   <p>
                                     Verdi:{" "}
                                     <strong className="text-neutral-200">
                                       <i className="fa-solid fa-dollar-sign"></i>{" "}
-                                      {valueAfterDamage(
-                                        l.car?.value,
-                                        l.car?.damage
+                                      {(
+                                        l.car?.currentValue ?? 0
                                       ).toLocaleString("nb-NO")}
                                     </strong>
                                   </p>

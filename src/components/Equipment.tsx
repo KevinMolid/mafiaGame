@@ -47,26 +47,44 @@ const EquipmentBox = ({ icon, span, children }: EquipmentBoxProps) => {
 
 // Resolve an equipment entry that might be:
 // - a full item object ({ name, img, tier, ... })
-// - a minimal object ({ id: "iw0001" })
+// - a minimal object ({ id: "iw0001" } or { itemId: "iw0001" })
 // - a plain string ("iw0001")
 function resolveEquipped(entry: any) {
   if (!entry) return null;
 
-  // If it looks complete enough for ItemTile, return as-is
-  if (entry.name && entry.img && entry.tier) return entry;
-
-  // If we have an id field or it's a string, try catalog lookup
-  const typeId = typeof entry === "string" ? entry : entry.id;
-  if (typeId) {
-    const cat = getItemById(typeId);
-    if (cat) {
-      // Merge any extra fields saved in equipment over catalog
-      return { ...cat, ...entry };
-    }
+  // If it already looks like a fully hydrated item, just use it
+  if (entry.name && entry.img && entry.tier) {
+    return entry;
   }
 
-  // As a last resort, return what we have; ItemTile may still render with missing fields
-  return entry;
+  // Try to figure out which field holds the catalog id
+  const itemId =
+    typeof entry === "string"
+      ? entry
+      : entry.id || entry.itemId || entry.type || null;
+
+  if (!itemId) {
+    // We can't resolve anything, just return what we have
+    return entry;
+  }
+
+  // Look up static definition from Items.tsx
+  const cat = getItemById(itemId);
+  if (!cat) {
+    // Unknown id – still return entry so we don't break UI,
+    // but at least we tried.
+    return entry;
+  }
+
+  // Merge:
+  // - start with catalog (name, img, tier, value, attack, defense, etc.)
+  // - then overlay whatever dynamic fields we saved in equipment
+  // - ensure `id` is set to the catalog id
+  return {
+    ...cat,
+    ...entry,
+    id: cat.id ?? itemId,
+  };
 }
 
 type EquippedForModal = {
@@ -100,31 +118,59 @@ const Equipment: React.FC = () => {
           return;
         }
 
-        // Build inventory payload (strip equip-specific fields)
+        const base = equipped ?? {};
+
+        // Figure out the catalog id for this item
+        const itemId =
+          typeof base === "string"
+            ? base
+            : base.id || base.itemId || base.type || null;
+
+        if (!itemId) {
+          console.warn("Unequip: equipped item missing id for slot", slotKey);
+          // Still clear the slot so the user doesn't get stuck with a ghost item
+          tx.update(charRef, { [`equipment.${slotKey}`]: deleteField() });
+          return;
+        }
+
+        const itemDef = getItemById(itemId);
+
+        // Strip equip-specific and display-only fields.
+        // Keep only dynamic instance data in `dynamicRest`.
         const {
           equippedAt,
           fromDocId,
           returnedFromSlot,
           returnedAt,
-          unequippedAt,
-          unequippedFrom,
-          slot, // optional to keep, but not required in bags
-          ...rest
-        } = equipped ?? {};
+          unequippedAt: _prevUnequippedAt,
+          unequippedFrom: _prevUnequippedFrom,
+          slot,
+          // display / catalog-ish fields we don't want in the compact doc
+          name,
+          img,
+          tier,
+          value,
+          attack,
+          defense,
+          capacity,
+          usingBullets,
+          ...dynamicRest
+        } = base;
 
+        const quantity =
+          Number(
+            (base as any).quantity ?? (dynamicRest as any).quantity ?? 1
+          ) || 1;
+
+        // Compact inventory payload:
+        // - id + type + quantity
+        // - any remaining dynamic per-instance fields
+        // - audit fields
         const invPayload = {
-          ...rest,
-          // Keep basic display fields if present:
-          name: equipped.name ?? rest.name ?? "Uten navn",
-          img: equipped.img ?? rest.img ?? null,
-          tier: equipped.tier ?? rest.tier ?? 1,
-          value: equipped.value ?? rest.value ?? 0,
-          attack: equipped.attack ?? rest.attack ?? 1,
-          capacity: equipped.capacity ?? rest.capacity ?? 0,
-          usingBullets: equipped.usingBullets ?? rest.usingBullets ?? false,
-          quantity: Number(equipped.quantity ?? rest.quantity ?? 1),
-          slot: equipped.slot ?? rest.slot ?? null,
-          // audit
+          ...dynamicRest,
+          id: itemId,
+          type: (itemDef as any)?.type ?? (dynamicRest as any).type ?? null,
+          quantity,
           unequippedFrom: slotKey,
           unequippedAt: serverTimestamp(),
         };

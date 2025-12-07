@@ -35,6 +35,7 @@ import { useCharacter } from "../CharacterContext";
 
 // Functions
 import { getRankProgress } from "../Functions/RankFunctions";
+import { getItemById } from "../Data/Items"; // <-- NEW
 
 const Home = () => {
   const { userCharacter, dailyXp } = useCharacter();
@@ -51,6 +52,41 @@ const Home = () => {
   const [itemModalOpen, setItemModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ItemDoc | null>(null);
   const [sellQty, setSellQty] = useState<number>(1);
+
+  // Hydrate an inventory item doc with catalog data from Items.tsx
+  function hydrateItemDoc(raw: any, docId: string): ItemDoc {
+    const base = raw || {};
+
+    const itemId = base.id || base.itemId || base.type || null;
+
+    if (!itemId) {
+      // No id – just return what we have + docId
+      return {
+        ...base,
+        docId,
+      };
+    }
+
+    const cat = getItemById(itemId);
+
+    if (!cat) {
+      // Unknown id – still return compact doc so UI doesn't break
+      return {
+        ...base,
+        id: itemId,
+        docId,
+      };
+    }
+
+    // Merge catalog definition with dynamic data from Firestore.
+    // Catalog first, dynamic second so per-instance fields override if needed.
+    return {
+      ...cat,
+      ...base,
+      id: cat.id ?? itemId,
+      docId,
+    };
+  }
 
   const openItemModal = (item: ItemDoc) => {
     setSelectedItem(item);
@@ -254,10 +290,9 @@ const Home = () => {
     const itemsRef = collection(db, "Characters", userCharacter.id, "items");
 
     const unsubscribe = onSnapshot(itemsRef, (snap) => {
-      const items: ItemDoc[] = snap.docs.map((d) => ({
-        ...d.data(), // retains your data.id (type id)
-        docId: d.id, // Firestore document id
-      }));
+      const items: ItemDoc[] = snap.docs.map((d) =>
+        hydrateItemDoc(d.data(), d.id)
+      );
       setBags(items);
     });
 
@@ -449,38 +484,6 @@ const Home = () => {
           <UpdateFeed />
         </div>
 
-        {/* Equipment and stash */}
-        {/* Reputation */}
-        {/*<Box>
-            <H2>Innflytelse</H2>
-            <div className="flex gap-x-4 flex-wrap">
-              <p>
-                Politi:{" "}
-                <strong className="text-neutral-200">
-                  {character.reputation.police}
-                </strong>
-              </p>
-              <p>
-                Styresmakter:{" "}
-                <strong className="text-neutral-200">
-                  {character.reputation.politics}
-                </strong>
-              </p>
-              <p>
-                Gjenger:{" "}
-                <strong className="text-neutral-200">
-                  {character.reputation.gangs}
-                </strong>
-              </p>
-              <p>
-                Organisasjoner:{" "}
-                <strong className="text-neutral-200">
-                  {character.reputation.community}
-                </strong>
-              </p>
-            </div>
-          </Box>*/}
-
         {/* Equipment */}
         <div className="w-fit md:col-span-4 lg:col-span-4">
           <H2>Utstyr</H2>
@@ -491,10 +494,10 @@ const Home = () => {
         <div className="md:col-span-2 lg:col-span-4">
           <H2>Eiendeler</H2>
           <ul className="flex flex-wrap gap-x-1 gap-y-0 max-w-[500px]">
-            {bags.map((item, index) => {
+            {bags.map((item) => {
               const qty = Number(item.quantity ?? 1);
               return (
-                <li key={item.id + index}>
+                <li key={item.docId}>
                   <button
                     type="button"
                     onClick={() => openItemModal(item)}
@@ -584,7 +587,7 @@ const Home = () => {
                       </strong>
                     </p>
 
-                    {/* Quantity picker (show when stack size > 1, or always if you prefer) */}
+                    {/* Quantity picker */}
                     <div className="mt-3 flex items-center gap-2">
                       <div className="flex items-center gap-1">
                         <Button
