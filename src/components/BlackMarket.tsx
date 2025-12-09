@@ -98,6 +98,34 @@ type Listing = {
 const fmt = (n: number) => n.toLocaleString("nb-NO");
 const stripTierSuffix = (s: string) => s.replace(/\s*\(T\d+\)\s*$/, "");
 
+// NEW: parse price input like "5k" -> 5000, "1m" -> 1000000
+const parseAmount = (input: string): number => {
+  const trimmed = input.trim();
+  if (!trimmed) return 0;
+
+  const upper = trimmed.toUpperCase();
+  const lastChar = upper[upper.length - 1];
+
+  let multiplier = 1;
+  let numericPart = upper;
+
+  if (lastChar === "K") {
+    multiplier = 1000;
+    numericPart = upper.slice(0, -1);
+  } else if (lastChar === "M") {
+    multiplier = 1_000_000;
+    numericPart = upper.slice(0, -1);
+  }
+
+  const digits = numericPart.replace(/[^\d]/g, "");
+  if (!digits) return 0;
+
+  const base = parseInt(digits, 10);
+  if (Number.isNaN(base)) return 0;
+
+  return base * multiplier;
+};
+
 // Flatten hydrated item into a convenient view shape
 function toViewItem(h: ReturnType<typeof hydrateItemDoc>): ViewItem {
   return {
@@ -651,7 +679,6 @@ const BlackMarket = () => {
               img: data.img ?? selectedEquip.img ?? null,
               slot: data.slot ?? null,
               type: data.type ?? null,
-              typeId: data.id ?? null,
               value: data.value ?? null,
             },
           });
@@ -1032,7 +1059,7 @@ const BlackMarket = () => {
 
             <div className="ml-auto w-full sm:w-72">
               <input
-                className="w-full bg-transparent border-b border-neutral-600 py-2 text-sm text-white placeholder-neutral-500 focus:border-white focus:outline-none"
+                className="w-full bg-transparent border-b border-neutral-600 py-2 text-white placeholder-neutral-500 focus:border-white focus:outline-none"
                 placeholder="Søk etter varer…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -1369,17 +1396,6 @@ const BlackMarket = () => {
                             </div>
                           }
                         />
-                        <Button
-                          size="text"
-                          style="text"
-                          onClick={() => {
-                            setSelectedCar(null);
-                            setPrice(0);
-                          }}
-                          title="Bytt bil"
-                        >
-                          Bytt
-                        </Button>
                       </div>
 
                       {/* Price */}
@@ -1397,11 +1413,7 @@ const BlackMarket = () => {
                           value={price === 0 ? "" : fmt(price)}
                           placeholder="0"
                           onChange={(e) => {
-                            const n = parseInt(
-                              e.target.value.replace(/[^\d]/g, ""),
-                              10
-                            );
-                            setPrice(Number.isFinite(n) ? n : 0);
+                            setPrice(parseAmount(e.target.value));
                           }}
                         />
                       </div>
@@ -1409,6 +1421,16 @@ const BlackMarket = () => {
                       <div className="flex gap-2 pt-2">
                         <Button onClick={handlePostListing}>
                           <i className="fa-solid fa-plus" /> Publiser
+                        </Button>
+                        <Button
+                          style="secondary"
+                          onClick={() => {
+                            setSelectedCar(null);
+                            setPrice(0);
+                          }}
+                          title="Bytt bil"
+                        >
+                          Avbryt
                         </Button>
                       </div>
                     </>
@@ -1482,34 +1504,6 @@ const BlackMarket = () => {
                             {selectedBullet.name ?? "Kuler"}
                           </span>
                         </div>
-                        <Button
-                          size="text"
-                          style="text"
-                          onClick={() => {
-                            setSelectedBullet(null);
-                            setItemName("");
-                            setQuantity(1);
-                            setPrice(0);
-                          }}
-                        >
-                          Bytt
-                        </Button>
-                      </div>
-
-                      {/* Name */}
-                      <div className="grid gap-1">
-                        <label
-                          htmlFor="bm-name"
-                          className="text-sm text-neutral-400"
-                        >
-                          Varenavn
-                        </label>
-                        <input
-                          id="bm-name"
-                          className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-                          value={itemName}
-                          onChange={(e) => setItemName(e.target.value)}
-                        />
                       </div>
 
                       {/* Quantity */}
@@ -1554,11 +1548,7 @@ const BlackMarket = () => {
                           value={price === 0 ? "" : fmt(price)}
                           placeholder="0"
                           onChange={(e) => {
-                            const n = parseInt(
-                              e.target.value.replace(/[^\d]/g, ""),
-                              10
-                            );
-                            setPrice(Number.isFinite(n) ? n : 0);
+                            setPrice(parseAmount(e.target.value));
                           }}
                         />
                       </div>
@@ -1566,6 +1556,17 @@ const BlackMarket = () => {
                       <div className="flex gap-2 pt-2">
                         <Button onClick={handlePostListing}>
                           <i className="fa-solid fa-plus" /> Publiser
+                        </Button>
+                        <Button
+                          style="secondary"
+                          onClick={() => {
+                            setSelectedBullet(null);
+                            setItemName("");
+                            setQuantity(1);
+                            setPrice(0);
+                          }}
+                        >
+                          Avbryt
                         </Button>
                       </div>
                     </>
@@ -1660,33 +1661,6 @@ const BlackMarket = () => {
                             {selectedEquip.name ?? "Utstyr"}
                           </span>
                         </div>
-                        <Button
-                          size="text"
-                          style="text"
-                          onClick={() => {
-                            setSelectedEquip(null);
-                            setItemName("");
-                            setPrice(0);
-                          }}
-                        >
-                          Bytt
-                        </Button>
-                      </div>
-
-                      {/* Navn */}
-                      <div className="grid gap-1">
-                        <label
-                          htmlFor="bm-name"
-                          className="text-sm text-neutral-400"
-                        >
-                          Varenavn
-                        </label>
-                        <input
-                          id="bm-name"
-                          className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-                          value={itemName}
-                          onChange={(e) => setItemName(e.target.value)}
-                        />
                       </div>
 
                       {/* Pris */}
@@ -1704,11 +1678,7 @@ const BlackMarket = () => {
                           value={price === 0 ? "" : fmt(price)}
                           placeholder="0"
                           onChange={(e) => {
-                            const n = parseInt(
-                              e.target.value.replace(/[^\d]/g, ""),
-                              10
-                            );
-                            setPrice(Number.isFinite(n) ? n : 0);
+                            setPrice(parseAmount(e.target.value));
                           }}
                         />
                       </div>
@@ -1716,6 +1686,16 @@ const BlackMarket = () => {
                       <div className="flex gap-2 pt-2">
                         <Button onClick={handlePostListing}>
                           <i className="fa-solid fa-plus" /> Publiser
+                        </Button>
+                        <Button
+                          style="secondary"
+                          onClick={() => {
+                            setSelectedEquip(null);
+                            setItemName("");
+                            setPrice(0);
+                          }}
+                        >
+                          Avbryt
                         </Button>
                       </div>
                     </>
@@ -1792,34 +1772,6 @@ const BlackMarket = () => {
                             {selectedDrug.name ?? "Narkotika"}
                           </span>
                         </div>
-                        <Button
-                          size="text"
-                          style="text"
-                          onClick={() => {
-                            setSelectedDrug(null);
-                            setItemName("");
-                            setQuantity(1);
-                            setPrice(0);
-                          }}
-                        >
-                          Bytt
-                        </Button>
-                      </div>
-
-                      {/* Navn */}
-                      <div className="grid gap-1">
-                        <label
-                          htmlFor="bm-name"
-                          className="text-sm text-neutral-400"
-                        >
-                          Varenavn
-                        </label>
-                        <input
-                          id="bm-name"
-                          className="bg-transparent border-b border-neutral-600 py-2 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-                          value={itemName}
-                          onChange={(e) => setItemName(e.target.value)}
-                        />
                       </div>
 
                       {/* Antall */}
@@ -1864,11 +1816,7 @@ const BlackMarket = () => {
                           value={price === 0 ? "" : fmt(price)}
                           placeholder="0"
                           onChange={(e) => {
-                            const n = parseInt(
-                              e.target.value.replace(/[^\d]/g, ""),
-                              10
-                            );
-                            setPrice(Number.isFinite(n) ? n : 0);
+                            setPrice(parseAmount(e.target.value));
                           }}
                         />
                       </div>
@@ -1876,6 +1824,17 @@ const BlackMarket = () => {
                       <div className="flex gap-2 pt-2">
                         <Button onClick={handlePostListing}>
                           <i className="fa-solid fa-plus" /> Publiser
+                        </Button>
+                        <Button
+                          style="secondary"
+                          onClick={() => {
+                            setSelectedDrug(null);
+                            setItemName("");
+                            setQuantity(1);
+                            setPrice(0);
+                          }}
+                        >
+                          Avbryt
                         </Button>
                       </div>
                     </>

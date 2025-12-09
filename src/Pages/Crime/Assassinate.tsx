@@ -106,6 +106,39 @@ const Assassinate = () => {
       : withSpaces;
   };
 
+  // NEW: parse input like "5k" -> "5000", "1m" -> "1000000"
+  const parseAmountInput = (input: string): string => {
+    const trimmed = input.trim();
+    if (!trimmed) return "";
+
+    const upper = trimmed.toUpperCase();
+    const lastChar = upper[upper.length - 1];
+
+    let multiplier = 1;
+    let numericPart = upper;
+
+    if (lastChar === "K") {
+      multiplier = 1000;
+      numericPart = upper.slice(0, -1);
+    } else if (lastChar === "M") {
+      multiplier = 1_000_000;
+      numericPart = upper.slice(0, -1);
+    }
+
+    // keep digits only from the numeric part
+    const digits = numericPart.replace(/[^\d]/g, "");
+    if (!digits) return "";
+
+    const base = parseInt(digits, 10);
+    if (Number.isNaN(base)) return "";
+
+    const amount = base * multiplier;
+    return String(amount); // stored as plain digits
+  };
+
+  const parsedBountyAmount = (): number =>
+    bountyAmountInput === "" ? 0 : parseInt(bountyAmountInput, 10);
+
   // Subscribe to bullets
   useEffect(() => {
     if (!userCharacter?.id) {
@@ -135,10 +168,6 @@ const Assassinate = () => {
 
     return () => unsub();
   }, [userCharacter?.id]);
-
-  const sanitizeInt = (s: string) => s.replace(/[^\d]/g, ""); // keep digits only
-  const parsedBountyAmount = (): number =>
-    bountyAmountInput === "" ? 0 : parseInt(bountyAmountInput, 10);
 
   // Remove bounty
   const removeBounty = async (bountyId: string, bountyAmount: number) => {
@@ -949,12 +978,16 @@ const Assassinate = () => {
                     type="text"
                     inputMode="numeric"
                     placeholder="Beløp"
-                    value={formatDigitsWithSpaces(bountyAmountInput)}
-                    onChange={(e) =>
-                      setBountyAmountInput(sanitizeInt(e.target.value))
+                    value={
+                      bountyAmountInput
+                        ? formatDigitsWithSpaces(bountyAmountInput)
+                        : ""
                     }
+                    onChange={(e) => {
+                      setBountyAmountInput(parseAmountInput(e.target.value));
+                    }}
                     onBlur={(e) => {
-                      const cleaned = sanitizeInt(e.target.value).replace(
+                      const cleaned = parseAmountInput(e.target.value).replace(
                         /^0+(?!$)/,
                         ""
                       );
