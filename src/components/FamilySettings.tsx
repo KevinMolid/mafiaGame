@@ -3,6 +3,7 @@ import H3 from "./Typography/H3";
 import Button from "./Button";
 import EditFamilyProfile from "./EditFamilyProfile";
 import Box from "./Box";
+import ConfirmDialog from "./ConfirmDialog";
 
 import { useAuth } from "../AuthContext";
 import { useCharacter } from "../CharacterContext";
@@ -45,6 +46,9 @@ const FamilySettings = ({
   const { userData } = useAuth();
   const { userCharacter } = useCharacter();
   const [changingProfile, setChangingProfile] = useState<boolean>(false);
+
+  const [showConfirmDisband, setShowConfirmDisband] = useState(false);
+  const [disbandBusy, setDisbandBusy] = useState(false);
 
   const navigate = useNavigate();
 
@@ -136,8 +140,8 @@ const FamilySettings = ({
 
   // Toggle admin status for this family
   const toggleAdmin = async () => {
-    if (!isBoss) {
-      setError("Bare lederen av familien kan endre admin-status.");
+    if (userData.type !== "admin") {
+      setError("Bare admin-brukere kan endre admin-status på familier.");
       return;
     }
 
@@ -213,7 +217,7 @@ const FamilySettings = ({
             {isBoss ? (
               <button
                 className="block text-red-400 cursor-pointer hover:underline"
-                onClick={disbandFamily}
+                onClick={() => setShowConfirmDisband(true)}
               >
                 <i className="fa-solid fa-ban"></i> Legg ned familien
               </button>
@@ -226,6 +230,40 @@ const FamilySettings = ({
               </button>
             )}
           </div>
+
+          {/* Confirm disband dialog */}
+          <ConfirmDialog
+            open={showConfirmDisband}
+            title="Legg ned familien?"
+            description={
+              <div className="text-sm sm:text-base space-y-1">
+                <p>
+                  Du er i ferd med å legge ned familien{" "}
+                  <strong>{family.name}</strong>.
+                </p>
+                <p>
+                  Alle medlemmer vil miste tilknytningen til familien, og
+                  familien vil bli slettet permanent.
+                </p>
+                <p className="text-stone-400">
+                  <small>Handlingen kan ikke angres!</small>
+                </p>
+              </div>
+            }
+            confirmLabel="Ja, legg ned familien"
+            cancelLabel="Avbryt"
+            loading={disbandBusy}
+            onConfirm={async () => {
+              setDisbandBusy(true);
+              try {
+                await disbandFamily();
+              } finally {
+                setDisbandBusy(false);
+                setShowConfirmDisband(false);
+              }
+            }}
+            onCancel={() => setShowConfirmDisband(false)}
+          />
         </div>
       )}
     </div>
