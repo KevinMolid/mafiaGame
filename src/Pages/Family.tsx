@@ -180,14 +180,44 @@ const Family = () => {
     fetchApplications();
   }, [userCharacter?.familyId]);
 
-  // Helper
+  // --- Amount parsing helpers ---------------------------------------
+
+  // Keep only numeric characters
   const sanitizeInt = (s: string) => s.replace(/[^\d]/g, "");
+
+  // Parse input like "5000", "5k", "1m", "2.5m" into a number or ""
+  const parseAmount = (input: string): number | "" => {
+    const trimmed = input.trim();
+    if (!trimmed) return "";
+
+    const upper = trimmed.toUpperCase();
+    const lastChar = upper[upper.length - 1];
+
+    let multiplier = 1;
+    let numericPart = upper;
+
+    if (lastChar === "K") {
+      multiplier = 1000;
+      numericPart = upper.slice(0, -1);
+    } else if (lastChar === "M") {
+      multiplier = 1_000_000;
+      numericPart = upper.slice(0, -1);
+    }
+
+    // allow user to type stuff like "1.2m" or "1 200k"
+    const digitsOnly = sanitizeInt(numericPart);
+    if (!digitsOnly) return "";
+
+    const base = parseInt(digitsOnly, 10);
+    if (!Number.isFinite(base) || base <= 0) return "";
+
+    return base * multiplier;
+  };
 
   // Handle inputs
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const cleaned = sanitizeInt(e.target.value);
-    if (cleaned === "") setAmount("");
-    else setAmount(parseInt(cleaned, 10));
+    const parsed = parseAmount(e.target.value);
+    setAmount(parsed);
   };
 
   // Banking functions
@@ -224,7 +254,7 @@ const Family = () => {
         setMessage(
           <p>
             Du donerte <i className="fa-solid fa-dollar-sign"></i>{" "}
-            <strong>{amount.toLocaleString("NO-nb")}</strong> til familien.
+            <strong>{amount.toLocaleString("nb-NO")}</strong> til familien.
           </p>
         );
         setAmount("");
@@ -267,7 +297,7 @@ const Family = () => {
         setMessage(
           <p>
             Du tok ut <i className="fa-solid fa-dollar-sign"></i>{" "}
-            <strong>{amount.toLocaleString()}</strong> fra familien.
+            <strong>{amount.toLocaleString("nb-NO")}</strong> fra familien.
           </p>
         );
         setAmount("");
@@ -332,7 +362,7 @@ const Family = () => {
               Formue:{" "}
               <strong className="text-neutral-200">
                 <i className="fa-solid fa-dollar-sign"></i>{" "}
-                {family.wealth.toLocaleString("NO-nb")}
+                {family.wealth.toLocaleString("nb-NO")}
               </strong>
             </p>
           </div>
