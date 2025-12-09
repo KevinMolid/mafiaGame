@@ -2,9 +2,11 @@
 import Main from "../../components/Main";
 import H1 from "../../components/Typography/H1";
 import H2 from "../../components/Typography/H2";
+import H4 from "../../components/Typography/H4";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import JailBox from "../../components/JailBox";
+import Box from "../../components/Box";
 
 // React
 import { useState } from "react";
@@ -45,21 +47,46 @@ const Bank = () => {
   const { userCharacter } = useCharacter();
   const { jailRemainingSeconds } = useCooldown();
 
+  const [helpActive, setHelpActive] = useState<boolean>(false);
+
   if (!userCharacter) {
     return null;
   }
 
-  const sanitizeInt = (s: string) => {
-    // remove anything that isn't 0–9 (covers spaces, NBSP, commas, dots, etc.)
-    const cleaned = s.replace(/[^\d]/g, "");
-    return cleaned;
+  // --- NEW: parse input like "5k" -> 5000, "1m" -> 1_000_000 -----------------
+  const parseAmount = (input: string): number | "" => {
+    const trimmed = input.trim();
+    if (!trimmed) return "";
+
+    const upper = trimmed.toUpperCase();
+    const lastChar = upper[upper.length - 1];
+
+    let multiplier = 1;
+    let numericPart = upper;
+
+    if (lastChar === "K") {
+      multiplier = 1000;
+      numericPart = upper.slice(0, -1);
+    } else if (lastChar === "M") {
+      multiplier = 1_000_000;
+      numericPart = upper.slice(0, -1);
+    }
+
+    // Remove anything that isn't a digit (spaces, commas, dots, etc.)
+    const digits = numericPart.replace(/[^\d]/g, "");
+    if (!digits) return "";
+
+    const base = parseInt(digits, 10);
+    if (Number.isNaN(base)) return "";
+
+    return base * multiplier;
   };
 
   // 2) handlers
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const cleaned = sanitizeInt(e.target.value);
-    if (cleaned === "") setAmount("");
-    else setAmount(parseInt(cleaned, 10));
+    const value = parseAmount(e.target.value);
+    if (value === "") setAmount("");
+    else setAmount(value);
   };
 
   const handleTargetCharacterInputChange = (e: any) => {
@@ -69,12 +96,12 @@ const Bank = () => {
   const handleAmountToSendInputChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const cleaned = sanitizeInt(e.target.value);
-    if (cleaned === "") setAmountToSend("");
-    else setAmountToSend(parseInt(cleaned, 10));
+    const value = parseAmount(e.target.value);
+    if (value === "") setAmountToSend("");
+    else setAmountToSend(value);
   };
 
-  // Banking functions
+  // Banking functions (unchanged)
   const deposit = async () => {
     try {
       const characterRef = doc(db, "Characters", userCharacter.id);
@@ -343,11 +370,59 @@ const Bank = () => {
 
   return (
     <Main>
-      <H1>Bank</H1>
-      <p className="mb-2">Sett inn eller ta penger ut av banken.</p>
-      <p className="mb-4">
-        Ved midnatt vil du motta 5% rente på pengene i din bankkonto.
+      <div className="flex items-baseline justify-between gap-4">
+        <H1>Bank</H1>
+        {helpActive ? (
+          <Button
+            size="small-square"
+            style="helpActive"
+            onClick={() => setHelpActive(!helpActive)}
+          >
+            <i className="fa-solid fa-question"></i>
+          </Button>
+        ) : (
+          <Button
+            size="small-square"
+            style="help"
+            onClick={() => setHelpActive(!helpActive)}
+          >
+            <i className="fa-solid fa-question"></i>
+          </Button>
+        )}
+      </div>
+      <p className="mb-2">
+        Her kan du sette inn eller ta penger ut av banken og overføre penger til
+        andre spillere.
       </p>
+
+      {/* Info box */}
+      {helpActive && (
+        <div className="mb-4">
+          <Box type="help" className="text-sm flex gap-x-8 flex-wrap">
+            <article>
+              <H4>Renter</H4>
+              <p className="mb-2">
+                Dersom du har penger i banken vil du ved midnatt motta 1% av
+                saldoen i renter.
+              </p>
+
+              <H4>Overføringsgebyr</H4>
+              <p className="mb-2">
+                Ved overføring av penger til en annen spiller vil banken ta 5%
+                av overføringen som gebyr. Dette beløpet blir lagt til oppå
+                overføringsbeløpet, slik at mottakeren mottar det angitte
+                beløpet.
+              </p>
+
+              <H4>Hurtigtaster</H4>
+              <p className="mb-4">
+                Du kan taste "K" for å legge til tre nuller (000) eller "M" for
+                å legge til seks nuller (000 000).
+              </p>
+            </article>
+          </Box>
+        </div>
+      )}
 
       {message && (
         <InfoBox type={messageType} onClose={() => setMessage("")}>
@@ -402,9 +477,6 @@ const Bank = () => {
 
       <div className="my-6">
         <H2>Overfør til spiller</H2>
-        <p className="mb-4">
-          En transaksjonskostnad på 5% vil bli lagt til og betalt til banken.
-        </p>
         <form className="flex flex-col gap-2" action="">
           <input
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
@@ -419,7 +491,7 @@ const Bank = () => {
           />
           <input
             className="bg-transparent border-b border-neutral-600 py-1 text-lg font-medium text-white placeholder-neutral-500 focus:border-white focus:outline-none"
-            type="numeric"
+            type="text"
             placeholder="Beløp"
             value={amountToSend ? amountToSend.toLocaleString("nb-NO") : ""}
             onChange={handleAmountToSendInputChange}
@@ -428,7 +500,6 @@ const Bank = () => {
             }}
           />
           <div>
-            {" "}
             <Button onClick={transfer}>Overfør</Button>
           </div>
         </form>

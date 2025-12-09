@@ -95,13 +95,13 @@ const Heist = () => {
         </div>
       )}
 
-      {cooldowns["crime"] > 0 && (
+      {cooldowns["heist"] > 0 && (
         <p className="mb-4 text-stone-400">
           Du må vente{" "}
           <span className="font-bold text-neutral-200">
-            {compactMmSs(cooldowns["crime"])}
+            {compactMmSs(cooldowns["heist"])}
           </span>{" "}
-          før du kan gjøre en kriminell handling.
+          før du kan gjøre et nytt brekk.
         </p>
       )}
 
@@ -110,6 +110,18 @@ const Heist = () => {
           {message}
         </InfoBox>
       )}
+
+      <ul>
+        <li>
+          <p>Lite brekk</p>
+        </li>
+        <li>
+          <p>Mellomstort brekk</p>
+        </li>
+        <li>
+          <p>Stort brekk</p>
+        </li>
+      </ul>
 
       <Button onClick={handleClick}>Utfør brekk</Button>
     </Main>

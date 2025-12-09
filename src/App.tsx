@@ -32,6 +32,8 @@ import Leaderboard from "./Pages/Leaderboard.tsx";
 import FindPlayer from "./Pages/FindPlayer.tsx";
 import Statistics from "./Pages/Statistics.tsx";
 
+import Intro from "./Pages/Sceenes/Intro.tsx";
+
 // Left dropdown menu
 import Profile from "./Pages/Profile.tsx";
 import EditProfile from "./Pages/EditProfile.tsx";
@@ -161,6 +163,15 @@ function App() {
                             element={
                               <ProtectedRoute>
                                 <Alerts />
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          <Route
+                            path="/intro"
+                            element={
+                              <ProtectedRoute>
+                                <Intro />
                               </ProtectedRoute>
                             }
                           />
