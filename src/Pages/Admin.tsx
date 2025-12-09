@@ -255,11 +255,18 @@ const Admin = () => {
   async function doResetGame() {
     setLoading(true);
     try {
-      // ----- Characters: reset fields, clear alerts and cars subcollection -----
+      // ----- Characters: reset fields, clear alerts, cars and items subcollections -----
       const characterCollectionRef = collection(db, "Characters");
       const characterDocs = await getDocs(characterCollectionRef);
 
       for (const charDoc of characterDocs.docs) {
+        const charData = charDoc.data() as any;
+
+        // 💡 Skip admin characters completely
+        if (charData.role === "admin") {
+          continue;
+        }
+
         const charDocRef = doc(db, "Characters", charDoc.id);
 
         await setDoc(
@@ -283,6 +290,10 @@ const Admin = () => {
             inJail: null,
             jailReleaseTime: null,
             activeFamilyApplication: null,
+
+            // 🔥 Remove these fields entirely
+            combatLoadout: deleteField(),
+            equipment: deleteField(),
             airplane: deleteField(),
             dailyXpStart: deleteField(),
             dealership: deleteField(),
@@ -290,20 +301,32 @@ const Admin = () => {
           { merge: true }
         );
 
+        // 🔥 Clear subcollections: alerts, cars, items
         await deleteAllDocsInCollection(["Characters", charDoc.id, "alerts"]);
         await deleteAllDocsInCollection(["Characters", charDoc.id, "cars"]);
+        await deleteAllDocsInCollection(["Characters", charDoc.id, "items"]);
       }
 
+      // ----- Global collections -----
       await deleteAllDocsInCollection(["Bounty"]);
       await deleteAllDocsInCollection(["Auctions"]);
       await deleteAllDocsInCollection(["Auction"]);
       await deleteAllDocsInCollection(["FamilyInvites"]);
 
+      // ----- Families: delete all non-admin families + their subcollections -----
       const familiesCollectionRef = collection(db, "Families");
       const familiesDocs = await getDocs(familiesCollectionRef);
       for (const familyDoc of familiesDocs.docs) {
+        const familyData = familyDoc.data() as any;
+
+        // 💡 Skip admin-families completely
+        if (familyData.admin === true) {
+          continue;
+        }
+
         const familyId = familyDoc.id;
         const familyDocRef = doc(db, "Families", familyId);
+
         await deleteAllDocsInCollection(["Families", familyId, "Applications"]);
         await deleteAllDocsInCollection(["Families", familyId, "Events"]);
         await deleteDoc(familyDocRef);
