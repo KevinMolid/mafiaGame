@@ -23,6 +23,7 @@ export type FamilyData = {
   wealth: number;
   img?: string;
   profileText?: string;
+  admin?: boolean;
 };
 
 export type Car = {

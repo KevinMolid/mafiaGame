@@ -4,6 +4,7 @@ import Button from "./Button";
 import EditFamilyProfile from "./EditFamilyProfile";
 import Box from "./Box";
 
+import { useAuth } from "../AuthContext";
 import { useCharacter } from "../CharacterContext";
 
 import {
@@ -41,6 +42,7 @@ const FamilySettings = ({
   setMessage,
   setMessageType,
 }: FamilySettingsInterface) => {
+  const { userData } = useAuth();
   const { userCharacter } = useCharacter();
   const [changingProfile, setChangingProfile] = useState<boolean>(false);
 
@@ -132,6 +134,34 @@ const FamilySettings = ({
     }
   };
 
+  // Toggle admin status for this family
+  const toggleAdmin = async () => {
+    if (!isBoss) {
+      setError("Bare lederen av familien kan endre admin-status.");
+      return;
+    }
+
+    try {
+      setError(null);
+      const newAdmin = !family.admin;
+      const familyRef = doc(db, "Families", family.id);
+
+      await updateDoc(familyRef, { admin: newAdmin });
+
+      setFamily((prev) => (prev ? { ...prev, admin: newAdmin } : prev));
+
+      setMessageType("success");
+      setMessage(
+        newAdmin
+          ? "Familien er nå satt som admin."
+          : "Familien er ikke lenger satt som admin."
+      );
+    } catch (e) {
+      console.error("Feil ved endring av admin-status:", e);
+      setError("Kunne ikke endre admin-status. Prøv igjen senere.");
+    }
+  };
+
   return (
     <div>
       <H2>Innstillinger</H2>
@@ -165,6 +195,20 @@ const FamilySettings = ({
             >
               <i className="fa-solid fa-pen-to-square"></i> Endre profil
             </button>
+
+            {/* Admin toggle — only visible if the character is admin */}
+            {userData.type === "admin" && (
+              <button
+                className="block mt-2 hover:underline"
+                onClick={toggleAdmin}
+              >
+                <i className="fa-solid fa-user-shield"></i>{" "}
+                {family.admin
+                  ? "Familien er admin – klikk for å fjerne"
+                  : "Sett familien som admin"}
+              </button>
+            )}
+
             <hr className="my-2 border-neutral-600" />
             {isBoss ? (
               <button

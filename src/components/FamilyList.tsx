@@ -25,6 +25,7 @@ const FamilyList = () => {
         members: doc.data().members,
         name: doc.data().name,
         wealth: doc.data().wealth,
+        admin: doc.data().admin,
       }));
 
       setFamilies(familyData);
