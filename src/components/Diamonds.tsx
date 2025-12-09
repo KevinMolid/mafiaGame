@@ -1,5 +1,4 @@
 import { useState, ReactNode } from "react";
-
 import H2 from "./Typography/H2";
 import H3 from "./Typography/H3";
 
@@ -9,6 +8,7 @@ import d3 from "/images/boxes/d3.png";
 
 import Button from "./Button";
 import InfoBox from "../components/InfoBox";
+import ItemTile from "./ItemTile";
 
 import { useCharacter } from "../CharacterContext";
 import { applyStatRewards } from "../Functions/RewardFunctions";
@@ -59,7 +59,7 @@ const Diamonds = () => {
 
   return (
     <>
-      <H2>Diamanter</H2>
+      <H2>Kjøp diamanter</H2>
       <p className="mb-4">
         Her kan du kjøpe diamanter som kan brukes til å kjøpe forskjellige ting
         i spillet.
@@ -72,7 +72,7 @@ const Diamonds = () => {
         </div>
       )}
 
-      <ul className="flex gap-4">
+      <ul className="flex gap-4 mb-8">
         <li>
           <div className="flex flex-col justify-center items-center text-center border border-neutral-600 pt-4 pb-6">
             <H3>Liten håndfull</H3>
@@ -82,9 +82,9 @@ const Diamonds = () => {
               alt="Diamonds"
             />
             <p className="font-semibold text-neutral-200 text-xl">
-              <i className="fa-solid fa-gem" /> 150
+              <i className="fa-solid fa-gem" /> 50
             </p>
-            <p className="text-lg mb-2">55 kr</p>
+            <p className="text-lg mb-2">50 kr</p>
             <Button onClick={() => handleBuy(150)} disabled={isBuying}>
               Kjøp
             </Button>
@@ -100,9 +100,9 @@ const Diamonds = () => {
               alt="Diamonds"
             />
             <p className="font-semibold text-neutral-200 text-xl">
-              <i className="fa-solid fa-gem" /> 450
+              <i className="fa-solid fa-gem" /> 165
             </p>
-            <p className="text-lg mb-2">129 kr</p>
+            <p className="text-lg mb-2">150 kr</p>
             <Button onClick={() => handleBuy(450)} disabled={isBuying}>
               Kjøp
             </Button>
@@ -118,12 +118,26 @@ const Diamonds = () => {
               alt="Diamonds"
             />
             <p className="font-semibold text-neutral-200 text-xl">
-              <i className="fa-solid fa-gem" /> 1200
+              <i className="fa-solid fa-gem" /> 500
             </p>
-            <p className="text-lg mb-2">299 kr</p>
+            <p className="text-lg mb-2">450 kr</p>
             <Button onClick={() => handleBuy(1200)} disabled={isBuying}>
               Kjøp
             </Button>
+          </div>
+        </li>
+      </ul>
+
+      <H2>Diamantbutikk</H2>
+      <ul>
+        <li className="flex flex-col gap-1 items-center">
+          <p className="text-neutral-200 font-semibold">Megafon</p>
+          <ItemTile name="Megafon" img="" tier={5}></ItemTile>
+          <p className="font-semibold text-neutral-200 text-xl">
+            <i className="fa-solid fa-gem" /> 5
+          </p>
+          <div className="mt-2">
+            <Button>Kjøp</Button>
           </div>
         </li>
       </ul>
