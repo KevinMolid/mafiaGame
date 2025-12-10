@@ -139,9 +139,9 @@ export default function CharacterListRank({
       {/* PODIUM */}
       {topThree.length > 0 && (
         <div className="w-full max-w-[420px]">
-          <div className="flex justify-between items-end gap-4 mt-8 mb-4">
+          <div className="flex justify-center items-end gap-4 mt-8 mb-4">
             {/* ---- 2ND PLACE ---- */}
-            <div className="flex flex-col items-start">
+            <div className="flex flex-col items-center">
               {second && (
                 <>
                   {/* Avatar + Number */}
@@ -163,7 +163,7 @@ export default function CharacterListRank({
                   </div>
 
                   {/* Name + rank */}
-                  <div className="mt-4 text-left">
+                  <div className="mt-4 text-center">
                     <div className="mb-0.5 text-[11px] sm:text-xs md:text-sm">
                       <Username
                         character={{
@@ -182,7 +182,7 @@ export default function CharacterListRank({
             </div>
 
             {/* ---- 1ST PLACE ---- */}
-            <div className="flex flex-col items-start">
+            <div className="flex flex-col items-center">
               {first && (
                 <>
                   {/* Avatar + Number */}
@@ -204,7 +204,7 @@ export default function CharacterListRank({
                   </div>
 
                   {/* Name + rank */}
-                  <div className="mt-4 text-left">
+                  <div className="mt-4 text-center">
                     <div className="mb-0.5 text-[11px] sm:text-xs md:text-sm font-semibold text-yellow-400">
                       <Username
                         character={{
@@ -223,7 +223,7 @@ export default function CharacterListRank({
             </div>
 
             {/* ---- 3RD PLACE ---- */}
-            <div className="flex flex-col items-start">
+            <div className="flex flex-col items-center">
               {third && (
                 <>
                   {/* Avatar + Number */}
@@ -245,7 +245,7 @@ export default function CharacterListRank({
                   </div>
 
                   {/* Name + rank */}
-                  <div className="mt-4 text-left">
+                  <div className="mt-4 text-center">
                     <div className="mb-0.5 text-[11px] sm:text-xs md:text-sm">
                       <Username
                         character={{
