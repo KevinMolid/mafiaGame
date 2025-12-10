@@ -5,12 +5,30 @@ import { useCooldown } from "../CooldownContext";
 import { useMenuContext } from "../MenuContext";
 
 import { compactMmSs } from "../Functions/TimeFunctions";
+import { activityConfig } from "../config/GameConfig";
 
 const DropdownLeft = () => {
   const { actionsOpen, toggleActions, closeMenus } = useMenuContext();
-  const { cooldowns } = useCooldown();
+  const { cooldowns, jailRemainingSeconds } = useCooldown();
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { jailRemainingSeconds } = useCooldown();
+
+  // Crime config (fra GameConfig)
+  const crimes = activityConfig.crime.crimes;
+
+  // Hent sist valgte crime fra localStorage (samme som i StreetCrime)
+  let selectedCrimeName = crimes[0]?.name ?? "Lommetyveri";
+  try {
+    const stored = localStorage.getItem("selectedCrime");
+    if (stored) selectedCrimeName = stored;
+  } catch {
+    // ignore (SSR / private mode)
+  }
+
+  const selectedCrimeConfig =
+    crimes.find((c) => c.name === selectedCrimeName) ?? crimes[0];
+
+  const crimeCooldownKey = selectedCrimeConfig?.cooldownKey || "crime";
+  const crimeRemaining = cooldowns[crimeCooldownKey] ?? 0;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -68,26 +86,15 @@ const DropdownLeft = () => {
 
           <hr className="border-neutral-700 my-2" />
 
-          {/*<DropdownOption
-          to="/innflytelse"
-          icon="handshake-simple"
-          onClick={toggleActions}
-        >
-          Innflytelse
-
-        <hr className="border-neutral-700 my-2" />
-
-        </DropdownOption>*/}
-
           <DropdownOption
             to="/kriminalitet"
             icon="money-bill"
             onClick={toggleActions}
           >
             <div>Kriminalitet</div>
-            {cooldowns["crime"] > 0 ? (
+            {crimeRemaining > 0 ? (
               <div className="text-neutral-200 font-medium pr-4">
-                {compactMmSs(cooldowns["crime"])}
+                {compactMmSs(crimeRemaining)}
               </div>
             ) : (
               <div className="text-green-400 pr-4">

@@ -56,6 +56,8 @@ const db = getFirestore(app);
 
 import type { Car } from "../../Interfaces/Types";
 
+import { activityConfig } from "../../config/GameConfig";
+
 // Cars by tier
 const tiers: { [key: number]: Car[] } = {
   1: Cars.filter((car) => car.tier === 1),
@@ -86,7 +88,10 @@ const GTA = () => {
   const targetInputRef = useRef<HTMLInputElement | null>(null);
   const [isBusy, setIsBusy] = useState<boolean>(false);
 
-  const SUCCESS_CHANCE_STREET = 0.75; // 75%
+  const SUCCESS_CHANCE_STREET = activityConfig.gta.street.successChance;
+  const STREET_XP_REWARD = activityConfig.gta.street.xpReward;
+  const PLAYER_BASE_SUCCESS = activityConfig.gta.player.baseSuccessChance;
+  const PLAYER_XP_REWARD = activityConfig.gta.player.xpReward;
 
   const navigate = useNavigate();
 
@@ -197,7 +202,7 @@ const GTA = () => {
         });
 
         // 2.b) Rewards
-        rewardXp(userCharacter, 10);
+        rewardXp(userCharacter, STREET_XP_REWARD);
         increaseHeat(userCharacter, userCharacter.id, 1);
 
         // 2.c) Use the catalog for messaging / tooltip
@@ -276,7 +281,7 @@ const GTA = () => {
   // ---- FRA SPILLER ----
   const calcPlayerTheftSuccess = (securityPct: number | undefined) => {
     const security = Math.max(0, Math.min(100, securityPct ?? 0));
-    return 0.5 * (1 - security / 100); // 50% × (100% − sikkerhet%)
+    return PLAYER_BASE_SUCCESS * (1 - security / 100); // 50% × (100% − sikkerhet%)
   };
 
   const findCharacterByUsername = async (username: string) => {
@@ -475,7 +480,7 @@ const GTA = () => {
         });
 
         // 4) Rewards & message
-        rewardXp(userCharacter, 15);
+        rewardXp(userCharacter, PLAYER_XP_REWARD);
         increaseHeat(userCharacter, userCharacter.id, 2);
 
         const catalogForMsg = catalog ?? getCarByKey(modelKey);

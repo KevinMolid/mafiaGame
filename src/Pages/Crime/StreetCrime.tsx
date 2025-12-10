@@ -9,13 +9,14 @@ import Box from "../../components/Box";
 
 // functions
 import { compactMmSs } from "../../Functions/TimeFunctions";
-
 import { arrest } from "../../Functions/RewardFunctions";
+
+import { activityConfig } from "../../config/GameConfig";
 
 // React
 import { useState, useEffect, ReactNode } from "react";
 
-// Firebase
+// Firebase / routing
 import { useNavigate } from "react-router-dom";
 
 // Context
@@ -34,6 +35,8 @@ const StreetCrime = () => {
   const navigate = useNavigate();
 
   const { cooldowns, startCooldown } = useCooldown();
+
+  const crimes = activityConfig.crime.crimes;
 
   const [selectedCrime, setSelectedCrime] = useState<string>(
     localStorage.getItem("selectedCrime") || "Lommetyveri"
@@ -56,23 +59,31 @@ const StreetCrime = () => {
     localStorage.setItem("selectedCrime", selectedCrime);
   }, [selectedCrime]);
 
+  // Finn konfig for valgt crime
+  const selectedCrimeConfig =
+    crimes.find((c) => c.name === selectedCrime) ?? crimes[0];
+
+  const cooldownKey = selectedCrimeConfig.cooldownKey || "crime";
+  const remainingCooldown = cooldowns[cooldownKey] ?? 0;
+
   // Function for comitting a crime
   const handleClick = async () => {
-    if (cooldowns["crime"] > 0) {
-      setMessageType("warning");
-      setMessage("Du må vente før du kan utføre en kriminell handling.");
-      return;
-    }
-
-    if (!userCharacter || !selectedCrime) {
+    if (!userCharacter || !selectedCrimeConfig) {
       setMessageType("warning");
       setMessage("Du må velge en handling!");
       return;
     }
 
-    const crime = crimes.find((c) => c.name === selectedCrime);
-    if (!crime) return;
+    // Sjekk cooldown for valgt handling
+    if (remainingCooldown > 0) {
+      setMessageType("warning");
+      setMessage(
+        `Du må vente før du kan utføre ${selectedCrimeConfig.name.toLowerCase()}.`
+      );
+      return;
+    }
 
+    const crime = selectedCrimeConfig;
     const characterRef = doc(db, "Characters", userCharacter.id);
 
     // Determine success/failure
@@ -128,7 +139,7 @@ const StreetCrime = () => {
         </>
       );
       setMessageType("success");
-      startCooldown("crime");
+      await startCooldown(cooldownKey);
       return;
     }
 
@@ -142,7 +153,7 @@ const StreetCrime = () => {
       await arrest(userCharacter);
       setMessage("Handlingen feilet, og du ble arrestert!");
       setMessageType("failure");
-      startCooldown("crime");
+      await startCooldown(cooldownKey);
       return;
     } else {
       // Failed but not jailed: just add (clamped) heat
@@ -154,46 +165,10 @@ const StreetCrime = () => {
         `Du prøvde å utføre ${crime.name}, men feilet. Bedre lykke neste gang!`
       );
       setMessageType("failure");
-      startCooldown("crime");
+      await startCooldown(cooldownKey);
       return;
     }
   };
-
-  // Crime options array
-  const crimes = [
-    {
-      id: "Lommetyveri",
-      name: "Lommetyveri",
-      successRate: 0.9,
-      xpReward: 3,
-      minMoneyReward: 10,
-      maxMoneyReward: 500,
-    },
-    {
-      id: "Herverk",
-      name: "Herverk",
-      successRate: 0.85,
-      xpReward: 4,
-      minMoneyReward: 20,
-      maxMoneyReward: 1000,
-    },
-    {
-      id: "verdisaker",
-      name: "Stjel verdisaker",
-      successRate: 0.8,
-      xpReward: 5,
-      minMoneyReward: 80,
-      maxMoneyReward: 8000,
-    },
-    {
-      id: "butikk",
-      name: "Ran butikk",
-      successRate: 0.75,
-      xpReward: 6,
-      minMoneyReward: 160,
-      maxMoneyReward: 16000,
-    },
-  ];
 
   if (userCharacter?.inJail && jailRemainingSeconds > 0) {
     return <JailBox message={message} messageType={messageType} />;
@@ -238,13 +213,14 @@ const StreetCrime = () => {
             <article>
               <H4>Hvordan utføre kriminalitet</H4>
               <p className="mb-2">
-                Velg ønsket kriminell handling, og trykk på "Utfør handling". Du
-                kan velge mellom "Lommetyveri", "Herverk", "Stjel verdisaker"
-                eller "Ran butikk".
+                Velg ønsket kriminell handling, og trykk på &quot;Utfør
+                handling&quot;. Du kan velge mellom &quot;Lommetyveri&quot;,
+                &quot;Herverk&quot;, &quot;Stjel verdisaker&quot; eller
+                &quot;Ran butikk&quot;.
               </p>
-              <H4>Sjanse for suksess og belønning</H4>
+              <H4>Sjanse for suksess, belønning og cooldown</H4>
               {crimes.map((crime) => (
-                <p>
+                <p key={crime.id}>
                   {crime.name}:{" "}
                   <strong className="text-neutral-200">
                     +{crime.xpReward} XP
@@ -252,6 +228,10 @@ const StreetCrime = () => {
                   og{" "}
                   <strong className="text-neutral-200">
                     {crime.minMoneyReward} - {crime.maxMoneyReward}
+                  </strong>
+                  {", cooldown: "}
+                  <strong className="text-neutral-200">
+                    {compactMmSs(crime.cooldownSeconds)}
                   </strong>
                 </p>
               ))}
@@ -261,13 +241,13 @@ const StreetCrime = () => {
         </div>
       )}
 
-      {cooldowns["crime"] > 0 && (
+      {remainingCooldown > 0 && (
         <p className="mb-4 text-stone-400">
           Du må vente{" "}
           <span className="font-bold text-neutral-200">
-            {compactMmSs(cooldowns["crime"])}
+            {compactMmSs(remainingCooldown)}
           </span>{" "}
-          før du kan gjøre en kriminell handling.
+          før du kan gjøre {selectedCrimeConfig.name.toLowerCase()} igjen.
         </p>
       )}
 

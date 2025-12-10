@@ -18,6 +18,8 @@ import {
 
 import { compactMmSs } from "../../Functions/TimeFunctions";
 
+import { activityConfig } from "../../config/GameConfig";
+
 // Context
 import { useAuth } from "../../AuthContext";
 import { useCooldown } from "../../CooldownContext";
@@ -46,6 +48,15 @@ import firebaseConfig from "../../firebaseConfig";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+const RANDOM_FIND_CHANCE = activityConfig.robbery.randomFindChance;
+const SPECIFIC_FIND_CHANCE = activityConfig.robbery.specificFindChance;
+const ROBBERY_SUCCESS_CHANCE = activityConfig.robbery.successChance;
+const ROBBERY_XP_REWARD = activityConfig.robbery.xpReward;
+
+const randomFindPct = Math.round(RANDOM_FIND_CHANCE * 100);
+const specificFindPct = Math.round(SPECIFIC_FIND_CHANCE * 100);
+const robberySuccessPct = Math.round(ROBBERY_SUCCESS_CHANCE * 100);
 
 const Robbery = () => {
   const [message, setMessage] = useState<React.ReactNode>("");
@@ -196,7 +207,7 @@ const Robbery = () => {
       read: false,
     });
 
-    rewardXp(userCharacter, 10);
+    rewardXp(userCharacter, ROBBERY_XP_REWARD);
     displayMessage(
       <>
         Du ranet{" "}
@@ -265,9 +276,9 @@ const Robbery = () => {
         : await findSpecificTarget(targetCharacter);
       if (!target) return;
 
-      const foundPlayer = !isTargetRandom
-        ? Math.random() <= 0.5
-        : Math.random() <= 0.9;
+      const foundPlayer = isTargetRandom
+        ? Math.random() <= RANDOM_FIND_CHANCE
+        : Math.random() <= SPECIFIC_FIND_CHANCE;
       if (!foundPlayer) {
         displayMessage(
           !isTargetRandom ? (
@@ -291,7 +302,7 @@ const Robbery = () => {
 
       let arrested = false;
 
-      const success = Math.random() <= 0.75;
+      const success = Math.random() <= ROBBERY_SUCCESS_CHANCE;
       if (success) {
         await handleRobberySuccess(target);
       } else {
@@ -352,17 +363,22 @@ const Robbery = () => {
           <Box type="help" className="text-sm flex gap-x-8 flex-wrap">
             <article>
               <H4>Rane en tilfeldig spiller</H4>
-              <p>90% sjanse for å finne en tilfeldig spiller.</p>
+              <p>{randomFindPct}% sjanse for å finne en tilfeldig spiller.</p>
               <p className="mb-4">
-                75% sjanse for å stjele 10-50% av spillerens penger.
+                {robberySuccessPct}% sjanse for å stjele 10-50% av spillerens
+                penger.
               </p>
             </article>
             <article>
               <H4>Rane en bestemt spiller</H4>
               <p>
-                50% sjanse for å finne spilleren. Spilleren må være i samme by.
+                {specificFindPct}% sjanse for å finne spilleren. Spilleren må
+                være i samme by.
               </p>
-              <p>75% sjanse for å stjele 10-50% av spillerens penger.</p>
+              <p>
+                {robberySuccessPct}% sjanse for å stjele 10-50% av spillerens
+                penger.
+              </p>
             </article>
           </Box>
         </div>

@@ -4,7 +4,8 @@ import H1 from "../components/Typography/H1";
 import H2 from "../components/Typography/H2";
 import H3 from "../components/Typography/H3";
 
-import { ranks, moneyRanks } from "../Functions/RankFunctions";
+import { moneyRanks } from "../Functions/RankFunctions";
+import { rankDefinitions, getRankPerksText } from "../config/GameConfig";
 
 const GameGuide = () => {
   return (
@@ -70,17 +71,18 @@ const GameGuide = () => {
             <p>Rank</p>
             <p>Låser opp</p>
           </li>
-          {ranks.map((rank, index) => (
+          {rankDefinitions.map((rank) => (
             <li
-              key={rank.name}
+              key={rank.id}
               className="grid grid-cols-[15px_100px_auto] gap-4"
             >
-              <p>{index + 1}. </p>
+              <p>{rank.id}. </p>
               <p className="text-neutral-200">{rank.name}</p>
-              <p>{rank.perks}</p>
+              <p>{getRankPerksText(rank.id)}</p>
             </li>
           ))}
         </ul>
+
         <H3>Pengerankene</H3>
         <ul>
           <li

@@ -18,12 +18,22 @@ import { useCharacter } from "./CharacterContext";
 import { db, rtdb } from "./firebase";
 import { breakOut } from "./Functions/RewardFunctions"; // ⬅️ auto free when timer hits 0
 
+import { activityConfig } from "./config/GameConfig";
+
+const CRIME_COOLDOWNS: Record<string, number> = Object.fromEntries(
+  activityConfig.crime.crimes.map((crime) => [
+    crime.cooldownKey,
+    crime.cooldownSeconds,
+  ])
+);
+
 /** Central cooldown durations (seconds) */
 const COOLDOWN_SECONDS: Record<string, number> = {
   crime: 90,
   gta: 130,
   robbery: 150,
   attack: 28800, // 60s * 60m * 8 = 8 hours
+  ...CRIME_COOLDOWNS,
 };
 
 type CooldownContextType = {

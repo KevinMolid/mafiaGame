@@ -20,6 +20,9 @@ import { useCharacter } from "../CharacterContext";
 import firebaseConfig from "../firebaseConfig";
 import { initializeApp } from "firebase/app";
 
+// 🔗 centralised rank config (same as RankUpModal)
+import { RankRewardConfig, unlockLabels } from "../config/GameConfig";
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -60,6 +63,10 @@ interface AlertItem {
   userName: string;
   timestamp: Date;
   read: boolean;
+
+  // 🆕 for rank-up alerts
+  reward: RankRewardConfig | null;
+  unlockedFeatures: string[];
 }
 
 const useServerNow = (intervalMs = 30000) => {
@@ -141,7 +148,7 @@ const Alerts = () => {
             newRank: data.newRank || "",
             amountLost: data.amountLost || 0,
             healthLost: data.healthLost || 0,
-            car: data.car || [],
+            car: (data.car as AlertCar) || ({} as AlertCar),
             amountSent: data.amountSent || 0,
             robberId: data.robberId || "",
             robberName: data.robberName || "",
@@ -157,6 +164,10 @@ const Alerts = () => {
             userId: data.userId || "",
             userName: data.userName || "",
             read: data.read || false,
+
+            // 🆕 rank-up extras (safe for old alerts that don't have them)
+            reward: (data.reward as RankRewardConfig) ?? null,
+            unlockedFeatures: (data.unlockedFeatures as string[]) ?? [],
           };
         });
 
@@ -272,216 +283,277 @@ const Alerts = () => {
           {alerts.length > 15 && <Pager />}
 
           <div className="flex gap-1 md:gap-1 flex-col">
-            {pageAlerts.map((alert) => (
-              <Alert key={alert.id} read={alert.read}>
-                {/* Rank alert */}
-                {alert.type === "xp" && (
-                  <small>Du nådde ranken {alert.newRank}.</small>
-                )}
+            {pageAlerts.map((alert) => {
+              const isRankUp = alert.type === "xp";
+              const money = alert.reward?.money ?? 0;
+              const diamonds = alert.reward?.diamonds ?? 0;
 
-                {/* Bounty Reward alert */}
-                {alert.type === "bountyReward" && (
-                  <small>
-                    Du mottok ${alert.bountyAmount?.toLocaleString()} for å
-                    drepe{" "}
-                    <Username
-                      character={{
-                        id: alert.killedPlayerId,
-                        username: alert.killedPlayerName,
-                      }}
-                    />
-                    .
-                  </small>
-                )}
+              // Prefer reward.unlocks; fall back to unlockedFeatures array for safety
+              const unlockKeys =
+                alert.reward?.unlocks && alert.reward.unlocks.length > 0
+                  ? alert.reward.unlocks
+                  : alert.unlockedFeatures ?? [];
 
-                {/* Attack alert */}
-                {alert.type === "attack" && alert.healthLost && (
-                  <small>
-                    Du ble angrepet og mistet{" "}
-                    <span className="text-neutral-200">
-                      <strong>
-                        {alert.healthLost.toLocaleString("nb-NO")} helse
-                      </strong>
-                    </span>
-                    .
-                  </small>
-                )}
+              return (
+                <Alert key={alert.id} read={alert.read}>
+                  {/* Rank-up alert – special styling */}
+                  {isRankUp && (
+                    <div className="flex flex-col gap-2 py-1">
+                      <p className="text-sm">
+                        Gratulerer, du har blitt{" "}
+                        <span className="font-semibold text-yellow-400">
+                          {alert.newRank}
+                        </span>
+                        !
+                      </p>
 
-                {/* Robbery alert */}
-                {alert.type === "robbery" && alert.amountLost && (
-                  <small>
-                    Du ble ranet av{" "}
-                    <Username
-                      character={{
-                        id: alert.robberId,
-                        username: alert.robberName,
-                      }}
-                    />{" "}
-                    og mistet{" "}
-                    <span className="text-neutral-200">
-                      <i className="fa-solid fa-dollar-sign"></i>{" "}
-                      <strong>
-                        {alert.amountLost.toLocaleString("nb-NO")}
-                      </strong>
-                    </span>
-                    .
-                  </small>
-                )}
+                      <div className="flex gap-2 flex-wrap">
+                        {(money > 0 || diamonds > 0) && (
+                          <div className="bg-neutral-900/70 border border-neutral-600 px-3 py-2 flex-1">
+                            <p className="text-sm mb-1">Belønning:</p>
+                            <ul className="list-disc list-inside space-y-1 text-sm">
+                              {money > 0 && (
+                                <li className="font-semibold text-neutral-200">
+                                  <i className="fa-solid fa-dollar-sign" />{" "}
+                                  {money.toLocaleString("nb-NO")}
+                                </li>
+                              )}
+                              {diamonds > 0 && (
+                                <li className="font-semibold text-neutral-200">
+                                  <i className="fa-solid fa-gem" /> {diamonds}{" "}
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
 
-                {/* GTA alert */}
-                {alert.type === "gta" && alert.car && (
-                  <small>
-                    Du ble ranet av{" "}
-                    <Username
-                      character={{
-                        id: alert.robberId,
-                        username: alert.robberName,
-                      }}
-                    />{" "}
-                    og mistet{" "}
-                    <Item
-                      name={alert.car.name}
-                      tier={alert.car.tier}
-                      itemType="car"
-                      tooltipImg={alert.car.img ?? undefined}
-                      tooltipContent={
-                        <div>
-                          <p>
-                            Effekt:{" "}
-                            <strong className="text-neutral-200">
-                              {alert.car.hp} hk
-                            </strong>
-                          </p>
-                          <p>
-                            Verdi:{" "}
-                            <strong className="text-neutral-200">
-                              <i className="fa-solid fa-dollar-sign"></i>{" "}
-                              {alert.car.value?.toLocaleString("nb-NO")}
-                            </strong>
-                          </p>
-                        </div>
-                      }
-                    />
-                    .
-                  </small>
-                )}
+                        {unlockKeys.length > 0 && (
+                          <div className="bg-neutral-900/70 border border-neutral-600 px-3 py-2 flex-1">
+                            <p className="text-sm mb-1">
+                              Nytt innhold låst opp:
+                            </p>
+                            <ul className="list-disc list-inside text-sm space-y-1">
+                              {unlockKeys.map((key) => (
+                                <li
+                                  className="font-semibold text-neutral-200"
+                                  key={key}
+                                >
+                                  {unlockLabels[
+                                    key as keyof typeof unlockLabels
+                                  ] ?? key}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
-                {/* Bank transfer alert */}
-                {alert.type === "banktransfer" && alert.amountSent && (
-                  <small>
-                    <Username
-                      character={{
-                        id: alert.senderId,
-                        username: alert.senderName,
-                      }}
-                    />{" "}
-                    overførte{" "}
-                    <span className="text-neutral-200">
-                      <i className="fa-solid fa-dollar-sign"></i>{" "}
-                      <strong>
-                        {alert.amountSent.toLocaleString("NO-nb")}
-                      </strong>
-                    </span>{" "}
-                    til din bankkonto.
-                  </small>
-                )}
+                  {/* Bounty Reward alert */}
+                  {alert.type === "bountyReward" && (
+                    <small>
+                      Du mottok ${alert.bountyAmount?.toLocaleString()} for å
+                      drepe{" "}
+                      <Username
+                        character={{
+                          id: alert.killedPlayerId,
+                          username: alert.killedPlayerName,
+                        }}
+                      />
+                      .
+                    </small>
+                  )}
 
-                {/* Family Application alert */}
-                {alert.type === "applicationAccepted" && (
-                  <small>
-                    Søknaden din ble godkjent. Du er nå medlem av{" "}
-                    <Familyname
-                      family={{
-                        id: alert.familyId,
-                        name: alert.familyName,
-                      }}
-                    />
-                    !
-                  </small>
-                )}
+                  {/* Attack alert */}
+                  {alert.type === "attack" && alert.healthLost && (
+                    <small>
+                      Du ble angrepet og mistet{" "}
+                      <span className="text-neutral-200">
+                        <strong>
+                          {alert.healthLost.toLocaleString("nb-NO")} helse
+                        </strong>
+                      </span>
+                      .
+                    </small>
+                  )}
 
-                {alert.type === "applicationDeclined" && (
-                  <small>
-                    Din søknad til{" "}
-                    <Familyname
-                      family={{
-                        id: alert.familyId,
-                        name: alert.familyName,
-                      }}
-                    />{" "}
-                    ble avslått!
-                  </small>
-                )}
+                  {/* Robbery alert */}
+                  {alert.type === "robbery" && alert.amountLost && (
+                    <small>
+                      Du ble ranet av{" "}
+                      <Username
+                        character={{
+                          id: alert.robberId,
+                          username: alert.robberName,
+                        }}
+                      />{" "}
+                      og mistet{" "}
+                      <span className="text-neutral-200">
+                        <i className="fa-solid fa-dollar-sign"></i>{" "}
+                        <strong>
+                          {alert.amountLost.toLocaleString("nb-NO")}
+                        </strong>
+                      </span>
+                      .
+                    </small>
+                  )}
 
-                {/* Kicked from Family alert */}
-                {alert.type === "KickedFromFamily" && (
-                  <small>
-                    Du ble kastet ut av familien{" "}
-                    <Familyname
-                      family={{
-                        id: alert.familyId,
-                        name: alert.familyName,
-                      }}
-                    />
-                    .
-                  </small>
-                )}
+                  {/* GTA alert */}
+                  {alert.type === "gta" && alert.car && (
+                    <small>
+                      Du ble ranet av{" "}
+                      <Username
+                        character={{
+                          id: alert.robberId,
+                          username: alert.robberName,
+                        }}
+                      />{" "}
+                      og mistet{" "}
+                      <Item
+                        name={alert.car.name}
+                        tier={alert.car.tier}
+                        itemType="car"
+                        tooltipImg={alert.car.img ?? undefined}
+                        tooltipContent={
+                          <div>
+                            <p>
+                              Effekt:{" "}
+                              <strong className="text-neutral-200">
+                                {alert.car.hp} hk
+                              </strong>
+                            </p>
+                            <p>
+                              Verdi:{" "}
+                              <strong className="text-neutral-200">
+                                <i className="fa-solid fa-dollar-sign"></i>{" "}
+                                {alert.car.value?.toLocaleString("nb-NO")}
+                              </strong>
+                            </p>
+                          </div>
+                        }
+                      />
+                      .
+                    </small>
+                  )}
 
-                {/* New Role alert */}
-                {alert.type === "newRole" && (
-                  <small>
-                    Din rolle ble endret til{" "}
-                    <strong
-                      className={
-                        (alert.newRole === "admin"
-                          ? "text-sky-400"
-                          : alert.newRole === "moderator"
-                          ? "text-green-400"
-                          : "") + " capitalize"
-                      }
-                    >
-                      {alert.newRole}
-                    </strong>{" "}
-                    av{" "}
-                    <Username
-                      character={{
-                        id: alert.userId,
-                        username: alert.userName,
-                      }}
-                    />
-                    .
-                  </small>
-                )}
+                  {/* Bank transfer alert */}
+                  {alert.type === "banktransfer" && alert.amountSent && (
+                    <small>
+                      <Username
+                        character={{
+                          id: alert.senderId,
+                          username: alert.senderName,
+                        }}
+                      />{" "}
+                      overførte{" "}
+                      <span className="text-neutral-200">
+                        <i className="fa-solid fa-dollar-sign"></i>{" "}
+                        <strong>
+                          {alert.amountSent.toLocaleString("NO-nb")}
+                        </strong>
+                      </span>{" "}
+                      til din bankkonto.
+                    </small>
+                  )}
 
-                {/* Removed Role alert */}
-                {alert.type === "removeRole" && (
-                  <small>
-                    Din rolle som{" "}
-                    <strong
-                      className={
-                        (alert.removedRole === "admin"
-                          ? "text-sky-400"
-                          : alert.removedRole === "moderator"
-                          ? "text-green-400"
-                          : "") + " capitalize"
-                      }
-                    >
-                      {alert.removedRole}
-                    </strong>{" "}
-                    ble fjernet av{" "}
-                    <Username
-                      character={{
-                        id: alert.userId,
-                        username: alert.userName,
-                      }}
-                    />
-                    .
-                  </small>
-                )}
+                  {/* Family Application alert */}
+                  {alert.type === "applicationAccepted" && (
+                    <small>
+                      Søknaden din ble godkjent. Du er nå medlem av{" "}
+                      <Familyname
+                        family={{
+                          id: alert.familyId,
+                          name: alert.familyName,
+                        }}
+                      />
+                      !
+                    </small>
+                  )}
 
-                <small>{formatTimeAgo(alert.timestamp, nowMs)} siden</small>
-              </Alert>
-            ))}
+                  {alert.type === "applicationDeclined" && (
+                    <small>
+                      Din søknad til{" "}
+                      <Familyname
+                        family={{
+                          id: alert.familyId,
+                          name: alert.familyName,
+                        }}
+                      />{" "}
+                      ble avslått!
+                    </small>
+                  )}
+
+                  {/* Kicked from Family alert */}
+                  {alert.type === "KickedFromFamily" && (
+                    <small>
+                      Du ble kastet ut av familien{" "}
+                      <Familyname
+                        family={{
+                          id: alert.familyId,
+                          name: alert.familyName,
+                        }}
+                      />
+                      .
+                    </small>
+                  )}
+
+                  {/* New Role alert */}
+                  {alert.type === "newRole" && (
+                    <small>
+                      Din rolle ble endret til{" "}
+                      <strong
+                        className={
+                          (alert.newRole === "admin"
+                            ? "text-sky-400"
+                            : alert.newRole === "moderator"
+                            ? "text-green-400"
+                            : "") + " capitalize"
+                        }
+                      >
+                        {alert.newRole}
+                      </strong>{" "}
+                      av{" "}
+                      <Username
+                        character={{
+                          id: alert.userId,
+                          username: alert.userName,
+                        }}
+                      />
+                      .
+                    </small>
+                  )}
+
+                  {/* Removed Role alert */}
+                  {alert.type === "removeRole" && (
+                    <small>
+                      Din rolle som{" "}
+                      <strong
+                        className={
+                          (alert.removedRole === "admin"
+                            ? "text-sky-400"
+                            : alert.removedRole === "moderator"
+                            ? "text-green-400"
+                            : "") + " capitalize"
+                        }
+                      >
+                        {alert.removedRole}
+                      </strong>{" "}
+                      ble fjernet av{" "}
+                      <Username
+                        character={{
+                          id: alert.userId,
+                          username: alert.userName,
+                        }}
+                      />
+                      .
+                    </small>
+                  )}
+
+                  <small>{formatTimeAgo(alert.timestamp, nowMs)} siden</small>
+                </Alert>
+              );
+            })}
           </div>
 
           {alerts.length > 15 && <Pager />}

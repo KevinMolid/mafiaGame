@@ -26,7 +26,9 @@ import { initializeApp } from "firebase/app";
 import firebaseConfig from "./firebaseConfig";
 import { useAuth } from "./AuthContext";
 import RankUpModal from "./components/RankUpModal";
-import { applyStatRewards } from "./Functions/RewardFunctions"; // 🟢 reuse tested reward logic
+import { applyStatRewards } from "./Functions/RewardFunctions";
+
+import { getRankReward, RankRewardConfig } from "./config/GameConfig";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -41,29 +43,6 @@ const getOsloYmd = (d: Date = new Date()): string => {
     day: "2-digit",
   }).format(d);
 };
-
-/* ---------- Rank rewards helper ---------- */
-
-export type RankRewardConfig = {
-  money?: number;
-  diamonds?: number;
-  unlocks?: string[]; // feature keys, e.g. ["crime.easy", "airport"]
-};
-
-function getRankReward(rank: number): RankRewardConfig | null {
-  // 🔧 Example config – adjust to your economy
-  const table: Record<number, RankRewardConfig> = {
-    2: { money: 10_000, unlocks: ["crime.easy"] },
-    3: { money: 25_000, unlocks: ["crime.medium"] },
-    4: { money: 75_000, unlocks: ["airport", "car-theft"] },
-    5: { money: 250_000, unlocks: ["black-market"] },
-    6: { money: 1_000_000, diamonds: 5, unlocks: ["assassinate"] },
-    7: { money: 5_000_000, diamonds: 15, unlocks: ["create-family"] },
-    8: { money: 10_000_000, diamonds: 25, unlocks: ["create-family"] },
-  };
-
-  return table[rank] ?? null;
-}
 
 /* ---------- Context types ---------- */
 interface DailyXpState {

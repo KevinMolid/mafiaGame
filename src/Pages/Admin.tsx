@@ -276,6 +276,11 @@ const Admin = () => {
             lastCrimeTimestamp: null,
             lastGtaTimestamp: null,
             lastRobberyTimestamp: null,
+            racingStats: {
+              losses: 0,
+              rating: 0,
+              wins: 0,
+            },
             stats: {
               xp: 0,
               hp: 100,

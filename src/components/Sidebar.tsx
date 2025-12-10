@@ -3,16 +3,36 @@ import { useCharacter } from "../CharacterContext";
 import { useCooldown } from "../CooldownContext";
 
 import { compactMmSs } from "../Functions/TimeFunctions";
+import { activityConfig } from "../config/GameConfig";
 
 // Components
 import SidebarLink from "./SidebarLink";
 
 const Sidebar = () => {
   const { userCharacter } = useCharacter();
-  const { cooldowns } = useCooldown();
-  const { jailRemainingSeconds } = useCooldown();
+  const { cooldowns, jailRemainingSeconds } = useCooldown();
 
-  if (!userCharacter || userCharacter.status === "dead") return;
+  if (!userCharacter || userCharacter.status === "dead") return null;
+
+  // --- Crime cooldown (per valgt handling) ---
+  const crimes = activityConfig.crime.crimes;
+
+  // Default til første crime hvis noe mangler
+  let selectedCrimeName = crimes[0]?.name ?? "Lommetyveri";
+
+  // Les samme key som i StreetCrime
+  try {
+    const stored = localStorage.getItem("selectedCrime");
+    if (stored) selectedCrimeName = stored;
+  } catch {
+    // ignorér (SSR / private mode)
+  }
+
+  const selectedCrimeConfig =
+    crimes.find((c) => c.name === selectedCrimeName) ?? crimes[0];
+
+  const crimeCooldownKey = selectedCrimeConfig?.cooldownKey || "crime";
+  const crimeRemaining = cooldowns[crimeCooldownKey] ?? 0;
 
   return (
     <div className="hidden lg:block bg-neutral-900 py-8 leading-relaxed h-full pb-24 border-r border-neutral-700">
@@ -46,9 +66,9 @@ const Sidebar = () => {
 
         <SidebarLink to="kriminalitet" icon="money-bill">
           <div>Kriminalitet</div>
-          {cooldowns["crime"] > 0 ? (
+          {crimeRemaining > 0 ? (
             <div className="text-neutral-200 font-medium">
-              {compactMmSs(cooldowns["crime"])}
+              {compactMmSs(crimeRemaining)}
             </div>
           ) : (
             <div className="text-green-400">

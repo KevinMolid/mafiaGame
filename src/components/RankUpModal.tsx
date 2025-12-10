@@ -3,12 +3,7 @@ import Button from "./Button";
 import H2 from "./Typography/H2";
 import H3 from "./Typography/H3";
 
-
-type RankRewardConfig = {
-  money?: number;
-  diamonds?: number;
-  unlocks?: string[];
-};
+import { RankRewardConfig, unlockLabels } from "../config/GameConfig";
 
 type RankUpModalProps = {
   data: {
@@ -17,15 +12,6 @@ type RankUpModalProps = {
     reward: RankRewardConfig | null;
   };
   onClose: () => void;
-};
-
-const unlockLabels: Record<string, string> = {
-  "crime.easy": "Enkle kriminalitetshandlinger",
-  "crime.medium": "Mellomvanskelige kriminalitetshandlinger",
-  airport: "Flyplassen (reis til andre byer)",
-  "car-theft": "Biltyveri",
-  "black-market": "Svartemarkedet",
-  // legg til flere nøkler etter hvert
 };
 
 const RankUpModal = ({ data, onClose }: RankUpModalProps) => {
@@ -38,9 +24,7 @@ const RankUpModal = ({ data, onClose }: RankUpModalProps) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="bg-neutral-900 text-neutral-100 rounded-xl shadow-2xl p-6 w-full max-w-md border border-neutral-700">
-        <H2>
-          Ny rank oppnådd
-        </H2>
+        <H2>Ny rank oppnådd</H2>
         <p className="text-lg mb-4">
           Gratulerer, du har blitt{" "}
           <span className="font-semibold text-amber-300">{rankName}</span>!
