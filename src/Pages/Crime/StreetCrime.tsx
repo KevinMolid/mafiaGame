@@ -175,7 +175,6 @@ const StreetCrime = () => {
   }
 
   // Helpers
-  const pct = (n: number) => `${Math.round(n * 100)}%`;
   const money = (n: number) => n.toLocaleString("nb-NO");
 
   return (
@@ -218,7 +217,7 @@ const StreetCrime = () => {
                 &quot;Herverk&quot;, &quot;Stjel verdisaker&quot; eller
                 &quot;Ran butikk&quot;.
               </p>
-              <H4>Sjanse for suksess, belønning og cooldown</H4>
+              <H4>Belønning og cooldown</H4>
               {crimes.map((crime) => (
                 <p key={crime.id}>
                   {crime.name}:{" "}
@@ -227,7 +226,8 @@ const StreetCrime = () => {
                   </strong>{" "}
                   og{" "}
                   <strong className="text-neutral-200">
-                    {crime.minMoneyReward} - {crime.maxMoneyReward}
+                    {money(crime.minMoneyReward)} -{" "}
+                    {money(crime.maxMoneyReward)}
                   </strong>
                   {", cooldown: "}
                   <strong className="text-neutral-200">
@@ -257,47 +257,88 @@ const StreetCrime = () => {
         </InfoBox>
       )}
 
-      <ul className="grid grid-cols-2 gap-2 mb-4 max-w-[500px]">
-        {crimes.map((crime) => (
-          <li
-            key={crime.id}
-            className="flex flex-1 flex-grow min-w-[max-content]"
-          >
-            <div
-              role="button"
-              tabIndex={0}
-              aria-pressed={selectedCrime === crime.name}
-              onClick={() => setSelectedCrime(crime.name)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setSelectedCrime(crime.name);
-                }
-              }}
-              className={
-                "relative border px-4 py-2 flex-1 flex-grow min-w-[max-content] text-center cursor-pointer " +
-                (selectedCrime === crime.name
-                  ? "bg-neutral-900 border-neutral-600"
-                  : "bg-neutral-800 hover:bg-neutral-900 border-transparent hover:border-neutral-600")
-              }
+      {/* VALG-BOKSER */}
+      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 max-w-[600px]">
+        {crimes.map((crime) => {
+          const isSelected = selectedCrime === crime.name;
+
+          return (
+            <li
+              key={crime.id}
+              className="flex flex-1 flex-grow min-w-[max-content]"
             >
-              <p
+              <div
+                role="button"
+                tabIndex={0}
+                aria-pressed={isSelected}
+                onClick={() => setSelectedCrime(crime.name)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedCrime(crime.name);
+                  }
+                }}
                 className={
-                  selectedCrime === crime.name
-                    ? "text-sand-400 font-bold"
-                    : "font-bold"
+                  "relative border px-4 py-3 flex-1 flex-grow min-w-[max-content] cursor-pointer text-left rounded " +
+                  (isSelected
+                    ? "bg-neutral-900 border-neutral-600"
+                    : "bg-neutral-800 hover:bg-neutral-900 border-transparent hover:border-neutral-600")
                 }
               >
-                {crime.name}
-              </p>
+                <div className="flex items-center gap-3">
+                  {/* Checkbox (radio-style) */}
+                  <div className="flex items-center">
+                    <div
+                      className={
+                        "w-5 h-5 rounded-full border flex items-center justify-center " +
+                        (isSelected
+                          ? "border-sky-400 bg-neutral-900"
+                          : "border-neutral-500 bg-neutral-900")
+                      }
+                    >
+                      {isSelected && (
+                        <div className="w-3 h-3 rounded-full bg-sky-400" />
+                      )}
+                    </div>
+                  </div>
 
-              {/* Chance of success */}
-              <p className="text-neutral-200 text-xl font-bold">
-                {pct(crime.successRate)}
-              </p>
-            </div>
-          </li>
-        ))}
+                  {/* Tekstinnhold */}
+                  <div className="flex flex-col gap-1 w-full">
+                    <div className="flex items-baseline justify-between w-full">
+                      <p
+                        className={
+                          isSelected
+                            ? "text-neutral-200 font-semibold"
+                            : "font-semibold text-neutral-300"
+                        }
+                      >
+                        {crime.name}
+                      </p>
+
+                      <p>
+                        <span className="font-semibold">
+                          {compactMmSs(crime.cooldownSeconds)}
+                        </span>{" "}
+                        <i className="text-sm fa-solid fa-clock text-stone-600"></i>
+                      </p>
+                    </div>
+
+                    <div className="flex gap-1 text-xs">
+                      <p>+</p>{" "}
+                      <p className="font-semibold">{crime.xpReward} xp</p>
+                      <p>+</p>
+                      <p className="font-semibold">
+                        <i className="fa-solid fa-dollar-sign"></i>{" "}
+                        {money(crime.minMoneyReward)} -{" "}
+                        {money(crime.maxMoneyReward)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          );
+        })}
       </ul>
 
       <Button onClick={handleClick}>Utfør handling</Button>
