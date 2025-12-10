@@ -54,10 +54,12 @@ function getRankReward(rank: number): RankRewardConfig | null {
   // 🔧 Example config – adjust to your economy
   const table: Record<number, RankRewardConfig> = {
     2: { money: 10_000, unlocks: ["crime.easy"] },
-    3: { money: 25_000, diamonds: 5, unlocks: ["crime.medium"] },
-    4: { diamonds: 15, unlocks: ["airport", "car-theft"] },
-    5: { money: 100_000, diamonds: 25, unlocks: ["black-market"] },
-    // add more ranks here...
+    3: { money: 25_000, unlocks: ["crime.medium"] },
+    4: { money: 75_000, unlocks: ["airport", "car-theft"] },
+    5: { money: 250_000, unlocks: ["black-market"] },
+    6: { money: 1_000_000, diamonds: 5, unlocks: ["assassinate"] },
+    7: { money: 5_000_000, diamonds: 15, unlocks: ["create-family"] },
+    8: { money: 10_000_000, diamonds: 25, unlocks: ["create-family"] },
   };
 
   return table[rank] ?? null;
