@@ -25,6 +25,8 @@ import {
 import { initializeApp } from "firebase/app";
 import firebaseConfig from "./firebaseConfig";
 import { useAuth } from "./AuthContext";
+import RankUpModal from "./components/RankUpModal";
+import { applyStatRewards } from "./Functions/RewardFunctions"; // 🟢 reuse tested reward logic
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -39,6 +41,27 @@ const getOsloYmd = (d: Date = new Date()): string => {
     day: "2-digit",
   }).format(d);
 };
+
+/* ---------- Rank rewards helper ---------- */
+
+export type RankRewardConfig = {
+  money?: number;
+  diamonds?: number;
+  unlocks?: string[]; // feature keys, e.g. ["crime.easy", "airport"]
+};
+
+function getRankReward(rank: number): RankRewardConfig | null {
+  // 🔧 Example config – adjust to your economy
+  const table: Record<number, RankRewardConfig> = {
+    2: { money: 10_000, unlocks: ["crime.easy"] },
+    3: { money: 25_000, diamonds: 5, unlocks: ["crime.medium"] },
+    4: { diamonds: 15, unlocks: ["airport", "car-theft"] },
+    5: { money: 100_000, diamonds: 25, unlocks: ["black-market"] },
+    // add more ranks here...
+  };
+
+  return table[rank] ?? null;
+}
 
 /* ---------- Context types ---------- */
 interface DailyXpState {
@@ -76,6 +99,13 @@ export const CharacterProvider = ({
   const [userCharacter, setUserCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
   const alertAddedRef = useRef<boolean>(false); // Ref to track alert addition
+
+  // Rank-up modal state
+  const [pendingRankUp, setPendingRankUp] = useState<{
+    rank: number;
+    rankName: string;
+    reward: RankRewardConfig | null;
+  } | null>(null);
 
   // --- Daily XP state (now sourced from Firestore) ---
   const [baselineXp, setBaselineXp] = useState<number>(0);
@@ -168,6 +198,7 @@ export const CharacterProvider = ({
             const currentXP = newCharacter.stats?.xp ?? 0;
             const newRank = getCurrentRank(currentXP, "number");
             const newRankName = getCurrentRank(currentXP);
+
             if (
               typeof newRank === "number" &&
               newRank > newCharacter.currentRank
@@ -182,6 +213,38 @@ export const CharacterProvider = ({
 
               if (existingAlerts.empty && !alertAddedRef.current) {
                 alertAddedRef.current = true;
+
+                // 1) Rank reward config
+                const reward = getRankReward(newRank);
+
+                // 2) Apply money/diamonds reward via the tested helper
+                if (reward) {
+                  await applyStatRewards(newCharacter.id, {
+                    money: reward.money ?? 0,
+                    diamonds: reward.diamonds ?? 0,
+                  });
+                }
+
+                // 3) Update rank + unlocks on the character doc
+                const prevUnlocked: string[] =
+                  (raw.unlockedFeatures as string[]) ?? [];
+                const unlocks = reward?.unlocks ?? [];
+                const mergedUnlocked =
+                  unlocks.length > 0
+                    ? Array.from(new Set([...prevUnlocked, ...unlocks]))
+                    : prevUnlocked;
+
+                const charDocRef3 = doc(db, "Characters", newCharacter.id);
+                const updateData: any = {
+                  currentRank: newRank,
+                };
+                if (unlocks.length > 0) {
+                  updateData.unlockedFeatures = mergedUnlocked;
+                }
+
+                await setDoc(charDocRef3, updateData, { merge: true });
+
+                // 4) Create alert for the player with reward + unlock info
                 const alertRef = collection(
                   db,
                   "Characters",
@@ -193,23 +256,27 @@ export const CharacterProvider = ({
                   timestamp: serverTimestamp(),
                   newRank: newRankName,
                   read: false,
+                  reward: reward ?? {},
+                  unlockedFeatures: reward?.unlocks ?? [],
                 });
 
+                // 5) Create global game event with the same info
                 await addDoc(collection(db, "GameEvents"), {
                   eventType: "newRank",
                   userId: newCharacter.id,
                   userName: newCharacter.username,
                   newRank: newRankName,
+                  reward: reward ?? {},
+                  unlockedFeatures: reward?.unlocks ?? [],
                   timestamp: serverTimestamp(),
                 });
 
-                // Update the character's current rank in the database
-                const charDocRef3 = doc(db, "Characters", newCharacter.id);
-                await setDoc(
-                  charDocRef3,
-                  { currentRank: newRank },
-                  { merge: true }
-                );
+                // 6) Show rank-up modal locally
+                setPendingRankUp({
+                  rank: newRank,
+                  rankName: String(newRankName),
+                  reward,
+                });
               }
             } else if (
               typeof newRank === "number" &&
@@ -314,6 +381,12 @@ export const CharacterProvider = ({
 
   return (
     <CharacterContext.Provider value={value}>
+      {pendingRankUp && (
+        <RankUpModal
+          data={pendingRankUp}
+          onClose={() => setPendingRankUp(null)}
+        />
+      )}
       {children}
     </CharacterContext.Provider>
   );
