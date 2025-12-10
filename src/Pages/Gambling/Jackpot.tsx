@@ -4,7 +4,6 @@ import H3 from "../../components/Typography/H3";
 import Button from "../../components/Button";
 import InfoBox from "../../components/InfoBox";
 import Box from "../../components/Box";
-import JailBox from "../../components/JailBox";
 
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
 
@@ -116,10 +115,6 @@ const Jackpot = () => {
       console.log(error);
     }
   };
-
-  if (userCharacter?.inJail) {
-    return <JailBox message={message} messageType={messageType} />;
-  }
 
   return (
     <div>
