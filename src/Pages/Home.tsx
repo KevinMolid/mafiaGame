@@ -306,10 +306,10 @@ const Home = () => {
           tx.set(eventRef, {
             eventType: "megaphone",
             message: messageText,
-            characterId: userCharacter.id,
-            username: userCharacter.username,
+            userId: userCharacter.id,
+            userName: userCharacter.username,
             city: userCharacter.location ?? null,
-            createdAt: serverTimestamp(),
+            timestamp: serverTimestamp(),
           });
 
           // 2) Consume one megaphone

@@ -28,6 +28,8 @@ export type GameEvent = {
   actorName?: string;
   role?: "admin" | "moderator";
   newRank?: string;
+
+  message?: string;
 };
 
 export function formatEventTime(ts?: FsTimestamp): string {
@@ -72,6 +74,21 @@ export function renderGameEvent(ev: GameEvent) {
   const formattedTime = formatEventTime(ev.timestamp);
 
   switch (ev.eventType) {
+    case "megaphone":
+      return (
+        <li key={ev.id} className="news-item flex gap-1">
+          <small className="mr-1 lg:mr-4 text-xs lg:text-sm">
+          <Username
+              character={{
+                id: ev.userId || "",
+                username: ev.userName || "Ukjent",
+              }}
+            />: {ev.message}
+          </small>
+          <small className="ml-auto text-xs lg:text-sm">{formattedTime}</small>
+        </li>
+      );
+
     case "assassination":
       return (
         <li key={ev.id} className="news-item flex gap-1">
