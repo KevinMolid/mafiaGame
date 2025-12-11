@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 import { auth, db } from "./firebase";
 
@@ -14,39 +14,70 @@ export const AuthProvider = ({ children }: any) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser(user); // Set user in state when logged in
-        const userDoc = await getUserDocument(user.uid); // Fetch user document from Firestore
-        setUserData(userDoc); // Store user data in state
-      } else {
-        setUser(null); // No user logged in
-        setUserData(null); // Clear user data
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log("Auth state changed. Firebase user:", firebaseUser);
+
+      if (!firebaseUser) {
+        console.log("No user -> logged out");
+        setUser(null);
+        setUserData(null);
+        setLoading(false);
+        return;
       }
-      setLoading(false); // Stop loading when done
+
+      console.log("Logged in as:", firebaseUser.uid, firebaseUser.email);
+      setUser(firebaseUser);
+
+      const userDoc = await getOrCreateUserDocument(firebaseUser);
+      console.log("User document from Firestore:", userDoc);
+
+      setUserData(userDoc);
+      setLoading(false);
     });
 
-    return () => unsubscribe(); // Cleanup listener on unmount
+    return () => unsubscribe();
   }, []);
 
-  // Function to get the user document from Firestore based on the UID
-  const getUserDocument = async (uid: string) => {
-    try {
-      const userDocRef = doc(db, "Users", uid); // Reference to user document
-      const userDocSnap = await getDoc(userDocRef); // Fetch the document snapshot
+  // Function to get or create the user document from Firestore
+  const getOrCreateUserDocument = async (firebaseUser: any) => {
+    const uid = firebaseUser.uid;
+    console.log("getOrCreateUserDocument for uid:", uid);
 
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
+    const userDocRef = doc(db, "Users", uid);
+
+    try {
+      const snap = await getDoc(userDocRef);
+
+      // If user document exists -> return it
+      if (snap.exists()) {
+        const data = snap.data();
+        console.log("Existing user doc found:", data);
         return {
-          ...userData,
-          characters: userData.characters || [], // Initialize characters as an empty array if undefined
+          ...data,
+          characters: data.characters || [],
         };
-      } else {
-        console.log("No such document!");
-        return null;
       }
+
+      console.log("No such document! Creating default user document...");
+
+      // Create the first-time user document
+      const newUserDoc = {
+        email: firebaseUser.email ?? null,
+        displayName: firebaseUser.displayName ?? null,
+        createdAt: serverTimestamp(),
+        characters: [],
+        role: "player", // optional
+      };
+
+      await setDoc(userDocRef, newUserDoc);
+
+      console.log("User doc created in Firestore for uid:", uid);
+      return {
+        ...newUserDoc,
+        createdAt: new Date(), // local placeholder; serverTimestamp resolves later
+      };
     } catch (error) {
-      console.error("Error fetching user document:", error);
+      console.error("Failed to get or create user document", error);
       return null;
     }
   };
