@@ -75,13 +75,14 @@ const CreateCharacter = () => {
   type NameStatus = "idle" | "checking" | "available" | "taken" | "invalid";
   const [nameStatus, setNameStatus] = useState<NameStatus>("idle");
   const lastCheckedRef = useRef<string>("");
+  const typingIntervalRef = useRef<number | null>(null);
+  const usernameInputRef = useRef<HTMLInputElement | null>(null);
 
   const navigate = useNavigate();
 
   // Typewriter-state
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const typingIntervalRef = useRef<number | null>(null);
 
   // Controls fade-in for username & city selection after typing
   const [extrasVisible, setExtrasVisible] = useState(false);
@@ -396,6 +397,13 @@ const CreateCharacter = () => {
     error,
   ]);
 
+  // Autofocus input
+  useEffect(() => {
+    if (step === 3 && extrasVisible && usernameInputRef.current) {
+      usernameInputRef.current.focus();
+    }
+  }, [step, extrasVisible]);
+
   /* ---------------- UI helpers ---------------- */
 
   function UsernameHint() {
@@ -451,6 +459,7 @@ const CreateCharacter = () => {
             }`}
           >
             <input
+              ref={usernameInputRef}
               className={
                 "w-full bg-transparent border-b text-2xl font-medium text-white placeholder-neutral-500 focus:outline-none mt-2 " +
                 (nameStatus === "taken"
@@ -468,6 +477,12 @@ const CreateCharacter = () => {
               autoComplete="off"
               spellCheck={false}
               onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === "ArrowRight") {
+                  e.preventDefault();
+                  handleNext();
+                }
+              }}
             />
             <div className="min-h-[1.5rem] mt-2">
               {error ? (
@@ -499,19 +514,34 @@ const CreateCharacter = () => {
           >
             <ul className="flex gap-2 flex-wrap mt-2 mb-2">
               {cities.map((city) => (
-                <li
-                  key={city}
-                  className={
-                    "border px-4 py-2 flex-grow text-center cursor-pointer " +
-                    (city === location
-                      ? "bg-neutral-900 border-neutral-600"
-                      : "bg-neutral-800 hover:bg-neutral-700 border-transparent")
-                  }
-                  onClick={() => setLocation(city)}
-                >
-                  <p className={city === location ? "text-white" : ""}>
-                    {city}
-                  </p>
+                <li key={city} className="flex-grow">
+                  <button
+                    className={
+                      "border px-4 py-2 flex-grow text-center cursor-pointer outline-none " +
+                      (city === location
+                        ? "bg-neutral-900 border-neutral-600 focus:border-neutral-200"
+                        : "bg-neutral-800 hover:bg-neutral-700 border-transparent focus:border-neutral-200")
+                    }
+                    onClick={() => setLocation(city)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        if (location !== city) {
+                          // First press on a focused (but not selected) city: select it
+                          setLocation(city);
+                        } else {
+                          // Press Enter on the already selected city: go to next step
+                          handleNext();
+                        }
+                      }
+                    }}
+                  >
+                    <p className={city === location ? "text-white" : ""}>
+                      {city}
+                    </p>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -578,7 +608,7 @@ const CreateCharacter = () => {
                   <Button
                     type="button"
                     size="small"
-                    style="black"
+                    style={step === 7 ? "primary" : "black"}
                     onClick={handleNext}
                     disabled={isNextDisabled}
                   >
