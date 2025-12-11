@@ -15,21 +15,16 @@ export const AuthProvider = ({ children }: any) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log("Auth state changed. Firebase user:", firebaseUser);
-
       if (!firebaseUser) {
-        console.log("No user -> logged out");
         setUser(null);
         setUserData(null);
         setLoading(false);
         return;
       }
 
-      console.log("Logged in as:", firebaseUser.uid, firebaseUser.email);
       setUser(firebaseUser);
 
       const userDoc = await getOrCreateUserDocument(firebaseUser);
-      console.log("User document from Firestore:", userDoc);
 
       setUserData(userDoc);
       setLoading(false);
@@ -41,7 +36,6 @@ export const AuthProvider = ({ children }: any) => {
   // Function to get or create the user document from Firestore
   const getOrCreateUserDocument = async (firebaseUser: any) => {
     const uid = firebaseUser.uid;
-    console.log("getOrCreateUserDocument for uid:", uid);
 
     const userDocRef = doc(db, "Users", uid);
 
@@ -51,14 +45,11 @@ export const AuthProvider = ({ children }: any) => {
       // If user document exists -> return it
       if (snap.exists()) {
         const data = snap.data();
-        console.log("Existing user doc found:", data);
         return {
           ...data,
           characters: data.characters || [],
         };
       }
-
-      console.log("No such document! Creating default user document...");
 
       // Create the first-time user document
       const newUserDoc = {
@@ -71,7 +62,6 @@ export const AuthProvider = ({ children }: any) => {
 
       await setDoc(userDocRef, newUserDoc);
 
-      console.log("User doc created in Firestore for uid:", uid);
       return {
         ...newUserDoc,
         createdAt: new Date(), // local placeholder; serverTimestamp resolves later
