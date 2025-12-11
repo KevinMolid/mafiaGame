@@ -76,6 +76,9 @@ import b2 from "/images/items/b2.jpg";
 import n1 from "/images/items/n1.png";
 import n2 from "/images/items/n2.png";
 
+// Special
+import megaphone from "/images/items/megaphone.jpg";
+
 // ---------- Types ----------
 export type Slot =
   | "hat"
@@ -96,6 +99,8 @@ interface BaseItem {
   value: number;
   img: string;
   stackable?: boolean;
+  shopOnly?: boolean;
+  consumable?: boolean;
 }
 
 export interface HatItem extends BaseItem {
@@ -150,7 +155,15 @@ export interface BulletItem extends BaseItem {
 export interface NarcoticItem extends BaseItem {
   type: "narcotic";
   stackable: true;
+  consumable: true;
   // add effect fields later if needed, e.g. duration, boost, etc.
+}
+
+export interface MegaphoneItem extends BaseItem {
+  type: "megaphone";
+  stackable: true;
+  shopOnly: true;
+  consumable: true;
 }
 
 export type Item =
@@ -163,7 +176,8 @@ export type Item =
   | HandsItem
   | RingItem
   | BulletItem
-  | NarcoticItem;
+  | NarcoticItem
+  | MegaphoneItem;
 
 // ---------- Category Arrays ----------
 export const Hats: HatItem[] = [
@@ -735,6 +749,7 @@ export const Narcotics: NarcoticItem[] = [
     img: n1,
     stackable: true,
     type: "narcotic",
+    consumable: true,
   },
   {
     id: "in0002",
@@ -744,6 +759,22 @@ export const Narcotics: NarcoticItem[] = [
     img: n2,
     stackable: true,
     type: "narcotic",
+    consumable: true,
+  },
+];
+
+// Specials
+export const Megaphones: MegaphoneItem[] = [
+  {
+    id: "sp0001",
+    name: "Megafon",
+    tier: 5,
+    value: 0,
+    img: megaphone,
+    stackable: true,
+    type: "megaphone",
+    consumable: true,
+    shopOnly: true,
   },
 ];
 
@@ -759,6 +790,7 @@ export const Items: Item[] = [
   ...Weapons,
   ...Bullets,
   ...Narcotics,
+  ...Megaphones,
 ];
 
 export const ITEMS_BY_ID: Record<string, Item> = Object.fromEntries(

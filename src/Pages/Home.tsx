@@ -35,7 +35,7 @@ import { useCharacter } from "../CharacterContext";
 
 // Functions
 import { getRankProgress } from "../Functions/RankFunctions";
-import { getItemById } from "../Data/Items"; // <-- NEW
+import { getItemById } from "../Data/Items";
 
 const Home = () => {
   const { userCharacter, dailyXp } = useCharacter();
@@ -269,6 +269,113 @@ const Home = () => {
     }
   };
 
+  const useItem = async (item: ItemDoc) => {
+    if (!userCharacter?.id) return;
+    if (!item.consumable) return;
+
+    const itemRef = doc(
+      db,
+      "Characters",
+      userCharacter.id,
+      "items",
+      item.docId
+    );
+
+    // Special handling for megaphone
+    if (item.type === "megaphone") {
+      const raw = window.prompt("Hva vil du rope ut med megafonen?");
+      const messageText = raw?.trim();
+      if (!messageText) return;
+
+      const eventsCol = collection(db, "GameEvents");
+      const eventRef = doc(eventsCol); // auto-id
+
+      try {
+        await runTransaction(db, async (tx) => {
+          const snap = await tx.get(itemRef);
+          if (!snap.exists()) {
+            throw new Error("Megafonen finnes ikke lenger i inventaret.");
+          }
+          const data = snap.data() as any;
+          const qtyInDb = Number(data.quantity ?? 1);
+          if (qtyInDb <= 0) {
+            throw new Error("Ingen megafoner igjen.");
+          }
+
+          // 1) Create game event
+          tx.set(eventRef, {
+            eventType: "megaphone",
+            message: messageText,
+            characterId: userCharacter.id,
+            username: userCharacter.username,
+            city: userCharacter.location ?? null,
+            createdAt: serverTimestamp(),
+          });
+
+          // 2) Consume one megaphone
+          if (qtyInDb > 1) {
+            tx.update(itemRef, {
+              quantity: qtyInDb - 1,
+              lastUsedAt: serverTimestamp(),
+            });
+          } else {
+            tx.delete(itemRef);
+          }
+        });
+
+        setMessageType("success");
+        setMessage(
+          <>
+            Du brukte <strong>{item.name}</strong> og ropte ut meldingen din.
+          </>
+        );
+      } catch (e) {
+        console.error("Use megaphone failed:", e);
+        setMessageType("failure");
+        setMessage("Kunne ikke bruke megafonen. Prøv igjen.");
+      } finally {
+        closeItemModal();
+      }
+
+      return;
+    }
+
+    // Generic consumable usage (e.g. narkotika etc.)
+    try {
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(itemRef);
+        if (!snap.exists()) throw new Error("Gjenstanden finnes ikke lenger.");
+        const data = snap.data() as any;
+        const qtyInDb = Number(data.quantity ?? 1);
+        if (qtyInDb <= 0) throw new Error("Ingen igjen.");
+
+        if (qtyInDb > 1) {
+          tx.update(itemRef, {
+            quantity: qtyInDb - 1,
+            lastUsedAt: serverTimestamp(),
+          });
+        } else {
+          tx.delete(itemRef);
+        }
+
+        // Placeholder: here you can add effects later (hp, heat, xp, etc.)
+      });
+
+      setMessageType("success");
+      setMessage(
+        <>
+          Du brukte <strong>{item.name}</strong>.
+        </>
+      );
+    } catch (e) {
+      console.error("Use consumable failed:", e);
+      setMessageType("failure");
+      setMessage("Kunne ikke bruke gjenstanden. Prøv igjen.");
+    } finally {
+      closeItemModal();
+    }
+  };
+
   // Sync the local XP state with character stats if character changes
   useEffect(() => {
     if (userCharacter) {
@@ -315,6 +422,8 @@ const Home = () => {
     !!selectedItem &&
     typeof selectedItem.slot === "string" &&
     selectedItem.slot.trim().length > 0;
+
+  const isConsumable = !!selectedItem?.consumable;
 
   const maxSellable = Number(selectedItem?.quantity ?? 1);
   const eachValue = Number(selectedItem?.value) || 0;
@@ -646,9 +755,20 @@ const Home = () => {
                           size="small"
                           onClick={() => equipItem(selectedItem)}
                         >
+                          Ta på
+                        </Button>
+                      )}
+
+                      {isConsumable && (
+                        <Button
+                          size="small"
+                          style="secondary"
+                          onClick={() => useItem(selectedItem)}
+                        >
                           Bruk
                         </Button>
                       )}
+
                       <Button
                         size="small"
                         style="danger"

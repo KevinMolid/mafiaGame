@@ -11,7 +11,13 @@ import InfoBox from "../components/InfoBox";
 import ItemTile from "./ItemTile";
 
 import { useCharacter } from "../CharacterContext";
-import { applyStatRewards } from "../Functions/RewardFunctions";
+import {
+  applyStatRewards,
+  grantItemToInventory,
+} from "../Functions/RewardFunctions";
+import { Megaphones } from "../Data/Items";
+
+const MEGAPHONE_COST = 5; // diamonds
 
 const Diamonds = () => {
   const { userCharacter } = useCharacter();
@@ -21,6 +27,9 @@ const Diamonds = () => {
     "success" | "failure" | "important" | "warning" | "info"
   >("success");
   const [isBuying, setIsBuying] = useState(false);
+  const [isBuyingMegaphone, setIsBuyingMegaphone] = useState(false); // <--- NEW
+
+  const megaphoneItem = Megaphones[0]; // we only have one megaphone config
 
   const handleBuy = async (amount: number) => {
     if (!userCharacter) {
@@ -54,6 +63,54 @@ const Diamonds = () => {
       setMessageType("failure");
     } finally {
       setIsBuying(false);
+    }
+  };
+
+  const handleBuyMegaphone = async () => {
+    if (!userCharacter) {
+      setMessage("Du må være innlogget for å kjøpe varer i diamantbutikken.");
+      setMessageType("warning");
+      return;
+    }
+
+    if (isBuyingMegaphone) return;
+
+    const currentDiamonds = userCharacter.stats.diamonds ?? 0;
+    if (currentDiamonds < MEGAPHONE_COST) {
+      setMessage("Du har ikke nok diamanter til å kjøpe denne varen.");
+      setMessageType("warning");
+      return;
+    }
+
+    try {
+      setIsBuyingMegaphone(true);
+
+      // 1) Subtract diamonds
+      await applyStatRewards(userCharacter.id, { diamonds: -MEGAPHONE_COST });
+
+      // 2) Grant megaphone item
+      await grantItemToInventory(userCharacter.id, megaphoneItem.id, 1);
+
+      setMessage(
+        <>
+          Du kjøpte{" "}
+          <span className="font-semibold text-neutral-200">
+            {megaphoneItem.name}
+          </span>{" "}
+          for{" "}
+          <span className="font-semibold text-neutral-200">
+            <i className="fa-solid fa-gem" /> {MEGAPHONE_COST}
+          </span>
+          .
+        </>
+      );
+      setMessageType("success");
+    } catch (error) {
+      console.error(error);
+      setMessage("Noe gikk galt. Prøv igjen senere.");
+      setMessageType("failure");
+    } finally {
+      setIsBuyingMegaphone(false);
     }
   };
 
@@ -131,13 +188,19 @@ const Diamonds = () => {
       <H2>Diamantbutikk</H2>
       <ul>
         <li className="flex flex-col gap-1 items-center">
-          <p className="text-neutral-200 font-semibold">Megafon</p>
-          <ItemTile name="Megafon" img="" tier={5}></ItemTile>
+          <p className="text-neutral-200 font-semibold">{megaphoneItem.name}</p>
+          <ItemTile
+            name={megaphoneItem.name}
+            img={megaphoneItem.img}
+            tier={megaphoneItem.tier}
+          />
           <p className="font-semibold text-neutral-200 text-xl">
-            <i className="fa-solid fa-gem" /> 5
+            <i className="fa-solid fa-gem" /> {MEGAPHONE_COST}
           </p>
           <div className="mt-2">
-            <Button>Kjøp</Button>
+            <Button onClick={handleBuyMegaphone} disabled={isBuyingMegaphone}>
+              Kjøp
+            </Button>
           </div>
         </li>
       </ul>
