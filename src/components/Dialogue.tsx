@@ -30,10 +30,8 @@ const Dialogue = ({
   const isLast = i >= lines.length - 1;
 
   function goNext() {
-    // if no lines, do nothing
     if (lines.length === 0) return;
 
-    // if we're on the last line, finish
     if (isLast) {
       onComplete?.();
       return;
@@ -63,61 +61,86 @@ const Dialogue = ({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [i, lines.length, isLast]); // include isLast so effect has latest logic
+  }, [i, lines.length, isLast]);
 
   if (!lines || lines.length === 0) return null;
 
+  const isScene = !speaker;
+
   return (
-    <div className={`w-[300px] ${className}`}>
+    <div className={`w-full ${className}`}>
+      {/* Bildet alene */}
       <img
         src={imageSrc}
         alt={imageAlt}
-        className="w-[300px] h-[225px] object-cover object-top rounded-lg border border-neutral-600 mb-1"
+        className="w-full max-h-[calc(80vh-10rem)] object-cover"
       />
 
-      {speaker && (
-        <p className="font-medium bg-neutral-800 text-neutral-200 py-1 px-2 text-center rounded-lg border border-neutral-600">
-          {speaker}
-        </p>
-      )}
+      {/* Tekst + knapper under bildet */}
+      <div className="w-full text-neutral-100 px-4 py-8 flex flex-col items-center gap-3">
+        {/* Speaker (bare i dialog-modus) */}
+        {!isScene && (
+          <p className="font-medium text-3xl border-b border-white/40 w-full max-w-48 text-center">
+            {speaker}
+          </p>
+        )}
 
-      {/* Click text box to go next */}
-      <button
-        type="button"
-        onClick={goNext}
-        className="w-full text-neutral-200 text-lg min-h-32 text-center p-2"
-        aria-label={isLast ? "Ferdig" : "Neste linje"}
-      >
-        <span>{lines[i]}</span>
-      </button>
+        {/* Rad: Forrige | TEKST | Neste */}
+        <div className="w-full max-w-xl mx-auto flex items-center gap-2">
+          {/* Forrige-knapp (venstre) */}
+          <div className="shrink-0">
+            {!isFirst && (
+              <Button
+                type="button"
+                size="small"
+                style="black"
+                onClick={goPrev}
+                disabled={isFirst}
+              >
+                Forrige
+              </Button>
+            )}
+          </div>
 
-      <div className="mt-1 flex items-center justify-between">
-        {/* Progress dots */}
-        <div className="flex gap-1">
+          {/* Klikkbart tekstfelt (midt) */}
+          <button
+            type="button"
+            onClick={goNext}
+            className="flex-1 text-center px-2 py-1"
+            aria-label={isLast ? "Ferdig" : "Neste linje"}
+          >
+            <div className="h-[4rem] overflow-y-auto px-1">
+              {isScene ? (
+                <p className="text-xl sm:text-2xl font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] leading-snug">
+                  {lines[i]}
+                </p>
+              ) : (
+                <p className="text-lg sm:text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] leading-snug">
+                  {lines[i]}
+                </p>
+              )}
+            </div>
+          </button>
+
+          {/* Neste / Ferdig (høyre) */}
+          <div className="shrink-0">
+            <Button type="button" size="small" style="black" onClick={goNext}>
+              {isLast ? "Ferdig" : "Neste"}
+            </Button>
+          </div>
+        </div>
+
+        {/* Prikker under teksten */}
+        <div className="mt-1 flex justify-center gap-1">
           {lines.map((_, idx) => (
             <span
               key={idx}
               className={`h-1.5 w-1.5 rounded-full ${
-                idx === i ? "bg-neutral-400" : "bg-neutral-600"
+                idx === i ? "bg-neutral-300" : "bg-neutral-600"
               }`}
               aria-hidden
             />
           ))}
-        </div>
-
-        <div className="flex gap-1">
-          <Button
-            type="button"
-            size="small"
-            style="black"
-            onClick={goPrev}
-            disabled={isFirst}
-          >
-            Forrige
-          </Button>
-          <Button type="button" size="small" style="black" onClick={goNext}>
-            {isLast ? "Ferdig" : "Neste"}
-          </Button>
         </div>
       </div>
     </div>
