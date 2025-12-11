@@ -63,6 +63,7 @@ import Casino from "./Pages/Gambling/Casino.tsx";
 
 import Support from "./Pages/Support.tsx";
 import SalesTermsAndConditions from "./Pages/SalesTerms&Conditions.tsx";
+import PrivacyPolicy from "./Pages/PrivacyPolicy.tsx";
 
 import Signup from "./Pages/Signup.tsx";
 import Login from "./Pages/Login.tsx";
@@ -118,6 +119,7 @@ function App() {
                           <Route path="/spillguide" element={<GameGuide />} />
                           <Route path="/support" element={<Support />} />
                           <Route path="/salgsvilkaar" element={<SalesTermsAndConditions />} />
+                          <Route path="/personvern" element={<PrivacyPolicy />} />
 
                           <Route
                             path="/nyspiller"
