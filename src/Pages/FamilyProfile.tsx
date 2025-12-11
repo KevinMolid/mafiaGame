@@ -11,13 +11,9 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
 // Firebase
-import { getFirestore, doc, getDoc } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 const FamilyProfile = () => {
   const { familieID } = useParams<{ familieID: string }>();

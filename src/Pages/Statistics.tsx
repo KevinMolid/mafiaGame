@@ -9,16 +9,12 @@ import Box from "../components/Box";
 import { useEffect, useState } from "react";
 
 // Firebase
-import { getFirestore, collection, getDocs } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../firebaseConfig";
+import { collection, getDocs } from "firebase/firestore";
 
 // Interfaces
 import { Character } from "../Interfaces/CharacterTypes";
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 const Statistics = () => {
   const [characters, setCharacters] = useState<Character[]>([]);

@@ -31,9 +31,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 // Firebase
-import { initializeApp } from "firebase/app";
 import {
-  getFirestore,
   collection,
   query,
   where,
@@ -44,10 +42,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
-import firebaseConfig from "../../firebaseConfig";
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../../firebase";
 
 const RANDOM_FIND_CHANCE = activityConfig.robbery.randomFindChance;
 const SPECIFIC_FIND_CHANCE = activityConfig.robbery.specificFindChance;

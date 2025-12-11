@@ -6,12 +6,9 @@ import Box from "../components/Box";
 import Button from "../components/Button";
 import InfoBox from "../components/InfoBox";
 
-import { getFirestore, doc, updateDoc } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../firebaseConfig";
+import { doc, updateDoc } from "firebase/firestore";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 import { useAuth } from "../AuthContext";
 import { useCharacter } from "../CharacterContext";

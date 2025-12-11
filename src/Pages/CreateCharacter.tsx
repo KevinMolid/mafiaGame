@@ -17,7 +17,6 @@ import { useCharacter } from "../CharacterContext";
 
 // Firebase
 import {
-  getFirestore,
   collection,
   doc,
   addDoc,
@@ -28,11 +27,8 @@ import {
   getDocs,
   serverTimestamp,
 } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../firebaseConfig";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 const cities = ["Mexico City", "New York", "Moskva", "Rio de Janeiro", "Tokyo"];
 

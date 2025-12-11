@@ -11,9 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 
 // Firebaase
-import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 
 // Firebaase
 import {
@@ -24,11 +23,7 @@ import {
 
 import { FirebaseError } from "firebase/app";
 
-import firebaseConfig from "../firebaseConfig";
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 const Signup = () => {
   const auth = getAuth();

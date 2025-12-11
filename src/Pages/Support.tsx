@@ -5,23 +5,14 @@ import InfoBox from "../components/InfoBox";
 import { useState, useEffect } from "react";
 import { useCharacter } from "../CharacterContext";
 
-import { initializeApp, getApps } from "firebase/app";
-import {
-  getFirestore,
-  addDoc,
-  collection,
-  serverTimestamp,
-} from "firebase/firestore";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { getDocs, where, query as fsQuery } from "firebase/firestore";
 
 import { getAuth } from "firebase/auth";
-import firebaseConfig from "../firebaseConfig";
 
 import { useLocation } from "react-router-dom";
 
-// trygg init ved HMR
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 import { CATEGORIES, CategoryValue } from "../constants/support";
 

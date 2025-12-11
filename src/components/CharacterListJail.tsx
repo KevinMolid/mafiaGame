@@ -4,15 +4,12 @@ import {
   collection,
   doc,
   getDoc,
-  getFirestore,
   onSnapshot,
   query,
   Timestamp,
   updateDoc,
   where,
 } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../firebaseConfig";
 
 import { useCharacter } from "../CharacterContext";
 import Username from "./Typography/Username";
@@ -28,9 +25,7 @@ const BRIBE_COST = 10_000; // fast pris
 const CHANCE_BRIBE = 0.6; // 60% sjanse
 const CHANCE_BREAKOUT = 0.35; // 35% sjanse
 
-// Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 // ---- Utils (same as original) ----
 function normalizeTs(val: any): Timestamp | null {

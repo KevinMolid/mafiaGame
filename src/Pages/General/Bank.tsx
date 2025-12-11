@@ -16,7 +16,6 @@ import { useCharacter } from "../../CharacterContext";
 
 // Firebase
 import {
-  getFirestore,
   doc,
   updateDoc,
   getDocs,
@@ -26,13 +25,11 @@ import {
   addDoc,
   serverTimestamp,
 } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../../firebaseConfig";
+
 import Username from "../../components/Typography/Username";
 import { useCooldown } from "../../CooldownContext";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../../firebase";
 
 const Bank = () => {
   const [amount, setAmount] = useState<number | "">("");

@@ -17,7 +17,6 @@ import { useState, useEffect, useMemo } from "react";
 import { useCharacter } from "../../CharacterContext";
 import { getCarByName, getCarByKey } from "../../Data/Cars";
 
-import { initializeApp } from "firebase/app";
 import {
   collection,
   query,
@@ -25,16 +24,13 @@ import {
   onSnapshot,
   doc as fsDoc,
   writeBatch,
-  getFirestore,
   doc,
   updateDoc,
 } from "firebase/firestore";
-import firebaseConfig from "../../firebaseConfig";
 
 import ParkingTypes from "../../Data/ParkingTypes";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../../firebase";
 
 import { useCooldown } from "../../CooldownContext";
 

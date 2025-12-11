@@ -37,7 +37,6 @@ import { useCooldown } from "../../CooldownContext";
 
 // Firebase
 import {
-  getFirestore,
   collection,
   addDoc,
   query,
@@ -48,11 +47,8 @@ import {
   deleteDoc,
   serverTimestamp,
 } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../../firebaseConfig";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../../firebase";
 
 import type { Car } from "../../Interfaces/Types";
 

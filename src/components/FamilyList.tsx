@@ -1,17 +1,13 @@
 import { useState, useEffect } from "react";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-
-import firebaseConfig from "../firebaseConfig";
+import { collection, getDocs } from "firebase/firestore";
 
 import Familyname from "./Typography/Familyname";
+
+import { db } from "../firebase";
 
 const FamilyList = () => {
   const [families, setFamilies] = useState<Array<any>>([]);
   const [loading, setLoading] = useState(true);
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
 
   const fetchFamilies = async () => {
     try {

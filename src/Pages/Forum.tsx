@@ -16,7 +16,6 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import {
-  getFirestore,
   collection,
   getDocs,
   query,
@@ -26,14 +25,10 @@ import {
   limit,
   Timestamp,
 } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../firebaseConfig";
 
 import { stripBBCode } from "../Functions/bbcode";
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 export const MAX_TITLE = 120;
 export const MAX_CONTENT = 10_000;

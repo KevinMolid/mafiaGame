@@ -1,5 +1,4 @@
 import {
-  getFirestore,
   collection,
   doc,
   setDoc,
@@ -14,16 +13,13 @@ import {
   Timestamp,
   runTransaction,
 } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../firebaseConfig";
 import { serverNow, serverTimeReady } from "./serverTime";
 
 import { getItemById } from "../Data/Items";
 
 import { getCarByKey } from "../Data/Cars";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 /**
  * Simple XP reward helper – kept for backwards compatibility.

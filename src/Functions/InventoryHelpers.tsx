@@ -1,20 +1,11 @@
 // InventoryHelpers.ts
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  query,
-  orderBy,
-} from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../firebaseConfig";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 
 import { getItemById } from "../Data/Items";
 import { getCarByKey /*, getCarByName, etc if needed */ } from "../Data/Cars";
 import { carValue, dmgPercent } from "./RewardFunctions"; // or adjust path
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 // --- Firestore shapes ---
 

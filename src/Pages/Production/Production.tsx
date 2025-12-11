@@ -15,9 +15,7 @@ import Narcotics from "./Narcotics";
 import React, { useEffect, useState, ReactNode } from "react";
 
 // Firebase
-import { initializeApp, getApps, getApp } from "firebase/app";
 import {
-  getFirestore,
   doc,
   onSnapshot,
   serverTimestamp,
@@ -28,7 +26,8 @@ import {
   runTransaction,
   increment,
 } from "firebase/firestore";
-import firebaseConfig from "../../firebaseConfig";
+
+import { db } from "../../firebase";
 
 import { useCharacter } from "../../CharacterContext";
 
@@ -79,9 +78,6 @@ const FACTORY_PRICE = Object.fromEntries(
 const FACTORY_TITLE = Object.fromEntries(
   FACTORIES.map((f) => [f.type, f.title])
 ) as Record<FactoryKind, string>;
-
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
 
 const Production: React.FC = () => {
   const { userCharacter } = useCharacter();

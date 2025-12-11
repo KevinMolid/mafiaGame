@@ -18,7 +18,6 @@ import timeAgo from "../Functions/TimeFunctions";
 import { bbcodeToHtml } from "../Functions/bbcode";
 
 import {
-  getFirestore,
   doc,
   collection,
   addDoc,
@@ -33,12 +32,8 @@ import {
   writeBatch,
   deleteDoc,
 } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../firebaseConfig";
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 // Lokale grenser (ikke importer fra Forum.tsx)
 const MAX_TITLE = 120;

@@ -7,25 +7,13 @@ import Item from "../components/Typography/Item";
 import { serverNow } from "../Functions/serverTime";
 
 import { useState, useEffect } from "react";
-import {
-  getFirestore,
-  collection,
-  query,
-  getDocs,
-  doc,
-  updateDoc,
-} from "firebase/firestore";
+import { collection, query, getDocs, doc, updateDoc } from "firebase/firestore";
 import { useCharacter } from "../CharacterContext";
-
-import firebaseConfig from "../firebaseConfig";
-import { initializeApp } from "firebase/app";
 
 // 🔗 centralised rank config (same as RankUpModal)
 import { RankRewardConfig, unlockLabels } from "../config/GameConfig";
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 type AlertCar = {
   name: string;

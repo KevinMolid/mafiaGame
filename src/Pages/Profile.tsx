@@ -17,19 +17,9 @@ import { useCharacter } from "../CharacterContext";
 import Username from "../components/Typography/Username";
 
 // Firebase
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc,
-  onSnapshot,
-} from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../firebaseConfig";
+import { doc, getDoc, updateDoc, onSnapshot } from "firebase/firestore";
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 // More functions
 import { getCurrentRank, getMoneyRank } from "../Functions/RankFunctions";

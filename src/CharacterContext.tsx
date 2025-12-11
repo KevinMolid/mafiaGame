@@ -10,7 +10,6 @@ import {
 import { Character } from "./Interfaces/CharacterTypes";
 import { getCurrentRank } from "./Functions/RankFunctions.tsx";
 import {
-  getFirestore,
   doc,
   onSnapshot,
   collection,
@@ -22,16 +21,13 @@ import {
   serverTimestamp,
   runTransaction,
 } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "./firebaseConfig";
 import { useAuth } from "./AuthContext";
 import RankUpModal from "./components/RankUpModal";
 import { applyStatRewards } from "./Functions/RewardFunctions";
 
 import { getRankReward, RankRewardConfig } from "./config/GameConfig";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "./firebase";
 
 /* ---------- Oslo time helper ---------- */
 const getOsloYmd = (d: Date = new Date()): string => {

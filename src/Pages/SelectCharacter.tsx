@@ -4,12 +4,9 @@ import H1 from "../components/Typography/H1";
 import Button from "../components/Button";
 
 import { useEffect, useState } from "react";
-import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../firebaseConfig";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 import { useAuth } from "../AuthContext";
 import { useCharacter } from "../CharacterContext";

@@ -2,12 +2,9 @@ import { useEffect, useState } from "react";
 import Button from "../components/Button";
 import InfoBox from "../components/InfoBox";
 
-import { getFirestore, doc, updateDoc, onSnapshot } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import firebaseConfig from "../firebaseConfig";
+import { doc, updateDoc, onSnapshot } from "firebase/firestore";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db } from "../firebase";
 
 import { useCharacter } from "../CharacterContext";
 
