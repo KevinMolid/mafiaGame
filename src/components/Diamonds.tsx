@@ -141,8 +141,8 @@ const Diamonds = () => {
             <p className="font-semibold text-neutral-200 text-xl">
               <i className="fa-solid fa-gem" /> 50
             </p>
-            <p className="text-lg mb-2">50 kr</p>
-            <Button onClick={() => handleBuy(150)} disabled={isBuying}>
+            <p className="text-lg mb-2">NOK 50</p>
+            <Button onClick={() => handleBuy(50)} disabled={isBuying}>
               Kjøp
             </Button>
           </div>
@@ -159,8 +159,8 @@ const Diamonds = () => {
             <p className="font-semibold text-neutral-200 text-xl">
               <i className="fa-solid fa-gem" /> 165
             </p>
-            <p className="text-lg mb-2">150 kr</p>
-            <Button onClick={() => handleBuy(450)} disabled={isBuying}>
+            <p className="text-lg mb-2">NOK 150</p>
+            <Button onClick={() => handleBuy(165)} disabled={isBuying}>
               Kjøp
             </Button>
           </div>
@@ -177,8 +177,8 @@ const Diamonds = () => {
             <p className="font-semibold text-neutral-200 text-xl">
               <i className="fa-solid fa-gem" /> 500
             </p>
-            <p className="text-lg mb-2">450 kr</p>
-            <Button onClick={() => handleBuy(1200)} disabled={isBuying}>
+            <p className="text-lg mb-2">NOK 450</p>
+            <Button onClick={() => handleBuy(500)} disabled={isBuying}>
               Kjøp
             </Button>
           </div>
