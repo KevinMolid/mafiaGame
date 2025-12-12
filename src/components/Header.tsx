@@ -24,6 +24,7 @@ import {
 const db = getFirestore();
 
 const Header = () => {
+  const { user } = useAuth();
   const { userCharacter } = useCharacter();
   const { userData } = useAuth();
   const { cooldowns, fetchCooldown } = useCooldown();
@@ -51,12 +52,12 @@ const Header = () => {
 
   // Unread messages across all conversations
   useEffect(() => {
-    if (!userCharacter?.username || !userCharacter?.id) return;
+    if (!user?.uid) return;
+    if (!userCharacter?.id) return;
 
-    // 1) Listen to conversations the user participates in
     const convQ = query(
       collection(db, "Conversations"),
-      where("participants", "array-contains", userCharacter.username)
+      where("participantUids", "array-contains", user.uid)
     );
 
     // Keep track of per-conversation unread counts and message unsubscribers
@@ -133,7 +134,7 @@ const Header = () => {
       for (const [, unsub] of msgUnsubs) unsub();
       msgUnsubs.clear();
     };
-  }, [userCharacter?.username, userCharacter?.id]);
+  }, [user?.uid, userCharacter?.id]);
 
   // Fetch cooldowns
   useEffect(() => {

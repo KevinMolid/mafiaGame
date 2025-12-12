@@ -22,6 +22,7 @@ import SidebarLink from "./SidebarLink";
 
 const SidebarRight = () => {
   const { userData } = useAuth();
+  const { user } = useAuth();
   const { userCharacter } = useCharacter();
   const [unreadAlertCount, setUnreadAlertCount] = useState(0);
   const [hasUnreadAlerts, setHasUnreadAlerts] = useState(false);
@@ -48,12 +49,12 @@ const SidebarRight = () => {
   }, [userCharacter]);
 
   useEffect(() => {
-    if (!userCharacter?.username || !userCharacter?.id) return;
+    if (!user?.uid) return;
+    if (!userCharacter?.id) return;
 
-    // 1) Listen to conversations the user participates in
     const convQ = query(
       collection(db, "Conversations"),
-      where("participants", "array-contains", userCharacter.username)
+      where("participantUids", "array-contains", user.uid)
     );
 
     const perConvCounts: Record<string, number> = {};
@@ -130,7 +131,7 @@ const SidebarRight = () => {
       for (const [, unsub] of msgUnsubs) unsub();
       msgUnsubs.clear();
     };
-  }, [userCharacter?.username, userCharacter?.id]);
+  }, [user?.uid, userCharacter?.id]);
 
   // Sign out
   function logOut() {

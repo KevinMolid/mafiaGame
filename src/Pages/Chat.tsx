@@ -273,11 +273,12 @@ const Chat = () => {
   };
 
   useEffect(() => {
-    if (!userCharacter?.username || !userCharacter?.id) return;
+    if (!user?.uid) return;
+    if (!userCharacter?.id) return;
 
     const convQ = query(
       collection(db, "Conversations"),
-      where("participants", "array-contains", userCharacter.username)
+      where("participantUids", "array-contains", user.uid)
     );
 
     const perConvCounts: Record<string, number> = {};
@@ -416,10 +417,12 @@ const Chat = () => {
   useEffect(() => {
     const fetchUserConversations = async () => {
       try {
+        if (!user?.uid) throw new Error("Missing auth uid");
+
         const conversationsSnapshot = await getDocs(
           query(
             collection(db, "Conversations"),
-            where("participants", "array-contains", userCharacter.username)
+            where("participantUids", "array-contains", user.uid)
           )
         );
 

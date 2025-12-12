@@ -14,17 +14,56 @@ import UpdateFeed from "../components/UpdateFeed";
 
 import { getCurrentRank } from "../Functions/RankFunctions";
 
+import { useAuth } from "../AuthContext";
+
 import {
   getFirestore,
   collection,
   onSnapshot,
   doc,
+  getDoc,
   runTransaction,
   serverTimestamp,
   increment,
   writeBatch,
+  query,
+  where,
 } from "firebase/firestore";
 const db = getFirestore();
+
+import { getAuth } from "firebase/auth";
+
+async function debugConvRead() {
+  const uid = getAuth().currentUser?.uid;
+  if (!uid) {
+    console.log("debugConvRead: no auth user yet");
+    return;
+  }
+
+  const id = "03QhZSqkP3Cf3HrcTsGQ";
+  const snap = await getDoc(doc(db, "Conversations", id));
+
+  console.log("auth uid:", uid);
+  console.log("getDoc conv exists?", snap.exists());
+  console.log("conv data:", snap.data());
+}
+
+import { getDocs, limit } from "firebase/firestore";
+
+async function debugConvQuery(uid: string) {
+  const q = query(
+    collection(db, "Conversations"),
+    where("participantUids", "array-contains", uid),
+    limit(10)
+  );
+
+  const snap = await getDocs(q);
+  console.log("query size:", snap.size);
+  console.log(
+    "ids:",
+    snap.docs.map((d) => d.id)
+  );
+}
 
 // React
 import { useState, useEffect } from "react";
@@ -38,6 +77,7 @@ import { getRankProgress } from "../Functions/RankFunctions";
 import { getItemById } from "../Data/Items";
 
 const Home = () => {
+  const { user } = useAuth();
   const { userCharacter, dailyXp } = useCharacter();
   const [message, setMessage] = useState<React.ReactNode>("");
   const [messageType, setMessageType] = useState<
@@ -52,6 +92,12 @@ const Home = () => {
   const [itemModalOpen, setItemModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ItemDoc | null>(null);
   const [sellQty, setSellQty] = useState<number>(1);
+
+  useEffect(() => {
+    if (!userCharacter?.id) return; // wait until you're fully in-game
+    debugConvRead().catch((e) => console.error("debugConvRead failed:", e));
+    debugConvQuery(user.uid).catch(console.error);
+  }, [userCharacter?.id]);
 
   // Hydrate an inventory item doc with catalog data from Items.tsx
   function hydrateItemDoc(raw: any, docId: string): ItemDoc {

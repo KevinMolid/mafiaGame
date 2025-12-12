@@ -47,7 +47,7 @@ const Statistics = () => {
         setCharacters(fetchedCharacters);
       } catch (err) {
         console.error("Error fetching characters:", err);
-        setError("Error fetching character data.");
+        setError("Kunne ikke laste spillere.");
       } finally {
         setLoading(false);
       }
