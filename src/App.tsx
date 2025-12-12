@@ -118,8 +118,14 @@ function App() {
                           {/* Public Routes */}
                           <Route path="/spillguide" element={<GameGuide />} />
                           <Route path="/support" element={<Support />} />
-                          <Route path="/salgsvilkaar" element={<SalesTermsAndConditions />} />
-                          <Route path="/personvern" element={<PrivacyPolicy />} />
+                          <Route
+                            path="/salgsvilkaar"
+                            element={<SalesTermsAndConditions />}
+                          />
+                          <Route
+                            path="/personvern"
+                            element={<PrivacyPolicy />}
+                          />
 
                           <Route
                             path="/nyspiller"

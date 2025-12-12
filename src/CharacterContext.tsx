@@ -353,7 +353,11 @@ export const CharacterProvider = ({
   }, [userCharacter, loading, baselineXp, xpToday, refreshDailyBaseline]);
 
   if (loading) {
-    return <div>Laster spillerdata...</div>;
+    return (
+      <div className="w-full h-svh flex justify-center items-center">
+        <p>Laster spillerdata...</p>
+      </div>
+    );
   }
 
   return (
