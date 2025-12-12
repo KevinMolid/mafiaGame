@@ -4,61 +4,38 @@ import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 import { auth, db } from "./firebase";
 
-// Create the AuthContext
-const AuthContext = createContext<any>(null);
+type AuthContextValue = {
+  user: any;
+  userData: any;
+  setUserData: React.Dispatch<React.SetStateAction<any>>;
+  loading: boolean;
+};
 
-// Create a provider component
-export const AuthProvider = ({ children }: any) => {
-  const [user, setUser] = useState<any>(null); // User from Auth
-  const [userData, setUserData] = useState<any>(null); // User data from Firestore
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<any>(null);
+  const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  /*
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!firebaseUser) {
-        setUser(null);
-        setUserData(null);
-        setLoading(false);
-        return;
-      }
-
-      setUser(firebaseUser);
-
-      const userDoc = await getOrCreateUserDocument(firebaseUser);
-
-      setUserData(userDoc);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []); */
-
-  useEffect(() => {
-    console.log("AuthContext mounted");
-
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log("Auth state changed:", user);
-
       try {
-        if (!user) {
-          console.log("No user → logged out");
+        if (!firebaseUser) {
           setUser(null);
           setUserData(null);
           setLoading(false);
           return;
         }
 
-        console.log("Fetching ID token result...");
-        const tokenResult = await user.getIdTokenResult(true);
-        console.log("Token claims:", tokenResult.claims);
+        // Get token claims (cached; no forced refresh)
+        const tokenResult = await firebaseUser.getIdTokenResult();
 
-        console.log("Fetching user document...");
-        const userDoc = await getOrCreateUserDocument(user);
-        console.log("User document:", userDoc);
+        // Fetch or create Firestore user document
+        const userDoc = await getOrCreateUserDocument(firebaseUser);
 
         setUser({
-          ...user,
+          ...firebaseUser,
           claims: tokenResult.claims,
         });
 
@@ -68,12 +45,9 @@ export const AuthProvider = ({ children }: any) => {
           banned: tokenResult.claims.banned === true,
         });
 
-        console.log("AuthContext finished successfully");
         setLoading(false);
       } catch (err) {
-        console.error("AuthContext fatal error:", err);
-
-        // IMPORTANT: prevent infinite loading
+        // Hard fail-safe: never leave app in loading state
         setUser(null);
         setUserData(null);
         setLoading(false);
@@ -83,16 +57,13 @@ export const AuthProvider = ({ children }: any) => {
     return () => unsubscribe();
   }, []);
 
-  // Function to get or create the user document from Firestore
   const getOrCreateUserDocument = async (firebaseUser: any) => {
     const uid = firebaseUser.uid;
-
     const userDocRef = doc(db, "Users", uid);
 
     try {
       const snap = await getDoc(userDocRef);
 
-      // If user document exists -> return it
       if (snap.exists()) {
         const data = snap.data();
         return {
@@ -101,23 +72,22 @@ export const AuthProvider = ({ children }: any) => {
         };
       }
 
-      // Create the first-time user document
       const newUserDoc = {
+        uid,
         email: firebaseUser.email ?? null,
         displayName: firebaseUser.displayName ?? null,
         createdAt: serverTimestamp(),
         characters: [],
-        role: "player", // optional
+        role: "player",
       };
 
       await setDoc(userDocRef, newUserDoc);
 
       return {
         ...newUserDoc,
-        createdAt: new Date(), // local placeholder; serverTimestamp resolves later
+        createdAt: new Date(), // local placeholder
       };
-    } catch (error) {
-      console.error("Failed to get or create user document", error);
+    } catch {
       return null;
     }
   };
@@ -129,5 +99,10 @@ export const AuthProvider = ({ children }: any) => {
   );
 };
 
-// Create a custom hook to use the AuthContext
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+  return ctx;
+};
